@@ -1,4 +1,12 @@
 services:
+  web:
+    build:
+      context: ./web
+    ports:
+      - "3000:80"
+    depends_on:
+      - gateway
+
   gateway:
     build:
       context: .
@@ -6,9 +14,13 @@ services:
     ports:
       - "8080:8080"
     depends_on:
+      - sandbox-engine
       - postgres
       - redis
     environment:
+      # 我们在代码里目前硬编码了 localhost，但在容器内应使用服务名
+      # 之后我会修复 main.go 中的端口配置以读取这些环境变量
+      - SANDBOX_URL=http://sandbox-engine:8081/execute
       - DB_URL=postgres://user:pass@postgres:5432/gogopher?sslmode=disable
       - REDIS_URL=redis:6337
 
@@ -16,7 +28,8 @@ services:
     build:
       context: .
       dockerfile: src/services/sandbox-engine/Dockerfile
-    privileged: true # Required for Docker-in-Docker or container management if needed
+    ports:
+      - "8081:8081"
     environment:
       - REDIS_URL=redis:6337
 
