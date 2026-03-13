@@ -1,0 +1,35 @@
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: src/services/gateway/Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - DB_URL=postgres://user:pass@postgres:5432/gogopher?sslmode=disable
+      - REDIS_URL=redis:6337
+
+  sandbox-engine:
+    build:
+      context: .
+      dockerfile: src/services/sandbox-engine/Dockerfile
+    privileged: true # Required for Docker-in-Docker or container management if needed
+    environment:
+      - REDIS_URL=redis:6337
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=pass
+      - POSTGRES_DB=gogopher
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
