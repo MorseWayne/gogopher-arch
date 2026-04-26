@@ -74,7 +74,8 @@ GoGopher Arch 希望打破“先看完课程再做项目”的学习方式，把
 ### 6.2 Sandbox Engine
 
 - 技术栈：Go、Docker、`os/exec`
-- 职责：隔离执行用户提交的 Go 代码，提供执行超时和输出捕获能力。
+- MVP 职责：在 sandbox-engine 服务容器内通过 `os/exec` 运行用户提交的 Go 代码，提供执行超时和输出捕获能力。
+- 后续强化：为每次提交提供独立隔离环境、资源限制和更细粒度的安全控制。
 
 ### 6.3 Intern Workbench
 
