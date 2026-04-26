@@ -1,301 +1,301 @@
-# GoGopher Arch Positioning Redesign
+# GoGopher Arch 项目定位重构
 
-- Date: 2026-04-26
-- Status: Draft approved in conversation
-- Scope: Product positioning, user progression, learning loop, and MVP focus
+- 日期：2026-04-26
+- 状态：已在对话中确认的草案
+- 范围：产品定位、用户成长路径、学习循环、MVP 聚焦范围
 
-## Summary
+## 摘要
 
-GoGopher Arch should move from a broad "Go architect progression" promise to a clearer learning product for Go beginners, pre-interns, interns, and Go engineers who want to grow into AI-era fullstack programmers.
+GoGopher Arch 应该从宽泛的“Go 架构师进阶”承诺，调整为一个更清晰的 Go 学习成长产品。它首先服务 Go 初学者、准实习生和实习生，同时为已有 Go 经验的工程师提供进阶到 AI 时代新型全栈程序员的路线。
 
-The recommended product frame is:
+推荐的产品定位是：
 
-> GoGopher Arch is a practical growth platform for Go learners. It helps users move from Go basics to Go backend internship readiness, then progress into Go engineering depth and AI application engineering as a new kind of fullstack programmer.
+> GoGopher Arch 是一个面向 Go 学习者的实战成长平台。它帮助用户从 Go 基础入门，成长到具备 Go 后端实习岗位能力，并进一步进阶到具备 Go 工程能力和 AI 应用工程能力的新型全栈程序员。
 
-The product shell should be a virtual internship simulator. The content spine should be project-based Go backend growth. The knowledge system should remain available as a map for review and gap-filling.
+产品外壳应该是虚拟实习模拟器，内容骨架应该是项目制 Go 后端成长路线，知识体系则作为查漏补缺和复习的地图长期存在。
 
-## Positioning
+## 项目定位
 
-### Previous Problem
+### 旧定位的问题
 
-The existing positioning emphasizes "architect evolution", high concurrency, cloud native systems, blockchain, runtime tuning, and advanced architecture outcomes. Those ideas are valuable, but they appear too early for the users the project should serve first.
+当前定位强调“架构师进化”、高并发、云原生、区块链、Runtime 调优和高级架构能力。这些方向本身有价值，但出现得太早，不适合作为项目第一眼传达给用户的核心承诺。
 
-The result is a mismatch:
+这会造成几个错位：
 
-- Go beginners may feel the product is too advanced.
-- Pre-interns may not see the concrete job-readiness value.
-- Experienced Go engineers may see ambition, but not a staged path.
+- Go 初学者可能觉得产品门槛过高。
+- 准实习生不一定能看出它和求职、实习、岗位胜任力之间的直接关系。
+- 有经验的 Go 工程师能看到野心，但看不到清晰的分阶段成长路径。
 
-### New Positioning
+### 新定位
 
-GoGopher Arch should present itself first as:
+GoGopher Arch 应该首先呈现为：
 
-> A Go backend internship growth platform that teaches through realistic workplace tasks.
+> 一个通过真实职场任务进行训练的 Go 后端实习成长平台。
 
-The long-term promise can remain ambitious, but it should be staged:
+长期愿景可以保持有野心，但需要分阶段表达：
 
-1. Help users learn Go fundamentals.
-2. Help users become ready for Go backend internships.
-3. Help users grow into capable Go engineers.
-4. Help users transition into AI-era fullstack programmers with Go plus RAG, agents, and LLM application engineering.
+1. 帮助用户掌握 Go 基础。
+2. 帮助用户具备 Go 后端实习岗位的基本能力。
+3. 帮助用户成长为更成熟的 Go 工程师。
+4. 帮助用户结合 Go、RAG、Agent 和 LLM 应用工程，转型为 AI 时代的新型全栈程序员。
 
-## Target Users
+## 目标用户
 
-### 1. Go Beginners
+### 1. Go 初学者
 
-These users need an "entry training camp" before they can complete realistic backend tasks.
+这类用户在完成真实后端任务前，需要一段“入职前训练营”。
 
-They need:
+他们需要掌握：
 
-- Basic syntax and types
-- Functions, structs, interfaces, and packages
-- Error handling
-- Slice, map, pointer, and defer pitfalls
-- Basic concurrency concepts
-- HTTP and JSON basics
+- 基础语法和类型
+- 函数、结构体、接口和包
+- 错误处理
+- slice、map、指针和 defer 常见坑
+- 基础并发概念
+- HTTP 和 JSON 基础
 
-The product should not feel like a static textbook. Basic knowledge should be taught as preparation for practical tasks.
+产品不应该像静态教材。基础知识应该作为完成实战任务的前置准备，而不是孤立的课程目录。
 
-### 2. Pre-Interns and Interns
+### 2. 准实习生和实习生
 
-This is the core user group.
+这是产品的核心用户。
 
-They need to practice the work patterns of a Go backend intern:
+他们需要练习 Go 后端实习岗位中的真实工作方式：
 
-- Reading task cards and acceptance criteria
-- Fixing bugs
-- Completing HTTP handlers
-- Adding parameter validation
-- Improving error handling
-- Writing table-driven tests
-- Reading logs and console output
-- Responding to review feedback
-- Understanding simple concurrency and context timeout issues
+- 阅读任务卡和验收标准
+- 修复 Bug
+- 补全 HTTP handler
+- 增加参数校验
+- 改进错误处理
+- 编写表驱动测试
+- 阅读日志和控制台输出
+- 处理代码评审意见
+- 理解简单并发问题和 context 超时问题
 
-This group should experience the product as a virtual first week on a Go backend team.
+这一层用户应该感受到：自己正在经历一个虚拟 Go 后端团队的入职第一周。
 
-### 3. Go Engineers
+### 3. Go 工程师
 
-These users already know the basics and want engineering depth.
+这类用户已经具备基础能力，希望继续提升工程深度。
 
-They need:
+他们需要训练：
 
-- Database and transaction practice
-- Cache patterns
-- Concurrency design
-- Performance profiling
-- Deployment basics
-- Observability
-- Service reliability and maintainability
+- 数据库和事务实践
+- 缓存模式
+- 并发设计
+- 性能分析
+- 部署基础
+- 可观测性
+- 服务可靠性和可维护性
 
-This path should be framed as Go engineering progression, not as the first thing every user sees.
+这条路线应该作为 Go 工程能力进阶呈现，而不是放在所有用户第一次进入产品时的第一屏。
 
-### 4. AI-Era Fullstack Programmers
+### 4. AI 时代新型全栈程序员
 
-This is the advanced long-term path.
+这是长期进阶路线。
 
-These users want to combine Go engineering with modern AI application development.
+这类用户希望把 Go 工程能力和现代 AI 应用开发结合起来。
 
-They need:
+他们需要掌握：
 
-- LLM API integration
-- Prompt design and structured output
-- Tool calling
-- RAG fundamentals
-- Document chunking, embeddings, vector retrieval, reranking, and knowledge-base QA
-- Agent principles: planning, tools, memory, context management, reflection, and evaluation
-- Go-based AI service gateways
-- Streaming responses and async task orchestration
-- AI product observability, cost control, safety boundaries, and evaluation sets
+- LLM API 集成
+- Prompt 设计和结构化输出
+- 工具调用
+- RAG 基础
+- 文档切分、Embedding、向量检索、重排和知识库问答
+- Agent 原理：规划、工具使用、记忆、上下文管理、反思和评估
+- 基于 Go 的 AI 服务网关
+- 流式响应和异步任务编排
+- AI 产品的可观测性、成本控制、安全边界和评测集
 
-This path gives the project a modern ceiling without making the first version too broad.
+这条路线让项目具备面向未来的上限，但不应该让第一版产品变得过宽。
 
-## Product Strategy
+## 产品策略
 
-The recommended strategy combines three approaches:
+推荐的产品策略由三部分组成：
 
-1. Internship simulator as the product shell
-2. Project-based learning as the content spine
-3. Knowledge map as the review and lookup system
+1. 以实习模拟器作为产品外壳
+2. 以项目制学习作为内容骨架
+3. 以知识地图作为复习和查漏补缺系统
 
-### Internship Simulator
+### 实习模拟器
 
-Users should feel like they joined a virtual Go backend team. They receive task cards, read requirements, edit code, run tests, inspect feedback, and complete review cycles.
+用户应该感觉自己加入了一个虚拟 Go 后端团队。他们会收到任务卡、阅读需求、编辑代码、运行测试、查看反馈，并完成代码评审式的迭代。
 
-This gives the product a clear identity and makes it more differentiated than a generic Go course.
+这会给产品一个清晰身份，也让它区别于普通 Go 课程。
 
-### Project-Based Learning
+### 项目制学习
 
-Behind the task cards, the user should gradually build and improve a real backend project. Each task should add, fix, or test part of the same project so the user builds durable engineering context.
+任务卡背后应该是一条连续的真实后端项目成长线。每个任务都应该对同一个项目进行新增、修复、测试或改进，让用户逐步积累工程上下文，而不是只完成彼此孤立的小练习。
 
-### Knowledge Map
+### 知识地图
 
-The knowledge map should organize all concepts covered by tasks. It is not the main first-screen experience, but it helps users review weak areas and understand the full route.
+知识地图负责整理任务中覆盖过的所有概念。它不是第一屏主体验，但可以帮助用户复习薄弱点，并理解完整成长路线。
 
-## Core Learning Loop
+## 核心学习循环
 
-Each task should follow this loop:
+每个任务都应该遵循这个循环：
 
-1. Receive a task card.
-2. Complete a short pre-task lesson.
-3. Edit Go code in the browser.
-4. Run code, tests, or task checks in the sandbox.
-5. Receive targeted feedback.
-6. Read a post-task review.
-7. Update the user's growth record.
+1. 收到任务卡。
+2. 完成一段简短的任务前小课。
+3. 在浏览器中编辑 Go 代码。
+4. 在沙盒中运行代码、测试或任务检查。
+5. 获得有针对性的反馈。
+6. 阅读任务后复盘。
+7. 更新用户成长记录。
 
-### Task Card
+### 任务卡
 
-The task card should include:
+任务卡应该包含：
 
-- Workplace-style background
-- Clear objective
-- Acceptance criteria
-- Related knowledge points
-- Expected output or passing tests
+- 职场化任务背景
+- 清晰目标
+- 验收标准
+- 关联知识点
+- 预期输出或需要通过的测试
 
-### Pre-Task Lesson
+### 任务前小课
 
-Each task should include a 5-10 minute lesson focused only on the concepts required for that task.
+每个任务都应该包含一段 5-10 分钟的小课，只讲完成当前任务必须用到的概念。
 
-Examples:
+示例：
 
-- Before a handler task: functions, structs, JSON, HTTP basics, and error response shape
-- Before a slice bug task: slice headers, underlying arrays, append behavior, and boundary checks
-- Before a map task: map initialization, nil map writes, and concurrent map safety
-- Before a test task: `testing`, table-driven tests, and edge cases
+- handler 任务前：函数、结构体、JSON、HTTP 基础和错误响应格式
+- slice Bug 任务前：slice header、底层数组、append 行为和边界检查
+- map 任务前：map 初始化、nil map 写入和并发安全
+- 测试任务前：`testing`、表驱动测试和边界用例
 
-### Coding and Sandbox Feedback
+### 编码和沙盒反馈
 
-The current Monaco editor and sandbox architecture should remain. Feedback should evolve beyond stdout and stderr into:
+当前的 Monaco 编辑器和沙盒架构可以保留。反馈能力需要从 stdout 和 stderr 扩展为：
 
-- Compile result
-- Test result
-- Task check result
-- Mentor hints
-- Console output
+- 编译结果
+- 测试结果
+- 任务检查结果
+- 导师提示
+- 控制台输出
 
-### Targeted Hints
+### 关键错误提示
 
-Hints should appear only for important errors or common Go pitfalls. They should not interrupt every small action.
+提示应该只在重要错误或 Go 常见坑出现时触发，不应该打断用户的每一个小动作。
 
-Examples:
+示例：
 
-- "This looks like a nil map write."
-- "This defer runs when the function returns, not when the loop iteration ends."
-- "This goroutine has no exit condition."
-- "This context timeout is created but never passed into the request."
+- “这里可能是 nil map 写入。”
+- “这个 defer 会在函数返回时执行，而不是在本轮循环结束时执行。”
+- “这个 goroutine 没有退出条件。”
+- “这里创建了 context timeout，但没有把它传入请求。”
 
-### Post-Task Review
+### 任务后复盘
 
-After completion, the user should see:
+任务完成后，用户应该看到：
 
-- What they fixed
-- Which Go concepts were involved
-- How the concept appears in real work
-- Common interview follow-up questions
-- Suggested next task
+- 本次修复了什么
+- 涉及哪些 Go 概念
+- 这些概念在真实工作中如何出现
+- 常见面试追问
+- 推荐的下一项任务
 
-## MVP Scope
+## MVP 范围
 
-The first MVP should be narrow:
+第一版 MVP 应该保持很窄：
 
-> Go backend intern: first week onboarding.
+> Go 后端实习生：入职第一周。
 
-Recommended tasks:
+推荐任务：
 
-1. Day 0: Go basics self-check and first sandbox run
-2. Day 1: Fix slice, map, and pointer bugs
-3. Day 2: Complete an HTTP API handler
-4. Day 3: Add parameter validation and error handling
-5. Day 4: Add table-driven tests
-6. Day 5: Fix a simple concurrency or context timeout issue
+1. Day 0：Go 基础自检和第一次沙盒运行
+2. Day 1：修复 slice、map 和指针相关 Bug
+3. Day 2：补全一个 HTTP API handler
+4. Day 3：增加参数校验和错误处理
+5. Day 4：编写表驱动测试
+6. Day 5：修复一个简单并发问题或 context 超时问题
 
-### Explicitly Out of Scope for MVP
+### MVP 明确不做
 
-The following should stay in the roadmap, not in the first version:
+以下内容应该留在路线图中，不进入第一版：
 
-- Cloud native systems
-- Blockchain
-- Large-scale load testing
-- Advanced runtime visualization
-- Full AI CTO review
-- Complex RPG story systems
-- Full RAG or agent curriculum
+- 云原生系统
+- 区块链
+- 大规模压测
+- 高级 Runtime 可视化
+- 完整 AI CTO 评审
+- 复杂 RPG 剧情系统
+- 完整 RAG 或 Agent 课程体系
 
-## Existing Project Changes
+## 现有项目调整
 
 ### README
 
-The README should change from an "architect evolution" first impression to an internship-readiness first impression.
+README 应该从“架构师进化”的第一印象，调整为“Go 后端实习岗位准备”的第一印象。
 
-Recommended hero message:
+推荐首屏文案：
 
-> GoGopher Arch is a Go backend internship growth platform. Through virtual workplace tasks, it helps Go learners build the coding, debugging, testing, and engineering collaboration skills needed for Go backend internship work.
+> GoGopher Arch 是一个 Go 后端实习成长平台。它通过虚拟职场任务，帮助 Go 学习者建立 Go 后端实习所需的编码、调试、测试和工程协作能力。
 
-The roadmap should include the AI-era fullstack path, but not as the MVP promise.
+路线图中应该加入 AI 时代全栈路线，但不要把它作为 MVP 的第一承诺。
 
-### Design Spec
+### 设计文档
 
-The existing level table should be replaced with a staged growth path:
+现有等级表应该替换为分阶段成长路径：
 
-1. Entry training camp
-2. Go backend intern task line
-3. Go engineering progression
-4. AI-era fullstack engineering path
+1. 入职前训练营
+2. Go 后端实习生任务线
+3. Go 工程能力进阶
+4. AI 时代全栈工程路线
 
-### Frontend
+### 前端
 
-The first screen should shift from runtime/goroutine leak visualization to an intern workbench.
+第一屏应该从 Runtime / Goroutine 泄露可视化，调整为实习生工作台。
 
-Recommended layout:
+推荐布局：
 
-- Task card: background, objective, acceptance criteria, related knowledge
-- Monaco editor
-- Task feedback panel: compile, tests, task checks, mentor hints
-- Console output
-- Growth progress indicator
+- 任务卡：背景、目标、验收标准、关联知识
+- Monaco 编辑器
+- 任务反馈面板：编译、测试、任务检查、导师提示
+- 控制台输出
+- 成长进度提示
 
-Default code should use a basic intern task, such as fixing an HTTP handler, slice bug, map initialization issue, or table-driven test.
+默认代码应该使用一个基础实习任务，例如修复 HTTP handler、slice Bug、map 初始化问题或表驱动测试。
 
-### Tone
+### 语气
 
-Use more:
+第一屏和核心文案中应该多使用：
 
-- Mentor
-- Task card
-- Acceptance criteria
-- First week onboarding
-- Test failure
-- Code review
-- Debugging
-- Internship readiness
+- 导师
+- 任务卡
+- 验收标准
+- 入职第一周
+- 测试失败
+- 代码评审
+- 调试
+- 实习岗位准备
 
-Use less on the first screen:
+第一屏和核心文案中应该少使用：
 
-- Architect
+- 架构师
 - CTO
-- 100k QPS
-- Double 11 traffic
-- Blockchain
-- Runtime deep tuning
-- High-concurrency IM systems
+- 10 万 QPS
+- 双十一流量
+- 区块链
+- Runtime 深度调优
+- 高并发 IM 系统
 
-Those advanced themes can remain later in the roadmap.
+这些高级主题可以保留在后续路线图里。
 
-## Success Criteria
+## 成功标准
 
-The positioning redesign succeeds if:
+这次定位重构成功的标准是：
 
-- A beginner understands that the product can help them start.
-- A pre-intern understands that the product prepares them for Go backend internship work.
-- An experienced Go engineer sees a path toward deeper Go engineering and AI application development.
-- The MVP scope is small enough to ship.
-- Advanced AI and architecture topics strengthen the long-term vision without confusing the first version.
+- Go 初学者能看懂这个产品可以帮助自己入门。
+- 准实习生能看懂这个产品能帮助自己准备 Go 后端实习工作。
+- 有经验的 Go 工程师能看到继续走向 Go 工程深度和 AI 应用开发的路径。
+- MVP 范围足够小，可以真正交付。
+- 高级 AI 和架构主题能增强长期愿景，但不会干扰第一版产品定位。
 
-## Open Questions
+## 待确认问题
 
-1. What exact backend project should the intern task line build around?
-2. Should the first MVP use one continuous codebase, or separate small exercises with a shared story?
-3. How much AI feedback should appear in MVP before full AI mentor integration exists?
-4. Should the AI-era fullstack path be branded as a separate track or as the final stage of the same career route?
+1. 实习生任务线应该围绕哪个具体后端项目展开？
+2. 第一版 MVP 应该使用一个连续代码库，还是使用带有统一故事线的独立小练习？
+3. 在完整 AI 导师集成前，MVP 中应该出现多少 AI 反馈能力？
+4. AI 时代全栈路线应该作为单独赛道来包装，还是作为同一条职业成长路线的最终阶段？
