@@ -80,7 +80,7 @@ cd gogopher-arch
 docker compose up --build
 ```
 
-前端默认运行在 `http://localhost:5173`，Gateway 默认运行在 `http://localhost:8080`。
+前端默认运行在 `http://localhost:3000`，Gateway 默认运行在 `http://localhost:8080`。
 
 ---
 
