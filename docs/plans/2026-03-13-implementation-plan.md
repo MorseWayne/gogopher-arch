@@ -117,7 +117,7 @@ npm run build
 
 ```bash
 rg -n "Go 后端实习成长平台|实习生工作台|AI 时代全栈" README.md docs/specs docs/plans/2026-03-13-implementation-plan.md
-rg -n "双十一|10W QPS|去中心化交易系统|高性能\\s+IM" README.md docs/specs web/src
+rg -n "双十[一]|10W\\s+QPS|去中心化交易系[统]|高性能\\s+IM" README.md docs/specs web/src
 ```
 
 第二条命令应无输出，表示生产可见文档和前端首屏不再使用旧的高级架构承诺。
