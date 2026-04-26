@@ -2,14 +2,11 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"time"
-
-	"github.com/MorseWayne/gogopher-arch/src/pkg/common"
 )
 
 func getSandboxURL() string {
