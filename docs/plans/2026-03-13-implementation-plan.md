@@ -25,7 +25,7 @@
 
 - 语言：Go 1.22+
 - Gateway：接收前端请求并转发到沙盒引擎
-- Sandbox Engine：隔离运行用户代码，返回 stdout、stderr、状态、耗时和退出码
+- Sandbox Engine：在 sandbox-engine 服务容器内受超时控制地运行用户代码，返回 stdout、stderr、状态、耗时和退出码；后续强化独立隔离和资源限制。
 - 容器：Docker 和 Docker Compose
 
 ### 2.2 前端
@@ -115,7 +115,7 @@ npm run build
 
 ```bash
 rg -n "Go 后端实习成长平台|实习生工作台|AI 时代全栈" README.md docs
-rg -n "双十一|10W QPS|去中心化交易系统|高性能\\s+IM" README.md docs
+rg -n "双十一|10W QPS|去中心化交易系统|高性能\\s+IM" README.md docs/specs web/src
 ```
 
-第二条命令应无输出，表示第一屏定位不再使用旧的高级架构承诺。
+第二条命令应无输出，表示生产可见文档和前端首屏不再使用旧的高级架构承诺。
