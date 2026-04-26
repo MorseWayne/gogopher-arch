@@ -1,7 +1,17 @@
-import React, { useState } from 'react';
-import Editor from "@monaco-editor/react";
-import { Play, Activity, Terminal, Code2, AlertCircle } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import Editor from '@monaco-editor/react';
 import axios from 'axios';
+import {
+  AlertCircle,
+  BookOpen,
+  CheckCircle2,
+  ClipboardCheck,
+  Code2,
+  GraduationCap,
+  Play,
+  Terminal,
+} from 'lucide-react';
+import './App.css';
 
 interface SandboxResponse {
   stdout: string;
@@ -11,31 +21,130 @@ interface SandboxResponse {
   exit_code: number;
 }
 
+type FeedbackState = 'idle' | 'pass' | 'fail';
+
+interface FeedbackItem {
+  label: string;
+  detail: string;
+  state: FeedbackState;
+}
+
 const DEFAULT_CODE = `package main
 
-import (
-	"fmt"
-	"time"
-)
+import "fmt"
+
+type User struct {
+\tName  string
+\tScore int
+}
+
+func buildScoreMap(users []User) map[string]int {
+\tvar scores map[string]int
+\tfor _, user := range users {
+\t\tscores[user.Name] = user.Score
+\t}
+\treturn scores
+}
 
 func main() {
-	fmt.Println("🚀 GoGopher Arch: 系统自检中...")
-	
-	// 这是一个典型的 Goroutine 泄露风险代码
-	// 如果你不小心在循环中开启了没有结束条件的协程...
-	for i := 0; i < 5; i++ {
-		go func(id int) {
-			fmt.Printf("Worker %d 启动并进入死循环...\n", id)
-			for {
-				time.Sleep(time.Second)
-			}
-		}(i)
-	}
+\tusers := []User{
+\t\t{Name: "Ming", Score: 86},
+\t\t{Name: "Yan", Score: 91},
+\t}
 
-	time.Sleep(2 * time.Second)
-	fmt.Println("✅ 任务执行完毕，观察右侧资源占用！")
+\tscores := buildScoreMap(users)
+\tfmt.Println("Ming 的分数:", scores["Ming"])
 }
 `;
+
+const taskCriteria = [
+  '程序可以成功运行，不再出现 nil map 写入 panic。',
+  'buildScoreMap 返回包含所有用户分数的 map。',
+  '不要修改 main 函数里的输入数据和输出语句。',
+];
+
+const lessonPoints = [
+  'map 在写入前必须完成初始化。',
+  'var scores map[string]int 声明的是 nil map，只能读，不能写。',
+  'make(map[string]int, len(users)) 可以创建可写 map，并预留容量。',
+];
+
+const mentorHints = [
+  '先定位 panic 行，再判断这个变量是否已经初始化。',
+  '这类问题在实习任务里很常见：看起来类型对了，但零值不能直接写入。',
+  '修复后再运行一次，确认 stdout 中出现 Ming 的分数。',
+];
+
+function getFeedback(output: SandboxResponse | null, error: string | null): FeedbackItem[] {
+  if (error) {
+    return [
+      {
+        label: '连接 Gateway',
+        detail: '前端无法连接到本地 Gateway，请确认后端服务已启动。',
+        state: 'fail',
+      },
+      {
+        label: '运行结果',
+        detail: '等待 Gateway 恢复后重新运行。',
+        state: 'idle',
+      },
+      {
+        label: '任务检查',
+        detail: '任务检查需要基于沙盒运行结果判断。',
+        state: 'idle',
+      },
+    ];
+  }
+
+  if (!output) {
+    return [
+      {
+        label: '连接 Gateway',
+        detail: '等待第一次运行。',
+        state: 'idle',
+      },
+      {
+        label: '运行结果',
+        detail: '点击运行代码后查看 stdout 和 stderr。',
+        state: 'idle',
+      },
+      {
+        label: '任务检查',
+        detail: '修复 nil map 后，程序应输出 Ming 的分数。',
+        state: 'idle',
+      },
+    ];
+  }
+
+  const succeeded = output.status === 'success' && output.exit_code === 0;
+  const hasExpectedOutput = output.stdout.includes('Ming 的分数:');
+
+  return [
+    {
+      label: '连接 Gateway',
+      detail: '已收到沙盒执行结果。',
+      state: 'pass',
+    },
+    {
+      label: '运行结果',
+      detail: succeeded ? '程序正常退出。' : '程序未正常退出，请查看 stderr。',
+      state: succeeded ? 'pass' : 'fail',
+    },
+    {
+      label: '任务检查',
+      detail: hasExpectedOutput ? '已输出目标用户分数。' : '还没有看到预期输出。',
+      state: hasExpectedOutput ? 'pass' : 'fail',
+    },
+  ];
+}
+
+function formatDuration(duration: number): string {
+  if (duration <= 0) {
+    return '--';
+  }
+
+  return `${(duration / 1_000_000).toFixed(2)}ms`;
+}
 
 function App() {
   const [code, setCode] = useState(DEFAULT_CODE);
@@ -43,117 +152,173 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const feedback = useMemo(() => getFeedback(output, error), [output, error]);
+
   const handleRun = async () => {
     setLoading(true);
     setError(null);
+
     try {
-      const response = await axios.post('http://localhost:8080/api/v1/execute', {
+      const response = await axios.post<SandboxResponse>('http://localhost:8080/api/v1/execute', {
         id: `task-${Date.now()}`,
-        code: code,
+        code,
         language: 'go',
-        timeout: 5
+        timeout: 5,
       });
       setOutput(response.data);
-    } catch (err: any) {
-      setError(err.response?.data || err.message || "无法连接到 Gateway 服务");
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        const message =
+          typeof err.response?.data === 'string'
+            ? err.response.data
+            : err.message || '无法连接到 Gateway 服务';
+        setError(message);
+      } else if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('无法连接到 Gateway 服务');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col h-screen bg-[#1e1e1e] text-gray-300 font-sans">
-      {/* 顶部导航 */}
-      <header className="flex items-center justify-between px-6 py-3 border-bottom border-gray-700 bg-[#252526]">
-        <div className="flex items-center gap-2">
-          <div className="bg-blue-600 p-1.5 rounded">
-            <Code2 size={20} className="text-white" />
+    <div className="app-shell">
+      <header className="topbar">
+        <div className="brand">
+          <div className="brand-icon">
+            <GraduationCap size={22} />
           </div>
-          <h1 className="text-lg font-bold text-white tracking-tight">GoGopher Arch <span className="text-xs font-normal text-gray-500 italic ml-1">v0.1-mvp</span></h1>
+          <div>
+            <p className="eyebrow">Go 后端实习生 · 入职第一周</p>
+            <h1>GoGopher Arch</h1>
+          </div>
         </div>
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={handleRun}
-            disabled={loading}
-            className={`flex items-center gap-2 px-4 py-1.5 rounded text-sm font-medium transition-all ${loading ? 'bg-gray-700 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 text-white shadow-lg'}`}
-          >
-            <Play size={16} fill="currentColor" />
-            {loading ? '运行中...' : '运行代码'}
-          </button>
-        </div>
+        <button className="run-button" onClick={handleRun} disabled={loading}>
+          <Play size={17} fill="currentColor" />
+          {loading ? '运行中' : '运行代码'}
+        </button>
       </header>
 
-      {/* 主工作区 */}
-      <main className="flex flex-1 overflow-hidden">
-        {/* 编辑器区域 */}
-        <div className="flex-1 flex flex-col border-r border-gray-800">
-          <div className="bg-[#2d2d2d] px-4 py-2 text-xs uppercase tracking-wider text-gray-400 flex items-center gap-2">
-            <Code2 size={14} /> main.go
+      <main className="workbench">
+        <aside className="task-panel" aria-label="任务卡">
+          <section className="panel-section hero-section">
+            <div className="section-title">
+              <ClipboardCheck size={16} />
+              <span>任务卡</span>
+            </div>
+            <h2>Day 1：修复 nil map 写入</h2>
+            <p>
+              你的导师把一个用户分数统计函数交给你。当前代码会在运行时 panic，
+              请定位原因并完成修复。
+            </p>
+          </section>
+
+          <section className="panel-section">
+            <div className="section-title">
+              <CheckCircle2 size={16} />
+              <span>验收标准</span>
+            </div>
+            <ul className="check-list">
+              {taskCriteria.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </section>
+
+          <section className="panel-section">
+            <div className="section-title">
+              <BookOpen size={16} />
+              <span>任务前小课</span>
+            </div>
+            <ul className="lesson-list">
+              {lessonPoints.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </section>
+        </aside>
+
+        <section className="editor-panel" aria-label="代码编辑器">
+          <div className="panel-toolbar">
+            <div className="section-title">
+              <Code2 size={16} />
+              <span>main.go</span>
+            </div>
+            <span className="file-badge">Go 基础 Bug 修复</span>
           </div>
           <Editor
             height="100%"
             theme="vs-dark"
             defaultLanguage="go"
             value={code}
-            onChange={(v) => setCode(v || "")}
+            onChange={(value) => setCode(value || '')}
             options={{
               fontSize: 14,
               minimap: { enabled: false },
-              padding: { top: 20 },
-              fontFamily: "'JetBrains Mono', 'Fira Code', monospace"
+              padding: { top: 18 },
+              fontFamily: "'JetBrains Mono', 'Fira Code', ui-monospace, monospace",
+              scrollBeyondLastLine: false,
             }}
           />
-        </div>
+        </section>
 
-        {/* 控制台与反馈区域 */}
-        <div className="w-[400px] flex flex-col bg-[#1e1e1e]">
-          {/* 实时监控面板 (预览) */}
-          <section className="p-4 border-b border-gray-800 bg-[#252526]">
-            <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-gray-400 mb-4">
-              <Activity size={14} className="text-blue-500" /> 实时指标 (Metrics)
+        <aside className="feedback-panel" aria-label="任务反馈">
+          <section className="panel-section">
+            <div className="section-title">
+              <ClipboardCheck size={16} />
+              <span>任务反馈</span>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-[#1e1e1e] p-3 rounded border border-gray-800">
-                <div className="text-[10px] text-gray-500 mb-1">活跃 Goroutines</div>
-                <div className={`text-xl font-bold ${output?.status === 'timeout' ? 'text-red-500' : 'text-blue-400'}`}>
-                  {output ? (output.status === 'success' ? '6' : '∞') : '--'}
+            <div className="feedback-list">
+              {feedback.map((item) => (
+                <div className={`feedback-item ${item.state}`} key={item.label}>
+                  <span className="feedback-dot" />
+                  <div>
+                    <strong>{item.label}</strong>
+                    <p>{item.detail}</p>
+                  </div>
                 </div>
-              </div>
-              <div className="bg-[#1e1e1e] p-3 rounded border border-gray-800">
-                <div className="text-[10px] text-gray-500 mb-1">执行耗时</div>
-                <div className="text-xl font-bold text-yellow-400">
-                  {output ? `${(output.duration / 1000000).toFixed(2)}ms` : '--'}
-                </div>
-              </div>
+              ))}
             </div>
           </section>
 
-          {/* 控制台终端 */}
-          <section className="flex-1 flex flex-col min-h-0">
-            <div className="bg-[#2d2d2d] px-4 py-2 text-xs uppercase tracking-wider text-gray-400 flex items-center gap-2">
-              <Terminal size={14} /> 控制台 (Console)
+          <section className="panel-section">
+            <div className="section-title">
+              <AlertCircle size={16} />
+              <span>导师提示</span>
             </div>
-            <div className="flex-1 p-4 font-mono text-sm overflow-y-auto bg-black text-green-400">
-              {error && (
-                <div className="flex items-start gap-2 text-red-400 mb-2">
-                  <AlertCircle size={16} className="shrink-0 mt-0.5" />
-                  <span>{error}</span>
-                </div>
-              )}
+            <ul className="hint-list">
+              {mentorHints.map((hint) => (
+                <li key={hint}>{hint}</li>
+              ))}
+            </ul>
+          </section>
+
+          <section className="console-section">
+            <div className="console-header">
+              <div className="section-title">
+                <Terminal size={16} />
+                <span>控制台</span>
+              </div>
+              <span>{output ? formatDuration(output.duration) : '--'}</span>
+            </div>
+            <div className="console-body">
+              {error && <pre className="console-error">{error}</pre>}
               {output ? (
                 <>
-                  <pre className="whitespace-pre-wrap mb-2">{output.stdout}</pre>
-                  {output.stderr && <pre className="text-red-400 whitespace-pre-wrap">{output.stderr}</pre>}
-                  <div className="mt-4 pt-2 border-t border-gray-800 text-gray-500 text-xs">
-                    程序退出码: {output.exit_code} | 状态: {output.status.toUpperCase()}
-                  </div>
+                  {output.stdout && <pre>{output.stdout}</pre>}
+                  {output.stderr && <pre className="console-error">{output.stderr}</pre>}
+                  <p className="console-meta">
+                    退出码：{output.exit_code} · 状态：{output.status.toUpperCase()}
+                  </p>
                 </>
               ) : (
-                <div className="text-gray-600 italic">点击“运行代码”查看输出结果...</div>
+                <p className="console-placeholder">点击运行代码，查看沙盒输出。</p>
               )}
             </div>
           </section>
-        </div>
+        </aside>
       </main>
     </div>
   );
