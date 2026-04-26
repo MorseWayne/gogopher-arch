@@ -117,7 +117,7 @@ function getFeedback(output: SandboxResponse | null, error: string | null): Feed
   }
 
   const succeeded = output.status === 'success' && output.exit_code === 0;
-  const hasExpectedOutput = output.stdout.includes('Ming 的分数:');
+  const hasExpectedOutput = /Ming 的分数:\s*86\b/.test(output.stdout);
   const taskPassed = succeeded && hasExpectedOutput;
 
   return [
