@@ -118,6 +118,7 @@ function getFeedback(output: SandboxResponse | null, error: string | null): Feed
 
   const succeeded = output.status === 'success' && output.exit_code === 0;
   const hasExpectedOutput = output.stdout.includes('Ming 的分数:');
+  const taskPassed = succeeded && hasExpectedOutput;
 
   return [
     {
@@ -132,8 +133,8 @@ function getFeedback(output: SandboxResponse | null, error: string | null): Feed
     },
     {
       label: '任务检查',
-      detail: hasExpectedOutput ? '已输出目标用户分数。' : '还没有看到预期输出。',
-      state: hasExpectedOutput ? 'pass' : 'fail',
+      detail: taskPassed ? '本次运行已输出目标用户分数。' : '本次运行还没有通过任务检查。',
+      state: taskPassed ? 'pass' : 'fail',
     },
   ];
 }
@@ -157,6 +158,7 @@ function App() {
   const handleRun = async () => {
     setLoading(true);
     setError(null);
+    setOutput(null);
 
     try {
       const response = await axios.post<SandboxResponse>('http://localhost:8080/api/v1/execute', {
