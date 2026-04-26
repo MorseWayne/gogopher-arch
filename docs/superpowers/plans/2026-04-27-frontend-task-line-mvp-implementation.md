@@ -1,53 +1,53 @@
-# Frontend Task Line MVP Implementation Plan
+# 前端任务线 MVP 实施计划
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **给 agentic workers：** 必须使用 `superpowers:subagent-driven-development`（推荐）或 `superpowers:executing-plans` 按任务逐步实施本计划。步骤使用 checkbox（`- [ ]`）语法跟踪进度。
 
-**Goal:** Build a frontend-only Day 0 to Day 5 intern task line so learners can switch tasks, run starter Go code, receive task-specific checks, and read mentor guidance.
+**目标：** 构建一个仅前端实现的 Day 0 到 Day 5 实习任务线，让学习者可以切换任务、运行起始 Go 代码、获得任务专属检查，并阅读导师指导。
 
-**Architecture:** Add a static task catalog in `web/src/tasks.ts`, a pure feedback evaluator in `web/src/taskFeedback.ts`, and refactor `web/src/App.tsx` to render the workbench from task data. Keep the existing Gateway and Sandbox Engine contract unchanged.
+**架构：** 在 `web/src/tasks.ts` 新增静态任务目录，在 `web/src/taskFeedback.ts` 新增纯反馈评估器，并重构 `web/src/App.tsx`，让工作台根据任务数据渲染。保持现有 Gateway 和 Sandbox Engine 协议不变。
 
-**Tech Stack:** React, TypeScript, Vite, Monaco Editor, Axios, Lucide React, Vitest, Go sandbox API.
+**技术栈：** React、TypeScript、Vite、Monaco Editor、Axios、Lucide React、Vitest、Go 沙盒 API。
 
 ---
 
-## Scope Check
+## 范围检查
 
-This plan implements one subsystem: the frontend task line MVP. It does not add backend task APIs, persisted progress, authentication, AI feedback, or a real `go test` sandbox mode.
+本计划只实现一个子系统：前端任务线 MVP。不新增后端任务 API、持久化进度、认证、AI 反馈或真正的 `go test` 沙盒模式。
 
-## File Structure
+## 文件结构
 
-- Create `web/src/taskFeedback.ts`: pure types and functions for evaluating sandbox output against task checks.
-- Create `web/src/taskFeedback.test.ts`: Vitest coverage for idle, connection error, pass, and fail feedback states.
-- Create `web/src/tasks.ts`: static Day 0 to Day 5 task catalog.
-- Create `web/src/tasks.test.ts`: Vitest coverage for catalog completeness and unique task ids.
-- Modify `web/package.json`: add `test` script and `vitest` dev dependency.
-- Modify `web/package-lock.json`: update via `npm install`.
-- Modify `web/src/App.tsx`: render task-driven workbench.
-- Modify `web/src/App.css`: add task navigation, status, and review styles.
-- Modify `README.md`: mark completed first-stage documentation/workbench/task-line items.
+- 新建 `web/src/taskFeedback.ts`：用于根据任务检查评估沙盒输出的纯类型和函数。
+- 新建 `web/src/taskFeedback.test.ts`：用 Vitest 覆盖待运行、连接错误、通过和失败反馈状态。
+- 新建 `web/src/tasks.ts`：静态 Day 0 到 Day 5 任务目录。
+- 新建 `web/src/tasks.test.ts`：用 Vitest 覆盖任务目录完整性和任务 id 唯一性。
+- 修改 `web/package.json`：增加 `test` 脚本和 `vitest` 开发依赖。
+- 修改 `web/package-lock.json`：通过 `npm install` 更新。
+- 修改 `web/src/App.tsx`：渲染任务驱动的工作台。
+- 修改 `web/src/App.css`：增加任务导航、状态和复盘样式。
+- 修改 `README.md`：标记第一阶段文档、工作台和任务线条目已完成。
 
-## Task 1: Add Feedback Evaluator With Tests
+## 任务 1：新增反馈评估器和测试
 
-**Files:**
-- Modify: `web/package.json`
-- Modify: `web/package-lock.json`
-- Create: `web/src/taskFeedback.test.ts`
-- Create: `web/src/taskFeedback.ts`
+**文件：**
+- 修改： `web/package.json`
+- 修改： `web/package-lock.json`
+- 新建： `web/src/taskFeedback.test.ts`
+- 新建： `web/src/taskFeedback.ts`
 
-- [ ] **Step 1: Install Vitest**
+- [ ] **步骤 1：安装 Vitest**
 
-Run:
+运行：
 
 ```bash
 cd web
 npm install -D vitest
 ```
 
-Expected: `package.json` and `package-lock.json` change, and `node_modules` remains untracked.
+预期：`package.json` 和 `package-lock.json` 发生变化，`node_modules` 仍保持未跟踪。
 
-- [ ] **Step 2: Add the test script**
+- [ ] **步骤 2：增加测试脚本**
 
-In `web/package.json`, update the `scripts` object so it contains:
+在 `web/package.json` 中更新 `scripts` 对象，使其包含：
 
 ```json
 {
@@ -59,9 +59,9 @@ In `web/package.json`, update the `scripts` object so it contains:
 }
 ```
 
-- [ ] **Step 3: Write failing tests for feedback evaluation**
+- [ ] **步骤 3：为反馈评估写失败测试**
 
-Create `web/src/taskFeedback.test.ts`:
+创建 `web/src/taskFeedback.test.ts`：
 
 ```ts
 import { describe, expect, it } from 'vitest';
@@ -142,20 +142,20 @@ describe('evaluateTaskChecks', () => {
 });
 ```
 
-- [ ] **Step 4: Run the tests to verify they fail**
+- [ ] **步骤 4：运行测试，确认测试失败**
 
-Run:
+运行：
 
 ```bash
 cd web
 npm test -- --run src/taskFeedback.test.ts
 ```
 
-Expected: FAIL because `./taskFeedback` does not exist.
+预期：FAIL，因为 `./taskFeedback` 尚不存在。
 
-- [ ] **Step 5: Implement the feedback evaluator**
+- [ ] **步骤 5：实现反馈评估器**
 
-Create `web/src/taskFeedback.ts`:
+创建 `web/src/taskFeedback.ts`：
 
 ```ts
 export interface SandboxResponse {
@@ -309,35 +309,35 @@ export function didPassTask(
 }
 ```
 
-- [ ] **Step 6: Run feedback tests**
+- [ ] **步骤 6：运行反馈测试**
 
-Run:
+运行：
 
 ```bash
 cd web
 npm test -- --run src/taskFeedback.test.ts
 ```
 
-Expected: PASS.
+预期：PASS。
 
-- [ ] **Step 7: Commit feedback evaluator**
+- [ ] **步骤 7：提交反馈评估器**
 
-Run:
+运行：
 
 ```bash
 git add web/package.json web/package-lock.json web/src/taskFeedback.ts web/src/taskFeedback.test.ts
 git commit -m "test: add task feedback evaluator"
 ```
 
-## Task 2: Add Static Day 0 To Day 5 Task Catalog
+## 任务 2：新增静态 Day 0 到 Day 5 任务目录
 
-**Files:**
-- Create: `web/src/tasks.test.ts`
-- Create: `web/src/tasks.ts`
+**文件：**
+- 新建： `web/src/tasks.test.ts`
+- 新建： `web/src/tasks.ts`
 
-- [ ] **Step 1: Write failing tests for the task catalog**
+- [ ] **步骤 1：为任务目录写失败测试**
 
-Create `web/src/tasks.test.ts`:
+创建 `web/src/tasks.test.ts`：
 
 ```ts
 import { describe, expect, it } from 'vitest';
@@ -375,20 +375,20 @@ describe('internshipTasks', () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [ ] **步骤 2：运行测试，确认测试失败**
 
-Run:
+运行：
 
 ```bash
 cd web
 npm test -- --run src/tasks.test.ts
 ```
 
-Expected: FAIL because `./tasks` does not exist.
+预期：FAIL，因为 `./tasks` 尚不存在。
 
-- [ ] **Step 3: Implement the task catalog**
+- [ ] **步骤 3：实现任务目录**
 
-Create `web/src/tasks.ts`:
+创建 `web/src/tasks.ts`：
 
 ```ts
 import type { TaskCheck } from './taskFeedback';
@@ -863,34 +863,34 @@ export function findTaskById(id: string): InternTask {
 }
 ```
 
-- [ ] **Step 4: Run catalog tests**
+- [ ] **步骤 4：运行任务目录测试**
 
-Run:
+运行：
 
 ```bash
 cd web
 npm test -- --run src/tasks.test.ts
 ```
 
-Expected: PASS.
+预期：PASS。
 
-- [ ] **Step 5: Commit task catalog**
+- [ ] **步骤 5：提交任务目录**
 
-Run:
+运行：
 
 ```bash
 git add web/src/tasks.ts web/src/tasks.test.ts
 git commit -m "feat: add first week task catalog"
 ```
 
-## Task 3: Refactor App To Render Task Line
+## 任务 3：重构 App 以渲染任务线
 
-**Files:**
-- Modify: `web/src/App.tsx`
+**文件：**
+- 修改： `web/src/App.tsx`
 
-- [ ] **Step 1: Replace imports and remove hard-coded task content**
+- [ ] **步骤 1：替换 imports 并移除硬编码任务内容**
 
-In `web/src/App.tsx`, replace the current imports and local task arrays with imports from the new modules:
+在 `web/src/App.tsx` 中，用新模块的 imports 替换当前 imports 和本地任务数组：
 
 ```tsx
 import { useMemo, useState } from 'react';
@@ -916,11 +916,11 @@ import {
 } from './taskFeedback';
 ```
 
-Remove the local `SandboxResponse`, `FeedbackState`, `FeedbackItem`, `DEFAULT_CODE`, `taskCriteria`, `lessonPoints`, `mentorHints`, and `getFeedback` definitions from `App.tsx`.
+从 `App.tsx` 中移除本地的 `SandboxResponse`、`FeedbackState`、`FeedbackItem`、`DEFAULT_CODE`、`taskCriteria`、`lessonPoints`、`mentorHints` 和 `getFeedback` 定义。
 
-- [ ] **Step 2: Update component state and task selection**
+- [ ] **步骤 2：更新组件状态和任务选择逻辑**
 
-Inside `App`, replace the initial state block with:
+在 `App` 内，将初始状态代码块替换为：
 
 ```tsx
 function App() {
@@ -954,9 +954,9 @@ function App() {
   };
 ```
 
-- [ ] **Step 3: Update `handleRun`**
+- [ ] **步骤 3：更新 `handleRun`**
 
-Replace the existing `handleRun` with:
+将现有 `handleRun` 替换为：
 
 ```tsx
   const handleRun = async () => {
@@ -999,9 +999,9 @@ Replace the existing `handleRun` with:
   };
 ```
 
-- [ ] **Step 4: Replace the JSX return**
+- [ ] **步骤 4：替换 JSX return**
 
-Replace the `return` body with:
+将 `return` 主体替换为：
 
 ```tsx
   return (
@@ -1193,47 +1193,47 @@ Replace the `return` body with:
 }
 ```
 
-Keep the existing `formatDuration` helper unchanged above `App`.
+保留 `App` 上方现有的 `formatDuration` helper，不做修改。
 
-- [ ] **Step 5: Run TypeScript build**
+- [ ] **步骤 5：运行 TypeScript 构建**
 
-Run:
+运行：
 
 ```bash
 cd web
 npm run build
 ```
 
-Expected: PASS.
+预期：PASS。
 
-- [ ] **Step 6: Run frontend tests**
+- [ ] **步骤 6：运行前端测试**
 
-Run:
+运行：
 
 ```bash
 cd web
 npm test -- --run
 ```
 
-Expected: PASS.
+预期：PASS。
 
-- [ ] **Step 7: Commit App refactor**
+- [ ] **步骤 7：提交 App 重构**
 
-Run:
+运行：
 
 ```bash
 git add web/src/App.tsx
 git commit -m "feat: render first week task line"
 ```
 
-## Task 4: Add Task Navigation And Review Styles
+## 任务 4：新增任务导航和复盘样式
 
-**Files:**
-- Modify: `web/src/App.css`
+**文件：**
+- 修改： `web/src/App.css`
 
-- [ ] **Step 1: Add topbar action styles**
+- [ ] **步骤 1：增加 topbar 操作区样式**
 
-In `web/src/App.css`, add these styles after `.brand h1`:
+在 `web/src/App.css` 中，将以下样式添加到 `.brand h1` 后面：
 
 ```css
 .topbar-actions {
@@ -1263,9 +1263,9 @@ In `web/src/App.css`, add these styles after `.brand h1`:
 }
 ```
 
-- [ ] **Step 2: Add task list styles**
+- [ ] **步骤 2：增加任务列表样式**
 
-Add these styles after `.panel-section`:
+将以下样式添加到 `.panel-section` 后面：
 
 ```css
 .task-nav-section {
@@ -1325,9 +1325,9 @@ Add these styles after `.panel-section`:
 }
 ```
 
-- [ ] **Step 3: Add objective, summary, and review styles**
+- [ ] **步骤 3：增加目标、摘要和复盘样式**
 
-Add these styles near the existing list styles:
+将以下样式添加到现有列表样式附近：
 
 ```css
 .objective {
@@ -1361,9 +1361,9 @@ Add these styles near the existing list styles:
 }
 ```
 
-- [ ] **Step 4: Update mobile topbar behavior**
+- [ ] **步骤 4：更新移动端 topbar 行为**
 
-Inside the existing `@media (max-width: 760px)` block, replace the `.run-button` rule with:
+在现有 `@media (max-width: 760px)` 块中，将 `.run-button` 规则替换为：
 
 ```css
   .topbar-actions {
@@ -1378,34 +1378,34 @@ Inside the existing `@media (max-width: 760px)` block, replace the `.run-button`
   }
 ```
 
-- [ ] **Step 5: Run build**
+- [ ] **步骤 5：运行构建**
 
-Run:
+运行：
 
 ```bash
 cd web
 npm run build
 ```
 
-Expected: PASS.
+预期：PASS。
 
-- [ ] **Step 6: Commit styles**
+- [ ] **步骤 6：提交样式**
 
-Run:
+运行：
 
 ```bash
 git add web/src/App.css
 git commit -m "style: add task line workbench states"
 ```
 
-## Task 5: Update Roadmap Docs
+## 任务 5：更新路线图文档
 
-**Files:**
-- Modify: `README.md`
+**文件：**
+- 修改： `README.md`
 
-- [ ] **Step 1: Mark completed first-stage items**
+- [ ] **步骤 1：标记第一阶段已完成条目**
 
-In `README.md`, update the first-stage checklist to:
+在 `README.md` 中，将第一阶段清单更新为：
 
 ```markdown
 ### 第一阶段：Go 后端实习生入职第一周
@@ -1421,104 +1421,104 @@ In `README.md`, update the first-stage checklist to:
 - [x] Day 5：修复一个简单并发问题或 context 超时问题
 ```
 
-- [ ] **Step 2: Verify README roadmap**
+- [ ] **步骤 2：验证 README 路线图**
 
-Run:
+运行：
 
 ```bash
 rg -n "Day 0|Day 1|Day 2|Day 3|Day 4|Day 5|\\[x\\] 前端首屏" README.md
 ```
 
-Expected: output includes Day 0 through Day 5 and the completed workbench line.
+预期：输出包含 Day 0 到 Day 5，以及已完成的工作台条目。
 
-- [ ] **Step 3: Commit README update**
+- [ ] **步骤 3：提交 README 更新**
 
-Run:
+运行：
 
 ```bash
 git add README.md
 git commit -m "docs: mark first week task line progress"
 ```
 
-## Task 6: Full Verification
+## 任务 6：全量验证
 
-**Files:**
-- Verify: `web/src/taskFeedback.ts`
-- Verify: `web/src/tasks.ts`
-- Verify: `web/src/App.tsx`
-- Verify: `web/src/App.css`
-- Verify: `README.md`
+**文件：**
+- 验证： `web/src/taskFeedback.ts`
+- 验证： `web/src/tasks.ts`
+- 验证： `web/src/App.tsx`
+- 验证： `web/src/App.css`
+- 验证： `README.md`
 
-- [ ] **Step 1: Run Go tests**
+- [ ] **步骤 1：运行 Go 测试**
 
-Run:
+运行：
 
 ```bash
 go test ./...
 ```
 
-Expected: PASS.
+预期：PASS。
 
-- [ ] **Step 2: Run frontend tests**
+- [ ] **步骤 2：运行前端测试**
 
-Run:
+运行：
 
 ```bash
 cd web
 npm test -- --run
 ```
 
-Expected: PASS.
+预期：PASS。
 
-- [ ] **Step 3: Run frontend build**
+- [ ] **步骤 3：运行前端构建**
 
-Run:
+运行：
 
 ```bash
 cd web
 npm run build
 ```
 
-Expected: PASS.
+预期：PASS。
 
-- [ ] **Step 4: Verify task-line content exists**
+- [ ] **步骤 4：验证任务线内容存在**
 
-Run:
+运行：
 
 ```bash
 rg -n "day-0-first-run|day-1-nil-map|day-2-json-response|day-3-validation|day-4-table-driven|day-5-context-timeout" web/src/tasks.ts
 ```
 
-Expected: output includes all six task ids.
+预期：输出包含全部 6 个任务 id。
 
-Run:
+运行：
 
 ```bash
 rg -n "任务列表|任务后复盘|导师提示|Day \\{selectedTask.day\\}" web/src/App.tsx
 ```
 
-Expected: output includes task navigation, review, mentor hint, and selected day rendering labels.
+预期：输出包含任务导航、复盘、导师提示和选中日期渲染标签。
 
-- [ ] **Step 5: Verify old first-screen positioning stays removed**
+- [ ] **步骤 5：验证旧第一屏定位仍已移除**
 
-Run:
+运行：
 
 ```bash
 rg -n "架构师进化之路|双十一|高性能 IM|去中心化交易系统|10W QPS" README.md docs/specs/2026-03-13-gogopher-arch-design.md docs/plans/2026-03-13-implementation-plan.md web/src
 ```
 
-Expected: no output and exit code 1.
+预期：无输出，退出码为 1。
 
-- [ ] **Step 6: Check git status and recent commits**
+- [ ] **步骤 6：检查 git 状态和最近提交**
 
-Run:
+运行：
 
 ```bash
 git status --short
 git log --oneline --max-count=8
 ```
 
-Expected: only unrelated pre-existing untracked files remain, and recent commits include:
+预期：只剩无关的既有未跟踪文件，并且最近提交包含：
 
 ```text
 docs: mark first week task line progress
@@ -1529,26 +1529,26 @@ test: add task feedback evaluator
 docs: design frontend task line mvp
 ```
 
-## Self-Review
+## 自检
 
-### Spec Coverage
+### 规格覆盖
 
-- Day 0 to Day 5 task line: Task 2.
-- Static frontend task data: Task 2.
-- Data-driven workbench rendering: Task 3.
-- Task-specific feedback checks: Task 1 and Task 3.
-- Mentor hints and task review: Task 2 and Task 3.
-- Existing sandbox contract preserved: Task 3 uses the current `/api/v1/execute` request shape.
-- Frontend styles without full redesign: Task 4.
-- Verification and old-positioning scan: Task 6.
+- Day 0 到 Day 5 任务线：任务 2。
+- 静态前端任务数据：任务 2。
+- 数据驱动工作台渲染：任务 3。
+- 任务专属反馈检查：任务 1 和任务 3。
+- 导师提示和任务复盘：任务 2 和任务 3。
+- 保留现有沙盒协议：任务 3 使用当前 `/api/v1/execute` 请求形态。
+- 不做完整重设计的前端样式：任务 4。
+- 验证和旧定位扫描：任务 6。
 
-### Placeholder Scan
+### 占位符扫描
 
-The plan intentionally avoids open-ended placeholders. Every file addition has concrete code, and every verification step has an exact command and expected result.
+本计划刻意避免开放式占位符。每个新增文件都有具体代码，每个验证步骤都有明确命令和预期结果。
 
-### Type Consistency
+### 类型一致性
 
-- `SandboxResponse` is defined once in `taskFeedback.ts` and imported by `App.tsx`.
-- `TaskCheck` is defined in `taskFeedback.ts` and imported by `tasks.ts`.
-- `InternTask.checks` uses `TaskCheck[]`.
-- `findTaskById`, `defaultTaskId`, and `internshipTasks` are imported by `App.tsx`.
+- `SandboxResponse` 只在 `taskFeedback.ts` 中定义一次，并由 `App.tsx` 导入。
+- `TaskCheck` 在 `taskFeedback.ts` 中定义，并由 `tasks.ts` 导入。
+- `InternTask.checks` 使用 `TaskCheck[]`。
+- `findTaskById`、`defaultTaskId` 和 `internshipTasks` 由 `App.tsx` 导入。

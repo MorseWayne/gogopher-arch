@@ -1,99 +1,99 @@
-# Frontend Task Line MVP Design
+# 前端任务线 MVP 设计
 
-- Date: 2026-04-27
-- Status: approved for implementation planning
-- Scope: frontend-only Day 0 to Day 5 intern task line
+- 日期：2026-04-27
+- 状态：已批准进入实施计划
+- 范围：仅前端实现 Day 0 到 Day 5 实习任务线
 
-## Summary
+## 摘要
 
-GoGopher Arch now has the right product positioning and an intern workbench, but the workbench still behaves like a single hard-coded sample. The next step is to make the first-week learning loop real by adding a selectable Day 0 to Day 5 task line in the frontend.
+GoGopher Arch 现在已经完成产品定位重构，也有了实习生工作台，但工作台仍然更像一个硬编码的单任务样例。下一步是在前端加入可切换的 Day 0 到 Day 5 任务线，让“入职第一周”的学习闭环真正跑起来。
 
-This MVP keeps tasks as static frontend data. It does not add a database, task API, authentication, AI feedback, or a backend grading engine. The goal is to prove the product shape first: a learner can pick a task, read the task card and short lesson, edit Go code, run the sandbox, see task-specific feedback, and read a short review.
+这个 MVP 会把任务保留为前端静态数据，不新增数据库、任务 API、认证、AI 反馈或后端评分引擎。目标是先验证产品形态：学习者可以选择任务、阅读任务卡和任务前小课、编辑 Go 代码、运行沙盒、看到任务专属反馈，并阅读简短复盘。
 
-## Goals
+## 目标
 
-- Provide a complete first-week task line from Day 0 through Day 5.
-- Keep each task self-contained with background, acceptance criteria, short lesson, mentor hints, default code, checks, and review notes.
-- Refactor the current hard-coded Day 1 workbench into data-driven task rendering.
-- Keep the current `/api/v1/execute` sandbox request and response contract unchanged.
-- Keep task checks in the frontend for this iteration, with a clean boundary for moving checks server-side later.
+- 提供完整的 Day 0 到 Day 5 入职第一周任务线。
+- 每个任务都自包含背景、验收标准、任务前小课、导师提示、默认代码、检查规则和复盘笔记。
+- 将当前硬编码的 Day 1 工作台重构为数据驱动的任务渲染。
+- 保持现有 `/api/v1/execute` 沙盒请求和响应协议不变。
+- 本轮任务检查继续放在前端，同时保留清晰边界，方便后续迁移到服务端。
 
-## Non-Goals
+## 非目标
 
-- No new Go task API.
-- No database or saved user progress.
-- No login, accounts, or multi-user state.
-- No LLM, RAG, Agent, or AI mentor integration.
-- No full browser end-to-end testing framework.
-- No redesign of the whole visual system.
+- 不新增 Go 任务 API。
+- 不新增数据库或用户进度持久化。
+- 不新增登录、账号或多用户状态。
+- 不集成 LLM、RAG、Agent 或 AI 导师。
+- 不引入完整浏览器端到端测试框架。
+- 不重做整套视觉系统。
 
-## User Experience
+## 用户体验
 
-The first screen remains an intern workbench. The visible change is that the learner can choose tasks across the first week instead of seeing only Day 1.
+第一屏仍然是实习生工作台。用户可见的变化是：学习者不再只看到 Day 1，而是可以选择入职第一周的多个任务。
 
-The workbench shows:
+工作台展示：
 
-- A compact task navigation list for Day 0 to Day 5.
-- A task card with background, objective, and acceptance criteria.
-- A short lesson for the current task.
-- Monaco Editor preloaded with the task's starter code.
-- A run button that sends the current code to the existing Gateway.
-- Task feedback derived from sandbox status, stdout, stderr, and task-specific checks.
-- Mentor hints and a review section for the current task.
+- Day 0 到 Day 5 的紧凑任务导航列表。
+- 包含背景、目标和验收标准的任务卡。
+- 当前任务对应的任务前小课。
+- 预置当前任务起始代码的 Monaco Editor。
+- 将当前代码发送到现有 Gateway 的运行按钮。
+- 基于沙盒状态、stdout、stderr 和任务专属检查生成的任务反馈。
+- 当前任务的导师提示和复盘区域。
 
-When the learner switches tasks, the editor loads that task's starter code and clears the previous output. This avoids confusing stale feedback from another task.
+学习者切换任务时，编辑器会载入该任务的起始代码，并清空上一轮输出，避免其他任务的旧反馈造成干扰。
 
-## Task Set
+## 任务集
 
-### Day 0: First Sandbox Run
+### Day 0：第一次运行沙盒
 
-Purpose: help beginners confirm they can run Go code and read stdout.
+目的：帮助初学者确认自己可以运行 Go 代码，并学会阅读 stdout。
 
-Starter code prints a simple onboarding message. The check passes when the sandbox succeeds and stdout contains the expected phrase.
+起始代码会打印一条简单的入职欢迎信息。沙盒执行成功且 stdout 包含预期短语时，检查通过。
 
-### Day 1: Fix Nil Map Write
+### Day 1：修复 nil map 写入
 
-Purpose: teach map initialization and Go zero values.
+目的：讲清 map 初始化和 Go 零值。
 
-Starter code contains a nil map write. The check passes when the code exits successfully and stdout includes the expected user score.
+起始代码包含一次 nil map 写入。代码成功退出且 stdout 包含预期用户分数时，检查通过。
 
-### Day 2: Complete JSON Handler Output
+### Day 2：补全 JSON Handler 输出
 
-Purpose: practice structs, JSON tags, and HTTP-handler-style response shaping without adding a backend exercise harness.
+目的：在不新增后端练习框架的前提下，练习结构体、JSON tag 和 HTTP handler 风格的响应塑形。
 
-Starter code asks the learner to implement a function that marshals a response struct. The check passes when stdout contains JSON with the expected `id` and `name` fields.
+起始代码要求学习者实现一个将响应结构体编码为 JSON 的函数。stdout 中包含带有预期 `id` 和 `name` 字段的 JSON 时，检查通过。
 
-### Day 3: Add Validation And Error Return
+### Day 3：增加校验和错误返回
 
-Purpose: practice input validation and explicit error handling.
+目的：练习输入校验和显式错误处理。
 
-Starter code accepts an empty request name. The learner updates validation so invalid input returns a clear error. The check passes when stdout contains a validation error and valid input still succeeds.
+起始代码会接受空请求名称。学习者需要补充校验，让无效输入返回明确错误。stdout 包含校验错误，且有效输入仍然成功时，检查通过。
 
-### Day 4: Write Table-Driven Checks
+### Day 4：编写表驱动检查
 
-Purpose: introduce table-driven thinking inside a runnable Go program.
+目的：在可运行的 Go 程序里引入表驱动思维。
 
-Because the sandbox currently runs `go run`, not `go test`, the MVP models table-driven tests as a small loop over cases that prints `PASS` for each case. The check passes when all cases print success.
+因为当前沙盒运行的是 `go run`，不是 `go test`，所以 MVP 先用一个遍历 case 的小循环模拟表驱动测试，并为每个通过用例打印 `PASS`。所有 case 都打印成功时，检查通过。
 
-### Day 5: Respect Context Timeout
+### Day 5：尊重 context 超时
 
-Purpose: introduce context cancellation and timeout-aware code.
+目的：引入 context 取消和超时感知代码。
 
-Starter code simulates a slow operation. The learner updates the operation to respect `ctx.Done()`. The check passes when stdout shows the timeout path instead of waiting for the slow path to finish.
+起始代码模拟一个慢操作。学习者需要让操作尊重 `ctx.Done()`。stdout 显示超时路径，而不是等待慢路径完成时，检查通过。
 
-## Frontend Architecture
+## 前端架构
 
 ### `web/src/tasks.ts`
 
-Create a focused task catalog module.
+创建一个职责聚焦的任务目录模块。
 
-Responsibilities:
+职责：
 
-- Define `InternTask`, `TaskCheck`, and related types.
-- Export `internshipTasks`.
-- Provide enough structured data for rendering and feedback.
+- 定义 `InternTask`、`TaskCheck` 和相关类型。
+- 导出 `internshipTasks`。
+- 提供足够的结构化数据，供渲染和反馈逻辑使用。
 
-The task data should include:
+任务数据应包含：
 
 - `id`
 - `day`
@@ -109,83 +109,83 @@ The task data should include:
 - `review`
 - `checks`
 
-Checks are declarative and intentionally small. Supported MVP check types:
+检查规则保持声明式，并刻意控制在很小的范围内。MVP 支持的检查类型包括：
 
-- stdout includes a string
-- stdout matches a regular expression
-- stderr does not include a string
-- sandbox exit succeeds
+- stdout 包含某个字符串
+- stdout 匹配某个正则表达式
+- stderr 不包含某个字符串
+- 沙盒执行成功退出
 
-This keeps `App.tsx` from knowing task-specific strings.
+这样可以避免 `App.tsx` 直接了解任务专属字符串。
 
 ### `web/src/App.tsx`
 
-Refactor the current component to render data-driven tasks.
+重构当前组件，让它根据任务数据渲染界面。
 
-Responsibilities:
+职责：
 
-- Track selected task id.
-- Reset code and output when the selected task changes.
-- Submit code to `/api/v1/execute` using the current contract.
-- Convert sandbox output and the current task's checks into feedback rows.
-- Render task navigation, task card, lesson, editor, feedback, hints, console, and review.
+- 记录当前选中的任务 id。
+- 选中任务变化时重置代码和输出。
+- 使用现有协议向 `/api/v1/execute` 提交代码。
+- 将沙盒输出和当前任务检查转换为反馈行。
+- 渲染任务导航、任务卡、小课、编辑器、反馈、提示、控制台和复盘。
 
-`App.tsx` should not contain the Day 0 to Day 5 task content directly. It may contain generic feedback rendering and sandbox error handling.
+`App.tsx` 不应直接包含 Day 0 到 Day 5 的任务内容。它可以保留通用反馈渲染和沙盒错误处理逻辑。
 
 ### `web/src/App.css`
 
-Extend the existing workbench CSS.
+扩展现有工作台 CSS。
 
-Responsibilities:
+职责：
 
-- Add task navigation styles.
-- Add selected and passed/failed states for task items.
-- Add a compact review section.
-- Preserve responsive behavior for desktop and mobile.
+- 增加任务导航样式。
+- 增加任务项的选中、通过和失败状态。
+- 增加紧凑的复盘区域。
+- 保留桌面端和移动端响应式行为。
 
-No major visual redesign is needed. The interface should stay quiet, practical, and workbench-like.
+不需要大规模视觉重构。界面应保持安静、实用、工作台感。
 
-## Data Flow
+## 数据流
 
-1. User selects a task.
-2. `App` loads `task.starterCode` into Monaco and clears output.
-3. User edits code.
-4. User clicks run.
-5. Frontend posts `{ id, code, language: "go", timeout }` to the existing Gateway.
-6. Gateway forwards to the sandbox engine.
-7. Sandbox returns stdout, stderr, status, duration, and exit code.
-8. Frontend evaluates the current task's checks.
-9. Workbench shows connection status, run status, task check status, console output, hints, and review.
+1. 用户选择一个任务。
+2. `App` 将 `task.starterCode` 载入 Monaco，并清空输出。
+3. 用户编辑代码。
+4. 用户点击运行。
+5. 前端向现有 Gateway 发送 `{ id, code, language: "go", timeout }`。
+6. Gateway 转发到 sandbox engine。
+7. Sandbox 返回 stdout、stderr、status、duration 和 exit code。
+8. 前端评估当前任务的检查规则。
+9. 工作台展示连接状态、运行状态、任务检查状态、控制台输出、提示和复盘。
 
-## Error Handling
+## 错误处理
 
-- If the Gateway request fails, the feedback panel should show a connection failure and keep task checks idle.
-- If the sandbox returns an error status or non-zero exit code, the run check fails and task-specific checks fail unless their definition explicitly only needs stderr.
-- If a task check fails, the learner sees the check label and a short hint, not an implementation answer.
-- Switching tasks clears old errors and output.
+- 如果 Gateway 请求失败，反馈面板应显示连接失败，并让任务检查保持待运行状态。
+- 如果 sandbox 返回错误状态或非零退出码，运行检查失败；除非某个任务检查明确只依赖 stderr，否则任务专属检查也失败。
+- 如果任务检查失败，学习者看到检查标签和简短提示，而不是直接看到实现答案。
+- 切换任务会清空旧错误和旧输出。
 
-## Testing And Verification
+## 测试与验证
 
-Manual verification for this MVP:
+此 MVP 的手动验证：
 
 - `cd web && npm run build`
 - `go test ./...`
-- Search for Day 0 through Day 5 task labels in `web/src`.
-- Search for new task-line UI labels such as `任务列表`, `任务后复盘`, and `导师提示`.
-- Confirm old advanced-positioning terms still do not appear in production-visible README/docs/frontend files.
+- 在 `web/src` 中搜索 Day 0 到 Day 5 的任务标签。
+- 搜索 `任务列表`、`任务后复盘`、`导师提示` 等新的任务线 UI 标签。
+- 确认旧的高级定位词仍未出现在生产可见 README、docs 和前端文件中。
 
-The implementation should keep code structured so future tests can target check evaluation separately if a test runner is added.
+实现应保持代码结构清晰，方便后续引入测试运行器后单独测试检查评估逻辑。
 
-## Future Migration Path
+## 后续迁移路径
 
-This static frontend task catalog is a deliberate stepping stone.
+这个前端静态任务目录是一个有意选择的过渡形态。
 
-Later, the project can move the same shape to:
+后续项目可以把同样的数据形态迁移到：
 
-- A backend `/api/v1/tasks` endpoint.
-- A persisted progress model.
-- A backend task-check runner.
-- Real `go test` execution support in the sandbox.
-- AI-assisted mentor feedback using RAG or Agent workflows.
+- 后端 `/api/v1/tasks` 接口。
+- 可持久化的进度模型。
+- 后端任务检查运行器。
+- 沙盒中真正的 `go test` 执行支持。
+- 基于 RAG 或 Agent 工作流的 AI 辅助导师反馈。
 
-The MVP should avoid decisions that make those migrations harder. The task data shape should therefore look like a future API response, even while it lives in TypeScript.
+MVP 应避免做出会增加后续迁移难度的决策。因此，即使任务数据暂时放在 TypeScript 中，它的数据形态也应接近未来 API 响应。
