@@ -66,10 +66,14 @@
 - 右侧显示任务反馈、导师提示和控制台输出。
 - 默认代码使用 nil map 写入这一类基础实习任务。
 
-### Task 3：完善 Day 0 到 Day 1 任务内容
+### Task 3：完善 Day 0 到 Day 5 任务内容
 
 - Day 0：Go 基础自检和第一次沙盒运行。
 - Day 1：修复 slice、map 和指针相关 Bug。
+- Day 2：补全 HTTP API handler。
+- Day 3：增加参数校验和错误处理。
+- Day 4：编写表驱动测试。
+- Day 5：修复简单并发问题或 context 超时问题。
 - 每个任务包含任务背景、验收标准、关联知识点和复盘内容。
 
 ### Task 4：扩展沙盒反馈结构
@@ -80,12 +84,10 @@
 
 ## 4. 第二阶段路线图
 
-- Day 2：补全 HTTP API handler。
-- Day 3：增加参数校验和错误处理。
-- Day 4：编写表驱动测试。
-- Day 5：修复简单并发问题或 context 超时问题。
 - 增加任务后复盘页面。
 - 增加成长记录。
+- 增加更丰富的任务检查和导师提示。
+- 扩展后续工程任务内容。
 
 ## 5. 第三阶段路线图
 
@@ -114,7 +116,7 @@ npm run build
 文档定位改动执行：
 
 ```bash
-rg -n "Go 后端实习成长平台|实习生工作台|AI 时代全栈" README.md docs
+rg -n "Go 后端实习成长平台|实习生工作台|AI 时代全栈" README.md docs/specs docs/plans/2026-03-13-implementation-plan.md
 rg -n "双十一|10W QPS|去中心化交易系统|高性能\\s+IM" README.md docs/specs web/src
 ```
 
