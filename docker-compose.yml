@@ -22,7 +22,7 @@ services:
       # 之后我会修复 main.go 中的端口配置以读取这些环境变量
       - SANDBOX_URL=http://sandbox-engine:8081/execute
       - DB_URL=postgres://user:pass@postgres:5432/gogopher?sslmode=disable
-      - REDIS_URL=redis:6337
+      - REDIS_URL=redis:6379
 
   sandbox-engine:
     build:
@@ -31,7 +31,8 @@ services:
     ports:
       - "8081:8081"
     environment:
-      - REDIS_URL=redis:6337
+      - REDIS_URL=redis:6379
+      - DB_URL=postgres://user:pass@postgres:5432/gogopher?sslmode=disable
 
   postgres:
     image: postgres:15-alpine

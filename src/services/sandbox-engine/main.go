@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/MorseWayne/gogopher-arch/src/pkg/common"
@@ -20,6 +21,25 @@ func NewGopherRunner() *GopherRunner {
 	return &GopherRunner{}
 }
 
+// ensureGoModule copies a pre-cached go.mod/go.sum into tmpDir if the user code
+// imports external packages (e.g. github.com/lib/pq, github.com/redis/go-redis).
+func (r *GopherRunner) ensureGoModule(tmpDir, code string) error {
+	if !strings.Contains(code, "github.com/lib/pq") && !strings.Contains(code, "github.com/redis/go-redis") {
+		return nil
+	}
+	for _, f := range []string{"go.mod", "go.sum"} {
+		src := filepath.Join("/app/sandbox-module", f)
+		data, err := os.ReadFile(src)
+		if err != nil {
+			return fmt.Errorf("read %s: %w", src, err)
+		}
+		if err := os.WriteFile(filepath.Join(tmpDir, f), data, 0644); err != nil {
+			return fmt.Errorf("write %s: %w", f, err)
+		}
+	}
+	return nil
+}
+
 func (r *GopherRunner) Run(req common.SandboxRequest) common.SandboxResponse {
 	start := time.Now()
 	tmpDir, err := os.MkdirTemp("", "gopher-task-*")
@@ -27,6 +47,10 @@ func (r *GopherRunner) Run(req common.SandboxRequest) common.SandboxResponse {
 		return r.errorResponse(req.ID, "Failed to create temp directory: "+err.Error())
 	}
 	defer os.RemoveAll(tmpDir)
+
+	if err := r.ensureGoModule(tmpDir, req.Code); err != nil {
+		return r.errorResponse(req.ID, "Failed to setup Go module: "+err.Error())
+	}
 
 	codePath := filepath.Join(tmpDir, "main.go")
 	if err := os.WriteFile(codePath, []byte(req.Code), 0644); err != nil {
