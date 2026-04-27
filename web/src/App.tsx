@@ -64,7 +64,7 @@ function App() {
     setOutput(null);
 
     try {
-      const response = await axios.post<SandboxResponse>('http://localhost:8080/api/v1/execute', {
+      const response = await axios.post<SandboxResponse>('/api/v1/execute', {
         id: `${selectedTask.id}-${Date.now()}`,
         code,
         language: 'go',
