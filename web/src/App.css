@@ -48,6 +48,32 @@
   color: #f8fffb;
 }
 
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ghost-button {
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 14px;
+  border: 1px solid #31414a;
+  border-radius: 6px;
+  background: #10171a;
+  color: #dce5e2;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ghost-button:disabled {
+  cursor: wait;
+  opacity: 0.62;
+}
+
 .run-button {
   height: 40px;
   display: inline-flex;
@@ -115,6 +141,62 @@
   border-bottom: 1px solid #253038;
 }
 
+.task-nav-section {
+  padding-bottom: 14px;
+}
+
+.task-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.task-list-item {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid #253038;
+  border-radius: 8px;
+  background: #10171a;
+  color: #dce5e2;
+  text-align: left;
+  cursor: pointer;
+}
+
+.task-list-item.selected {
+  border-color: #f0b429;
+  background: #1d231d;
+}
+
+.task-list-item.pass {
+  border-color: #2c8a62;
+}
+
+.task-list-item.fail {
+  border-color: #8a3b3b;
+}
+
+.task-day {
+  grid-row: span 2;
+  min-width: 48px;
+  color: #f0b429;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.task-list-title {
+  color: #f8fffb;
+  font-weight: 700;
+}
+
+.task-list-track {
+  color: #8fb7aa;
+  font-size: 12px;
+}
+
 .hero-section {
   background: #18211f;
 }
@@ -138,6 +220,11 @@
 .panel-section p {
   margin: 0;
   color: #b6c5c0;
+}
+
+.objective {
+  margin-top: 12px !important;
+  color: #f0d58a !important;
 }
 
 .check-list,
@@ -167,6 +254,16 @@
   color: #101417;
   background: #8fb7aa;
   font-size: 12px;
+  font-weight: 700;
+}
+
+.feedback-summary {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid #31414a;
+  border-radius: 8px;
+  background: #10171a;
+  color: #f8fffb;
   font-weight: 700;
 }
 
@@ -212,6 +309,21 @@
 .feedback-item p {
   margin: 0;
   color: #aebbb7;
+}
+
+.review-list {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.review-list li {
+  padding: 10px 12px;
+  border-left: 3px solid #f0b429;
+  background: #10171a;
+  color: #dce5e2;
 }
 
 .console-section {
@@ -266,7 +378,14 @@
     flex-direction: column;
   }
 
-  .run-button {
+  .topbar-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .run-button,
+  .ghost-button {
     width: 100%;
   }
 
