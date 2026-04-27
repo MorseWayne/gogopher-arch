@@ -9,135 +9,16 @@ import {
   Code2,
   GraduationCap,
   Play,
+  RotateCcw,
   Terminal,
 } from 'lucide-react';
 import './App.css';
-
-interface SandboxResponse {
-  stdout: string;
-  stderr: string;
-  status: string;
-  duration: number;
-  exit_code: number;
-}
-
-type FeedbackState = 'idle' | 'pass' | 'fail';
-
-interface FeedbackItem {
-  label: string;
-  detail: string;
-  state: FeedbackState;
-}
-
-const DEFAULT_CODE = `package main
-
-import "fmt"
-
-type User struct {
-\tName  string
-\tScore int
-}
-
-func buildScoreMap(users []User) map[string]int {
-\tvar scores map[string]int
-\tfor _, user := range users {
-\t\tscores[user.Name] = user.Score
-\t}
-\treturn scores
-}
-
-func main() {
-\tusers := []User{
-\t\t{Name: "Ming", Score: 86},
-\t\t{Name: "Yan", Score: 91},
-\t}
-
-\tscores := buildScoreMap(users)
-\tfmt.Println("Ming 的分数:", scores["Ming"])
-}
-`;
-
-const taskCriteria = [
-  '程序可以成功运行，不再出现 nil map 写入 panic。',
-  'buildScoreMap 返回包含所有用户分数的 map。',
-  '不要修改 main 函数里的输入数据和输出语句。',
-];
-
-const lessonPoints = [
-  'map 在写入前必须完成初始化。',
-  'var scores map[string]int 声明的是 nil map，只能读，不能写。',
-  'make(map[string]int, len(users)) 可以创建可写 map，并预留容量。',
-];
-
-const mentorHints = [
-  '先定位 panic 行，再判断这个变量是否已经初始化。',
-  '这类问题在实习任务里很常见：看起来类型对了，但零值不能直接写入。',
-  '修复后再运行一次，确认 stdout 中出现 Ming 的分数。',
-];
-
-function getFeedback(output: SandboxResponse | null, error: string | null): FeedbackItem[] {
-  if (error) {
-    return [
-      {
-        label: '连接 Gateway',
-        detail: '前端无法连接到本地 Gateway，请确认后端服务已启动。',
-        state: 'fail',
-      },
-      {
-        label: '运行结果',
-        detail: '等待 Gateway 恢复后重新运行。',
-        state: 'idle',
-      },
-      {
-        label: '任务检查',
-        detail: '任务检查需要基于沙盒运行结果判断。',
-        state: 'idle',
-      },
-    ];
-  }
-
-  if (!output) {
-    return [
-      {
-        label: '连接 Gateway',
-        detail: '等待第一次运行。',
-        state: 'idle',
-      },
-      {
-        label: '运行结果',
-        detail: '点击运行代码后查看 stdout 和 stderr。',
-        state: 'idle',
-      },
-      {
-        label: '任务检查',
-        detail: '修复 nil map 后，程序应输出 Ming 的分数。',
-        state: 'idle',
-      },
-    ];
-  }
-
-  const succeeded = output.status === 'success' && output.exit_code === 0;
-  const hasExpectedOutput = /Ming 的分数:\s*86\b/.test(output.stdout);
-  const taskPassed = succeeded && hasExpectedOutput;
-
-  return [
-    {
-      label: '连接 Gateway',
-      detail: '已收到沙盒执行结果。',
-      state: 'pass',
-    },
-    {
-      label: '运行结果',
-      detail: succeeded ? '程序正常退出。' : '程序未正常退出，请查看 stderr。',
-      state: succeeded ? 'pass' : 'fail',
-    },
-    {
-      label: '任务检查',
-      detail: taskPassed ? '本次运行已输出目标用户分数。' : '本次运行还没有通过任务检查。',
-      state: taskPassed ? 'pass' : 'fail',
-    },
-  ];
-}
+import { defaultTaskId, findTaskById, internshipTasks } from './tasks';
+import {
+  didPassTask,
+  evaluateTaskChecks,
+  type SandboxResponse,
+} from './taskFeedback';
 
 function formatDuration(duration: number): string {
   if (duration <= 0) {
@@ -148,12 +29,34 @@ function formatDuration(duration: number): string {
 }
 
 function App() {
-  const [code, setCode] = useState(DEFAULT_CODE);
+  const [selectedTaskId, setSelectedTaskId] = useState(defaultTaskId);
+  const selectedTask = findTaskById(selectedTaskId);
+  const [code, setCode] = useState(selectedTask.starterCode);
   const [output, setOutput] = useState<SandboxResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [taskResults, setTaskResults] = useState<Record<string, 'pass' | 'fail'>>({});
 
-  const feedback = useMemo(() => getFeedback(output, error), [output, error]);
+  const feedback = useMemo(
+    () => evaluateTaskChecks(output, error, selectedTask.checks),
+    [output, error, selectedTask],
+  );
+
+  const currentTaskPassed = didPassTask(output, error, selectedTask.checks);
+
+  const handleSelectTask = (taskId: string) => {
+    const nextTask = findTaskById(taskId);
+    setSelectedTaskId(nextTask.id);
+    setCode(nextTask.starterCode);
+    setOutput(null);
+    setError(null);
+  };
+
+  const handleResetCode = () => {
+    setCode(selectedTask.starterCode);
+    setOutput(null);
+    setError(null);
+  };
 
   const handleRun = async () => {
     setLoading(true);
@@ -162,12 +65,17 @@ function App() {
 
     try {
       const response = await axios.post<SandboxResponse>('http://localhost:8080/api/v1/execute', {
-        id: `task-${Date.now()}`,
+        id: `${selectedTask.id}-${Date.now()}`,
         code,
         language: 'go',
         timeout: 5,
       });
-      setOutput(response.data);
+      const nextOutput = response.data;
+      setOutput(nextOutput);
+      setTaskResults((results) => ({
+        ...results,
+        [selectedTask.id]: didPassTask(nextOutput, null, selectedTask.checks) ? 'pass' : 'fail',
+      }));
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
         const message =
@@ -180,6 +88,10 @@ function App() {
       } else {
         setError('无法连接到 Gateway 服务');
       }
+      setTaskResults((results) => ({
+        ...results,
+        [selectedTask.id]: 'fail',
+      }));
     } finally {
       setLoading(false);
     }
@@ -197,24 +109,56 @@ function App() {
             <h1>GoGopher Arch</h1>
           </div>
         </div>
-        <button className="run-button" onClick={handleRun} disabled={loading}>
-          <Play size={17} fill="currentColor" />
-          {loading ? '运行中' : '运行代码'}
-        </button>
+        <div className="topbar-actions">
+          <button className="ghost-button" onClick={handleResetCode} disabled={loading}>
+            <RotateCcw size={16} />
+            重置代码
+          </button>
+          <button className="run-button" onClick={handleRun} disabled={loading}>
+            <Play size={17} fill="currentColor" />
+            {loading ? '运行中' : '运行代码'}
+          </button>
+        </div>
       </header>
 
       <main className="workbench">
         <aside className="task-panel" aria-label="任务卡">
+          <section className="panel-section task-nav-section">
+            <div className="section-title">
+              <ClipboardCheck size={16} />
+              <span>任务列表</span>
+            </div>
+            <div className="task-list">
+              {internshipTasks.map((task) => {
+                const result = taskResults[task.id];
+                const isSelected = task.id === selectedTask.id;
+
+                return (
+                  <button
+                    className={`task-list-item ${isSelected ? 'selected' : ''} ${result || ''}`}
+                    key={task.id}
+                    onClick={() => handleSelectTask(task.id)}
+                    type="button"
+                  >
+                    <span className="task-day">Day {task.day}</span>
+                    <span className="task-list-title">{task.title}</span>
+                    <span className="task-list-track">{task.track}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
           <section className="panel-section hero-section">
             <div className="section-title">
               <ClipboardCheck size={16} />
               <span>任务卡</span>
             </div>
-            <h2>Day 1：修复 nil map 写入</h2>
-            <p>
-              你的导师把一个用户分数统计函数交给你。当前代码会在运行时 panic，
-              请定位原因并完成修复。
-            </p>
+            <h2>
+              Day {selectedTask.day}：{selectedTask.title}
+            </h2>
+            <p>{selectedTask.background}</p>
+            <p className="objective">{selectedTask.objective}</p>
           </section>
 
           <section className="panel-section">
@@ -223,7 +167,7 @@ function App() {
               <span>验收标准</span>
             </div>
             <ul className="check-list">
-              {taskCriteria.map((item) => (
+              {selectedTask.criteria.map((item) => (
                 <li key={item}>{item}</li>
               ))}
             </ul>
@@ -235,7 +179,7 @@ function App() {
               <span>任务前小课</span>
             </div>
             <ul className="lesson-list">
-              {lessonPoints.map((item) => (
+              {selectedTask.lesson.map((item) => (
                 <li key={item}>{item}</li>
               ))}
             </ul>
@@ -248,7 +192,7 @@ function App() {
               <Code2 size={16} />
               <span>main.go</span>
             </div>
-            <span className="file-badge">Go 基础 Bug 修复</span>
+            <span className="file-badge">{selectedTask.track}</span>
           </div>
           <Editor
             height="100%"
@@ -272,6 +216,9 @@ function App() {
               <ClipboardCheck size={16} />
               <span>任务反馈</span>
             </div>
+            <div className="feedback-summary">
+              {currentTaskPassed ? '本任务已通过。' : '运行代码后查看任务检查。'}
+            </div>
             <div className="feedback-list">
               {feedback.map((item) => (
                 <div className={`feedback-item ${item.state}`} key={item.label}>
@@ -291,8 +238,20 @@ function App() {
               <span>导师提示</span>
             </div>
             <ul className="hint-list">
-              {mentorHints.map((hint) => (
+              {selectedTask.mentorHints.map((hint) => (
                 <li key={hint}>{hint}</li>
+              ))}
+            </ul>
+          </section>
+
+          <section className="panel-section">
+            <div className="section-title">
+              <BookOpen size={16} />
+              <span>任务后复盘</span>
+            </div>
+            <ul className="review-list">
+              {selectedTask.review.map((item) => (
+                <li key={item}>{item}</li>
               ))}
             </ul>
           </section>
