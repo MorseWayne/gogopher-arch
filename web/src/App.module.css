@@ -1,0 +1,51 @@
+.appShell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-primary);
+  color: var(--color-text-body);
+}
+
+.desktopMain {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+}
+
+.mobileMain {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.mobileTabBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 52px;
+  display: flex;
+  background: var(--color-bg-surface);
+  border-top: 1px solid var(--color-border-default);
+  z-index: 100;
+}
+
+.mobileTabBar button {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-caption);
+  font-weight: 700;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.mobileTabBar button.activeTab {
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+}

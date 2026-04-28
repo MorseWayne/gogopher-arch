@@ -1,0 +1,56 @@
+.progressBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 8px 20px;
+  border-bottom: 1px solid var(--color-border-default);
+  background: var(--color-bg-elevated);
+  overflow-x: auto;
+}
+
+.dayItem {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 4px 10px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 6px;
+  background: var(--color-bg-card);
+  color: var(--color-text-muted);
+  font-size: var(--text-caption);
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.dayItem:hover {
+  border-color: var(--color-border-active);
+  color: var(--color-text-body);
+}
+
+.dayItem.selected {
+  border-color: var(--color-accent);
+  background: var(--color-bg-selected);
+  color: var(--color-accent);
+}
+
+.dayItem.passed {
+  border-color: var(--color-border-pass);
+  color: var(--color-success);
+}
+
+.dayItem.passed.selected {
+  border-color: var(--color-success);
+  background: rgba(66, 211, 146, 0.1);
+}
+
+.checkIcon {
+  flex-shrink: 0;
+}
+
+.arrow {
+  color: var(--color-text-dim);
+  margin-left: 2px;
+  font-size: 10px;
+}

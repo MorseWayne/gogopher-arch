@@ -1,0 +1,62 @@
+.panel {
+  min-width: 0;
+  overflow-y: auto;
+  background: var(--color-bg-surface);
+  border-right: 1px solid var(--color-border-default);
+}
+
+.section {
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--color-border-default);
+}
+
+.heroSection {
+  background: var(--color-bg-hero);
+}
+
+.heading {
+  margin: 12px 0 10px;
+  font-size: var(--text-heading);
+  line-height: 1.2;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.background {
+  margin: 0;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+.objective {
+  margin-top: var(--space-sm) !important;
+  color: var(--color-accent) !important;
+  font-weight: 600;
+}
+
+.checkList,
+.lessonList {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.checkList li,
+.lessonList li {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-default);
+  color: var(--color-text-body);
+  font-size: var(--text-body);
+  line-height: 1.5;
+}
+
+@media (max-width: 959px) {
+  .panel {
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border-default);
+  }
+}
