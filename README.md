@@ -84,6 +84,150 @@ docker compose up --build
 
 ---
 
+## 部署说明
+
+### 环境要求
+
+- [Docker](https://docs.docker.com/get-docker/) 20.10+
+- [Docker Compose](https://docs.docker.com/compose/install/) v2+
+
+### 服务架构
+
+本项目通过 Docker Compose 编排以下服务：
+
+| 服务 | 说明 | 镜像 / 构建方式 | 暴露端口 |
+| :--- | :--- | :--- | :--- |
+| `web` | React 前端（Nginx 托管） | `web/Dockerfile` | `3000` → `80` |
+| `gateway` | Go API 网关 | `src/services/gateway/Dockerfile` | `8080` |
+| `sandbox-engine` | Go 沙盒执行引擎 | `src/services/sandbox-engine/Dockerfile` | `8081` |
+| `postgres` | 数据库 | `postgres:15-alpine` | `5432` |
+| `redis` | 缓存 | `redis:7-alpine` | `6379` |
+
+### 部署步骤
+
+1. **克隆仓库**
+
+   ```bash
+   git clone https://github.com/MorseWayne/gogopher-arch.git
+   cd gogopher-arch
+   ```
+
+2. **启动所有服务**
+
+   ```bash
+   # 前台运行（便于查看日志）
+   docker compose up --build
+
+   # 后台运行
+   docker compose up --build -d
+   ```
+
+3. **查看服务状态**
+
+   ```bash
+   docker compose ps
+   ```
+
+4. **查看日志**
+
+   ```bash
+   # 查看所有服务日志
+   docker compose logs -f
+
+   # 查看指定服务日志
+   docker compose logs -f gateway
+   ```
+
+5. **停止服务**
+
+   ```bash
+   docker compose down
+   ```
+
+### 本地开发（混合模式）
+
+如果你希望在本地运行上层应用代码（便于断点调试和热重载），同时用 Docker 只启动基础依赖（PostgreSQL、Redis），可按以下步骤操作。
+
+#### 本地开发环境要求
+
+- [Docker](https://docs.docker.com/get-docker/) 20.10+
+- [Node.js](https://nodejs.org/) 20+
+- [Go](https://go.dev/dl/) 1.24+
+
+#### 1. 启动基础组件
+
+```bash
+docker compose up postgres redis -d
+```
+
+#### 2. 启动沙盒引擎（Go）
+
+```bash
+go run ./src/services/sandbox-engine/main.go
+```
+
+沙盒引擎默认监听 `http://localhost:8081`。
+
+#### 3. 启动 API 网关（Go）
+
+```bash
+export DB_URL="postgres://user:pass@localhost:5432/gogopher?sslmode=disable"
+export REDIS_URL="localhost:6379"
+go run ./src/services/gateway/main.go
+```
+
+API 网关默认监听 `http://localhost:8080`。
+
+#### 4. 启动前端（React + Vite）
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+前端开发服务器默认运行在 [http://localhost:5173](http://localhost:5173)。
+
+#### 本地开发环境变量速查
+
+| 变量 | 值（本地混合模式） | 说明 |
+| :--- | :--- | :--- |
+| `DB_URL` | `postgres://user:pass@localhost:5432/gogopher?sslmode=disable` | 连接本地 Docker PostgreSQL |
+| `REDIS_URL` | `localhost:6379` | 连接本地 Docker Redis |
+| `SANDBOX_URL` | `http://localhost:8081/execute` | Gateway 连接本地沙盒引擎（已硬编码为默认值，一般无需手动设置） |
+
+### 环境变量
+
+以下环境变量在 `docker-compose.yml` 中已预配置，如需自定义可修改该文件：
+
+| 变量 | 所在服务 | 默认值 | 说明 |
+| :--- | :--- | :--- | :--- |
+| `SANDBOX_URL` | `gateway` | `http://sandbox-engine:8081/execute` | 沙盒引擎地址 |
+| `DB_URL` | `gateway`, `sandbox-engine` | `postgres://user:pass@postgres:5432/gogopher?sslmode=disable` | PostgreSQL 连接串 |
+| `REDIS_URL` | `gateway`, `sandbox-engine` | `redis:6379` | Redis 地址 |
+| `POSTGRES_USER` | `postgres` | `user` | 数据库用户名 |
+| `POSTGRES_PASSWORD` | `postgres` | `pass` | 数据库密码 |
+| `POSTGRES_DB` | `postgres` | `gogopher` | 数据库名 |
+
+### 访问地址
+
+服务启动后，可通过以下地址访问：
+
+- **前端界面**：[http://localhost:3000](http://localhost:3000)
+- **API 网关**：[http://localhost:8080](http://localhost:8080)
+- **沙盒引擎**（内部调用）：[http://localhost:8081](http://localhost:8081)
+- **PostgreSQL**：`localhost:5432`
+- **Redis**：`localhost:6379`
+
+### 生产环境注意事项
+
+- 请将默认的数据库密码 (`pass`) 修改为强密码，并通过环境变量或 Docker Secrets 注入。
+- 前端 Nginx 配置可根据需要启用 HTTPS、Gzip 压缩和反向代理。
+- 建议为 Go 服务添加健康检查（`healthcheck`）和重启策略（`restart: unless-stopped`）。
+- 如需暴露到公网，请在网关前添加反向代理（如 Nginx、Traefik）并配置 SSL 证书。
+
+---
+
 ## 开源协议
 
 本项目采用 [MIT License](LICENSE) 协议。

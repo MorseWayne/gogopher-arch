@@ -1,0 +1,73 @@
+<h2>方案 A：渐进式精细化 — 设计详情</h2>
+<p class="subtitle">分 3 个部分展示，请确认每个部分</p>
+
+<div class="section">
+  <h3>第一部分：架构与组件拆分</h3>
+  <p style="color: #b6c5c0;">将单文件 App.tsx + App.css 拆分为独立组件模块</p>
+
+  <div class="mockup">
+    <div class="mockup-header">New Component Structure</div>
+    <div class="mockup-body" style="font-family: ui-monospace, monospace; font-size: 12px; line-height: 1.8; color: #dce5e2;">
+      <div style="color: #8fb7aa;">web/src/</div>
+      <div style="padding-left: 16px;">├─ <span style="color: #f0b429;">main.tsx</span></div>
+      <div style="padding-left: 16px;">├─ <span style="color: #f0b429;">App.tsx</span> (orchestrator, ~60 lines)</div>
+      <div style="padding-left: 16px;">├─ <span style="color: #f0b429;">index.css</span> (design tokens + reset)</div>
+      <div style="padding-left: 16px;">│</div>
+      <div style="padding-left: 16px;">├─ <span style="color: #42d392;">components/</span></div>
+      <div style="padding-left: 32px;">├─ <span style="color: #f0b429;">TopBar/</span></div>
+      <div style="padding-left: 48px;">├─ TopBar.tsx</div>
+      <div style="padding-left: 48px;">└─ TopBar.module.css</div>
+      <div style="padding-left: 32px;">├─ <span style="color: #f0b429;">TaskPanel/</span></div>
+      <div style="padding-left: 48px;">├─ TaskPanel.tsx</div>
+      <div style="padding-left: 48px;">├─ TaskList.tsx</div>
+      <div style="padding-left: 48px;">├─ TaskCard.tsx</div>
+      <div style="padding-left: 48px;">└─ TaskPanel.module.css</div>
+      <div style="padding-left: 32px;">├─ <span style="color: #f0b429;">EditorPanel/</span></div>
+      <div style="padding-left: 48px;">├─ EditorPanel.tsx</div>
+      <div style="padding-left: 48px;">├─ EditorToolbar.tsx</div>
+      <div style="padding-left: 48px;">└─ EditorPanel.module.css</div>
+      <div style="padding-left: 32px;">├─ <span style="color: #f0b429;">FeedbackPanel/</span></div>
+      <div style="padding-left: 48px;">├─ FeedbackPanel.tsx</div>
+      <div style="padding-left: 48px;">├─ FeedbackList.tsx</div>
+      <div style="padding-left: 48px;">├─ Console.tsx</div>
+      <div style="padding-left: 48px;">└─ FeedbackPanel.module.css</div>
+      <div style="padding-left: 32px;">├─ <span style="color: #f0b429;">ResizableSplit/</span></div>
+      <div style="padding-left: 48px;">├─ ResizableSplit.tsx</div>
+      <div style="padding-left: 48px;">└─ ResizableSplit.module.css</div>
+      <div style="padding-left: 32px;">└─ <span style="color: #f0b429;">common/</span></div>
+      <div style="padding-left: 48px;">└─ SectionTitle.tsx</div>
+      <div style="padding-left: 16px;">│</div>
+      <div style="padding-left: 16px;">├─ <span style="color: #42d392;">hooks/</span></div>
+      <div style="padding-left: 48px;">└─ useResizable.ts</div>
+      <div style="padding-left: 16px;">│</div>
+      <div style="padding-left: 16px;">├─ <span style="color: #42d392;">types/</span></div>
+      <div style="padding-left: 48px;">└─ workbench.ts</div>
+      <div style="padding-left: 16px;">│</div>
+      <div style="padding-left: 16px;">└─ <span style="color: #42d392;">lib/</span></div>
+      <div style="padding-left: 48px;">└─ formatDuration.ts</div>
+    </div>
+  </div>
+
+  <div class="pros-cons" style="margin-top: 16px;">
+    <div class="pros">
+      <h4>Why CSS Modules</h4>
+      <ul>
+        <li>避免类名冲突，组件自包含</li>
+        <li>tree-shaking 友好</li>
+        <li>与现有 Vite 项目零配置兼容</li>
+      </ul>
+    </div>
+    <div class="cons">
+      <h4>State 管理</h4>
+      <ul>
+        <li>App.tsx 保留核心状态（selectedTask, code, output）</li>
+        <li>通过 props 向下传递</li>
+        <li>无全局状态库，保持简单</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <p style="color: #8fb7aa; font-size: 13px;">确认这部分设计没有问题后，我将展示下一部分：响应式策略 + 视觉系统</p>
+</div>

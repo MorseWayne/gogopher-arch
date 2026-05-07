@@ -1,0 +1,102 @@
+<h2>优化方案对比</h2>
+<p class="subtitle">三种不同深度的改造策略，覆盖你关心的全部 5 个方向</p>
+
+<div class="options">
+  <div class="option" data-choice="incremental" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>渐进式精细化（推荐）</h3>
+      <p>保持三栏骨架，在现有结构上做深度打磨</p>
+      <ul style="margin: 8px 0 0; padding-left: 16px; font-size: 13px; color: #b6c5c0;">
+        <li>响应式：增强断点（1120px → 960px → 760px），面板可收起/展开</li>
+        <li>视觉：统一 8px 间距系统、字体层级（display / heading / body / caption）</li>
+        <li>交互：拖拽调整三栏宽度、面板折叠按钮、运行状态动画</li>
+        <li>编辑器：保持 Monaco，优化工具栏和文件标签展示</li>
+        <li>组件化：按面板拆分为 TaskPanel / EditorPanel / FeedbackPanel / TopBar</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="option" data-choice="ide" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>IDE 式工作台（激进重构）</h3>
+      <p>借鉴 VS Code 布局模式，编辑器最大化</p>
+      <ul style="margin: 8px 0 0; padding-left: 16px; font-size: 13px; color: #b6c5c0;">
+        <li>左侧 Activity Bar 图标切换不同功能面板（任务、反馈、知识地图）</li>
+        <li>中间代码编辑器占据绝大部分空间</li>
+        <li>底部可抽出控制台/终端</li>
+        <li>面板可自由拖拽、浮动、堆叠</li>
+        <li>移动端：底部 Tab Bar 替代 Activity Bar</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="option" data-choice="minimal" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>最小可行优化（快速交付）</h3>
+      <p>只改 CSS 和少量结构，不动骨架</p>
+      <ul style="margin: 8px 0 0; padding-left: 16px; font-size: 13px; color: #b6c5c0;">
+        <li>响应式：微调媒体查询断点</li>
+        <li>视觉：调整 padding、font-size、边框颜色</li>
+        <li>不添加拖拽交互</li>
+        <li>不大幅拆分组件</li>
+        <li>1-2 天内可完成</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Trade-off 对比</h3>
+  <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+    <thead>
+      <tr style="border-bottom: 1px solid #31414a;">
+        <th style="text-align: left; padding: 8px;">维度</th>
+        <th style="text-align: center; padding: 8px;">A 渐进式</th>
+        <th style="text-align: center; padding: 8px;">B IDE 式</th>
+        <th style="text-align: center; padding: 8px;">C 最小化</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom: 1px solid #253038;">
+        <td style="padding: 8px;">改动量</td>
+        <td style="text-align: center; padding: 8px;">中等</td>
+        <td style="text-align: center; padding: 8px;">大</td>
+        <td style="text-align: center; padding: 8px;">小</td>
+      </tr>
+      <tr style="border-bottom: 1px solid #253038;">
+        <td style="padding: 8px;">交付周期</td>
+        <td style="text-align: center; padding: 8px;">3-5 天</td>
+        <td style="text-align: center; padding: 8px;">1-2 周</td>
+        <td style="text-align: center; padding: 8px;">1 天</td>
+      </tr>
+      <tr style="border-bottom: 1px solid #253038;">
+        <td style="padding: 8px;">风险</td>
+        <td style="text-align: center; padding: 8px;">低</td>
+        <td style="text-align: center; padding: 8px;">中高</td>
+        <td style="text-align: center; padding: 8px;">极低</td>
+      </tr>
+      <tr style="border-bottom: 1px solid #253038;">
+        <td style="padding: 8px;">编辑器空间</td>
+        <td style="text-align: center; padding: 8px;">良好</td>
+        <td style="text-align: center; padding: 8px;">极佳</td>
+        <td style="text-align: center; padding: 8px;">不变</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px;">移动端</td>
+        <td style="text-align: center; padding: 8px;">友好</td>
+        <td style="text-align: center; padding: 8px;">很友好</td>
+        <td style="text-align: center; padding: 8px;">基本可用</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section" style="background: #18211f; padding: 16px; border-radius: 8px; margin-top: 20px;">
+  <strong style="color: #f0d58a;">我的推荐：方案 A（渐进式精细化）</strong>
+  <p style="margin: 8px 0 0; color: #b6c5c0;">
+    理由：当前三栏布局对于"任务驱动学习"场景其实是合理的（左侧任务、中间编码、右侧反馈），不需要推翻重来。方案 A 在保持用户已有心智模型的前提下，把响应式、视觉、交互、组件化都做扎实，性价比最高。后续如果确实需要 IDE 式体验，可以再演进。
+  </p>
+</div>

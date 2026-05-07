@@ -1,0 +1,135 @@
+<h2>方案 A：渐进式精细化 — 设计详情（续）</h2>
+<p class="subtitle">第二部分：响应式策略 + 视觉系统</p>
+
+<div class="section">
+  <h3>响应式断点策略</h3>
+  <p style="color: #b6c5c0;">4 个断点，从宽屏到移动端逐步简化</p>
+
+  <div class="mockup">
+    <div class="mockup-header">Responsive Breakpoints</div>
+    <div class="mockup-body">
+      <div style="display: grid; gap: 12px;">
+        <div style="background: #10171a; border: 1px solid #2c8a62; border-radius: 8px; padding: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <strong style="color: #42d392;">Desktop Wide ≥1440px</strong>
+            <span style="font-size: 11px; color: #8fb7aa;">三栏全开</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 300px 1fr 340px; gap: 4px; height: 40px;">
+            <div style="background: #1d231d; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px;">TaskPanel</div>
+            <div style="background: #18211f; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px;">EditorPanel</div>
+            <div style="background: #1d231d; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px;">FeedbackPanel</div>
+          </div>
+        </div>
+
+        <div style="background: #10171a; border: 1px solid #253038; border-radius: 8px; padding: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <strong style="color: #f0b429;">Desktop ≥1120px</strong>
+            <span style="font-size: 11px; color: #8fb7aa;">三栏自适应</span>
+          </div>
+          <div style="display: grid; grid-template-columns: minmax(260px, 300px) 1fr minmax(280px, 320px); gap: 4px; height: 40px;">
+            <div style="background: #1d231d; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px;">TaskPanel</div>
+            <div style="background: #18211f; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px;">EditorPanel</div>
+            <div style="background: #1d231d; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px;">FeedbackPanel</div>
+          </div>
+        </div>
+
+        <div style="background: #10171a; border: 1px solid #f0b429; border-radius: 8px; padding: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <strong style="color: #f0b429;">Tablet ≥960px</strong>
+            <span style="font-size: 11px; color: #8fb7aa;">两栏 + 面板可折叠</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 260px 1fr; gap: 4px; height: 40px;">
+            <div style="background: #1d231d; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px;">TaskPanel</div>
+            <div style="background: #18211f; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; position: relative;">
+              EditorPanel
+              <span style="position: absolute; right: 8px; background: #31414a; padding: 2px 6px; border-radius: 4px; font-size: 9px;">Feedback →</span>
+            </div>
+          </div>
+          <p style="font-size: 11px; color: #8fb7aa; margin-top: 8px;">FeedbackPanel 折叠为侧边悬浮按钮或底部抽屉，点击展开</p>
+        </div>
+
+        <div style="background: #10171a; border: 1px solid #8a3b3b; border-radius: 8px; padding: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <strong style="color: #ff6b6b;">Mobile ≥760px</strong>
+            <span style="font-size: 11px; color: #8fb7aa;">单栏 + Tab 切换</span>
+          </div>
+          <div style="background: #18211f; border-radius: 4px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 10px;"></div>
+          <div style="display: flex; gap: 4px; margin-top: 8px;">
+            <div style="flex: 1; background: #1d231d; border-radius: 4px; padding: 6px; text-align: center; font-size: 10px;">任务</div>
+            <div style="flex: 1; background: #f0b429; color: #15110a; border-radius: 4px; padding: 6px; text-align: center; font-size: 10px; font-weight: 700;">编辑</div>
+            <div style="flex: 1; background: #1d231d; border-radius: 4px; padding: 6px; text-align: center; font-size: 10px;">反馈</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>视觉设计系统（Design Tokens）</h3>
+  <p style="color: #b6c5c0;">统一 8px 间距系统 + 字体层级 + 语义化颜色</p>
+
+  <div class="mockup">
+    <div class="mockup-header">Design Tokens</div>
+    <div class="mockup-body" style="font-size: 12px;">
+      <div style="margin-bottom: 16px;">
+        <strong style="color: #8fb7aa;">Spacing (8px base)</strong>
+        <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
+          <div style="background: #1a2227; border-radius: 4px; padding: 4px 8px;">xs: 4px</div>
+          <div style="background: #1a2227; border-radius: 4px; padding: 4px 8px;">sm: 8px</div>
+          <div style="background: #1a2227; border-radius: 4px; padding: 4px 8px;">md: 16px</div>
+          <div style="background: #1a2227; border-radius: 4px; padding: 4px 8px;">lg: 24px</div>
+          <div style="background: #1a2227; border-radius: 4px; padding: 4px 8px;">xl: 32px</div>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 16px;">
+        <strong style="color: #8fb7aa;">Typography</strong>
+        <div style="display: grid; gap: 6px; margin-top: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; background: #10171a; padding: 6px 10px; border-radius: 4px;">
+            <span>Display</span>
+            <span style="font-size: 20px; font-weight: 700; color: #f8fffb;">GoGopher Arch</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: baseline; background: #10171a; padding: 6px 10px; border-radius: 4px;">
+            <span>Heading</span>
+            <span style="font-size: 18px; font-weight: 700; color: #f8fffb;">Day 1: 修复 Bug</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: baseline; background: #10171a; padding: 6px 10px; border-radius: 4px;">
+            <span>Body</span>
+            <span style="font-size: 14px; color: #dce5e2;">修复 slice 越界访问问题...</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: baseline; background: #10171a; padding: 6px 10px; border-radius: 4px;">
+            <span>Caption</span>
+            <span style="font-size: 12px; color: #8fb7aa;">退出码：0 · 状态：SUCCESS</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <strong style="color: #8fb7aa;">Colors (semantic)</strong>
+        <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
+          <div style="background: #10171a; border-radius: 4px; padding: 6px 10px; display: flex; align-items: center; gap: 8px;">
+            <span style="width: 16px; height: 16px; background: #f0b429; border-radius: 4px;"></span>
+            <span>accent (primary)</span>
+          </div>
+          <div style="background: #10171a; border-radius: 4px; padding: 6px 10px; display: flex; align-items: center; gap: 8px;">
+            <span style="width: 16px; height: 16px; background: #42d392; border-radius: 4px;"></span>
+            <span>success</span>
+          </div>
+          <div style="background: #10171a; border-radius: 4px; padding: 6px 10px; display: flex; align-items: center; gap: 8px;">
+            <span style="width: 16px; height: 16px; background: #ff6b6b; border-radius: 4px;"></span>
+            <span>error</span>
+          </div>
+          <div style="background: #10171a; border-radius: 4px; padding: 6px 10px; display: flex; align-items: center; gap: 8px;">
+            <span style="width: 16px; height: 16px; background: #253038; border-radius: 4px;"></span>
+            <span>border</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <p style="color: #8fb7aa; font-size: 13px;">确认这部分没问题后，继续第三部分：交互设计 + 编辑器优化</p>
+</div>
