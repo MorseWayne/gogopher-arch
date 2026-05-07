@@ -4,7 +4,7 @@ import {
   evaluateTaskChecks,
   type SandboxResponse,
   type TaskCheck,
-} from './taskFeedback';
+} from './checks';
 
 const checks: TaskCheck[] = [
   {

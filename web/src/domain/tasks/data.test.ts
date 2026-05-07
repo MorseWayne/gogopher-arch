@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { defaultTaskId, findTaskById, internshipTasks } from './tasks';
+import { defaultTaskId, findTaskById, internshipTasks } from './data';
 
 describe('internshipTasks', () => {
   it('contains exactly Day 0 through Day 9', () => {
