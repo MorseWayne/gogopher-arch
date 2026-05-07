@@ -19,7 +19,7 @@ GoGopher Arch 当前处于 MVP 阶段，代码量快速增长，但目录结构�
 
 ### 1.2 重构目标
 
-1. **Go 后端三层分离**: transport (handler) → service → infrastructure，让代码职责清晰、测试可分层
+1. **Go 后端分层拆分**: transport (handler) 与核心逻辑（runner）分离，main.go 只做依赖注入和启动，让代码职责清晰、测试可分层
 2. **前端业务域拆分**: 将膨胀的任务数据和检查逻辑按 domain 拆分，建立 API 客户端层
 3. **工程化补齐**: 引入 Makefile、GitHub Actions CI、数据库迁移目录预留
 4. **为未来扩展预留空间**: 第三阶段（LLM API、RAG、Agent）可以直接在现有分层上扩展
@@ -251,12 +251,12 @@ type SandboxRequest struct {
 }
 
 type SandboxResponse struct {
-    ID       string `json:"id"`
-    Stdout   string `json:"stdout"`
-    Stderr   string `json:"stderr"`
-    ExitCode int    `json:"exit_code"`
-    Duration int64  `json:"duration"` // 毫秒，前端易消费
-    Status   string `json:"status"`
+    ID       string        `json:"id"`
+    Stdout   string        `json:"stdout"`
+    Stderr   string        `json:"stderr"`
+    ExitCode int           `json:"exit_code"`
+    Duration time.Duration `json:"duration"`
+    Status   string        `json:"status"`
 }
 ```
 
@@ -384,13 +384,15 @@ export * from './checks';
 
 dev:
 	docker compose up postgres redis -d
+	# 本地混合开发：后台启动 Go 服务，前台启动前端 dev server
+	# 停止时运行 `make clean`
 	go run ./src/services/sandbox-engine/main.go &
 	go run ./src/services/gateway/main.go &
 	cd web && npm run dev
 
 test:
 	go test ./...
-	cd web && npm run test
+	cd web && npm run test -- --run
 
 build:
 	docker compose build
@@ -426,7 +428,7 @@ jobs:
         with: { node-version: '20' }
       - run: cd web && npm ci
       - run: cd web && npm run lint
-      - run: cd web && npm run test
+      - run: cd web && npm run test -- --run
 ```
 
 ### 5.3 文档目录合并
@@ -456,9 +458,10 @@ mkdir -p .github/workflows
 
 ### Step 2: 迁移共享代码
 
-1. `src/pkg/common/models.go` — 保持不变
+1. `src/pkg/common/models.go` — 保持不变（注意：`Duration` 字段保持 `time.Duration` 类型，前端 `formatDuration.ts` 中的除法逻辑无需修改）
 2. 新增 `src/pkg/common/errors.go`
 3. 新增 `src/internal/config/config.go`
+4. 新增 `src/internal/sandbox/runner.go` — 从 `sandbox-engine/main.go` 提取 `GopherRunner` 核心逻辑，作为共享沙盒执行器（当前仅 sandbox-engine 使用，未来 gateway 离线模式可复用）
 
 ### Step 3: 重构 Sandbox Engine
 
@@ -488,7 +491,11 @@ mkdir -p .github/workflows
 7. 新增 `web/src/domain/tasks/index.ts`
 8. 新增 `web/src/domain/workbench/types.ts` — 从 `types/workbench.ts` 迁移
 9. 重写 `web/src/App.tsx` — 使用新的 domain 和 api 模块
-10. 删除旧文件：`web/src/tasks.ts`、`web/src/taskFeedback.ts`、`web/src/types/workbench.ts`
+10. 更新测试文件 import 路径：
+    - `web/src/App.test.tsx` — 更新 `tasks` 和 `taskFeedback` 的 import 为 `domain/tasks`
+    - `web/src/tasks.test.ts` → 重命名为 `web/src/domain/tasks/data.test.ts`，更新 import
+    - `web/src/taskFeedback.test.ts` → 重命名为 `web/src/domain/tasks/checks.test.ts`，更新 import
+11. 删除旧文件：`web/src/tasks.ts`、`web/src/taskFeedback.ts`、`web/src/types/workbench.ts`
 
 ### Step 6: 新增基础设施
 
@@ -537,6 +544,9 @@ docker compose up --build  # 端到端验证
 | — | `web/src/domain/tasks/index.ts` | 新增 |
 | — | `Makefile` | 新增 |
 | — | `.github/workflows/ci.yml` | 新增 |
+| `web/src/App.test.tsx` | `web/src/App.test.tsx` | 更新 import 路径 |
+| `web/src/tasks.test.ts` | `web/src/domain/tasks/data.test.ts` | 迁移并更新 import |
+| `web/src/taskFeedback.test.ts` | `web/src/domain/tasks/checks.test.ts` | 迁移并更新 import |
 | `docs/specs/*` | `docs/superpowers/specs/*` | 迁移 |
 | `docs/plans/*` | `docs/superpowers/plans/*` | 迁移 |
 | `db/seed.sql` | `db/seed.sql` | 保持 |
@@ -553,7 +563,9 @@ docker compose up --build  # 端到端验证
 | 文件移动导致 import 路径断裂 | 编译失败 | 每次移动后立刻运行 `go build` 和 `tsc -b`，分步提交 |
 | 前端路径别名配置未同步 | 构建失败 | Vite `resolve.alias` 已配置 `@/`，确保新目录在别名范围内 |
 | Docker 构建上下文变化 | 镜像构建失败 | 逐步验证每个 Dockerfile 的 COPY 路径 |
-| 测试引用旧路径 | 测试失败 | 同步更新 `*.test.ts` 和 `*_test.go` 中的 import |
+| 测试引用旧路径 | 测试失败 | 同步更新 `*.test.ts` 和 `*_test.go` 中的 import（已在 Step 5 中列为独立子步骤） |
+| `make dev` 后台进程泄漏 | 端口占用 / 僵尸进程 | `make clean` 使用 `pkill` 清理；长期方案建议统一用 `docker compose up` 或引入进程管理器 |
+| models.go Duration 类型变更 | 前端 duration 显示错误 | 保持 `time.Duration` 不变，不修改序列化行为 |
 
 ### 8.2 回滚策略
 
