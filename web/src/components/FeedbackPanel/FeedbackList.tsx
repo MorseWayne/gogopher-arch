@@ -1,4 +1,4 @@
-import type { FeedbackItem } from '../../taskFeedback';
+import type { FeedbackItem } from '@/domain/tasks';
 import styles from './FeedbackPanel.module.css';
 
 interface FeedbackListProps {

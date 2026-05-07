@@ -1,6 +1,6 @@
 import Editor from '@monaco-editor/react';
 import { EditorToolbar } from './EditorToolbar';
-import type { EditorPanelProps } from '../../types/workbench';
+import type { EditorPanelProps } from '@/domain/workbench';
 import styles from './EditorPanel.module.css';
 
 export function EditorPanel({ code, onChange, track }: EditorPanelProps) {

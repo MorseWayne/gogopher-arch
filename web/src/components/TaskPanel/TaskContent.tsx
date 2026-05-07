@@ -1,6 +1,6 @@
 import { BookOpen, CheckCircle2, ClipboardCheck } from 'lucide-react';
 import { SectionTitle } from '../common/SectionTitle';
-import type { TaskPanelProps } from '../../types/workbench';
+import type { TaskPanelProps } from '@/domain/workbench';
 import styles from './TaskPanel.module.css';
 
 export function TaskContent({ task }: TaskPanelProps) {

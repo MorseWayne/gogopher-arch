@@ -1,5 +1,5 @@
 import { Check } from 'lucide-react';
-import type { TaskProgressProps } from '../../types/workbench';
+import type { TaskProgressProps } from '@/domain/workbench';
 import styles from './TaskProgress.module.css';
 
 export function TaskProgress({ tasks, selectedTaskId, taskResults, onSelectTask }: TaskProgressProps) {

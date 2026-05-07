@@ -2,7 +2,7 @@ import { AlertCircle, BookOpen, ClipboardCheck } from 'lucide-react';
 import { SectionTitle } from '../common/SectionTitle';
 import { FeedbackList } from './FeedbackList';
 import { Console } from './Console';
-import type { FeedbackPanelProps } from '../../types/workbench';
+import type { FeedbackPanelProps } from '@/domain/workbench';
 import styles from './FeedbackPanel.module.css';
 
 export function FeedbackPanel({

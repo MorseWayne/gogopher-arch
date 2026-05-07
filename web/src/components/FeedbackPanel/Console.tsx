@@ -1,7 +1,7 @@
 import { Terminal } from 'lucide-react';
 import { SectionTitle } from '../common/SectionTitle';
 import { formatDuration } from '../../lib/formatDuration';
-import type { SandboxResponse } from '../../taskFeedback';
+import type { SandboxResponse } from '@/domain/tasks';
 import styles from './FeedbackPanel.module.css';
 
 interface ConsoleProps {

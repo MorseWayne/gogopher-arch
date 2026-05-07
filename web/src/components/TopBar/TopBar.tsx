@@ -1,5 +1,5 @@
 import { GraduationCap, Play, RotateCcw } from 'lucide-react';
-import type { TopBarProps } from '../../types/workbench';
+import type { TopBarProps } from '@/domain/workbench';
 import styles from './TopBar.module.css';
 
 export function TopBar({ onReset, onRun, loading }: TopBarProps) {

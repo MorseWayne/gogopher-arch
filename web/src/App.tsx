@@ -6,11 +6,11 @@ import { EditorPanel } from './components/EditorPanel/EditorPanel';
 import { FeedbackPanel } from './components/FeedbackPanel/FeedbackPanel';
 import { ResizableSplit } from './components/ResizableSplit/ResizableSplit';
 import { useMediaQuery } from './hooks/useMediaQuery';
-import { defaultTaskId, findTaskById, internshipTasks } from './tasks';
-import { didPassTask, evaluateTaskChecks, type SandboxResponse } from './taskFeedback';
+import { defaultTaskId, findTaskById, internshipTasks, didPassTask, evaluateTaskChecks, type SandboxResponse } from '@/domain/tasks';
+import { executeCode } from '@/api/execute';
+import type { SandboxRequest } from '@/api/types';
 import './index.css';
 import styles from './App.module.css';
-import axios from 'axios';
 
 function App() {
   const [selectedTaskId, setSelectedTaskId] = useState(defaultTaskId);
@@ -51,30 +51,21 @@ function App() {
     setOutput(null);
 
     try {
-      const response = await axios.post<SandboxResponse>('/api/v1/execute', {
+      const req: SandboxRequest = {
         id: `${selectedTask.id}-${Date.now()}`,
         code,
         language: 'go',
         timeout: 5,
-      });
-      const nextOutput = response.data;
+      };
+      const nextOutput = await executeCode(req);
       setOutput(nextOutput);
       setTaskResults((results) => ({
         ...results,
         [selectedTask.id]: didPassTask(nextOutput, null, selectedTask.checks) ? 'pass' : 'fail',
       }));
     } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        const message =
-          typeof err.response?.data === 'string'
-            ? err.response.data
-            : err.message || '无法连接到 Gateway 服务';
-        setError(message);
-      } else if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('无法连接到 Gateway 服务');
-      }
+      const message = err instanceof Error ? err.message : '无法连接到 Gateway 服务';
+      setError(message);
       setTaskResults((results) => ({
         ...results,
         [selectedTask.id]: 'fail',

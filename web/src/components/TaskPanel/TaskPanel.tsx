@@ -1,5 +1,5 @@
 import { TaskContent } from './TaskContent';
-import type { TaskPanelProps } from '../../types/workbench';
+import type { TaskPanelProps } from '@/domain/workbench';
 import styles from './TaskPanel.module.css';
 
 export function TaskPanel({ task }: TaskPanelProps) {

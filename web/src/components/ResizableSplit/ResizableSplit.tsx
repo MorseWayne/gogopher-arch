@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useResizable } from '../../hooks/useResizable';
-import type { ResizableSplitProps } from '../../types/workbench';
+import type { ResizableSplitProps } from '@/domain/workbench';
 import styles from './ResizableSplit.module.css';
 
 export function ResizableSplit({
