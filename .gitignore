@@ -1,2 +1,10 @@
 test.sh
 .gitnexus
+
+# Go build artifacts
+/main
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
