@@ -355,7 +355,7 @@ export * from './checks';
 
 **`src/domain/workbench/types.ts`**
 
-从 `src/types/workbench.ts` 迁移，保持不变。
+从 `src/types/workbench.ts` 迁移，更新其内部 import 路径（`../tasks` → `./tasks`，`../taskFeedback` → `./checks` 或重新组织导出）。
 
 ### 4.3 App.tsx 瘦身
 
@@ -481,17 +481,21 @@ mkdir -p .github/workflows
 5. 新增 `web/src/domain/tasks/data.ts` — 从 `tasks.ts` 提取
 6. 新增 `web/src/domain/tasks/checks.ts` — 从 `taskFeedback.ts` 提取
 7. 新增 `web/src/domain/tasks/index.ts`
-8. 新增 `web/src/domain/workbench/types.ts` — 从 `types/workbench.ts` 迁移，更新其内部 import（`../tasks` → `@/domain/tasks`，`../taskFeedback` → `@/domain/tasks`）
+8. 新增 `web/src/domain/workbench/types.ts` — 从 `types/workbench.ts` 迁移，更新其内部 import（`../tasks` → `@/domain/tasks`，`../taskFeedback` → `@/domain/tasks`）—— 该文件自身的类型定义保持不变，但 import 路径必须更新以适配新目录结构
 9. 重写 `web/src/App.tsx` — 使用新的 domain 和 api 模块
 10. 更新组件 import 路径（所有引用 `../../types/workbench`、`../../taskFeedback`、`../tasks` 的组件）：
     - `EditorPanel.tsx`、`TaskPanel.tsx`、`TaskContent.tsx`、`TopBar.tsx`、`TaskProgress.tsx`、`ResizableSplit.tsx`、`FeedbackPanel.tsx` — `../../types/workbench` → `@/domain/workbench`
     - `FeedbackList.tsx`、`Console.tsx` — `../../taskFeedback` → `@/domain/tasks`
 11. 更新测试文件 import 路径：
-    - `web/src/App.test.tsx` — 更新 `tasks` 和 `taskFeedback` 的 import 为 `domain/tasks`
+    - `web/src/App.test.tsx` — 该文件目前只 import `./App`，本身无需更新；但若后续增加业务逻辑测试，import 来源应使用 `@/domain/tasks`
     - `web/src/tasks.test.ts` → 重命名为 `web/src/domain/tasks/data.test.ts`，更新 import
     - `web/src/taskFeedback.test.ts` → 重命名为 `web/src/domain/tasks/checks.test.ts`，更新 import
 12. 删除旧文件：`web/src/tasks.ts`、`web/src/taskFeedback.ts`、`web/src/types/workbench.ts`
-13. 删除空目录：`web/src/types/`
+13. 配置路径别名（必须先于此步之前的所有 `@/` import）：
+    - 更新 `web/vite.config.ts` — 在 `export default defineConfig({...})` 中添加 `resolve: { alias: { '@': path.resolve(__dirname, './src') } }`
+    - 更新 `web/tsconfig.app.json` — 在 `compilerOptions` 中添加 `"baseUrl": "."` 和 `"paths": { "@/*": ["src/*"] }`
+    - 确保 `web/package.json` 中有 `@types/node`（用于 `path` 模块）—— 当前已有
+14. 删除空目录：`web/src/types/`
 
 ### Step 6: 新增基础设施
 
