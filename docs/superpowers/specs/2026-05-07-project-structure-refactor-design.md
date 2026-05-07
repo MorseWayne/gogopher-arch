@@ -45,9 +45,6 @@ gogopher-arch/
 │   │   ├── models.go                 # SandboxRequest, SandboxResponse
 │   │   └── errors.go                 # 自定义错误类型
 │   ├── internal/                     # 私有代码，禁止外部导入
-│   │   ├── sandbox/                  # 沙盒执行域
-│   │   │   ├── runner.go             # GopherRunner 核心逻辑
-│   │   │   └── runner_test.go
 │   │   ├── task/                     # 任务域（预留，未来持久化）
 │   │   │   ├── service.go
 │   │   │   └── store.go
@@ -284,10 +281,6 @@ func Load() Config
 
 读取环境变量，提供合理的默认值（兼容当前 docker-compose.yml 和本地混合开发模式）。
 
-**`src/internal/sandbox/runner.go`**（新增，预留共享）
-
-将 sandbox-engine 的 runner 核心逻辑提取到 `internal/sandbox/`。当前只有 sandbox-engine 使用，但未来如果 gateway 需要本地执行沙盒（如离线模式），可以直接复用。
-
 ---
 
 ## 4. 前端重构设计
@@ -461,7 +454,6 @@ mkdir -p .github/workflows
 1. `src/pkg/common/models.go` — 保持不变（注意：`Duration` 字段保持 `time.Duration` 类型，前端 `formatDuration.ts` 中的除法逻辑无需修改）
 2. 新增 `src/pkg/common/errors.go`
 3. 新增 `src/internal/config/config.go`
-4. 新增 `src/internal/sandbox/runner.go` — 从 `sandbox-engine/main.go` 提取 `GopherRunner` 核心逻辑，作为共享沙盒执行器（当前仅 sandbox-engine 使用，未来 gateway 离线模式可复用）
 
 ### Step 3: 重构 Sandbox Engine
 
@@ -532,7 +524,6 @@ docker compose up --build  # 端到端验证
 | `src/pkg/common/models.go` | `src/pkg/common/models.go` | 保持 |
 | — | `src/pkg/common/errors.go` | 新增 |
 | — | `src/internal/config/config.go` | 新增 |
-| — | `src/internal/sandbox/runner.go` | 新增（预留共享） |
 | `web/src/tasks.ts` | `web/src/domain/tasks/data.ts` | 迁移 |
 | `web/src/tasks.ts` | `web/src/domain/tasks/types.ts` | 提取 |
 | `web/src/taskFeedback.ts` | `web/src/domain/tasks/checks.ts` | 迁移 |
