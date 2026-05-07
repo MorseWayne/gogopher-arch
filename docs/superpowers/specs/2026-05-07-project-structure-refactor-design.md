@@ -441,7 +441,7 @@ jobs:
 ```bash
 mkdir -p src/services/gateway/internal/{handlers,middleware,routes}
 mkdir -p src/services/sandbox-engine/internal/{handlers,runner}
-mkdir -p src/internal/{sandbox,task,config}
+mkdir -p src/internal/{task,config}
 mkdir -p src/pkg/common
 mkdir -p web/src/api
 mkdir -p web/src/domain/{tasks,workbench}
