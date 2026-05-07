@@ -481,13 +481,17 @@ mkdir -p .github/workflows
 5. 新增 `web/src/domain/tasks/data.ts` — 从 `tasks.ts` 提取
 6. 新增 `web/src/domain/tasks/checks.ts` — 从 `taskFeedback.ts` 提取
 7. 新增 `web/src/domain/tasks/index.ts`
-8. 新增 `web/src/domain/workbench/types.ts` — 从 `types/workbench.ts` 迁移
+8. 新增 `web/src/domain/workbench/types.ts` — 从 `types/workbench.ts` 迁移，更新其内部 import（`../tasks` → `@/domain/tasks`，`../taskFeedback` → `@/domain/tasks`）
 9. 重写 `web/src/App.tsx` — 使用新的 domain 和 api 模块
-10. 更新测试文件 import 路径：
+10. 更新组件 import 路径（所有引用 `../../types/workbench`、`../../taskFeedback`、`../tasks` 的组件）：
+    - `EditorPanel.tsx`、`TaskPanel.tsx`、`TaskContent.tsx`、`TopBar.tsx`、`TaskProgress.tsx`、`ResizableSplit.tsx`、`FeedbackPanel.tsx` — `../../types/workbench` → `@/domain/workbench`
+    - `FeedbackList.tsx`、`Console.tsx` — `../../taskFeedback` → `@/domain/tasks`
+11. 更新测试文件 import 路径：
     - `web/src/App.test.tsx` — 更新 `tasks` 和 `taskFeedback` 的 import 为 `domain/tasks`
     - `web/src/tasks.test.ts` → 重命名为 `web/src/domain/tasks/data.test.ts`，更新 import
     - `web/src/taskFeedback.test.ts` → 重命名为 `web/src/domain/tasks/checks.test.ts`，更新 import
-11. 删除旧文件：`web/src/tasks.ts`、`web/src/taskFeedback.ts`、`web/src/types/workbench.ts`
+12. 删除旧文件：`web/src/tasks.ts`、`web/src/taskFeedback.ts`、`web/src/types/workbench.ts`
+13. 删除空目录：`web/src/types/`
 
 ### Step 6: 新增基础设施
 
