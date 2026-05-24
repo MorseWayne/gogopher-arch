@@ -1,7 +1,7 @@
 # GoGopher Arch: Go 后端实习成长平台
 
 [![Go Version](https://img.shields.io/badge/Go-1.22+-00ADD8?style=flat&logo=go)](https://golang.org)
-[![React](https://img.shields.io/badge/Frontend-React-61DAFB?style=flat&logo=react)](https://reactjs.org)
+[![React](https://img.shields.io/badge/Frontend-React%20%2B%20Tailwind-61DAFB?style=flat&logo=react)](https://reactjs.org)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 **GoGopher Arch** 是一个面向 Go 学习者的实战成长平台。它通过虚拟职场任务，帮助用户从 Go 基础入门，成长到具备 Go 后端实习岗位能力，并进一步进阶为掌握 Go 技术栈与 AI 应用工程能力的新型全栈程序员。
@@ -34,7 +34,7 @@ GoGopher Arch 不把学习过程设计成单纯的课程目录，而是把知识
 | 模块 | 技术实现 |
 | :--- | :--- |
 | 后端 | Go 1.22+, Gateway, Sandbox Engine |
-| 前端 | React, TypeScript, Monaco Editor |
+| 前端 | React, TypeScript, Tailwind CSS, shadcn/ui |
 | 沙盒 | Docker, `os/exec`, 执行超时控制 |
 | 反馈 | 编译结果、控制台输出、任务检查、导师提示 |
 | AI 路线 | LLM API、RAG、Agent、结构化输出、评测与安全 |
@@ -97,7 +97,7 @@ docker compose up --build
 
 | 服务 | 说明 | 镜像 / 构建方式 | 暴露端口 |
 | :--- | :--- | :--- | :--- |
-| `web` | React 前端（Nginx 托管） | `web/Dockerfile` | `3000` → `80` |
+| `web` | React + Tailwind 前端（Nginx 托管） | `web/Dockerfile` | `3000` → `80` |
 | `gateway` | Go API 网关 | `src/services/gateway/Dockerfile` | `8080` |
 | `sandbox-engine` | Go 沙盒执行引擎 | `src/services/sandbox-engine/Dockerfile` | `8081` |
 | `postgres` | 数据库 | `postgres:15-alpine` | `5432` |

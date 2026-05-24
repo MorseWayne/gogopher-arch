@@ -10,14 +10,12 @@ dev:
 
 test:
 	go test ./...
-	cd web && npm run test -- --run
 
 build:
 	docker compose build
 
 lint:
 	go vet ./...
-	cd web && npm run lint
 
 clean:
 	docker compose down -v

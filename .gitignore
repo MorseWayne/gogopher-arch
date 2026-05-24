@@ -1,6 +1,3 @@
-test.sh
-.gitnexus
-
 # Go build artifacts
 /main
 *.exe
@@ -8,3 +5,60 @@ test.sh
 *.dll
 *.so
 *.dylib
+*.test
+*.out
+
+# Node / frontend artifacts
+node_modules
+/dist
+/dist-ssr
+/.next
+/out
+/coverage
+/.vite
+
+# Logs
+logs
+*.log
+*.log.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Environment and local config
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Editors and OS files
+.vscode
+!.vscode/extensions.json
+.idea
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*.sw?
+*~
+
+# DB / temporary files
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.sqlite-shm
+*.sqlite-wal
+*.tmp
+*.temp
+*.log
+
+# Tooling and cache directories
+.gitnexus
+.codegraph
+.opencode
+.sisyphus
+.cursor
