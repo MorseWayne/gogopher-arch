@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
 import { Link } from "react-router";
-import { ArrowRight, Shield, Beaker, Zap, Bot, Map, ChevronRight, CheckCircle2, Circle, Activity } from "lucide-react";
+import { ArrowRight, Shield, Beaker, Zap, Bot, Map, ChevronRight, CheckCircle2, Circle, Activity, BookOpen } from "lucide-react";
 
 export function Landing() {
   return (
@@ -56,19 +56,19 @@ export function Landing() {
               transition={{ duration: 0.5, delay: 0.3 }}
               className="flex flex-col sm:flex-row items-center justify-center gap-4"
             >
-              <Link 
-                to="/dashboard" 
+              <Link
+                to="/courses/go-basics"
                 className="w-full sm:w-auto px-8 py-4 bg-[#00ADD8] text-neutral-950 font-bold rounded-xl hover:bg-[#00ADD8]/90 transition-colors flex items-center justify-center gap-2 text-lg group"
               >
-                进入沙盒体验
+                开始 Go 基础训练营
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
-              <a 
-                href="#features" 
+              <Link
+                to="/dashboard"
                 className="w-full sm:w-auto px-8 py-4 bg-neutral-900 text-white font-medium rounded-xl hover:bg-neutral-800 border border-neutral-800 transition-colors flex items-center justify-center gap-2 text-lg"
               >
-                了解更多
-              </a>
+                进入沙盒体验
+              </Link>
             </motion.div>
           </div>
         </div>
@@ -103,7 +103,12 @@ export function Landing() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <FeatureCard 
+            <FeatureCard
+              icon={<BookOpen className="w-8 h-8 text-[#00ADD8]" />}
+              title="Go 基础训练营"
+              description="参考并改编《Go 语言圣经中文版》，按 13 章重写为可学习、可运行、可衔接实习任务的基础课程。"
+            />
+            <FeatureCard
               icon={<Shield className="w-8 h-8 text-yellow-500" />}
               title="战役模式 (RPG Style)"
               description="扮演职场角色，通过解决“双十一抢单限流”、“高并发 IM 系统崩溃”等真实业务挑战来晋升。"

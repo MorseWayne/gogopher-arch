@@ -21,6 +21,7 @@ GoGopher Arch 不把学习过程设计成单纯的课程目录，而是把知识
 
 ## 核心特性
 
+- **Go 基础训练营**：参考并改编《Go 语言圣经中文版》，按 13 章组织系统课程，每章配一个可运行的 Go 练习。
 - **实习生任务线**：以虚拟 Go 后端团队的入职第一周为主线，围绕任务卡、验收标准和导师反馈推进学习。
 - **任务前小课**：每个任务前只讲完成当前任务必须用到的 Go 知识，降低上手挫败感。
 - **交互式沙盒**：在浏览器中编写 Go 代码，运行程序或测试，立即看到输出、错误和任务反馈。
@@ -42,6 +43,12 @@ GoGopher Arch 不把学习过程设计成单纯的课程目录，而是把知识
 ---
 
 ## 路线图
+
+### 第零阶段：Go 基础训练营
+
+- [x] 以《Go 语言圣经中文版》13 章为参考骨架，建立 Go 基础学习路径
+- [x] 每章提供重写导读、学习目标、核心概念、原文链接和 sandbox 练习
+- [x] 课程总览页和章节详情页接入前端导航
 
 ### 第一阶段：Go 后端实习生入职第一周
 
@@ -228,6 +235,10 @@ npm run dev
 
 ---
 
-## 开源协议
+## 开源协议与课程来源
 
 本项目采用 [MIT License](LICENSE) 协议。
+
+Go 基础训练营参考并改编自《Go 语言圣经中文版》项目 [gopl-zh/gopl-zh.github.com](https://github.com/gopl-zh/gopl-zh.github.com)。训练营内容以 GoGopher Arch 的学习路径、导读、练习和验收标准重写，不镜像原教程正文；每章页面保留对应原文阅读链接。
+
+原教程仓库 LICENSE 为 [BSD 3-Clause](https://github.com/gopl-zh/gopl-zh.github.com/blob/master/LICENSE)；其[译文授权附录](https://gopl-zh.github.io/appendix/appendix-c-cpoyright.html)说明正文采用 CC-BY 3.0，代码遵循 Go 项目的 BSD 协议。

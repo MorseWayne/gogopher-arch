@@ -17,6 +17,7 @@ export function Layout() {
           
           <div className="hidden md:flex items-center gap-8">
             <Link to="/" className="text-sm font-medium text-neutral-300 hover:text-white transition-colors">首页</Link>
+            <Link to="/courses/go-basics" className="text-sm font-medium text-neutral-300 hover:text-white transition-colors">Go 基础训练营</Link>
             <a href="#features" className="text-sm font-medium text-neutral-300 hover:text-white transition-colors">核心特性</a>
             <a href="#roadmap" className="text-sm font-medium text-neutral-300 hover:text-white transition-colors">路线图</a>
             
@@ -69,6 +70,7 @@ export function Layout() {
           >
             <div className="flex flex-col p-4 gap-4">
               <Link to="/" className="text-neutral-300 hover:text-white font-medium px-4 py-2 rounded-lg hover:bg-neutral-800 transition-colors" onClick={() => setIsMenuOpen(false)}>首页</Link>
+              <Link to="/courses/go-basics" className="text-neutral-300 hover:text-white font-medium px-4 py-2 rounded-lg hover:bg-neutral-800 transition-colors" onClick={() => setIsMenuOpen(false)}>Go 基础训练营</Link>
               <Link to="/dashboard" className="text-neutral-300 hover:text-white font-medium px-4 py-2 rounded-lg hover:bg-neutral-800 transition-colors" onClick={() => setIsMenuOpen(false)}>进入沙盒</Link>
             </div>
           </motion.div>
