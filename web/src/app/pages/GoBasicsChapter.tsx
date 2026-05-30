@@ -1,11 +1,10 @@
 import type { ReactNode } from "react";
 import { Link, useParams } from "react-router";
-import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2, Clock3, ExternalLink, Lightbulb, MapPin, Star, Target } from "lucide-react";
+import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2, Clock3, Lightbulb, MapPin, Star, Target } from "lucide-react";
 import { CourseExercisePanel } from "../components/CourseExercisePanel";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Separator } from "../components/ui/separator";
 import { getGoBasicsChapterBySlug, getRelatedMissions, goBasicsChapters, type GoCourseChapter } from "../data/goBasicsCourse";
 
 export function GoBasicsChapter() {
@@ -47,10 +46,7 @@ export function GoBasicsChapter() {
             <div className="flex flex-wrap gap-4 text-sm text-neutral-400">
               <ChapterMeta icon={<Clock3 className="h-4 w-4" />} text={chapter.duration} />
               <ChapterMeta icon={<Star className="h-4 w-4" />} text={chapter.difficulty} />
-              <a href={chapter.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 transition-colors hover:text-[#00ADD8]">
-                <ExternalLink className="h-4 w-4" />
-                阅读原文
-              </a>
+              <ChapterMeta icon={<BookOpen className="h-4 w-4" />} text={`${chapter.lessons.length} 个课程小节`} />
             </div>
           </div>
         </section>
@@ -80,35 +76,80 @@ export function GoBasicsChapter() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-white">
                   <BookOpen className="h-5 w-5 text-[#00ADD8]" />
-                  本章导读
+                  课程正文
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4 text-sm leading-7 text-neutral-300">
-                <p>本章为 GoGopher Arch 改编课程，参考《Go 语言圣经中文版》对应章节。课程导读和练习使用本项目语境重写，不复制原教程正文。</p>
-                <p>{chapter.summary}</p>
-                <Button asChild variant="outline" className="border-neutral-700 bg-neutral-950 text-neutral-200 hover:bg-neutral-800">
-                  <a href={chapter.sourceUrl} target="_blank" rel="noreferrer">
-                    打开原教程章节
-                    <ExternalLink className="h-4 w-4" />
-                  </a>
-                </Button>
+              <CardContent className="space-y-5">
+                {chapter.lessons.map((lesson, index) => (
+                  <article key={lesson.title} className="rounded-xl border border-neutral-800 bg-neutral-950 p-5">
+                    <div className="mb-3 flex items-center gap-3">
+                      <Badge className="border-neutral-700 bg-neutral-900 text-neutral-300">{index + 1}</Badge>
+                      <h2 className="text-lg font-semibold text-white">{lesson.title}</h2>
+                    </div>
+                    <div className="space-y-3 text-sm leading-7 text-neutral-300">
+                      {lesson.body.map((paragraph) => (
+                        <p key={paragraph}>{paragraph}</p>
+                      ))}
+                    </div>
+                    {lesson.code && (
+                      <pre className="mt-4 overflow-auto rounded-xl border border-neutral-800 bg-black p-4 text-sm leading-6 text-neutral-200">
+                        <code>{lesson.code}</code>
+                      </pre>
+                    )}
+                  </article>
+                ))}
               </CardContent>
             </Card>
 
             <Card className="border-neutral-800 bg-neutral-900/70 text-neutral-100">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-white">
-                  <Lightbulb className="h-5 w-5 text-[#00ADD8]" />
-                  核心概念与常见坑
+                  <Star className="h-5 w-5 text-[#00ADD8]" />
+                  Go 1.24+ 与现代生态说明
                 </CardTitle>
               </CardHeader>
               <CardContent className="grid gap-4 md:grid-cols-2">
-                {chapter.concepts.map((concept) => (
-                  <div key={concept.name} className="rounded-xl border border-neutral-800 bg-neutral-950 p-4">
-                    <h3 className="mb-2 font-semibold text-white">{concept.name}</h3>
-                    <p className="mb-3 text-sm leading-6 text-neutral-300">{concept.explanation}</p>
-                    <Separator className="mb-3 bg-neutral-800" />
-                    <p className="text-sm leading-6 text-yellow-200/80">常见坑：{concept.pitfall}</p>
+                {chapter.modernNotes.map((note) => (
+                  <div key={note.title} className="rounded-xl border border-[#00ADD8]/20 bg-[#00ADD8]/5 p-4">
+                    <h3 className="mb-2 font-semibold text-white">{note.title}</h3>
+                    <p className="text-sm leading-6 text-neutral-300">{note.body}</p>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            <Card className="border-neutral-800 bg-neutral-900/70 text-neutral-100">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <CheckCircle2 className="h-5 w-5 text-[#00ADD8]" />
+                  后端工程实践
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3">
+                  {chapter.engineeringPractices.map((practice) => (
+                    <li key={practice} className="flex gap-3 rounded-xl border border-neutral-800 bg-neutral-950 p-4 text-sm leading-6 text-neutral-300">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-400" />
+                      {practice}
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="border-neutral-800 bg-neutral-900/70 text-neutral-100">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <Lightbulb className="h-5 w-5 text-yellow-300" />
+                  常见坑
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-4 md:grid-cols-3">
+                {chapter.pitfalls.map((pitfall) => (
+                  <div key={pitfall.title} className="rounded-xl border border-yellow-500/20 bg-yellow-500/5 p-4">
+                    <h3 className="mb-2 font-semibold text-white">{pitfall.title}</h3>
+                    <p className="mb-3 text-sm leading-6 text-yellow-100/80">现象：{pitfall.symptom}</p>
+                    <p className="text-sm leading-6 text-neutral-300">修正：{pitfall.fix}</p>
                   </div>
                 ))}
               </CardContent>
@@ -137,6 +178,25 @@ export function GoBasicsChapter() {
             <Card className="border-neutral-800 bg-neutral-900/70 text-neutral-100">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-white">
+                  <BookOpen className="h-5 w-5 text-[#00ADD8]" />
+                  复盘问题
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ol className="space-y-3">
+                  {chapter.reviewQuestions.map((question, index) => (
+                    <li key={question} className="rounded-xl border border-neutral-800 bg-neutral-950 p-4 text-sm leading-6 text-neutral-300">
+                      <span className="mr-2 font-mono text-[#00ADD8]">Q{index + 1}</span>
+                      {question}
+                    </li>
+                  ))}
+                </ol>
+              </CardContent>
+            </Card>
+
+            <Card className="border-neutral-800 bg-neutral-900/70 text-neutral-100">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-white">
                   <MapPin className="h-5 w-5 text-[#00ADD8]" />
                   衔接实习任务
                 </CardTitle>
@@ -152,19 +212,6 @@ export function GoBasicsChapter() {
                 ) : (
                   <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-4 text-sm text-neutral-400">暂无绑定实习任务。</div>
                 )}
-              </CardContent>
-            </Card>
-
-            <Card className="border-neutral-800 bg-neutral-900/70 text-neutral-100">
-              <CardHeader>
-                <CardTitle className="text-white">来源</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm leading-6 text-neutral-300">
-                <p>参考并改编自《Go 语言圣经中文版》。</p>
-                <a href={chapter.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-[#00ADD8] hover:text-[#00ADD8]/80">
-                  {chapter.sourcePath}
-                  <ExternalLink className="h-4 w-4" />
-                </a>
               </CardContent>
             </Card>
           </aside>

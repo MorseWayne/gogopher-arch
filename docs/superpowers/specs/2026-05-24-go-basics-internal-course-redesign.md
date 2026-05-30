@@ -324,7 +324,7 @@ type GoCourseChapter = {
 - 13 章都通过课程数据校验。
 - README 保留来源说明，但表述为“历史参考/灵感来源”，不是课程依赖入口。
 - `npm run build --prefix web` 通过。
-- GitNexus detect changes 风险不超出预期。
+- 变更范围检查风险不超出预期。
 - `/dashboard` 和 `/missions/slice-memory-leak` 无回归。
 
 ## 测试策略

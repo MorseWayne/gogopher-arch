@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(xargs -r -I{} bash -lc 'ls -la {}')",
+      "Read(//home/wayne/source/open/gogopher-201b8f17f3d1f0f0e/web/src/app/data/**)",
+      "Bash(find /home/wayne/source/open -type f -name 'goBasicsCourse.ts')",
+      "Read(//home/wayne/source/open/**)"
     ]
   }
 }

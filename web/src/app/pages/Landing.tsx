@@ -77,7 +77,7 @@ export function Landing() {
         <div className="mt-20 border-y border-neutral-900 bg-neutral-950/50 backdrop-blur-sm py-8">
           <div className="container mx-auto px-6 flex flex-wrap justify-center gap-8 md:gap-16 opacity-60">
             <div className="flex items-center gap-2 font-mono text-lg font-bold">
-              <span className="text-[#00ADD8]">Go</span> 1.22+
+              <span className="text-[#00ADD8]">Go</span> 1.24+
             </div>
             <div className="flex items-center gap-2 font-mono text-lg font-bold">
               <span className="text-[#61DAFB]">React</span>
@@ -106,7 +106,7 @@ export function Landing() {
             <FeatureCard
               icon={<BookOpen className="w-8 h-8 text-[#00ADD8]" />}
               title="Go 基础训练营"
-              description="参考并改编《Go 语言圣经中文版》，按 13 章重写为可学习、可运行、可衔接实习任务的基础课程。"
+              description="GoGopher Arch 内置 Go 1.24+ 基础课程，13 章覆盖语法、并发、测试与工程实践，每章配可运行 sandbox 练习。"
             />
             <FeatureCard
               icon={<Shield className="w-8 h-8 text-yellow-500" />}

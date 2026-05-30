@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Link } from "react-router";
 import { ArrowRight, BookOpen, CheckCircle2, Clock3, GraduationCap, ShieldCheck, Star } from "lucide-react";
 import { Badge } from "../components/ui/badge";
@@ -6,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { goBasicsChapters, validateGoBasicsCourse } from "../data/goBasicsCourse";
 
 const validationErrors = validateGoBasicsCourse();
+const lessonCount = goBasicsChapters.reduce((sum, chapter) => sum + chapter.lessons.length, 0);
+const modernNoteCount = goBasicsChapters.reduce((sum, chapter) => sum + chapter.modernNotes.length, 0);
 
 export function GoBasicsCourse() {
   return (
@@ -14,11 +17,11 @@ export function GoBasicsCourse() {
         <div className="container mx-auto max-w-6xl">
           <div className="grid gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(320px,2fr)] lg:items-center">
             <div className="space-y-6">
-              <Badge className="border-[#00ADD8]/30 bg-[#00ADD8]/10 text-[#00ADD8]">Go 基础训练营 · 13 章完整路径</Badge>
+              <Badge className="border-[#00ADD8]/30 bg-[#00ADD8]/10 text-[#00ADD8]">Go 基础训练营 · 13 章内置课程</Badge>
               <div className="space-y-4">
                 <h1 className="text-4xl font-extrabold tracking-tight text-white md:text-6xl">从第一行 Go 代码到后端实习基本功</h1>
                 <p className="max-w-3xl text-lg leading-8 text-neutral-300">
-                  训练营参考并改编自《Go 语言圣经中文版》，用 GoGopher Arch 的实战语境重写知识点，并为每章配一个可运行的 sandbox 练习。
+                  GoGopher Arch 内置课程，结合 Go 1.24+ 和后端工程现状重制。13 章覆盖语法、数据结构、测试、并发和底层边界，每章都配有可运行 sandbox 练习。
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
@@ -29,9 +32,7 @@ export function GoBasicsCourse() {
                   </Link>
                 </Button>
                 <Button asChild className="rounded-xl border border-neutral-700 bg-neutral-900 px-6 py-5 text-neutral-100 hover:bg-neutral-800">
-                  <a href="https://github.com/gopl-zh/gopl-zh.github.com" target="_blank" rel="noreferrer">
-                    查看原项目
-                  </a>
+                  <Link to="/dashboard">进入实习工作台</Link>
                 </Button>
               </div>
             </div>
@@ -40,21 +41,16 @@ export function GoBasicsCourse() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-white">
                   <ShieldCheck className="h-5 w-5 text-[#00ADD8]" />
-                  来源与改编说明
+                  内置课程说明
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4 text-sm leading-7 text-neutral-300">
-                <p>本训练营不镜像原教程全文，课程导读、练习和验收标准由 GoGopher Arch 重写。</p>
-                <p>
-                  原教程正文与代码遵循其各自授权说明：仓库 LICENSE 为 BSD 3-Clause，附录 C 说明正文采用 CC-BY 3.0，代码遵循 Go 项目的 BSD 协议。
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <Button asChild variant="outline" className="border-neutral-700 bg-neutral-950 text-neutral-200 hover:bg-neutral-800">
-                    <a href="https://github.com/gopl-zh/gopl-zh.github.com/blob/master/LICENSE" target="_blank" rel="noreferrer">LICENSE</a>
-                  </Button>
-                  <Button asChild variant="outline" className="border-neutral-700 bg-neutral-950 text-neutral-200 hover:bg-neutral-800">
-                    <a href="https://gopl-zh.github.io/appendix/appendix-c-cpoyright.html" target="_blank" rel="noreferrer">译文授权</a>
-                  </Button>
+              <CardContent className="space-y-5 text-sm leading-7 text-neutral-300">
+                <p>课程讲解、练习、验收 checklist 和复盘问题由 GoGopher Arch 重新整理生成，目标是服务浏览器练习和后端实习任务衔接。</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <HeroMetric label="章节" value={`${goBasicsChapters.length}`} />
+                  <HeroMetric label="正文小节" value={`${lessonCount}`} />
+                  <HeroMetric label="现代说明" value={`${modernNoteCount}`} />
+                  <HeroMetric label="练习" value={`${goBasicsChapters.length}`} />
                 </div>
               </CardContent>
             </Card>
@@ -67,7 +63,7 @@ export function GoBasicsCourse() {
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <h2 className="text-3xl font-bold text-white">课程路径</h2>
-              <p className="mt-2 text-neutral-400">13 章按原书主题组织，每章先理解概念，再用 sandbox 跑一个小练习。</p>
+              <p className="mt-2 text-neutral-400">13 章按工程成长顺序组织，每章先学习内置正文，再用 sandbox 完成一个小练习。</p>
             </div>
             <div className="flex gap-2 text-sm text-neutral-400">
               <span>章节数: {goBasicsChapters.length}</span>
@@ -78,7 +74,7 @@ export function GoBasicsCourse() {
 
           {validationErrors.length > 0 && (
             <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4 text-sm text-yellow-200">
-              课程数据校验提示：{validationErrors.join("；")}
+              内置课程数据完整性提示：{validationErrors.join("；")}
             </div>
           )}
 
@@ -98,14 +94,15 @@ export function GoBasicsCourse() {
                   </CardHeader>
                   <CardContent className="space-y-5">
                     <p className="line-clamp-3 text-sm leading-6 text-neutral-400">{chapter.summary}</p>
-                    <div className="grid grid-cols-3 gap-2 text-xs text-neutral-400">
+                    <div className="grid grid-cols-4 gap-2 text-xs text-neutral-400">
                       <CourseMetric icon={<Clock3 className="h-4 w-4" />} label={chapter.duration} />
-                      <CourseMetric icon={<GraduationCap className="h-4 w-4" />} label={`${chapter.goals.length} 个目标`} />
-                      <CourseMetric icon={<BookOpen className="h-4 w-4" />} label="1 个练习" />
+                      <CourseMetric icon={<BookOpen className="h-4 w-4" />} label={`${chapter.lessons.length} 节`} />
+                      <CourseMetric icon={<Star className="h-4 w-4" />} label={`${chapter.modernNotes.length} 说明`} />
+                      <CourseMetric icon={<GraduationCap className="h-4 w-4" />} label="1 练习" />
                     </div>
                     <div className="flex items-center gap-2 text-sm text-green-300">
                       <CheckCircle2 className="h-4 w-4" />
-                      重写导读 + sandbox 练习
+                      内置正文 + 工程实践 + sandbox 练习
                     </div>
                   </CardContent>
                 </Card>
@@ -118,7 +115,16 @@ export function GoBasicsCourse() {
   );
 }
 
-function CourseMetric({ icon, label }: { icon: React.ReactNode; label: string }) {
+function HeroMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-4">
+      <div className="text-2xl font-bold text-white">{value}</div>
+      <div className="text-xs text-neutral-500">{label}</div>
+    </div>
+  );
+}
+
+function CourseMetric({ icon, label }: { icon: ReactNode; label: string }) {
   return (
     <div className="flex flex-col items-center gap-1 rounded-lg border border-neutral-800 bg-neutral-950 px-2 py-3 text-center">
       <span className="text-[#00ADD8]">{icon}</span>
