@@ -84,10 +84,11 @@ GoGopher Arch 不把学习过程设计成单纯的课程目录，而是把知识
 ```bash
 git clone https://github.com/MorseWayne/gogopher-arch.git
 cd gogopher-arch
+cp .env.example .env # 可选：需要改端口或默认连接串时再执行
 docker compose up --build
 ```
 
-前端默认运行在 `http://localhost:3000`，Gateway 默认运行在 `http://localhost:8080`。
+前端默认运行在 `http://localhost:3000`，Gateway 默认运行在 `http://localhost:8080`。前端在容器模式下通过 Nginx 将 `/api` 反向代理到 Gateway，本地 Vite 开发模式也会将 `/api` 代理到 `localhost:8080`。
 
 ---
 
@@ -100,15 +101,15 @@ docker compose up --build
 
 ### 服务架构
 
-本项目通过 Docker Compose 编排以下服务：
+本项目通过 Docker Compose 编排以下服务。PostgreSQL 和 Redis 保留在默认启动链路中，作为本地平台依赖和后续数据库/缓存任务的运行环境；当前 Go 基础课程的代码运行主链路主要经过 `web`、`gateway` 和 `sandbox-engine`。
 
-| 服务 | 说明 | 镜像 / 构建方式 | 暴露端口 |
+| 服务 | 说明 | 镜像 / 构建方式 | 默认访问 |
 | :--- | :--- | :--- | :--- |
-| `web` | React + Tailwind 前端（Nginx 托管） | `web/Dockerfile` | `3000` → `80` |
-| `gateway` | Go API 网关 | `src/services/gateway/Dockerfile` | `8080` |
-| `sandbox-engine` | Go 沙盒执行引擎 | `src/services/sandbox-engine/Dockerfile` | `8081` |
-| `postgres` | 数据库 | `postgres:15-alpine` | `5432` |
-| `redis` | 缓存 | `redis:7-alpine` | `6379` |
+| `web` | React + Tailwind 前端（Nginx 托管，代理 `/api`） | `web/Dockerfile` | `http://localhost:3000` |
+| `gateway` | Go API 网关 | `src/services/gateway/Dockerfile` | `http://localhost:8080` |
+| `sandbox-engine` | Go 沙盒执行引擎 | `src/services/sandbox-engine/Dockerfile` | `http://localhost:8081` |
+| `postgres` | 数据库 | `postgres:15-alpine` | `localhost:5432` |
+| `redis` | 缓存 | `redis:7-alpine` | `localhost:6379` |
 
 ### 部署步骤
 
@@ -119,7 +120,15 @@ docker compose up --build
    cd gogopher-arch
    ```
 
-2. **启动所有服务**
+2. **按需覆盖本地默认配置**
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   如果默认端口没有冲突，可以跳过这一步。Docker Compose 会使用 `.env.example` 中展示的默认值。
+
+3. **启动所有服务**
 
    ```bash
    # 前台运行（便于查看日志）
@@ -129,13 +138,15 @@ docker compose up --build
    docker compose up --build -d
    ```
 
-3. **查看服务状态**
+4. **查看服务状态和健康检查**
 
    ```bash
    docker compose ps
+   curl http://localhost:8080/health
+   curl http://localhost:8081/health
    ```
 
-4. **查看日志**
+5. **查看日志**
 
    ```bash
    # 查看所有服务日志
@@ -145,7 +156,7 @@ docker compose up --build
    docker compose logs -f gateway
    ```
 
-5. **停止服务**
+6. **停止服务**
 
    ```bash
    docker compose down
@@ -173,17 +184,18 @@ docker compose up postgres redis -d
 go run ./src/services/sandbox-engine/main.go
 ```
 
-沙盒引擎默认监听 `http://localhost:8081`。
+沙盒引擎默认监听 `http://localhost:8081`，健康检查地址为 `http://localhost:8081/health`。
 
 #### 3. 启动 API 网关（Go）
 
 ```bash
 export DB_URL="postgres://user:pass@localhost:5432/gogopher?sslmode=disable"
 export REDIS_URL="localhost:6379"
+export SANDBOX_URL="http://localhost:8081/execute"
 go run ./src/services/gateway/main.go
 ```
 
-API 网关默认监听 `http://localhost:8080`。
+API 网关默认监听 `http://localhost:8080`，健康检查地址为 `http://localhost:8080/health`。
 
 #### 4. 启动前端（React + Vite）
 
@@ -193,7 +205,7 @@ npm install
 npm run dev
 ```
 
-前端开发服务器默认运行在 [http://localhost:5173](http://localhost:5173)。
+前端开发服务器默认运行在 [http://localhost:5173](http://localhost:5173)。开发模式下，Vite 会将 `/api` 请求代理到 `http://localhost:8080`；如需绕过代理，可设置 `VITE_API_BASE_URL`。
 
 #### 本地开发环境变量速查
 
@@ -201,15 +213,21 @@ npm run dev
 | :--- | :--- | :--- |
 | `DB_URL` | `postgres://user:pass@localhost:5432/gogopher?sslmode=disable` | 连接本地 Docker PostgreSQL |
 | `REDIS_URL` | `localhost:6379` | 连接本地 Docker Redis |
-| `SANDBOX_URL` | `http://localhost:8081/execute` | Gateway 连接本地沙盒引擎（已硬编码为默认值，一般无需手动设置） |
+| `SANDBOX_URL` | `http://localhost:8081/execute` | Gateway 连接本地沙盒引擎 |
+| `VITE_API_BASE_URL` | `/api/v1` | 前端 API 基址；默认走相对路径和代理 |
 
 ### 环境变量
 
-以下环境变量在 `docker-compose.yml` 中已预配置，如需自定义可修改该文件：
+以下变量可在 `.env` 中覆盖；默认值见 `.env.example`。
 
 | 变量 | 所在服务 | 默认值 | 说明 |
 | :--- | :--- | :--- | :--- |
-| `SANDBOX_URL` | `gateway` | `http://sandbox-engine:8081/execute` | 沙盒引擎地址 |
+| `WEB_PORT` | host | `3000` | Web 容器映射到宿主机的端口 |
+| `GATEWAY_PORT` | host | `8080` | Gateway 映射到宿主机的端口 |
+| `SANDBOX_PORT` | host | `8081` | Sandbox Engine 映射到宿主机的端口 |
+| `POSTGRES_PORT` | host | `5432` | PostgreSQL 映射到宿主机的端口 |
+| `REDIS_PORT` | host | `6379` | Redis 映射到宿主机的端口 |
+| `SANDBOX_URL` | `gateway` | `http://sandbox-engine:8081/execute` | Gateway 调用沙盒引擎的内部地址 |
 | `DB_URL` | `gateway`, `sandbox-engine` | `postgres://user:pass@postgres:5432/gogopher?sslmode=disable` | PostgreSQL 连接串 |
 | `REDIS_URL` | `gateway`, `sandbox-engine` | `redis:6379` | Redis 地址 |
 | `POSTGRES_USER` | `postgres` | `user` | 数据库用户名 |
@@ -222,15 +240,18 @@ npm run dev
 
 - **前端界面**：[http://localhost:3000](http://localhost:3000)
 - **API 网关**：[http://localhost:8080](http://localhost:8080)
-- **沙盒引擎**（内部调用）：[http://localhost:8081](http://localhost:8081)
+- **Gateway 健康检查**：[http://localhost:8080/health](http://localhost:8080/health)
+- **Sandbox 健康检查**：[http://localhost:8081/health](http://localhost:8081/health)
+- **沙盒引擎**（Gateway 内部调用 `/execute`）：`http://sandbox-engine:8081/execute`
 - **PostgreSQL**：`localhost:5432`
 - **Redis**：`localhost:6379`
 
 ### 生产环境注意事项
 
 - 请将默认的数据库密码 (`pass`) 修改为强密码，并通过环境变量或 Docker Secrets 注入。
-- 前端 Nginx 配置可根据需要启用 HTTPS、Gzip 压缩和反向代理。
-- 建议为 Go 服务添加健康检查（`healthcheck`）和重启策略（`restart: unless-stopped`）。
+- 前端 Nginx 已在本地容器模式下代理 `/api` 到 Gateway；生产环境可根据需要补充 HTTPS、Gzip 压缩、缓存策略和外层反向代理。
+- Compose 已为核心服务配置健康检查和 `restart: unless-stopped`，但还没有覆盖滚动发布、备份恢复和集中式日志。
+- 当前 Sandbox 只适合本地可信学习环境，不应直接暴露到公网；P2 会再处理更强的执行隔离和资源限制。
 - 如需暴露到公网，请在网关前添加反向代理（如 Nginx、Traefik）并配置 SSL 证书。
 
 ---

@@ -39,5 +39,8 @@ func (h *ExecuteHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer resp.Body.Close()
 
 	w.Header().Set("Content-Type", "application/json")
-	io.Copy(w, resp.Body)
+	w.WriteHeader(resp.StatusCode)
+	if _, err := io.Copy(w, resp.Body); err != nil {
+		fmt.Printf("Failed to copy sandbox response: %v\n", err)
+	}
 }

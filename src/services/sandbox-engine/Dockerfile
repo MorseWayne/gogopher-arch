@@ -9,11 +9,6 @@ WORKDIR /app
 # 拷贝整个 monorepo 代码以处理本地包依赖
 COPY . .
 
-# Pre-cache Go module with PostgreSQL driver for sandbox tasks
-WORKDIR /app/sandbox-module
-RUN go mod init sandbox-module && go get github.com/lib/pq@v1.12.3 && go get github.com/redis/go-redis/v9@v9.18.0
-WORKDIR /app
-
 # 编译沙盒引擎二进制文件
 RUN go build -o sandbox-main ./src/services/sandbox-engine/main.go
 
