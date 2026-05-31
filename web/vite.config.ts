@@ -1,5 +1,9 @@
 import { defineConfig } from 'vite'
+import mdx from '@mdx-js/rollup'
 import path from 'path'
+import remarkGfm from 'remark-gfm'
+import rehypeHighlight from 'rehype-highlight'
+import rehypeSlug from 'rehype-slug'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 
@@ -19,6 +23,7 @@ function figmaAssetResolver() {
 export default defineConfig({
   plugins: [
     figmaAssetResolver(),
+    mdx({ remarkPlugins: [remarkGfm], rehypePlugins: [rehypeSlug, rehypeHighlight] }),
     // The React and Tailwind plugins are both required for Make, even if
     // Tailwind is not being actively used – do not remove them
     react(),

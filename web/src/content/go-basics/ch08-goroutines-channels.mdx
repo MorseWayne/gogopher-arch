@@ -1,0 +1,298 @@
+# Goroutines 和 Channels：通信式并发的基本模型
+
+并发程序同时推进多个任务：Web 服务处理许多请求，命令行工具一边读文件一边计算，后台任务一边等待网络一边做本地处理。《Go 程序设计语言》第 8 章介绍 Go 的第一套并发工具：goroutine 和 channel。它们体现了 CSP 风格：让并发执行单元通过通信协作，而不是一开始就共享内存。
+
+并发会放大程序结构问题。一个 goroutine 谁启动、谁等待、谁取消、谁关闭 channel，如果没有明确答案，程序可能偶尔卡住、泄露、提前退出或压垮下游服务。
+
+## Goroutine：轻量的并发执行单元
+
+Go 中每个并发执行单元叫 goroutine。程序启动时，`main` 函数运行在 main goroutine 中。使用 `go` 语句可以启动新的 goroutine：
+
+```go
+f()    // 调用 f，等待它返回
+go f() // 启动新 goroutine 调用 f，不等待
+```
+
+`go` 语句本身很快返回，函数会在新的 goroutine 中继续执行。
+
+```go
+go func() {
+    fmt.Println("background work")
+}()
+```
+
+main goroutine 返回时，程序直接退出，其他 goroutine 会被终止。因此启动 goroutine 后，如果你关心它的结果或清理逻辑，就必须显式等待它完成。
+
+## 启动 goroutine 时先问三个问题
+
+每次写 `go` 关键字，都应该问：
+
+1. 谁负责等待它完成？
+2. 它失败时错误发给谁？
+3. 调用方取消、超时或服务关闭时，它如何退出？
+
+如果回答不出来，这个 goroutine 就可能泄露。泄露的 goroutine 不一定立刻出错，但会保留栈、引用、channel、网络连接或锁，最终造成内存增长、请求卡住或资源耗尽。
+
+最小同步可以用一个 `done` channel：
+
+```go
+done := make(chan struct{})
+
+go func() {
+    defer close(done)
+    doWork()
+}()
+
+<-done
+```
+
+如果有多个 worker，通常用 `sync.WaitGroup` 或 `errgroup` 更合适。
+
+## Channel：goroutine 之间的通信机制
+
+channel 让一个 goroutine 向另一个 goroutine 发送值。创建 channel：
+
+```go
+ch := make(chan int)
+```
+
+发送和接收都使用 `<-`：
+
+```go
+ch <- 42
+x := <-ch
+<-ch // 接收并丢弃值
+```
+
+channel 也可以关闭：
+
+```go
+close(ch)
+```
+
+关闭表示“不会再发送新值”。接收者仍然可以读完已经发送的数据；数据耗尽后，再接收会得到元素类型零值和 `ok=false`。
+
+```go
+v, ok := <-ch
+if !ok {
+    // channel 已关闭且没有剩余值
+}
+```
+
+通常由发送方关闭 channel，因为发送方最清楚是否还有值要发送。接收方随意关闭 channel 很容易造成 `panic: send on closed channel`。
+
+## Unbuffered channel：通信也是同步
+
+不带缓冲的 channel 会让发送方阻塞，直到接收方准备好；接收方也会阻塞，直到发送方发送值。
+
+```go
+ch := make(chan string)
+
+go func() {
+    ch <- "done"
+}()
+
+fmt.Println(<-ch)
+```
+
+这种通信不只是传值，也建立同步关系。发送完成意味着接收方已经拿到值；接收发生意味着发送方之前的相关写入对接收方可见。后面讨论数据竞争时，这种 happens-before 关系很重要。
+
+当只需要表达“事件发生了”而不需要携带数据，可以用 `chan struct{}`。
+
+```go
+done := make(chan struct{})
+go func() {
+    defer close(done)
+    work()
+}()
+<-done
+```
+
+## Pipeline：用 channel 串起阶段
+
+channel 可以把多个 goroutine 串成管道。一个阶段输出，作为下一个阶段输入。
+
+```go
+func counter(out chan<- int) {
+    for x := 0; x < 100; x++ {
+        out <- x
+    }
+    close(out)
+}
+
+func squarer(out chan<- int, in <-chan int) {
+    for x := range in {
+        out <- x * x
+    }
+    close(out)
+}
+
+func printer(in <-chan int) {
+    for x := range in {
+        fmt.Println(x)
+    }
+}
+```
+
+这里使用了单向 channel 类型：`chan<- int` 表示只发送，`<-chan int` 表示只接收。它能把函数意图写进类型系统，防止误用。
+
+`range ch` 会一直接收值，直到 channel 被关闭并耗尽。只有当接收者需要知道“没有更多值”时，才需要关闭 channel。不是所有 channel 都必须关闭。
+
+## Buffered channel：有限队列，不是无限缓冲
+
+带缓冲 channel 创建时指定容量：
+
+```go
+results := make(chan string, 3)
+```
+
+发送会把值放入队列；如果队列满，发送阻塞。接收会从队列取值；如果队列空，接收阻塞。
+
+缓冲可以解耦发送方和接收方的短暂速度差，也可以用于计数信号量限制并发：
+
+```go
+var tokens = make(chan struct{}, 20)
+
+func crawl(url string) []string {
+    tokens <- struct{}{}        // acquire
+    defer func() { <-tokens }() // release
+    return fetchLinks(url)
+}
+```
+
+不要把 buffered channel 当成“解决阻塞”的万能药。容量过大可能掩盖背压问题；容量过小可能导致吞吐不足。容量应该来自资源限制或业务约束，例如最多同时 20 个 HTTP 请求。
+
+## 并发循环：等待和错误收集同样重要
+
+把循环里的工作改成 goroutine 很容易：
+
+```go
+for _, f := range filenames {
+    go process(f)
+}
+```
+
+但这通常是错误的，因为函数可能在 worker 完成前返回。需要等待所有 goroutine 完成。
+
+已知任务数量时，可以用 channel 收集完成事件；未知数量或需要动态派生任务时，`sync.WaitGroup` 更常见。
+
+```go
+var wg sync.WaitGroup
+for _, f := range filenames {
+    f := f
+    wg.Add(1)
+    go func() {
+        defer wg.Done()
+        process(f)
+    }()
+}
+wg.Wait()
+```
+
+注意 `wg.Add(1)` 应在启动 goroutine 前调用，否则可能与 `Wait` 产生竞态。`defer wg.Done()` 能保证错误返回时也会正确减少计数。
+
+## Goroutine 泄露：没人接收，发送方就会卡住
+
+教材中的缩略图例子展示了一个典型 bug：多个 worker 把错误发送到 channel，主 goroutine 收到第一个错误就返回，剩下 worker 再发送时无人接收，于是永久阻塞。
+
+```go
+errors := make(chan error)
+// 如果提前 return，其他 goroutine 可能卡在 errors <- err
+```
+
+解决思路包括：
+
+- 使用足够容量的 buffered channel；
+- 即使提前返回，也启动 goroutine 排空 channel；
+- 使用 context/done 通知 worker 停止；
+- 使用 `errgroup` 统一错误传播和取消。
+
+并发代码里，“谁会继续接收？”和“谁会关闭？”必须想清楚。
+
+## select：等待多个通信事件
+
+`select` 可以同时等待多个 channel 操作。哪一个 case 就绪，就执行哪一个。多个 case 同时就绪时，Go 会伪随机选择一个。
+
+```go
+select {
+case result := <-results:
+    fmt.Println(result)
+case <-time.After(2 * time.Second):
+    return fmt.Errorf("timeout")
+case <-done:
+    return fmt.Errorf("cancelled")
+}
+```
+
+`select` 常用于超时、取消、心跳、多路输入和非阻塞尝试。
+
+有 `default` 的 select 可以实现非阻塞操作：
+
+```go
+select {
+case msg := <-ch:
+    handle(msg)
+default:
+    // 没有消息，继续做别的事
+}
+```
+
+nil channel 在 select 中永远不会就绪。因此可以用 nil 动态启用或禁用某个 case。
+
+## 取消：关闭 channel 是广播
+
+Go 不能强行杀掉另一个 goroutine。正确方式是发出取消信号，让 goroutine 自己在安全位置退出。
+
+关闭一个 channel 可以广播事件：所有接收者都会立刻得到通知。
+
+```go
+var done = make(chan struct{})
+
+func cancelled() bool {
+    select {
+    case <-done:
+        return true
+    default:
+        return false
+    }
+}
+```
+
+真实服务中更常用 `context.Context`：
+
+```go
+func fetch(ctx context.Context, url string) error {
+    req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+    if err != nil {
+        return err
+    }
+    resp, err := http.DefaultClient.Do(req)
+    if err != nil {
+        return err
+    }
+    defer resp.Body.Close()
+    return nil
+}
+```
+
+channel 关闭广播的思想仍然重要，因为 context 的取消本质上也通过 `Done()` channel 传播。
+
+## 过度并发也是 bug
+
+并发不是越多越好。并发爬虫如果无限启动请求，可能耗尽文件描述符、网络连接或下游服务容量。教材里的解决方案是用 buffered channel 做计数信号量，把同时请求限制在固定数量。
+
+工程上要为每类资源设上限：
+
+- HTTP 请求并发数；
+- 数据库连接池；
+- 队列消费者数量；
+- 文件打开数量；
+- CPU 密集任务 worker 数。
+
+没有上限的 goroutine 通常是事故前兆。把本服务压力瞬间转嫁给下游，会造成级联失败。
+
+## 本章工程视角
+
+goroutine 和 channel 让并发写起来很轻，但这也意味着你更容易启动太多工作。每个 goroutine 都要有生命周期，每个 channel 都要有所有权，每条发送路径都要有人接收，每个阻塞点都要考虑取消。
+
+写并发代码时，不要只验证“快乐路径能跑”。还要问：如果上游不再发送会怎样？如果下游提前返回会怎样？如果第一个错误出现，其他 goroutine 怎么退出？如果客户端取消请求，后台任务是否继续占资源？这些问题才是并发代码能否进生产的关键。

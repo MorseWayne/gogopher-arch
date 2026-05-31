@@ -3,9 +3,10 @@ import { CheckCircle2, Loader2, Play, Terminal, XCircle } from "lucide-react";
 import { executeCode } from "../../api/execute";
 import type { SandboxResponse } from "../../api/types";
 import type { GoCourseExercise } from "../data/goBasicsCourse";
+import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 
 export function CourseExercisePanel({ chapterSlug, exercise }: { chapterSlug: string; exercise: GoCourseExercise }) {
   const [isRunning, setIsRunning] = useState(false);
@@ -36,88 +37,85 @@ export function CourseExercisePanel({ chapterSlug, exercise }: { chapterSlug: st
   };
 
   return (
-    <Card className="border-neutral-800 bg-neutral-900/80 text-neutral-100 shadow-2xl shadow-[#00ADD8]/5">
-      <CardHeader className="border-b border-neutral-800">
+    <Card className="overflow-hidden border-slate-800 bg-slate-950 text-slate-100 shadow-xl shadow-primary/10">
+      <CardHeader className="border-b border-slate-800">
         <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="space-y-2">
-            <CardTitle className="flex items-center gap-2 text-xl text-white">
-              <Terminal className="h-5 w-5 text-[#00ADD8]" />
+          <div>
+            <CardTitle className="flex items-center gap-2 text-slate-50">
+              <Terminal className="text-primary" />
               {exercise.title}
             </CardTitle>
-            <p className="text-sm leading-6 text-neutral-400">{exercise.prompt}</p>
+            <CardDescription className="mt-2 text-slate-400">{exercise.prompt}</CardDescription>
           </div>
-          <Button onClick={handleRun} disabled={isRunning} className="rounded-xl bg-[#00ADD8] font-bold text-neutral-950 hover:bg-[#00ADD8]/90">
-            {isRunning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+          <Button onClick={handleRun} disabled={isRunning}>
+            {isRunning ? <Loader2 className="animate-spin" data-icon="inline-start" /> : <Play data-icon="inline-start" />}
             {isRunning ? "运行中" : "运行代码"}
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-5 p-6">
+      <CardContent className="flex flex-col gap-5 p-6">
         <div>
-          <div className="mb-2 flex items-center justify-between text-xs text-neutral-500">
+          <div className="mb-2 flex items-center justify-between text-xs text-slate-500">
             <span>starter code</span>
             <span>Go · timeout 3s</span>
           </div>
-          <pre className="max-h-80 overflow-auto rounded-xl border border-neutral-800 bg-neutral-950 p-4 text-sm leading-6 text-neutral-200">
+          <pre className="max-h-80 overflow-auto rounded-2xl border border-slate-800 bg-black p-4 text-sm leading-6 text-slate-100">
             <code>{exercise.starterCode}</code>
           </pre>
         </div>
 
         <div className="grid gap-3 md:grid-cols-2">
-          <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-4">
-            <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-500">期望输出</div>
-            <code className="text-sm text-[#00ADD8]">{exercise.expectedOutput}</code>
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-4">
+            <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">期望输出</div>
+            <code className="text-sm text-cyan-300">{exercise.expectedOutput}</code>
           </div>
-          <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-4">
-            <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-500">匹配规则</div>
-            <Badge className="border-neutral-700 bg-neutral-800 text-neutral-300">{exercise.outputMatch}</Badge>
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-4">
+            <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">匹配规则</div>
+            <Badge variant="secondary">{exercise.outputMatch}</Badge>
           </div>
         </div>
 
         {exercise.hints.length > 0 && (
-          <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-4">
-            <div className="mb-2 text-sm font-semibold text-blue-200">提示</div>
-            <ul className="space-y-1 text-sm text-blue-100/80">
-              {exercise.hints.map((hint) => (
-                <li key={hint}>• {hint}</li>
-              ))}
-            </ul>
-          </div>
+          <Alert className="border-cyan-900 bg-cyan-950 text-cyan-100">
+            <Terminal />
+            <AlertTitle>提示</AlertTitle>
+            <AlertDescription>
+              <ul className="mt-2 list-disc pl-5">
+                {exercise.hints.map((hint) => (
+                  <li key={hint}>{hint}</li>
+                ))}
+              </ul>
+            </AlertDescription>
+          </Alert>
         )}
 
         {error && (
-          <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
-            <div className="mb-1 flex items-center gap-2 font-semibold">
-              <XCircle className="h-4 w-4" />
-              无法连接到代码运行服务
-            </div>
-            <p className="text-red-100/80">{error}</p>
-            <p className="mt-2 text-red-100/70">请确认本地 Gateway 和 Sandbox Engine 已启动。</p>
-          </div>
+          <Alert variant="destructive">
+            <XCircle />
+            <AlertTitle>无法连接到代码运行服务</AlertTitle>
+            <AlertDescription>{error}。请确认本地 Gateway 和 Sandbox Engine 已启动。</AlertDescription>
+          </Alert>
         )}
 
         {result && (
-          <div className="space-y-3 rounded-xl border border-neutral-800 bg-neutral-950 p-4">
+          <div className="space-y-3 rounded-2xl border border-slate-800 bg-black p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="text-sm font-semibold text-white">运行结果</div>
+              <div className="text-sm font-semibold text-slate-50">运行结果</div>
               <div className="flex flex-wrap gap-2">
-                <Badge className={isExecutionSuccessful ? "border-green-500/30 bg-green-500/10 text-green-300" : "border-red-500/30 bg-red-500/10 text-red-300"}>
-                  exit {result.exit_code}
-                </Badge>
-                <Badge className="border-neutral-700 bg-neutral-800 text-neutral-300">{result.status}</Badge>
-                <Badge className="border-neutral-700 bg-neutral-800 text-neutral-300">{result.duration}ms</Badge>
+                <Badge variant={isExecutionSuccessful ? "default" : "destructive"}>exit {result.exit_code}</Badge>
+                <Badge variant="secondary">{result.status}</Badge>
+                <Badge variant="secondary">{result.duration}ms</Badge>
               </div>
             </div>
 
             <OutputBlock label="stdout" value={result.stdout} />
             <OutputBlock label="stderr" value={result.stderr} />
 
-            <div className={isExecutionSuccessful && isOutputMatched ? "rounded-lg border border-green-500/30 bg-green-500/10 p-3 text-sm text-green-200" : "rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-3 text-sm text-yellow-200"}>
-              <div className="flex items-center gap-2 font-semibold">
-                {isExecutionSuccessful && isOutputMatched ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
-                {isExecutionSuccessful && isOutputMatched ? "练习输出已匹配" : "请检查运行状态或输出内容"}
-              </div>
-            </div>
+            <Alert className={isExecutionSuccessful && isOutputMatched ? "border-emerald-900 bg-emerald-950 text-emerald-100" : "border-amber-900 bg-amber-950 text-amber-100"}>
+              {isExecutionSuccessful && isOutputMatched ? <CheckCircle2 /> : <XCircle />}
+              <AlertTitle>{isExecutionSuccessful && isOutputMatched ? "练习输出已匹配" : "请检查运行状态或输出内容"}</AlertTitle>
+              <AlertDescription>编译失败、输出不匹配或 timeout 都属于正常学习反馈，不会清空你的代码。</AlertDescription>
+            </Alert>
           </div>
         )}
       </CardContent>
@@ -128,9 +126,9 @@ export function CourseExercisePanel({ chapterSlug, exercise }: { chapterSlug: st
 function OutputBlock({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-neutral-500">{label}</div>
-      <pre className="min-h-12 whitespace-pre-wrap rounded-lg border border-neutral-800 bg-black p-3 text-sm text-neutral-200">
-        {value || <span className="text-neutral-600">无输出</span>}
+      <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</div>
+      <pre className="min-h-12 whitespace-pre-wrap rounded-xl border border-slate-800 bg-slate-950 p-3 text-sm text-slate-100">
+        {value || <span className="text-slate-600">无输出</span>}
       </pre>
     </div>
   );

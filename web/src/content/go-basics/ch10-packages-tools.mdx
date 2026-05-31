@@ -1,0 +1,271 @@
+# 包和工具：用边界组织代码，用工具保持一致
+
+现代 Go 项目不是把所有文件堆在一个目录里。包负责组织代码边界，模块负责描述版本和依赖，工具链负责把格式化、构建、测试、文档和元数据查询变成统一动作。《Go 程序设计语言》第 10 章从包系统讲到 Go 工具箱：为什么显式 import 能让编译很快，为什么循环依赖被禁止，为什么 `go list`、`go doc`、`go build` 这些命令对工程协作很重要。
+
+这一章的重点不是背命令，而是形成判断：一个包应该暴露什么 API？一个 import path 是否稳定？什么时候应该拆包？工具链输出应该如何进入 CI？这些判断会决定代码库能否长期演进。
+
+## Package：编译、封装和命名空间
+
+包的第一作用是把一组相关能力放进独立单元。每个包拥有自己的命名空间，因此不同包可以各自定义 `Client`、`Server`、`Config`，调用方通过包名区分它们。
+
+```go
+http.Client
+sql.DB
+json.Decoder
+```
+
+包也是封装边界。小写开头的名字只在同包内可见，大写开头的名字才导出给其他包。这个规则让包维护者可以隐藏内部实现，在不破坏调用方的前提下调整数据结构、缓存策略或并发控制。
+
+同一目录下的 Go 文件通常属于同一个包。编译时，一个包会作为整体编译；修改某个包后，依赖它的包也需要重新编译。Go 编译速度快，很大程度来自几个约束：
+
+- 每个文件顶部显式声明 import，编译器不用扫描全文件猜依赖；
+- 禁止循环依赖，包依赖图必须是有向无环图；
+- 编译产物记录导出信息和依赖信息，下游只需读取直接依赖的目标文件。
+
+这就是为什么 Go 不鼓励“随便互相 import”。循环依赖不是工具不够聪明，而是边界设计出了问题。
+
+## Import path：依赖身份，不只是路径字符串
+
+`import` 语句里写的是导入路径：
+
+```go
+import (
+    "encoding/json"
+    "fmt"
+    "math/rand"
+
+    "golang.org/x/net/html"
+    "github.com/go-sql-driver/mysql"
+)
+```
+
+标准库路径短小稳定。第三方包通常使用域名或托管平台路径作为前缀，目的是保证全局唯一，也方便检索和版本管理。对库作者来说，import path 是 API 的一部分；改路径几乎等于让所有调用方改代码。
+
+module 时代，`go.mod` 让依赖版本更明确，但 import path 的身份意义没有消失。一个模块路径、一个包路径、一个公开 API，一旦被外部使用，就需要按兼容性承诺对待。
+
+## Package declaration：包名和目录名相关但不完全相同
+
+每个 Go 文件必须以 package 声明开始：
+
+```go
+package rand
+```
+
+导入 `math/rand` 后，默认用包名 `rand` 访问成员：
+
+```go
+fmt.Println(rand.Int())
+```
+
+通常包名是导入路径最后一段，但有几个常见例外：
+
+1. 可执行程序使用 `package main`，它的导入路径最后一段不重要；
+2. 外部测试包可以使用 `package xxx_test`，它会被 `go test` 当作独立包编译；
+3. 某些带版本后缀的路径，例如旧生态里的 `gopkg.in/yaml.v2`，包名通常仍是 `yaml`。
+
+工程上应尽量让目录名、包名和职责一致。目录叫 `payment`，包也叫 `payment`，导入后读起来最自然。如果包名和目录名经常不一致，调用方会被迫频繁使用 import alias，代码会变难读。
+
+## Import declaration：分组、重命名和循环依赖
+
+多个 import 可以分组：
+
+```go
+import (
+    "crypto/rand"
+    "encoding/hex"
+    "fmt"
+
+    mrand "math/rand"
+)
+```
+
+空行通常用来分隔标准库、第三方包和内部包。`gofmt` 会整理每组内部顺序；`goimports` 还能自动增删 import。
+
+当两个包默认包名相同，例如 `crypto/rand` 和 `math/rand` 都叫 `rand`，就需要给其中一个起别名。别名只影响当前文件，不改变包自身名称。
+
+`import` 关系就是编译依赖关系。如果 A import B，B 又 import A，Go 会直接拒绝。解决循环依赖通常不是“找技巧绕过”，而是重新划分包：
+
+- 把共同接口或数据类型上移到更底层包；
+- 让依赖方向从业务上层指向基础设施下层；
+- 把过大的包拆成更稳定的核心和外层适配。
+
+## 匿名导入：只要副作用时才使用
+
+Go 不允许导入未使用的包。少数场景下，导入包的目的不是直接使用它的名字，而是执行它的初始化副作用。这时使用空白标识符：
+
+```go
+import _ "image/png"
+```
+
+这叫匿名导入。`image/png` 的 `init` 会向 `image` 包注册 PNG 解码器，之后 `image.Decode` 才能识别 PNG。
+
+类似模式也出现在数据库驱动：
+
+```go
+import (
+    "database/sql"
+    _ "github.com/lib/pq"
+)
+
+ db, err := sql.Open("postgres", dsn)
+```
+
+匿名导入要克制使用，因为它隐藏了副作用。工程代码中应在注释中说明目的，例如“register PostgreSQL driver”。如果一个包导入后会连接网络、读取生产配置或启动 goroutine，那通常不是好设计。
+
+## 包命名：调用点读起来要自然
+
+包名应该短小、清楚、稳定。标准库里有很多好例子：`fmt`、`io`、`http`、`json`、`sync`、`time`。
+
+设计包 API 时，要把包名和成员名一起读：
+
+```go
+strings.NewReader
+json.Marshal
+http.Get
+flag.String
+```
+
+因此成员名里通常不重复包名。不要写成 `json.JSONMarshal` 或 `strings.StringReader`。包名已经提供上下文。
+
+也要避免 `util`、`common`、`helper` 这类名字。它们看似方便，长期会变成垃圾桶包：什么都能放，什么边界都不清。更好的名字应该表达领域或能力，例如 `authz`、`billing`、`retry`、`clock`。
+
+## Go 工具箱：统一反馈回路
+
+Go 命令是一组工具的入口：
+
+```bash
+go fmt ./...
+go test ./...
+go vet ./...
+go build ./...
+go list ./...
+go doc time.Since
+```
+
+常见命令的职责：
+
+| 命令 | 作用 |
+| --- | --- |
+| `go fmt` | 格式化源代码 |
+| `go test` | 运行测试、基准测试、示例 |
+| `go vet` | 检查可疑代码，例如格式化参数不匹配 |
+| `go build` | 编译包或命令，验证能否构建 |
+| `go run` | 临时构建并运行命令 |
+| `go install` | 安装命令到 `$GOBIN` 或 `$GOPATH/bin` |
+| `go env` | 查看工具链环境 |
+| `go list` | 查询包元数据 |
+| `go doc` | 查看包、类型、函数和方法文档 |
+
+团队项目应该把这些命令固化进 Makefile、脚本或 CI，而不是依赖每个人记忆。最小 CI 通常至少包含：
+
+```bash
+go test ./...
+go vet ./...
+go build ./...
+```
+
+如果涉及前端、生成代码或容器，也要把对应验证命令写清楚。
+
+## Module 时代：GOPATH 退到幕后，但工具思想没变
+
+教材写作时 GOPATH 是核心工作区概念。现代 Go 项目通常使用 module：
+
+```bash
+go mod init example.com/acme/service
+go mod tidy
+go test ./...
+```
+
+`go.mod` 描述模块路径、Go 版本和依赖版本。`go.sum` 记录依赖校验和。多数应用仓库从单 module 开始最简单；只有当发布边界、版本节奏或依赖图确实需要分离时，才考虑多 module。
+
+`go work` 适合本地同时开发多个 module。例如你同时修改一个服务和一个内部库，可以用 workspace 把它们放在一起调试。但发布和 CI 仍应验证每个 module 独立可构建。
+
+现代工具链还支持 `toolchain` 指令，用于表达期望的 Go 工具链版本。即便如此，README、CI 镜像和本地脚本仍应明确版本，避免“我机器上能跑”的问题。
+
+## 构建、交叉编译和构建约束
+
+`go build` 可以编译当前目录、导入路径或相对路径：
+
+```bash
+go build ./cmd/server
+go build ./...
+```
+
+对于 `package main`，构建会生成可执行程序；对于库包，构建主要用于验证编译通过。
+
+Go 交叉编译很直接：
+
+```bash
+GOOS=linux GOARCH=amd64 go build ./cmd/server
+```
+
+但不要误以为“能交叉编译”就等于“能跨平台运行正确”。涉及文件路径、系统调用、cgo、时区、证书、换行符或大小写敏感文件系统时，仍需要在目标平台验证。
+
+某些文件只应在特定平台构建，可以用文件名后缀或 build tag：
+
+```go
+//go:build linux || darwin
+```
+
+旧式写法是 `// +build`，现代代码优先使用 `//go:build`。构建约束适合隔离平台差异，但不要滥用到业务功能开关，否则可读性会迅速下降。
+
+## 文档：注释是 API 的一部分
+
+Go 鼓励文档注释和代码放在一起。导出的包、类型、函数、方法都应该有说明，注释通常以被注释的名字开头：
+
+```go
+// ParseConfig reads configuration from r and returns a validated Config.
+func ParseConfig(r io.Reader) (Config, error) {
+    // ...
+}
+```
+
+查看文档可以用：
+
+```bash
+go doc time
+go doc time.Since
+go doc json.Decoder.Decode
+```
+
+如果包文档较长，通常放在 `doc.go`。好的文档不是把实现复述一遍，而是说明用途、约束、错误行为和并发安全性。对于公共包，文档就是调用方的第一份契约。
+
+## internal：只给一部分代码使用的包
+
+Go 的导出规则只有包内和包外两级。有时你希望某些包只给仓库内部某个子树使用，而不是暴露给所有调用方。`internal` 目录提供了这种边界。
+
+```text
+service/
+  internal/cache
+  internal/auth
+  cmd/server
+```
+
+`service/internal/cache` 只能被 `service` 目录树下面的包导入，外部项目不能直接 import。它适合放内部实现、实验性接口和不稳定工具包。
+
+不要把 `internal` 当作随手隐藏混乱代码的地方。它仍然应该有清晰职责，只是可见范围更小。
+
+## go list：理解包图和自动化脚本
+
+`go list` 可以查询包路径和元数据：
+
+```bash
+go list ./...
+go list -json ./cmd/server
+go list -f '{{.ImportPath}} -> {{join .Imports " "}}' ./...
+```
+
+它在脚本中很有用：
+
+- 找出仓库内所有包；
+- 区分普通源文件、内部测试和外部测试；
+- 查询依赖图；
+- 为自定义 lint、生成代码或 CI 分组提供输入。
+
+相比手写 `find` 或解析目录，`go list` 更懂 Go 的构建规则，包括 build tag、测试文件、module 和 vendor 语义。
+
+## 本章工程视角
+
+包和工具是 Go 工程的骨架。包边界决定依赖方向，import path 决定依赖身份，文档注解决定调用方能否正确使用 API，工具链决定团队反馈是否一致。
+
+评审 Go 项目结构时，不要只看文件数量。要问：包名和职责是否匹配？导出的 API 是否稳定？是否存在循环依赖苗头？匿名导入是否有清楚注释？CI 是否运行和本地相同的工具命令？这些问题比“目录看起来整齐”更重要。

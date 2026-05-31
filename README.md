@@ -85,7 +85,7 @@ GoGopher Arch 不把学习过程设计成单纯的课程目录，而是把知识
 git clone https://github.com/MorseWayne/gogopher-arch.git
 cd gogopher-arch
 cp .env.example .env # 可选：需要改端口或默认连接串时再执行
-docker compose up --build
+./scripts/dev.sh docker
 ```
 
 前端默认运行在 `http://localhost:3000`，Gateway 默认运行在 `http://localhost:8080`。前端在容器模式下通过 Nginx 将 `/api` 反向代理到 Gateway，本地 Vite 开发模式也会将 `/api` 代理到 `localhost:8080`。
@@ -132,16 +132,16 @@ docker compose up --build
 
    ```bash
    # 前台运行（便于查看日志）
-   docker compose up --build
+   ./scripts/dev.sh docker
 
    # 后台运行
-   docker compose up --build -d
+   ./scripts/dev.sh docker -d
    ```
 
 4. **查看服务状态和健康检查**
 
    ```bash
-   docker compose ps
+   ./scripts/dev.sh status
    curl http://localhost:8080/health
    curl http://localhost:8081/health
    ```
@@ -150,17 +150,54 @@ docker compose up --build
 
    ```bash
    # 查看所有服务日志
-   docker compose logs -f
+   ./scripts/dev.sh logs
 
    # 查看指定服务日志
-   docker compose logs -f gateway
+   ./scripts/dev.sh logs gateway
    ```
 
 6. **停止服务**
 
    ```bash
-   docker compose down
+   ./scripts/dev.sh docker:down
    ```
+
+### 启动脚本
+
+项目提供 `scripts/dev.sh` 封装常用启动场景，避免反复手动输入环境变量和 `docker compose` 命令。
+
+```bash
+./scripts/dev.sh help
+```
+
+| 命令 | 适用场景 |
+| :--- | :--- |
+| `./scripts/dev.sh docker` | 完整 Docker 部署验证，会执行 `docker compose up --build` |
+| `./scripts/dev.sh docker:up` | 使用已有镜像启动完整 Docker 环境，不主动重新构建 |
+| `./scripts/dev.sh backend` | 用 Docker 启动 Gateway、Sandbox Engine、PostgreSQL、Redis，适合前端本地热开发 |
+| `./scripts/dev.sh deps` | 只启动 PostgreSQL 和 Redis，适合 Go 服务本地运行 |
+| `./scripts/dev.sh sandbox` | 本地启动 Sandbox Engine，并自动注入本地 DB/Redis 环境变量 |
+| `./scripts/dev.sh gateway` | 本地启动 Gateway，并自动注入本地 DB/Redis/Sandbox 环境变量 |
+| `./scripts/dev.sh web` | 启动本地 Vite 前端开发服务，访问 `http://localhost:5173` |
+| `./scripts/dev.sh local` | 启动 PostgreSQL/Redis，并提示本地热开发需要开的 3 个终端 |
+| `./scripts/dev.sh status` | 查看 Docker Compose 服务状态 |
+| `./scripts/dev.sh logs [service]` | 跟随查看所有服务或指定服务日志 |
+
+如果只是修改前端 UI，推荐不要每次重建 Web 镜像：
+
+```bash
+./scripts/dev.sh backend
+./scripts/dev.sh web
+```
+
+如果前后端都要本地热开发，分别开终端运行：
+
+```bash
+./scripts/dev.sh deps
+./scripts/dev.sh sandbox
+./scripts/dev.sh gateway
+./scripts/dev.sh web
+```
 
 ### 本地开发（混合模式）
 
@@ -175,13 +212,13 @@ docker compose up --build
 #### 1. 启动基础组件
 
 ```bash
-docker compose up postgres redis -d
+./scripts/dev.sh deps
 ```
 
 #### 2. 启动沙盒引擎（Go）
 
 ```bash
-go run ./src/services/sandbox-engine/main.go
+./scripts/dev.sh sandbox
 ```
 
 沙盒引擎默认监听 `http://localhost:8081`，健康检查地址为 `http://localhost:8081/health`。
@@ -189,10 +226,7 @@ go run ./src/services/sandbox-engine/main.go
 #### 3. 启动 API 网关（Go）
 
 ```bash
-export DB_URL="postgres://user:pass@localhost:5432/gogopher?sslmode=disable"
-export REDIS_URL="localhost:6379"
-export SANDBOX_URL="http://localhost:8081/execute"
-go run ./src/services/gateway/main.go
+./scripts/dev.sh gateway
 ```
 
 API 网关默认监听 `http://localhost:8080`，健康检查地址为 `http://localhost:8080/health`。
@@ -200,9 +234,7 @@ API 网关默认监听 `http://localhost:8080`，健康检查地址为 `http://l
 #### 4. 启动前端（React + Vite）
 
 ```bash
-cd web
-npm install
-npm run dev
+./scripts/dev.sh web
 ```
 
 前端开发服务器默认运行在 [http://localhost:5173](http://localhost:5173)。开发模式下，Vite 会将 `/api` 请求代理到 `http://localhost:8080`；如需绕过代理，可设置 `VITE_API_BASE_URL`。

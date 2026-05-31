@@ -1,0 +1,264 @@
+# 反射：运行时观察类型和值，但要克制使用
+
+Go 是静态类型语言。通常我们在编译期就知道变量类型，编译器帮我们检查方法、字段和赋值是否正确。反射提供了另一种能力：在运行时检查类型和值，读取字段、遍历方法、根据标签做序列化，甚至修改变量。
+
+《Go 程序设计语言》第 12 章通过 `fmt`、`encoding/json`、结构体标签、S 表达式编码器等例子展示反射的表达力。但它也反复提醒：反射强大、复杂、慢，而且很多错误只能在运行时暴露。工程上应把反射限制在框架边界，给业务层暴露普通、类型安全的 API。
+
+## 为什么需要反射
+
+假设你想写一个类似 `fmt.Sprint` 的函数，能把任意值转成字符串。你可以先用 type switch：
+
+```go
+func Sprint(x interface{}) string {
+    switch x := x.(type) {
+    case string:
+        return x
+    case int:
+        return strconv.Itoa(x)
+    case bool:
+        return strconv.FormatBool(x)
+    default:
+        return "???"
+    }
+}
+```
+
+问题很快出现：`[]float64`、`map[string][]string`、`url.Values`、自定义结构体怎么办？类型组合无限多，编译时不可能为所有类型写分支。
+
+反射解决的是这类问题：函数需要处理一大类没有共同接口的值，而且这些类型可能在你写函数时还不存在。典型场景包括：
+
+- `fmt` 按格式打印任意值；
+- `encoding/json` 根据结构体字段和 tag 编解码；
+- ORM 根据结构体映射数据库列；
+- 参数绑定器把 HTTP query 填入结构体；
+- 测试工具比较任意结构。
+
+如果类型集合是明确的，优先使用接口、泛型或普通函数。反射适合“框架不知道未来类型”的边界。
+
+## Type 和 Value：动态类型与动态值
+
+反射由 `reflect` 包提供，两个核心类型是 `reflect.Type` 和 `reflect.Value`。
+
+```go
+t := reflect.TypeOf(3)
+fmt.Println(t.String()) // int
+
+v := reflect.ValueOf(3)
+fmt.Println(v.Type())   // int
+fmt.Println(v.Int())    // 3
+```
+
+`TypeOf` 和 `ValueOf` 都接收 `interface{}`。当一个具体值传给接口参数时，接口里保存了动态类型和动态值。反射就是把这些信息拿出来。
+
+注意：`reflect.TypeOf` 返回的是动态具体类型，不是变量的静态接口类型：
+
+```go
+var w io.Writer = os.Stdout
+fmt.Println(reflect.TypeOf(w)) // *os.File
+```
+
+`reflect.Value` 可以再转回普通接口：
+
+```go
+v := reflect.ValueOf(3)
+x := v.Interface()
+i := x.(int)
+fmt.Println(i)
+```
+
+这条路径看起来绕，但很多通用库会先用反射分析结构，再在边界处把值交回普通 Go 代码。
+
+## Kind：有限的底层类别
+
+Go 类型无限多，但 `Kind` 是有限集合：`Bool`、`Int`、`String`、`Struct`、`Slice`、`Map`、`Ptr`、`Interface`、`Func` 等。
+
+```go
+func formatAtom(v reflect.Value) string {
+    switch v.Kind() {
+    case reflect.Invalid:
+        return "invalid"
+    case reflect.Bool:
+        return strconv.FormatBool(v.Bool())
+    case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+        return strconv.FormatInt(v.Int(), 10)
+    case reflect.String:
+        return strconv.Quote(v.String())
+    default:
+        return v.Type().String()
+    }
+}
+```
+
+`Type` 描述“具体是什么类型”，例如 `time.Duration`；`Kind` 描述“底层属于哪类”，例如 `Int64`。这就是为什么反射能统一处理具名类型和基础类型。
+
+但要小心：并不是所有 `Value` 方法都能对任意 Kind 调用。对非 slice 调用 `Index`、对非 struct 调用 `Field`、对非 int 调用 `Int` 都会 panic。反射代码必须先检查 Kind。
+
+## 递归显示复杂值
+
+教材里的 `Display` 函数是一个调试工具：给定任意值，递归打印它的结构和路径。
+
+处理不同 Kind 的思路大致如下：
+
+```go
+func display(path string, v reflect.Value) {
+    switch v.Kind() {
+    case reflect.Slice, reflect.Array:
+        for i := 0; i < v.Len(); i++ {
+            display(fmt.Sprintf("%s[%d]", path, i), v.Index(i))
+        }
+    case reflect.Struct:
+        for i := 0; i < v.NumField(); i++ {
+            fieldPath := fmt.Sprintf("%s.%s", path, v.Type().Field(i).Name)
+            display(fieldPath, v.Field(i))
+        }
+    case reflect.Map:
+        for _, key := range v.MapKeys() {
+            display(fmt.Sprintf("%s[%v]", path, key), v.MapIndex(key))
+        }
+    case reflect.Ptr:
+        if v.IsNil() {
+            fmt.Printf("%s = nil\n", path)
+        } else {
+            display("(*"+path+")", v.Elem())
+        }
+    case reflect.Interface:
+        if v.IsNil() {
+            fmt.Printf("%s = nil\n", path)
+        } else {
+            display(path+".value", v.Elem())
+        }
+    default:
+        fmt.Printf("%s = %v\n", path, v)
+    }
+}
+```
+
+这类代码揭示了反射的力量：它能遍历你没有静态类型信息的对象图。也揭示了反射的危险：遇到带环结构时可能无限递归；遇到未导出字段、nil 值、不可寻址值时要仔细处理。
+
+## 编码和解码：JSON 背后的思路
+
+`encoding/json` 能把结构体、map、slice 和基础类型编码成 JSON，也能反过来填充结构体。这类库通常会用反射：
+
+- 根据 Kind 决定如何编码；
+- 遍历 struct 字段；
+- 读取字段 tag；
+- 创建 map、slice、指针目标；
+- 把输入值设置到对应字段。
+
+教材用 S 表达式编码器演示了这一点。编码函数递归处理值：整数、字符串直接输出；slice 和数组输出列表；struct 输出字段名和值；map 输出键值对。
+
+解码更复杂，因为它需要修改变量：
+
+```go
+var movie Movie
+err := json.Unmarshal(data, &movie)
+```
+
+为什么要传指针？因为解码器必须拿到可修改的变量。如果传 `movie` 而不是 `&movie`，反射拿到的是副本，不能设置原变量。
+
+## 可寻址和可设置：修改值前先确认
+
+反射读取值相对简单，修改值要满足更多条件。
+
+```go
+x := 2
+v := reflect.ValueOf(&x).Elem()
+v.SetInt(3)
+fmt.Println(x) // 3
+```
+
+`reflect.ValueOf(x)` 得到的是 x 的副本，不可设置。`reflect.ValueOf(&x).Elem()` 才表示原变量。
+
+常用检查：
+
+```go
+v.CanAddr()
+v.CanSet()
+```
+
+`CanAddr` 表示是否可取地址，`CanSet` 表示是否可以被修改。未导出字段即使可寻址，也通常不能通过反射设置。
+
+错误示例：
+
+```go
+reflect.ValueOf(2).SetInt(3) // panic
+```
+
+库代码不应该让这种 panic 泄漏给调用方。更好的做法是检查输入是否是非 nil 指针、目标是否可设置、类型是否匹配，然后返回清晰 error。
+
+## 结构体标签：协议映射的元数据
+
+结构体标签是反射最常见的工程应用之一：
+
+```go
+type User struct {
+    ID    int64  `json:"id" db:"id"`
+    Name  string `json:"name" db:"name"`
+    Email string `json:"email,omitempty"`
+}
+```
+
+读取标签：
+
+```go
+field, ok := reflect.TypeOf(User{}).FieldByName("Email")
+if ok {
+    fmt.Println(field.Tag.Get("json"))
+}
+```
+
+JSON、ORM、参数绑定器、验证器都会用类似方式解析标签。标签不是注释，它会影响外部协议和运行时行为。修改 tag 等同于修改 API 或数据库映射，应该有测试保护。
+
+教材中的 HTTP 参数绑定器会根据 `http:"max"` 这类标签，把 request form 填入结构体字段。这个思路很常见，但也要定义清楚：未知参数怎么办？空值怎么办？非法 bool/int 怎么报错？slice 多值如何处理？这些边界比反射语法更重要。
+
+## 方法集：运行时查看类型能力
+
+`reflect.Type` 和 `reflect.Value` 可以枚举方法：
+
+```go
+func PrintMethods(x interface{}) {
+    v := reflect.ValueOf(x)
+    t := v.Type()
+    fmt.Printf("type %s\n", t)
+
+    for i := 0; i < v.NumMethod(); i++ {
+        method := t.Method(i)
+        fmt.Println(method.Name, method.Type)
+    }
+}
+```
+
+这可以用于调试、文档工具或框架适配。但业务逻辑如果依赖“字符串方法名”调用方法，往往会变得脆弱。字段或方法重命名后，编译器无法帮你发现反射字符串里的错误。
+
+## 反射的替代方案
+
+在写反射前先问：
+
+1. 能不能用接口表达？
+2. 能不能用泛型表达？
+3. 能不能把类型列表显式写出来？
+4. 能不能用代码生成？
+5. 反射是否只在冷路径运行？
+
+常见替代：
+
+- 接口：适合行为抽象，例如 `io.Reader`、`json.Marshaler`；
+- 泛型：适合容器、集合、算法；
+- 代码生成：适合高性能序列化、RPC、ORM 映射；
+- 手写转换：适合字段很少、协议稳定的 DTO。
+
+反射不是错，但它应该是有理由的选择，而不是因为“看起来通用”。
+
+## 反射的三个成本
+
+第一，反射代码脆弱。许多编译期错误会变成运行时 panic：Kind 不匹配、不可设置、nil、字段不存在、类型不可赋值。
+
+第二，反射代码难读难重构。自动化工具很难理解字符串字段名和运行时类型关系，改名、移动字段、调整标签都更容易漏。
+
+第三，反射通常更慢。它需要运行时检查、间接调用、分配和元数据处理。对配置加载、测试、启动期扫描来说通常没问题；对高频请求热路径要谨慎。
+
+## 本章工程视角
+
+反射适合基础设施层，不适合日常业务层。把反射封装在小包里，给外部提供普通函数、结构体和 error。这样业务代码仍然能享受静态类型检查，反射风险也集中可测。
+
+评审反射代码时，要问：是否检查 Kind？是否检查 CanSet？是否处理 nil？是否避免公开 `reflect.Value`？错误信息是否能诊断输入问题？是否有 benchmark 证明成本可接受？是否有接口、泛型或生成代码的更清晰替代？这些问题决定反射是工具，还是未来事故源。
