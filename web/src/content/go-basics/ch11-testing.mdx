@@ -1,14 +1,59 @@
 # 测试：把预期行为写成可重复的反馈
 
-《Go 程序设计语言》第 11 章讨论测试。测试不是额外的仪式，而是把你对程序行为的预期写成可重复执行的代码。没有测试，重构只能靠信心；有了好测试，重构、修 bug、升级依赖和优化性能才有安全网。
+测试不是额外的仪式，而是把你对程序行为的预期写成可重复执行的代码。没有测试，重构只能靠信心；有了好测试，修 bug、升级依赖、优化性能和重构边界才有安全网。
 
-Go 的测试框架很朴素：文件名、函数名和 `go test` 约定驱动一切。它没有复杂断言 DSL，也不强迫你使用某种测试风格。优点是测试代码和普通 Go 代码一样，缺点是你必须自己认真设计输入、输出和失败信息。
+这一章按一个后端工程场景展开：**你维护用户名称规范化逻辑，需要把用户反馈转成回归测试，再用表驱动测试覆盖边界，最后用 benchmark 判断优化是否真的有效**。
+
+<SourceNote
+  source="gopl-zh"
+  title="第 11 章：测试"
+  note="本章主干基于本地 gopl-zh 第 11 章重组：保留 go test 约定、测试函数、随机测试、覆盖率、基准测试、pprof 和示例函数，并改写为回归测试与后端服务质量反馈场景。"
+/>
+
+<CompareNote
+  title="本章如何整合外部优秀资料"
+  points={[
+    "gopl-zh 负责测试工具链主干：go test 如何发现测试文件、运行 Test/Benchmark/Example，以及覆盖率、pprof 的基本用法。",
+    "Go 官方 testing 文档用于校准现代约定：t.Run、t.Cleanup、fuzzing、benchmark 和包级示例。",
+    "Learn Go with Tests 的思想被放进学习路径：先把预期写成测试，再小步修改实现，测试是设计反馈而不是事后补丁。",
+    "工程实践部分强调失败信息、测试隔离、外部依赖替身和避免脆弱测试。"
+  ]}
+/>
+
+## 你会解决什么问题
+
+假设线上出现一个 bug：用户输入名字时有多余空格，系统保存后无法稳定匹配。
+
+```go
+NormalizeName("  Go   Developer  ")
+```
+
+你希望最终得到：
+
+```text
+go developer
+```
+
+这件事会牵出本章大多数知识：
+
+| 任务 | 需要的测试能力 | 工程关注点 |
+|---|---|---|
+| 把用户报告变成可复现输入 | `TestXxx` | 先让测试失败，再修实现 |
+| 覆盖多个边界 | 表驱动测试 | 新增 case 成本要低 |
+| 定位具体失败场景 | `t.Run` 子测试 | 输出里能看到 case 名称 |
+| 修复后避免回归 | 回归测试 | 历史 bug 要长期留在测试集 |
+| 优化字符串拼接 | benchmark + benchmem | 先保证正确，再用数据判断性能 |
+
+<PracticeBridge
+  exercise="ch11-table-driven-summary"
+  text="先完成热身练习：用结构体切片模拟表驱动测试统计，理解测试表、循环执行和 got/want 对比的最小模型。"
+/>
 
 ## go test 的基本约定
 
-测试文件以 `_test.go` 结尾。它们不会参与普通 `go build`，只在 `go test` 时编译运行。
+`go test` 是一个按照约定组织测试代码的命令。在包目录里，所有以 `_test.go` 结尾的文件不会参与普通 `go build`，只会在 `go test` 时编译和运行。
 
-测试文件里常见三类函数：
+测试文件中常见三类函数：
 
 ```go
 func TestName(t *testing.T) { ... }
@@ -16,9 +61,13 @@ func BenchmarkName(b *testing.B) { ... }
 func ExampleName() { ... }
 ```
 
-- `Test` 函数验证行为是否正确；
-- `Benchmark` 函数测量固定工作负载下的性能；
-- `Example` 函数既是可编译文档，也可以校验输出。
+命名规则很重要：
+
+| 函数类型 | 前缀 | 参数 | 用途 |
+|---|---|---|---|
+| Test | `Test` | `*testing.T` | 验证行为是否正确 |
+| Benchmark | `Benchmark` | `*testing.B` | 测量固定工作负载的性能 |
+| Example | `Example` | 无参数 | 提供可编译文档，并可校验输出 |
 
 运行当前包测试：
 
@@ -44,30 +93,69 @@ go test -v
 go test -run 'French|Canal'
 ```
 
-测试命令会生成临时 main 包来调用测试函数，运行结束后报告 PASS 或 FAIL，并清理临时文件。
+`go test` 的语义模型可以这样理解：它扫描 `*_test.go` 文件，找到符合命名规则的测试、基准和示例函数，生成临时测试入口，编译、运行、报告 PASS/FAIL，最后清理临时文件。
+
+<SourceNote
+  source="Go 官方文档"
+  title="testing package"
+  href="https://pkg.go.dev/testing"
+  note="testing 包文档定义了 Test、Benchmark、Fuzz、Example 的命名和执行约定。课程中的命令和函数签名以官方文档为准。"
+/>
+
+## 测试包名：白盒、黑盒和外部测试包
+
+测试文件可以和被测代码使用同一个包名，也可以使用 `_test` 后缀作为外部测试包。
+
+```go
+package user
+```
+
+同包测试可以访问未导出的函数、变量和类型，适合检查复杂内部状态或难以通过公开 API 触发的边界。这更接近白盒测试。
+
+```go
+package user_test
+```
+
+外部测试包被 `go test` 当作独立包编译，只能访问被测包的导出 API。这更接近黑盒测试，也更像真实调用方。
+
+| 方式 | 能访问未导出符号 | 更适合 |
+|---|---|---|
+| `package user` | 可以 | 内部不变量、复杂状态机、包内辅助函数 |
+| `package user_test` | 不可以 | 公开 API、集成用法、避免测试绑死内部实现 |
+
+有时外部测试需要少量访问内部实现，可以添加只在测试构建时参与的 `export_test.go`。这个技巧要谨慎使用，因为它会把测试和内部实现绑得更紧。
+
+<PitfallCard
+  title="所有测试都写成白盒测试"
+  symptom="内部函数一重构，大量测试失败，但公开行为没有变。"
+  fix="优先从公开 API 写黑盒测试；只有内部不变量很重要且外部 API 难以覆盖时，再补同包白盒测试。"
+/>
 
 ## 测试函数：失败信息要帮人定位问题
 
 测试函数签名固定：
 
 ```go
-func TestIsPalindrome(t *testing.T) {
-    if !IsPalindrome("kayak") {
-        t.Error(`IsPalindrome("kayak") = false`)
+func TestNormalizeName(t *testing.T) {
+    got := NormalizeName("Gopher")
+    want := "gopher"
+    if got != want {
+        t.Errorf("NormalizeName(%q) = %q, want %q", "Gopher", got, want)
     }
 }
 ```
 
-`t.Error` 和 `t.Errorf` 会报告失败，但不会立刻停止当前测试函数。后面的检查仍会继续执行，这样一次运行可能暴露多个失败点。
+`*testing.T` 是测试函数和测试框架沟通的对象。常用方法如下。
 
-如果初始化失败，继续运行没有意义，可以用 `t.Fatal` 或 `t.Fatalf` 停止当前测试：
-
-```go
-file, err := os.Open(name)
-if err != nil {
-    t.Fatalf("Open(%q): %v", name, err)
-}
-```
+| 方法 | 是否立刻停止当前测试 | 适合场景 |
+|---|---|---|
+| `t.Error(args...)` | 否 | 报告失败，继续后续检查 |
+| `t.Errorf(format, args...)` | 否 | 带格式化信息的失败报告 |
+| `t.Fatal(args...)` | 是 | 初始化失败，继续没有意义 |
+| `t.Fatalf(format, args...)` | 是 | 带格式化信息并停止 |
+| `t.Log/t.Logf` | 否 | 输出诊断日志，通常失败或 `-v` 时更有用 |
+| `t.Helper()` | 否 | 标记辅助函数，让失败行号指向调用方 |
+| `t.Cleanup(fn)` | 否 | 注册测试结束后的清理逻辑 |
 
 好的失败信息通常写成：
 
@@ -77,26 +165,44 @@ f(input) = got, want want
 
 它应该包含：被调用的函数、关键输入、实际结果、期望结果。不要只写 `failed` 或 `not equal`，那会逼维护者重新读测试代码才能知道发生了什么。
 
+<ExamplePair
+  title="失败信息：无上下文 vs 可诊断"
+  leftTitle="不要这样写"
+  rightTitle="推荐写法"
+  left={`if got != want {
+    t.Error("failed")
+}`}
+  right={`if got != want {
+    t.Errorf("NormalizeName(%q) = %q, want %q", input, got, want)
+}`}
+/>
+
+<PitfallCard
+  title="错误地使用 Fatal"
+  symptom="一个表里第一个 case 失败后，后面的边界条件都没跑，排查时只能一次修一个。"
+  fix="普通 got/want 不匹配用 Errorf，让所有 case 都跑完；只有测试准备失败、继续没有意义时才用 Fatalf。"
+/>
+
 ## 表驱动测试：让新增用例变便宜
 
-Go 社区非常常见的模式是表驱动测试：用结构体切片列出输入和期望，再循环执行。
+Go 社区非常常见的模式是表驱动测试：用结构体切片列出输入和期望，再循环执行同一套检查逻辑。
 
 ```go
-func TestSplit(t *testing.T) {
+func TestNormalizeName(t *testing.T) {
     tests := []struct {
-        name string
-        s    string
-        sep  string
-        want []string
+        name  string
+        input string
+        want  string
     }{
-        {"basic", "a:b:c", ":", []string{"a", "b", "c"}},
-        {"empty", "", ":", []string{""}},
+        {"lowercase", "Gopher", "gopher"},
+        {"trim", "  Gopher  ", "gopher"},
+        {"spaces", "Go   Developer", "go developer"},
     }
 
     for _, tt := range tests {
-        got := strings.Split(tt.s, tt.sep)
-        if !reflect.DeepEqual(got, tt.want) {
-            t.Errorf("%s: Split(%q, %q) = %#v, want %#v", tt.name, tt.s, tt.sep, got, tt.want)
+        got := NormalizeName(tt.input)
+        if got != tt.want {
+            t.Errorf("%s: NormalizeName(%q) = %q, want %q", tt.name, tt.input, got, tt.want)
         }
     }
 }
@@ -104,22 +210,46 @@ func TestSplit(t *testing.T) {
 
 表驱动的价值不是“看起来高级”，而是让新增边界条件变成新增一行数据。修 bug 时尤其有用：先把用户报告变成失败用例，再修改实现，最后确认测试变绿。
 
-现代 Go 还常配合 `t.Run` 做子测试：
+现代 Go 常配合 `t.Run` 做子测试：
 
 ```go
 for _, tt := range tests {
     tt := tt
     t.Run(tt.name, func(t *testing.T) {
-        // ...
+        got := NormalizeName(tt.input)
+        if got != tt.want {
+            t.Errorf("NormalizeName(%q) = %q, want %q", tt.input, got, tt.want)
+        }
     })
 }
 ```
 
-子测试让 `go test -run` 可以定位具体场景，也能让失败输出更清楚。
+子测试让失败输出带上 case 名称，也让 `go test -run` 可以定位具体场景。
+
+<ExamplePair
+  title="回归测试节奏：先复现 bug，再修实现"
+  leftTitle="用户报告变成失败用例"
+  rightTitle="修复后长期保留"
+  left={`tests := []struct {
+    input string
+    want  string
+}{
+    {"  Go   Developer  ", "go developer"},
+}`}
+  right={`func NormalizeName(input string) string {
+    fields := strings.Fields(input)
+    return strings.ToLower(strings.Join(fields, " "))
+}`}
+/>
+
+<PracticeBridge
+  exercise="ch11-normalize-name"
+  text="进入核心练习：修复 NormalizeName 的空白和大小写边界。这个练习模拟先把用户报告写成回归用例，再修改实现。"
+/>
 
 ## 随机测试和 fuzzing：探索你没想到的输入
 
-表驱动测试适合精心挑选的输入。随机测试适合探索更大的输入空间。教材中的回文例子会随机生成回文字符串，再检查 `IsPalindrome` 是否始终返回 true。
+表驱动测试适合精心挑选的输入。随机测试适合探索更大的输入空间。gopl-zh 中的回文例子会随机生成回文字符串，再检查 `IsPalindrome` 是否始终返回 true。
 
 随机测试要能复现失败。常见做法是记录 seed：
 
@@ -131,15 +261,36 @@ rng := rand.New(rand.NewSource(seed))
 
 Go 现在内置 fuzzing，特别适合解析器、编码器、URL/JSON/协议处理和安全敏感输入：
 
+```go
+func FuzzNormalizeName(f *testing.F) {
+    f.Add("  Go   Developer  ")
+    f.Fuzz(func(t *testing.T, input string) {
+        got := NormalizeName(input)
+        if strings.Contains(got, "  ") {
+            t.Fatalf("NormalizeName(%q) contains repeated spaces: %q", input, got)
+        }
+    })
+}
+```
+
+运行：
+
 ```bash
 go test -fuzz=Fuzz
 ```
 
 基础阶段先把表驱动测试写扎实。等函数输入空间很大、手写用例明显不够时，再引入 fuzzing。
 
+<SourceNote
+  source="Go 官方教程"
+  title="Fuzzing"
+  href="https://go.dev/doc/tutorial/fuzz"
+  note="Go fuzzing 是标准工具链能力，适合补充手写测试无法覆盖的大输入空间；它不替代表驱动测试中的关键业务样例。"
+/>
+
 ## 测试命令：main 包也能被测试
 
-命令行程序也可以测试。关键是把核心逻辑从 `main` 函数中拆出来，让它接收显式参数和 `io.Writer`：
+命令行程序也可以测试。关键是把核心逻辑从 `main` 函数中拆出来，让它接收显式参数和 `io.Writer`。
 
 ```go
 func echo(out io.Writer, newline bool, sep string, args []string) error {
@@ -166,25 +317,15 @@ if got, want := buf.String(), "a,b\n"; got != want {
 
 不要在可测试函数里直接调用 `os.Exit` 或 `log.Fatal`。这些应该留在 `main` 中；业务函数返回 error，让测试能检查错误。
 
-## 白盒、黑盒和外部测试包
-
-黑盒测试只通过导出 API 观察行为。它更接近真实调用方，也更不容易因为内部重构而破碎。
-
-白盒测试和被测代码在同一个包，可以访问未导出的函数和变量。它适合检查内部不变量、复杂状态机或难以通过公开 API 触发的边界。
-
-外部测试包使用 `_test` 后缀：
-
-```go
-package url_test
-```
-
-它会被 `go test` 当成独立包编译，只能访问被测包的导出 API。外部测试包适合集成测试和 API 使用示例，也能避免测试代码造成循环导入。
-
-有时外部测试需要访问少量内部实现，可以在包内添加只参与测试构建的 `export_test.go`，把内部符号临时导出给外部测试。这个技巧要谨慎使用，避免把测试和实现绑得太死。
+<PitfallCard
+  title="业务逻辑藏在 main 里"
+  symptom="命令行程序只能靠手工运行验证，测试无法稳定捕获 stdout/stderr 和错误路径。"
+  fix="把核心逻辑拆成接收参数和 io.Writer 的函数；main 只负责解析 flag、调用函数和处理最终退出。"
+/>
 
 ## 测试替身：隔离外部世界
 
-单元测试不应该真的发送邮件、扣款、写生产数据库或请求第三方 API。可以通过接口或函数变量注入替身对象。
+单元测试不应该真的发送邮件、扣款、写生产数据库或请求第三方 API。可以通过接口或函数参数注入替身对象。
 
 更推荐的方式是小接口：
 
@@ -226,6 +367,12 @@ t.Cleanup(func() { notifyUser = old })
 
 测试污染是后端项目里很常见的隐性成本：单独跑通过，整包跑失败，通常就是共享状态没清干净。
 
+<PitfallCard
+  title="真实外部依赖混入单元测试"
+  symptom="测试偶发超时、扣费、污染真实数据，或者在 CI 环境因为缺少凭据失败。"
+  fix="单元测试用 fake/stub 隔离外部世界；真实服务交互放进明确标记的集成测试，并配置隔离环境。"
+/>
+
 ## 覆盖率：找到薄弱区域，不追求数字崇拜
 
 测试覆盖率表示测试执行到了哪些代码。Go 内置覆盖率工具：
@@ -240,14 +387,23 @@ HTML 报告会标出被覆盖和未覆盖的语句。它能帮你发现明显缺
 
 但覆盖率不能证明没有 bug。100% 语句覆盖也可能没有检查关键结果；低质量测试可以让数字好看却没有保护价值。更好的目标是：关键业务规则、错误路径、边界输入和历史 bug 都有清晰测试。
 
+<CompareNote
+  title="覆盖率应该怎么用"
+  points={[
+    "用覆盖率发现盲区，而不是用百分比证明质量。",
+    "优先补关键错误路径、历史 bug、权限/金额/状态流转等高风险逻辑。",
+    "看到红色未覆盖代码时先判断它是否真的值得测试，而不是机械追求 100%。"
+  ]}
+/>
+
 ## 基准测试：用数据判断优化
 
-基准测试函数以 `Benchmark` 开头：
+基准测试函数以 `Benchmark` 开头，参数是 `*testing.B`：
 
 ```go
-func BenchmarkIsPalindrome(b *testing.B) {
+func BenchmarkNormalizeName(b *testing.B) {
     for i := 0; i < b.N; i++ {
-        IsPalindrome("A man, a plan, a canal: Panama")
+        NormalizeName("  Go   Developer  ")
     }
 }
 ```
@@ -262,12 +418,39 @@ go test -bench=. -benchmem
 `b.N` 由测试框架调整，用来获得稳定测量。不要把输入规模错误地绑定到 `b.N`；输入规模应该由单独参数控制：
 
 ```go
-func benchmarkSort(b *testing.B, n int) { ... }
-func BenchmarkSort100(b *testing.B) { benchmarkSort(b, 100) }
-func BenchmarkSort10000(b *testing.B) { benchmarkSort(b, 10000) }
+func benchmarkNormalize(b *testing.B, n int) { ... }
+func BenchmarkNormalize10(b *testing.B) { benchmarkNormalize(b, 10) }
+func BenchmarkNormalize1000(b *testing.B) { benchmarkNormalize(b, 1000) }
 ```
 
 `-benchmem` 会显示每次操作的字节分配和分配次数。很多 Go 性能问题都和不必要分配有关，但仍要用数据确认，不要凭直觉重写代码。
+
+<ExamplePair
+  title="优化前后：先保证等价，再比较性能"
+  leftTitle="慢但直接"
+  rightTitle="更少分配的方向"
+  left={`func slowJoin(parts []string) string {
+    result := ""
+    for i, part := range parts {
+        if i > 0 { result += "," }
+        result += part
+    }
+    return result
+}`}
+  right={`func builderJoin(parts []string) string {
+    var b strings.Builder
+    for i, part := range parts {
+        if i > 0 { b.WriteString(",") }
+        b.WriteString(part)
+    }
+    return b.String()
+}`}
+/>
+
+<PracticeBridge
+  exercise="ch11-benchmark-comparison"
+  text="进入挑战练习：先补全 strings.Builder 版本并保证输出一致。真正写 benchmark 之前，正确性基线必须先成立。"
+/>
 
 ## pprof：优化前先找到真正瓶颈
 
@@ -288,23 +471,46 @@ go tool pprof ./pkg.test cpu.out
 
 优化顺序应该是：先 profile，找到热点；再提出改动；再 benchmark 对比；最后保留回归基准。没有测量的优化经常只是把代码写复杂。
 
+<SourceNote
+  source="Go Blog"
+  title="Profiling Go Programs"
+  href="https://go.dev/blog/pprof"
+  note="pprof 适合定位真实热点。课程阶段先理解 CPU、heap、block、mutex profile 的用途，后续项目任务再结合长运行服务做实战。"
+/>
+
 ## 示例函数：可执行文档
 
 示例函数以 `Example` 开头：
 
 ```go
-func ExampleIsPalindrome() {
-    fmt.Println(IsPalindrome("A man, a plan, a canal: Panama"))
-    fmt.Println(IsPalindrome("palindrome"))
+func ExampleNormalizeName() {
+    fmt.Println(NormalizeName("  Go   Developer  "))
+    fmt.Println(NormalizeName("Gopher"))
     // Output:
-    // true
-    // false
+    // go developer
+    // gopher
 }
 ```
 
 如果包含 `// Output:` 注释，`go test` 会运行示例并比对标准输出。示例同时出现在文档中，成为真实可编译的用法说明。
 
 公共库尤其适合写 Example：它比长篇说明更直观，也能防止文档示例随着 API 变化而失效。
+
+## 测试概念回看：go test 工具链怎么串起来
+
+前面已经看过测试文件、测试函数、表驱动、替身、覆盖率和性能测量。现在再回看这张表，它更像一张复盘索引，而不是开篇要背的术语清单。
+
+| 概念 | 定义形式 | 运行方式 | 语义模型 | 最常见误区 |
+|---|---|---|---|---|
+| 测试文件 | `*_test.go` | 只在 `go test` 时参与编译 | 和普通 Go 文件同包或外部测试包一起编译 | 以为测试文件会进普通二进制 |
+| 测试函数 | `func TestXxx(t *testing.T)` | `go test` 自动发现并运行 | 通过 `*testing.T` 报告失败和日志 | 函数名不符合规则，或失败信息无上下文 |
+| 子测试 | `t.Run(name, func(t *testing.T){...})` | 可用 `-run` 精确匹配 | 每个 case 有独立名称和失败输出 | 表驱动循环里不写 case 名，失败难定位 |
+| 基准测试 | `func BenchmarkXxx(b *testing.B)` | `go test -bench=.` | 框架调整 `b.N` 获得稳定测量 | 把输入规模绑到 `b.N` |
+| 示例函数 | `func ExampleXxx()` | `go test` 可比对 `// Output:` | 示例既是文档也是可执行检查 | 文档示例和真实 API 脱节 |
+| 覆盖率 | `go test -cover` | 插桩统计执行过的语句 | 帮助发现盲区，不证明无 bug | 追求百分比而忽略断言质量 |
+| fuzzing | `func FuzzXxx(f *testing.F)` | `go test -fuzz=Fuzz` | 自动探索输入空间 | 用 fuzz 替代表驱动基础用例 |
+
+写测试时可以按这个顺序自检：先确认是否能用 `TestXxx` 复现行为，再看是否需要表驱动和子测试；质量反馈不够时看覆盖率；性能问题出现时再写 benchmark 或 pprof；输入空间太大时再考虑 fuzzing。
 
 ## 避免脆弱测试
 
@@ -318,8 +524,22 @@ func ExampleIsPalindrome() {
 
 避免脆弱测试的原则是：只断言你真正关心、且应该稳定的行为。复杂输出可以先解析成结构，再检查关键字段；涉及时间和随机数时注入 clock 和 rng；涉及外部依赖时使用 fake。
 
+<DeepDive title="测试也是设计反馈">
+
+如果一个函数很难测试，通常不是测试框架的问题，而是代码边界的问题。常见信号包括：函数直接读环境变量、直接访问全局数据库、直接发网络请求、混合解析/业务/输出、错误路径只打印日志不返回 error。
+
+为了写测试，你会被迫把核心逻辑提取出来，让依赖通过参数或接口进入。这种拆分会让代码更容易复用、更容易 review，也更容易在项目任务中替换实现。
+
+</DeepDive>
+
 ## 本章工程视角
 
-测试是一种设计反馈。难测的代码通常依赖隐藏全局状态、混合 I/O 和业务逻辑、错误处理不明确、函数边界过大。为了写好测试，你会被迫把核心逻辑提取出来，让依赖通过参数或接口进入。这本身就会改善设计。
+测试是一种设计反馈。评审测试时，不要只问“有没有测试”。要问：失败信息能否定位问题？是否覆盖错误路径？是否有历史 bug 回归用例？测试是否依赖真实外部服务？是否会污染其他测试？基准测试是否有对比数据？这些问题决定测试能不能真正保护项目。
 
-评审测试时，不要只问“有没有测试”。要问：失败信息能否定位问题？是否覆盖错误路径？是否有历史 bug 回归用例？测试是否依赖真实外部服务？是否会污染其他测试？基准测试是否有对比数据？这些问题决定测试能不能真正保护项目。
+## 复盘清单
+
+- 看到 bug 报告时，能先写一个失败测试再改实现。
+- 看到多个输入/输出组合时，能用表驱动测试组织 case。
+- 看到失败输出时，能判断它是否包含函数、输入、got 和 want。
+- 看到外部依赖时，能选择 fake、stub 或接口注入，而不是直接请求真实服务。
+- 看到性能优化建议时，能先写 benchmark/pprof 获取数据。

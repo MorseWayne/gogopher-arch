@@ -206,7 +206,7 @@ export function GoBasicsChapter() {
         </Card>
 
         <div id="exercise">
-          <CourseExercisePanel chapterSlug={chapter.slug} exercise={chapter.exercise} />
+          <CourseExercisePanel chapterSlug={chapter.slug} exercise={chapter.exercise} exercises={chapter.exercises} />
         </div>
       </article>
 

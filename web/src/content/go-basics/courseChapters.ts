@@ -218,6 +218,11 @@ func main() {
     { title: "依赖 map 遍历顺序", symptom: "本地测试偶尔通过，CI 输出顺序不同。", fix: "将 key 收集后排序，再按排序结果访问 map。" },
   ],
   exercise: {
+    id: "ch4-status-counts",
+    kind: "run",
+    difficulty: "warmup",
+    concepts: ["slice", "map", "stable output"],
+    estimatedMinutes: 8,
     title: "统计订单状态",
     prompt: "用 slice 保存事件流，用 map 聚合状态数量，输出一个稳定的统计结果。",
     starterCode: `package main
@@ -235,7 +240,114 @@ func main() {
     expectedOutput: "pending=2 paid=3 failed=1",
     outputMatch: "trimmed-exact",
     hints: ["map 的零值不能直接写入，字面量或 make 都可以初始化。", "为了输出稳定，不要直接 range map。"],
+    solutionOutline: ["初始化 map 后遍历 statuses。", "使用 counts[status]++ 统计。", "按固定字段顺序输出，不直接 range map。"],
   },
+  exercises: [
+    {
+      id: "ch4-status-counts",
+      kind: "run",
+      difficulty: "warmup",
+      concepts: ["slice", "map", "stable output"],
+      estimatedMinutes: 8,
+      title: "统计订单状态",
+      prompt: "用 slice 保存事件流，用 map 聚合状态数量，输出一个稳定的统计结果。",
+      starterCode: `package main
+
+import "fmt"
+
+func main() {
+    statuses := []string{"paid", "pending", "paid", "failed", "paid", "pending"}
+    counts := map[string]int{}
+    for _, status := range statuses {
+        counts[status]++
+    }
+    fmt.Printf("pending=%d paid=%d failed=%d\\n", counts["pending"], counts["paid"], counts["failed"])
+}`,
+      expectedOutput: "pending=2 paid=3 failed=1",
+      outputMatch: "trimmed-exact",
+      hints: ["map 写入前要初始化。", "读取不存在的 key 会得到 int 零值。", "输出时按固定 key 顺序读取，避免 map 遍历随机顺序。"],
+      solutionOutline: ["遍历事件 slice。", "用 map 计数。", "固定输出 pending、paid、failed。"],
+    },
+    {
+      id: "ch4-stable-counts",
+      kind: "edit",
+      difficulty: "core",
+      concepts: ["map", "sort", "strings.Builder", "deterministic output"],
+      estimatedMinutes: 18,
+      title: "实现稳定统计输出",
+      prompt: "补全 StableCounts：统计任意状态出现次数，并按 key 字典序输出，避免依赖 map 的随机遍历顺序。",
+      context: "真实后端里的日志、导出文件、签名字符串和测试快照都需要稳定顺序。",
+      starterCode: `package main
+
+import (
+    "fmt"
+    "sort"
+    "strings"
+)
+
+func StableCounts(statuses []string) string {
+    counts := map[string]int{}
+    for _, status := range statuses {
+        // TODO: 统计每个 status
+    }
+
+    keys := make([]string, 0, len(counts))
+    // TODO: 收集并排序 keys
+
+    parts := make([]string, 0, len(keys))
+    for _, key := range keys {
+        parts = append(parts, fmt.Sprintf("%s=%d", key, counts[key]))
+    }
+    return strings.Join(parts, " ")
+}
+
+func main() {
+    statuses := []string{"paid", "pending", "paid", "failed", "paid", "pending"}
+    fmt.Println(StableCounts(statuses))
+}`,
+      expectedOutput: "failed=1 paid=3 pending=2",
+      outputMatch: "trimmed-exact",
+      hints: ["先用 counts[status]++ 完成计数。", "用 for key := range counts 收集 key。", "sort.Strings(keys) 后再拼接输出。"],
+      solutionOutline: ["统计 map。", "收集 key 到 slice。", "排序 key。", "按排序后的 key 拼接结果。"],
+    },
+    {
+      id: "ch4-safe-response",
+      kind: "debug",
+      difficulty: "challenge",
+      concepts: ["struct", "json", "DTO", "data boundary"],
+      estimatedMinutes: 22,
+      title: "修复响应结构体泄漏",
+      prompt: "当前 JSON 响应会暴露 Email 和 PasswordHash。改成明确的响应 DTO，只输出 id 和 name。",
+      context: "数据库模型、内部领域对象和 API 响应不应随意混用。",
+      starterCode: `package main
+
+import (
+    "encoding/json"
+    "fmt"
+)
+
+type User struct {
+    ID           int64  \`json:"id"\`
+    Name         string \`json:"name"\`
+    Email        string \`json:"email"\`
+    PasswordHash string \`json:"password_hash"\`
+}
+
+func PublicJSON(user User) string {
+    data, _ := json.Marshal(user)
+    return string(data)
+}
+
+func main() {
+    user := User{ID: 7, Name: "Gopher", Email: "gopher@example.com", PasswordHash: "secret"}
+    fmt.Println(PublicJSON(user))
+}`,
+      expectedOutput: `{"id":7,"name":"Gopher"}`,
+      outputMatch: "trimmed-exact",
+      hints: ["新增 UserResponse 结构体，只包含 ID 和 Name。", "在 PublicJSON 内把 User 转成 UserResponse。", "不要依赖 omitempty 隐藏敏感字段；边界上应该明确建模。"],
+      solutionOutline: ["定义响应 DTO。", "从内部 User 映射到响应结构。", "只 marshal 响应结构。"],
+    },
+  ],
   checklist: [
     "能解释 slice 的 len 和 cap。",
     "能用 map 完成计数。",
@@ -720,6 +832,11 @@ func main() {
     { title: "未隔离真实外部依赖", symptom: "测试偶发超时、扣费或污染真实数据。", fix: "用接口注入 fake；把真实服务交互放到受控集成测试。" },
   ],
   exercise: {
+    id: "ch11-table-driven-summary",
+    kind: "run",
+    difficulty: "warmup",
+    concepts: ["table-driven tests", "test cases", "failure messages"],
+    estimatedMinutes: 8,
     title: "模拟表驱动测试统计",
     prompt: "用表格描述多个加法用例，模拟 go test 中表驱动测试的核心思想。",
     starterCode: `package main
@@ -752,7 +869,137 @@ func main() {
     expectedOutput: "passed=3/3",
     outputMatch: "trimmed-exact",
     hints: ["真实测试会写在 *_test.go 中，并使用 t.Errorf 报告失败。", "表驱动的关键是新增边界条件足够低成本。", "name 字段能让失败输出更容易定位。"],
+    solutionOutline: ["把输入和期望写进结构体切片。", "循环执行同一套检查逻辑。", "统计或报告每个 case 的结果。"],
   },
+  exercises: [
+    {
+      id: "ch11-table-driven-summary",
+      kind: "run",
+      difficulty: "warmup",
+      concepts: ["table-driven tests", "test cases", "failure messages"],
+      estimatedMinutes: 8,
+      title: "模拟表驱动测试统计",
+      prompt: "用表格描述多个加法用例，模拟 go test 中表驱动测试的核心思想。",
+      starterCode: `package main
+
+import "fmt"
+
+func add(a, b int) int {
+    return a + b
+}
+
+func main() {
+    tests := []struct {
+        name string
+        a, b int
+        want int
+    }{
+        {"positive", 1, 2, 3},
+        {"zero", -1, 1, 0},
+        {"negative", -2, -3, -5},
+    }
+
+    passed := 0
+    for _, tt := range tests {
+        if add(tt.a, tt.b) == tt.want {
+            passed++
+        }
+    }
+    fmt.Printf("passed=%d/%d\\n", passed, len(tests))
+}`,
+      expectedOutput: "passed=3/3",
+      outputMatch: "trimmed-exact",
+      hints: ["真实测试会写在 *_test.go 中。", "表驱动的关键是新增用例只要新增一行数据。", "name 字段能让失败输出更容易定位。"],
+      solutionOutline: ["定义测试表。", "循环执行函数。", "比较 got 和 want。"],
+    },
+    {
+      id: "ch11-normalize-name",
+      kind: "debug",
+      difficulty: "core",
+      concepts: ["regression test", "strings", "edge cases"],
+      estimatedMinutes: 18,
+      title: "修复名称规范化边界",
+      prompt: "当前 NormalizeName 没有处理前后空格和多余空格。修复函数，让输出稳定通过三个场景。",
+      context: "先把用户报告转成可复现输入，再修实现，是回归测试的基本节奏。",
+      starterCode: `package main
+
+import (
+    "fmt"
+    "strings"
+)
+
+func NormalizeName(input string) string {
+    return strings.ToLower(input)
+}
+
+func main() {
+    tests := []struct {
+        input string
+        want  string
+    }{
+        {"Gopher", "gopher"},
+        {"  Gopher  ", "gopher"},
+        {"Go   Developer", "go developer"},
+    }
+
+    passed := 0
+    for _, tt := range tests {
+        if got := NormalizeName(tt.input); got == tt.want {
+            passed++
+        } else {
+            fmt.Printf("NormalizeName(%q) = %q, want %q\\n", tt.input, got, tt.want)
+        }
+    }
+    fmt.Printf("passed=%d/%d\\n", passed, len(tests))
+}`,
+      expectedOutput: "passed=3/3",
+      outputMatch: "contains",
+      hints: ["strings.TrimSpace 可以去掉前后空白。", "strings.Fields 可以把连续空白拆成字段。", "strings.Join(fields, \" \") 可以恢复为单空格分隔。"],
+      solutionOutline: ["TrimSpace 或 Fields 处理空白。", "ToLower 统一大小写。", "用 Join 保证中间只有一个空格。"],
+    },
+    {
+      id: "ch11-benchmark-comparison",
+      kind: "project",
+      difficulty: "challenge",
+      concepts: ["benchmark", "allocation", "strings.Builder"],
+      estimatedMinutes: 25,
+      title: "比较两种字符串拼接策略",
+      prompt: "补全 builderJoin，让它和 slowJoin 输出一致。这个练习模拟 benchmark 前先保证行为一致。",
+      context: "真正优化前应先写基准测试；sandbox 里先用相同输入输出建立正确性基线。",
+      starterCode: `package main
+
+import (
+    "fmt"
+    "strings"
+)
+
+func slowJoin(parts []string) string {
+    result := ""
+    for i, part := range parts {
+        if i > 0 {
+            result += ","
+        }
+        result += part
+    }
+    return result
+}
+
+func builderJoin(parts []string) string {
+    var b strings.Builder
+    // TODO: 使用 Builder 拼出和 slowJoin 相同的结果
+    return b.String()
+}
+
+func main() {
+    parts := []string{"cache", "db", "queue"}
+    fmt.Printf("same=%v output=%s\\n", slowJoin(parts) == builderJoin(parts), builderJoin(parts))
+}`,
+      expectedOutput: "same=true output=cache,db,queue",
+      outputMatch: "trimmed-exact",
+      hints: ["循环 parts，索引大于 0 时先写逗号。", "Builder 使用 WriteString。", "性能优化前先保证两个实现行为一致。"],
+      solutionOutline: ["用 strings.Builder 累积字符串。", "处理分隔符位置。", "比较 slowJoin 与 builderJoin 输出。"],
+    },
+  ],
   checklist: [
     "能写出 TestXxx 的基本结构。",
     "能用表驱动测试组织多个输入输出。",
