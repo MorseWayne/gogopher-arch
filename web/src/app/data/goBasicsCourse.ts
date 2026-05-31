@@ -4,6 +4,8 @@ import { missionCatalog, type Mission } from "./missions";
 
 export type GoCourseDifficulty = "入门" | "基础" | "进阶" | "高级";
 export type GoCourseOutputMatch = "trimmed-exact" | "contains";
+export type GoCourseExerciseKind = "run" | "edit" | "test" | "debug" | "project" | "review";
+export type GoCourseExerciseDifficulty = "warmup" | "core" | "challenge";
 
 export type GoCourseLesson = {
   title: string;
@@ -23,12 +25,19 @@ export type GoCoursePitfall = {
 };
 
 export type GoCourseExercise = {
+  id?: string;
   title: string;
+  kind?: GoCourseExerciseKind;
+  difficulty?: GoCourseExerciseDifficulty;
+  concepts?: string[];
+  estimatedMinutes?: number;
   prompt: string;
+  context?: string;
   starterCode: string;
   expectedOutput: string;
   outputMatch: GoCourseOutputMatch;
   hints: string[];
+  solutionOutline?: string[];
 };
 
 export type GoCourseContentSource = {
@@ -51,6 +60,7 @@ export type GoCourseChapter = {
   engineeringPractices: string[];
   pitfalls: GoCoursePitfall[];
   exercise: GoCourseExercise;
+  exercises?: GoCourseExercise[];
   checklist: string[];
   reviewQuestions: string[];
   nextMissionSlugs: string[];
@@ -1212,7 +1222,7 @@ export function getGoBasicsLessonCount(chapter: GoCourseChapter) {
 }
 
 export function getGoBasicsExerciseCount(chapter: GoCourseChapter) {
-  return chapter.exercise ? 1 : 0;
+  return chapter.exercises?.length ?? (chapter.exercise ? 1 : 0);
 }
 
 export const goBasicsCatalog = Object.fromEntries(goBasicsChapters.map((chapter) => [chapter.slug, chapter])) as Record<string, GoCourseChapter>;
@@ -1288,8 +1298,23 @@ export function validateGoBasicsCourse() {
       errors.push(`expected at least 3 review questions in ${chapter.slug}`);
     }
 
-    if (!chapter.exercise.title || !chapter.exercise.prompt || !chapter.exercise.starterCode || !chapter.exercise.expectedOutput || !chapter.exercise.outputMatch) {
+    const exercises = chapter.exercises ?? [chapter.exercise];
+    if (exercises.length === 0) {
       errors.push(`missing required exercise data: ${chapter.slug}`);
+    }
+
+    const exerciseIds = new Set<string>();
+    for (const exercise of exercises) {
+      if (!exercise.title || !exercise.prompt || !exercise.starterCode || !exercise.expectedOutput || !exercise.outputMatch) {
+        errors.push(`missing required exercise data: ${chapter.slug}`);
+      }
+
+      if (exercise.id) {
+        if (exerciseIds.has(exercise.id)) {
+          errors.push(`duplicate exercise id ${exercise.id} in ${chapter.slug}`);
+        }
+        exerciseIds.add(exercise.id);
+      }
     }
 
     for (const missionSlug of chapter.nextMissionSlugs) {
