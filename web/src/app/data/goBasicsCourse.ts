@@ -1,3 +1,5 @@
+import type { ComponentType } from "react";
+import { mdxGoBasicsChapterMetadata } from "../../content/go-basics/courseChapters";
 import { missionCatalog, type Mission } from "./missions";
 
 export type GoCourseDifficulty = "入门" | "基础" | "进阶" | "高级";
@@ -29,6 +31,12 @@ export type GoCourseExercise = {
   hints: string[];
 };
 
+export type GoCourseContentSource = {
+  primary: string;
+  references: string[];
+  license?: string;
+};
+
 export type GoCourseChapter = {
   slug: string;
   order: number;
@@ -38,6 +46,7 @@ export type GoCourseChapter = {
   summary: string;
   goals: string[];
   lessons: GoCourseLesson[];
+  lessonCount?: number;
   modernNotes: GoCourseModernNote[];
   engineeringPractices: string[];
   pitfalls: GoCoursePitfall[];
@@ -45,9 +54,28 @@ export type GoCourseChapter = {
   checklist: string[];
   reviewQuestions: string[];
   nextMissionSlugs: string[];
+  loadContent?: () => Promise<ComponentType>;
+  contentKind?: "structured" | "mdx";
+  contentSource?: GoCourseContentSource;
 };
 
-export const goBasicsChapters: GoCourseChapter[] = [
+export type GoBasicsMdxChapter = Omit<GoCourseChapter, "loadContent" | "contentKind">;
+
+type GoBasicsMdxModule = {
+  default: ComponentType;
+};
+
+const mdxChapterContentLoaders = import.meta.glob<GoBasicsMdxModule>("../../content/go-basics/*.mdx");
+
+function getMdxChapterContentLoader(chapter: GoBasicsMdxChapter) {
+  const slugSuffix = chapter.slug.replace(/^ch\d+-/, "");
+  const paddedPath = `../../content/go-basics/ch${String(chapter.order).padStart(2, "0")}-${slugSuffix}.mdx`;
+  const plainPath = `../../content/go-basics/${chapter.slug}.mdx`;
+
+  return mdxChapterContentLoaders[paddedPath] ?? mdxChapterContentLoaders[plainPath];
+}
+
+const baseGoBasicsChapters: GoCourseChapter[] = [
   {
     slug: "ch1-getting-started",
     order: 1,
@@ -1150,6 +1178,43 @@ func main() {
   },
 ];
 
+const mdxChapterOverrides = Object.fromEntries(
+  mdxGoBasicsChapterMetadata.map((chapter) => {
+    const loadModule = getMdxChapterContentLoader(chapter);
+
+    return [
+      chapter.slug,
+      {
+        ...chapter,
+        loadContent: async () => {
+          if (!loadModule) {
+            throw new Error(`missing MDX content loader for ${chapter.slug}`);
+          }
+
+          const module = await loadModule();
+          return module.default;
+        },
+        contentKind: "mdx" as const,
+      },
+    ];
+  }),
+) as Record<string, GoCourseChapter>;
+
+const baseGoBasicsChapterSlugs = new Set(baseGoBasicsChapters.map((chapter) => chapter.slug));
+
+export const goBasicsChapters: GoCourseChapter[] = [
+  ...baseGoBasicsChapters.map((chapter) => mdxChapterOverrides[chapter.slug] ?? chapter),
+  ...Object.values(mdxChapterOverrides).filter((chapter) => !baseGoBasicsChapterSlugs.has(chapter.slug)),
+].sort((left, right) => left.order - right.order);
+
+export function getGoBasicsLessonCount(chapter: GoCourseChapter) {
+  return chapter.lessonCount ?? chapter.lessons.length;
+}
+
+export function getGoBasicsExerciseCount(chapter: GoCourseChapter) {
+  return chapter.exercise ? 1 : 0;
+}
+
 export const goBasicsCatalog = Object.fromEntries(goBasicsChapters.map((chapter) => [chapter.slug, chapter])) as Record<string, GoCourseChapter>;
 
 export function getGoBasicsChapterBySlug(slug?: string | null) {
@@ -1189,13 +1254,15 @@ export function validateGoBasicsCourse() {
       errors.push(`missing goals or checklist: ${chapter.slug}`);
     }
 
-    if (chapter.lessons.length < 3) {
+    if (getGoBasicsLessonCount(chapter) < 3) {
       errors.push(`expected at least 3 lessons in ${chapter.slug}`);
     }
 
-    for (const lesson of chapter.lessons) {
-      if (!lesson.title || lesson.body.filter((paragraph) => paragraph.trim()).length < 2) {
-        errors.push(`lesson needs a title and at least 2 paragraphs in ${chapter.slug}`);
+    if (chapter.lessons.length > 0) {
+      for (const lesson of chapter.lessons) {
+        if (!lesson.title || lesson.body.filter((paragraph) => paragraph.trim()).length < 2) {
+          errors.push(`lesson needs a title and at least 2 paragraphs in ${chapter.slug}`);
+        }
       }
     }
 

@@ -1,0 +1,315 @@
+# 接口：用行为边界替代实现细节
+
+接口是 Go 抽象能力的核心。具体类型告诉你“这个值是什么、内部如何组织”；接口只告诉你“这个值能做什么”。《Go 程序设计语言》第 7 章从 `io.Writer`、`fmt.Stringer`、`flag.Value`、接口值、类型断言和类型分支讲起，展示了接口如何让代码更灵活。
+
+对后端工程来说，接口最常见的价值不是“做架构设计图”，而是隔离变化：把文件、网络、缓存、数据库、通知渠道和第三方 API 抽象成当前调用方真正需要的能力。接口越小，测试替身越容易写，代码越容易替换。
+
+## 接口描述能力，而不是家族
+
+接口类型是一组方法的集合。实现了这些方法的具体类型，就满足这个接口。典型例子是 `io.Writer`：
+
+```go
+type Writer interface {
+    Write(p []byte) (n int, err error)
+}
+```
+
+`fmt.Fprintf` 不关心自己写向文件、网络连接、bytes.Buffer 还是计数器。它只需要第一个参数能 `Write`。
+
+```go
+func Fprintf(w io.Writer, format string, args ...interface{}) (int, error)
+```
+
+这就是接口的力量：调用方和实现方通过很小的方法约定协作，而不是绑定具体类型。
+
+## 小接口更容易复用
+
+Go 标准库有很多单方法接口，例如：
+
+```go
+type Reader interface {
+    Read(p []byte) (n int, err error)
+}
+
+type Closer interface {
+    Close() error
+}
+```
+
+多个小接口可以组合成更大的接口：
+
+```go
+type ReadWriter interface {
+    Reader
+    Writer
+}
+
+type ReadWriteCloser interface {
+    Reader
+    Writer
+    Closer
+}
+```
+
+工程代码里也应优先定义小接口。比如发送通知的业务只需要 `Notify`，就不要把邮件服务的配置、模板、批量发送、健康检查等方法都塞进一个接口。
+
+```go
+type Notifier interface {
+    Notify(message string) error
+}
+```
+
+接口越小，实现者越多，测试 fake 越轻。
+
+## 隐式实现：不需要 implements
+
+Go 的接口是隐式满足的。具体类型不需要声明自己实现了哪个接口；只要方法集匹配即可。
+
+```go
+type ByteCounter int
+
+func (c *ByteCounter) Write(p []byte) (int, error) {
+    *c += ByteCounter(len(p))
+    return len(p), nil
+}
+```
+
+`*ByteCounter` 有 `Write([]byte) (int, error)` 方法，所以它满足 `io.Writer`。你可以把它传给 `fmt.Fprintf`，统计格式化输出写了多少字节。
+
+隐式实现让你可以在消费方定义接口，而不需要修改实现方代码。比如第三方库里的类型，只要它已经拥有你需要的方法，就可以自然满足你的接口。
+
+如果你希望在编译期确认某个类型满足接口，可以写断言：
+
+```go
+var _ io.Writer = (*ByteCounter)(nil)
+```
+
+这不会分配实际对象，只是让编译器检查方法集。
+
+## 方法集会影响接口满足关系
+
+如果方法使用指针接收者，那么通常只有 `*T` 满足接口，`T` 不一定满足。
+
+```go
+type IntSet struct{}
+func (*IntSet) String() string { return "{}" }
+
+var s IntSet
+var _ fmt.Stringer = &s // OK
+// var _ fmt.Stringer = s // 编译错误
+```
+
+虽然变量 `s` 可以直接调用 `s.String()`，因为编译器能自动取地址，但接口赋值不是普通方法调用。接口满足关系看的是方法集本身，不会因为某个值可寻址就把 `T` 当成 `*T`。
+
+遇到 “T does not implement interface, method has pointer receiver” 一类错误时，先检查接收者类型。
+
+## 接口值由动态类型和动态值组成
+
+接口值概念上包含两部分：动态类型和动态值。
+
+```go
+var w io.Writer
+w = os.Stdout
+w = new(bytes.Buffer)
+w = nil
+```
+
+`var w io.Writer` 的零值是 nil 接口，动态类型和动态值都为 nil。把 `os.Stdout` 赋给它后，动态类型是 `*os.File`，动态值是标准输出文件指针。把 `new(bytes.Buffer)` 赋给它后，动态类型是 `*bytes.Buffer`，动态值是缓冲区指针。
+
+调用接口方法时，会根据动态类型进行分派。编译期你只知道 `w` 是 `io.Writer`，运行期实际调用哪个 `Write`，取决于接口里装的具体类型。
+
+可以用 `%T` 打印接口值的动态类型：
+
+```go
+fmt.Printf("%T\n", w)
+```
+
+## nil 接口陷阱
+
+nil 接口和“装着 nil 指针的接口”不是一回事。接口只有在动态类型和动态值都为 nil 时，才等于 nil。
+
+```go
+func writeDone(out io.Writer) {
+    if out != nil {
+        out.Write([]byte("done\n"))
+    }
+}
+
+var buf *bytes.Buffer
+writeDone(buf) // out 不是 nil 接口，而是装着 nil *bytes.Buffer 的接口
+```
+
+这里 `out != nil` 为 true，因为接口有动态类型 `*bytes.Buffer`。但动态值是 nil 指针，调用 `Write` 可能 panic。
+
+更安全的写法是让变量一开始就是接口类型：
+
+```go
+var out io.Writer
+if debug {
+    out = new(bytes.Buffer)
+}
+writeDone(out)
+```
+
+返回 `error` 时也要注意这个问题。不要把带类型的 nil 指针作为 error 返回；成功时直接返回 nil 接口值。
+
+## 空接口和泛型之后的边界
+
+`interface{}` 没有任何方法，因此任何类型都满足它。Go 1.18 后也可以写作 `any`。
+
+```go
+var v any
+v = true
+v = 42
+v = "hello"
+```
+
+空接口适合日志字段、JSON 任意值、格式化参数这类确实需要接收任意类型的场景。但不要用它逃避类型设计。泛型出现后，许多“任意但同构”的容器和算法更适合用类型参数表达；接口仍然适合表达运行时行为能力。
+
+简单判断：如果你只需要调用某些方法，用接口；如果你要保留元素的具体类型并在编译期检查，用泛型；如果确实无法提前知道形状，才考虑 `any` 和类型断言。
+
+## 接口让测试替身更自然
+
+接口最实际的工程用途之一是隔离外部依赖。比如业务逻辑只需要发送消息：
+
+```go
+type Notifier interface {
+    Notify(message string) error
+}
+
+func PublishBuildResult(n Notifier, passed bool) error {
+    if passed {
+        return n.Notify("build passed")
+    }
+    return n.Notify("build failed")
+}
+```
+
+测试时不需要真实邮件服务，只要写一个 fake：
+
+```go
+type fakeNotifier struct {
+    messages []string
+}
+
+func (f *fakeNotifier) Notify(message string) error {
+    f.messages = append(f.messages, message)
+    return nil
+}
+```
+
+接口应该由消费方定义，而不是实现方预先定义一个庞大的 `EmailServiceInterface`。消费方最知道自己需要哪些方法。
+
+## 标准库接口：flag.Value 和 fmt.Stringer
+
+`fmt.Stringer` 让类型控制自己的打印形式：
+
+```go
+type Stringer interface {
+    String() string
+}
+```
+
+只要实现 `String() string`，`fmt` 打印时就会使用它。第 6 章的集合类型、温度类型都适合实现 `Stringer`。
+
+`flag.Value` 则展示了接口如何扩展命令行解析：
+
+```go
+type Value interface {
+    String() string
+    Set(string) error
+}
+```
+
+实现 `String` 和 `Set` 后，你可以把自己的类型接入 `flag` 包。`String` 用于帮助信息和默认值展示，`Set` 用于从命令行字符串解析并更新值。这种设计体现了接口的双向约定：实现方提供能力，调用方只依赖能力。
+
+## 类型断言：从接口取回更具体的能力
+
+类型断言用于检查接口值的动态类型：
+
+```go
+var w io.Writer = os.Stdout
+f, ok := w.(*os.File)
+if ok {
+    fmt.Println(f.Name())
+}
+```
+
+如果只写一个返回值，断言失败会 panic：
+
+```go
+f := w.(*os.File)
+```
+
+工程代码里通常使用 `value, ok` 形式，避免动态类型不匹配导致崩溃。
+
+类型断言也可以断言到另一个接口，表示“这个值除了当前能力，是否还具有更多能力”：
+
+```go
+if rw, ok := w.(io.ReadWriter); ok {
+    _ = rw
+}
+```
+
+不要滥用类型断言。如果一个函数频繁断言很多具体类型，可能说明接口抽象不合适，或者你真正需要的是类型分支处理联合数据。
+
+## 错误分类不要靠字符串匹配
+
+错误也是接口：
+
+```go
+type error interface {
+    Error() string
+}
+```
+
+有时你需要区分错误类型，例如文件不存在、权限不足、文件已存在。不要靠 `strings.Contains(err.Error(), "not exist")` 判断线上逻辑，因为错误文本可能随平台和实现变化。
+
+更稳妥的方式是使用结构化错误和标准帮助函数。现代 Go 通常使用：
+
+```go
+if errors.Is(err, os.ErrNotExist) {
+    // handle not exist
+}
+
+var pathErr *os.PathError
+if errors.As(err, &pathErr) {
+    fmt.Println(pathErr.Path)
+}
+```
+
+这延续了教材中用 `*os.PathError` 和类型断言区分错误的思路，同时适配了现代错误包装链。
+
+## 类型分支：当接口表示一组可能类型
+
+接口有两种常见用法。第一种是行为抽象，例如 `io.Writer`、`fmt.Stringer`、`http.Handler`。第二种是让接口值承载多种具体类型，再用类型断言或类型分支区分。
+
+类型分支写法：
+
+```go
+func sqlQuote(x any) string {
+    switch x := x.(type) {
+    case nil:
+        return "NULL"
+    case int, uint:
+        return fmt.Sprintf("%d", x)
+    case bool:
+        if x {
+            return "TRUE"
+        }
+        return "FALSE"
+    case string:
+        return quoteString(x)
+    default:
+        panic(fmt.Sprintf("unexpected type %T", x))
+    }
+}
+```
+
+类型分支适合协议编码、日志字段格式化、JSON-like 结构处理等场景。但如果 case 越来越多，要警惕是不是缺少更清晰的数据模型。
+
+## 本章工程视角
+
+接口的设计原则很简单：少、准、靠近使用方。不要为了“看起来专业”提前为每个结构体配一个接口。只有当你需要替换实现、隔离外部依赖、隐藏复杂细节或表达通用行为时，接口才真正有价值。
+
+评审接口时可以问：这个接口是否只包含调用方需要的方法？是否由消费方定义？是否会让测试 fake 更容易？是否把 nil 指针包装成非 nil 接口？是否因为过度抽象让代码更难读？能回答这些问题，才算真正开始掌握 Go 的接口。

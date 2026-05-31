@@ -3,47 +3,78 @@ services:
     build:
       context: ./web
     ports:
-      - "3000:80"
+      - "${WEB_PORT:-3000}:80"
     depends_on:
-      - gateway
+      gateway:
+        condition: service_healthy
+    restart: unless-stopped
 
   gateway:
     build:
       context: .
       dockerfile: src/services/gateway/Dockerfile
     ports:
-      - "8080:8080"
+      - "${GATEWAY_PORT:-8080}:8080"
     depends_on:
-      - sandbox-engine
-      - postgres
-      - redis
+      sandbox-engine:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
-      # 我们在代码里目前硬编码了 localhost，但在容器内应使用服务名
-      # 之后我会修复 main.go 中的端口配置以读取这些环境变量
-      - SANDBOX_URL=http://sandbox-engine:8081/execute
-      - DB_URL=postgres://user:pass@postgres:5432/gogopher?sslmode=disable
-      - REDIS_URL=redis:6379
+      - SANDBOX_URL=${SANDBOX_URL:-http://sandbox-engine:8081/execute}
+      - DB_URL=${DB_URL:-postgres://user:pass@postgres:5432/gogopher?sslmode=disable}
+      - REDIS_URL=${REDIS_URL:-redis:6379}
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
 
   sandbox-engine:
     build:
       context: .
       dockerfile: src/services/sandbox-engine/Dockerfile
     ports:
-      - "8081:8081"
+      - "${SANDBOX_PORT:-8081}:8081"
     environment:
-      - REDIS_URL=redis:6379
-      - DB_URL=postgres://user:pass@postgres:5432/gogopher?sslmode=disable
+      - REDIS_URL=${REDIS_URL:-redis:6379}
+      - DB_URL=${DB_URL:-postgres://user:pass@postgres:5432/gogopher?sslmode=disable}
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8081/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
 
   postgres:
     image: postgres:15-alpine
     environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=pass
-      - POSTGRES_DB=gogopher
+      - POSTGRES_USER=${POSTGRES_USER:-user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-pass}
+      - POSTGRES_DB=${POSTGRES_DB:-gogopher}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped

@@ -1,0 +1,215 @@
+# 方法：把行为放到合适的数据旁边
+
+方法是带接收者的函数。它让某个命名类型拥有自己的行为，也让调用代码更接近领域语言。《Go 程序设计语言》第 6 章展示了方法声明、指针接收者、结构体嵌入、方法值、方法表达式和封装。Go 支持面向对象的一部分能力，但它没有类继承体系，更强调组合和清晰边界。
+
+在后端工程里，方法适合表达“这个对象能做什么”：账户增加积分、缓存读取值、服务处理请求、集合添加元素。好的方法让行为靠近数据；坏的方法会把隐藏依赖、全局状态和副作用塞进对象里。
+
+## 方法声明：接收者让函数绑定到类型
+
+方法声明和函数声明很像，只是在函数名前多了一个接收者参数。
+
+```go
+type Point struct{ X, Y float64 }
+
+func (p Point) Distance(q Point) float64 {
+    return math.Hypot(q.X-p.X, q.Y-p.Y)
+}
+```
+
+`p` 是接收者。调用时写成：
+
+```go
+p := Point{1, 2}
+q := Point{4, 6}
+fmt.Println(p.Distance(q))
+```
+
+接收者名字不是 `this` 或 `self`，Go 通常用短而有辨识度的名字，例如 `p Point`、`a *Account`、`s *Server`。同一类型的方法接收者命名应保持一致。
+
+方法不只能定义在 struct 上。只要是同一个包内定义的命名类型，底层类型可以是 slice、map、数字或字符串，也可以定义方法。
+
+```go
+type Path []Point
+
+func (path Path) Distance() float64 {
+    sum := 0.0
+    for i := range path {
+        if i > 0 {
+            sum += path[i-1].Distance(path[i])
+        }
+    }
+    return sum
+}
+```
+
+这让 Go 的方法比传统“类方法”更灵活。
+
+## 值接收者和指针接收者
+
+方法接收者也遵循值传递。值接收者会复制接收者，适合小型、不可变或语义上像值的类型。指针接收者可以修改原对象，也能避免复制大型结构体。
+
+```go
+type Account struct {
+    Points int
+}
+
+func (a *Account) Add(points int) {
+    a.Points += points
+}
+```
+
+如果写成值接收者：
+
+```go
+func (a Account) Add(points int) {
+    a.Points += points
+}
+```
+
+修改只发生在副本上，调用方看到的 `Points` 不会变化。
+
+工程上常见经验是：如果某个类型有一个方法需要指针接收者，通常该类型所有方法都使用指针接收者，减少调用者和接口实现上的困惑。小型不可变值，例如 `time.Duration` 一类，使用值接收者更自然。
+
+## 方法调用中的自动取址和解引用
+
+Go 会在合法场景下为方法调用自动取址或解引用。变量 `p` 是 `Point`，但方法需要 `*Point` 接收者时，可以直接写：
+
+```go
+p := Point{1, 2}
+p.ScaleBy(2) // 编译器隐式使用 (&p).ScaleBy(2)
+```
+
+前提是接收者可寻址。临时值不能自动取址：
+
+```go
+// Point{1, 2}.ScaleBy(2) // 编译错误：临时值不能取地址
+```
+
+反过来，`*Point` 也可以调用值接收者方法，编译器会自动解引用。
+
+这种语法糖让方法调用更顺手，但不要因此忽略方法集差异。接口实现判断时，`T` 和 `*T` 拥有的方法集合不完全相同，这会在接口章节变得非常重要。
+
+## nil 也可能是合法接收者
+
+某些方法允许 nil 指针作为接收者，只要 nil 对这个类型有明确语义。例如链表中 nil 可以表示空链表：
+
+```go
+type IntList struct {
+    Value int
+    Tail  *IntList
+}
+
+func (list *IntList) Sum() int {
+    if list == nil {
+        return 0
+    }
+    return list.Value + list.Tail.Sum()
+}
+```
+
+如果你的方法允许 nil 接收者，应该在类型注释或方法注释中写清楚 nil 表示什么。否则调用者会误以为 nil 一定是 bug。
+
+map 命名类型也常有类似行为。例如 `url.Values.Get` 可以把 nil map 当成空 map 读取，但 `Add` 需要写入，nil map 写入会 panic。这提醒我们：同一个类型的不同方法，对 nil 的容忍程度可能不同，文档要清楚。
+
+## 结构体嵌入：组合，不是继承
+
+结构体可以嵌入匿名字段，从而提升字段和方法。
+
+```go
+type ColoredPoint struct {
+    Point
+    Color color.RGBA
+}
+```
+
+这样可以直接访问：
+
+```go
+var cp ColoredPoint
+cp.X = 1
+cp.Y = 2
+fmt.Println(cp.Point.X)
+```
+
+`Point` 的方法也会被提升到 `ColoredPoint` 上。但这不是继承。`ColoredPoint` 不是 `Point`，它只是包含一个 `Point`。如果某个方法需要参数 `Point`，你仍然要显式传入 `cp.Point`。
+
+这种组合方式适合把复杂对象拆成小能力。例如把 `sync.Mutex` 嵌入缓存结构中，可以让锁和被保护的数据放在一起：
+
+```go
+var cache = struct {
+    sync.Mutex
+    mapping map[string]string
+}{
+    mapping: make(map[string]string),
+}
+```
+
+但嵌入不是越多越好。提升的方法过多会让类型表面能力变得模糊，甚至产生同名选择器冲突。
+
+## 方法值和方法表达式
+
+选择器 `p.Distance` 可以生成一个方法值。它把方法和特定接收者绑定成一个函数值。
+
+```go
+distanceFromP := p.Distance
+fmt.Println(distanceFromP(q))
+```
+
+这在需要传递回调时很方便。例如：
+
+```go
+time.AfterFunc(10*time.Second, rocket.Launch)
+```
+
+方法表达式则把接收者变成普通函数的第一个参数：
+
+```go
+distance := Point.Distance
+fmt.Println(distance(p, q))
+```
+
+方法值更适合“绑定某个对象后稍后调用”；方法表达式更适合“按条件选择同一类型的不同方法”。实际项目里它们不如普通方法调用常见，但在回调、调度、表驱动策略中很有用。
+
+## 方法让集合类型有领域行为
+
+教材中的 `IntSet` 用 `[]uint64` 实现一个整数集合，并为它定义 `Has`、`Add`、`UnionWith`、`String` 等方法。这个例子说明：方法可以把底层表示隐藏起来，让调用者关心集合行为，而不是关心位运算细节。
+
+```go
+type IntSet struct {
+    words []uint64
+}
+
+func (s *IntSet) Add(x int) {
+    word, bit := x/64, uint(x%64)
+    for word >= len(s.words) {
+        s.words = append(s.words, 0)
+    }
+    s.words[word] |= 1 << bit
+}
+```
+
+如果直接把 `IntSet` 暴露为 `[]uint64`，外部包就可以随意修改内部表示。用 struct 包一层，即使只有一个字段，也能为未来变化保留空间。
+
+## 封装：保护不变量和演进空间
+
+Go 的可见性规则很简单：大写开头的包级名字、字段和方法会导出；小写开头不会导出。封装的最小单位是包，而不是类。
+
+```go
+type Counter struct {
+    n int
+}
+
+func (c *Counter) N() int     { return c.n }
+func (c *Counter) Increment() { c.n++ }
+func (c *Counter) Reset()     { c.n = 0 }
+```
+
+外部调用者不能直接设置 `n`，只能通过方法改变状态。这样包作者可以维护不变量，例如计数不能任意设成负数、缓存必须和索引同步、连接状态必须按顺序流转。
+
+Go 不强制所有字段私有。很多简单 DTO 会直接导出字段，方便 JSON 编码或调用方构造。但一旦字段导出，它就成为 API 的一部分，未来很难在不破坏兼容的情况下收回。因此导出字段前要确认：调用方直接读写它是否安全？内部表示是否稳定？是否需要校验？
+
+## 本章工程视角
+
+方法应该服务于领域行为，而不是把函数机械挪到类型上。`account.AddPoints` 比 `AddPoints(account, n)` 更能表达业务动作；但如果函数只是无状态转换，普通函数可能更清楚。
+
+设计方法时问自己：接收者是否需要被修改？类型是否大到不适合复制？方法是否依赖隐藏的全局状态？字段是否应该导出？组合是否让能力更清楚，还是制造了伪继承？这些问题会决定你的 Go 代码是简单可读，还是慢慢长成难以测试的对象泥团。

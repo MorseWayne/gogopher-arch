@@ -1,0 +1,284 @@
+# 复合数据类型：数组、slice、map、struct 和 JSON
+
+基础类型像原子，复合类型负责把它们组织成真实业务数据。《Go 程序设计语言》第 4 章集中讨论数组、slice、map 和 struct，并进一步展示如何把这些结构编码成 JSON。对后端开发来说，这一章直接对应请求参数、响应 DTO、缓存索引、聚合统计、配置结构和数据模型。
+
+这一章的关键不是记住语法，而是理解数据是否共享、长度是否固定、顺序是否稳定、字段是否跨系统边界。这些判断会直接影响内存、测试和 API 兼容性。
+
+## 数组：固定长度也是类型的一部分
+
+数组是固定长度、同类型元素的序列。数组长度是类型的一部分，因此 `[3]int` 和 `[4]int` 是不同类型。
+
+```go
+var a [3]int
+fmt.Println(a[0])
+fmt.Println(a[len(a)-1])
+
+for i, v := range a {
+    fmt.Printf("%d %d\n", i, v)
+}
+```
+
+数组元素默认是零值，也可以用字面量初始化：
+
+```go
+q := [...]int{1, 2, 3}
+fmt.Printf("%T\n", q) // [3]int
+```
+
+数组在 Go 中不如 slice 常用，因为长度固定，不方便表达动态集合。但数组仍然适合特定大小的数据，例如 SHA-256 摘要是 `[32]byte`。如果数组元素可比较，那么数组也可比较。
+
+函数参数是值传递。把大数组传给函数会复制整个数组；如果要修改调用方数组，需要传指针。但多数业务代码更自然地使用 slice。
+
+## Slice：动态窗口，不是数组本身
+
+slice 是 Go 中最常用的序列类型，写作 `[]T`。它不是数组本身，而是对底层数组某段区间的描述。可以把 slice 理解成三个字段：指向底层数组元素的指针、长度 `len` 和容量 `cap`。
+
+```go
+months := [...]string{1: "January", 2: "February", 3: "March", 4: "April", 5: "May", 6: "June"}
+q2 := months[4:7]
+fmt.Println(q2)
+```
+
+多个 slice 可以共享同一个底层数组。修改一个 slice 的元素，可能影响另一个 slice 看到的数据。
+
+```go
+items := []string{"a", "b", "c", "d"}
+left := items[:2]
+right := items[1:3]
+right[0] = "B"
+fmt.Println(left) // [a B]
+```
+
+这不是 bug，而是 slice 的基本语义。真正危险的是你误以为切片已经复制了数据。
+
+## len、cap 和 append
+
+`len(s)` 是当前 slice 可见元素数量，`cap(s)` 是从 slice 起点到底层数组末尾的可增长空间。`append` 会在容量足够时复用底层数组；容量不足时分配新数组并复制旧元素。
+
+```go
+var values []int
+values = append(values, 1)
+values = append(values, 2, 3)
+fmt.Println(values)
+```
+
+因此，调用 `append` 后必须使用它的返回值：
+
+```go
+values = append(values, next)
+```
+
+不要假设 append 一定会或一定不会重新分配。这个不确定性是很多隐藏 bug 的来源。如果你需要保留一份独立数据，明确复制：
+
+```go
+snapshot := append([]string(nil), items...)
+```
+
+或者：
+
+```go
+snapshot := make([]string, len(items))
+copy(snapshot, items)
+```
+
+长期保存从大 slice 中截取的小片段时尤其要注意。小 slice 可能因为共享底层数组而让整块大数组无法被 GC 回收。
+
+## nil slice 和空 slice
+
+slice 的零值是 `nil`，长度和容量都是 0。空 slice 也可以是非 nil，例如 `[]int{}`。多数情况下，判断 slice 是否为空应该使用 `len(s) == 0`，而不是 `s == nil`。
+
+```go
+var a []int
+b := []int{}
+
+fmt.Println(len(a), a == nil) // 0 true
+fmt.Println(len(b), b == nil) // 0 false
+```
+
+除非 API 文档明确区分 nil 和 empty，否则函数应该尽量同等对待二者。JSON 编码时二者可能表现不同：nil slice 可能编码为 `null`，空 slice 编码为 `[]`，这属于跨系统边界，需要按产品协议决定。
+
+## Map：哈希表、索引和集合
+
+map 是 key/value 集合，底层是哈希表引用。类型写作 `map[K]V`，其中 key 类型必须可比较。
+
+```go
+counts := map[string]int{}
+counts["paid"]++
+counts["pending"]++
+fmt.Println(counts["paid"])
+```
+
+查找不存在的 key 会返回 value 类型的零值。这很方便，但有时需要区分“不存在”和“存在但值为零”，这时使用 comma ok 写法：
+
+```go
+age, ok := ages["bob"]
+if !ok {
+    fmt.Println("bob not found")
+}
+_ = age
+```
+
+map 的零值是 nil。读取、`len`、`range`、`delete` 都可以安全作用于 nil map，但写入 nil map 会 panic。因此写入前要用 `make` 或字面量初始化。
+
+```go
+var m map[string]int
+// m["x"] = 1 // panic
+m = make(map[string]int)
+m["x"] = 1
+```
+
+## Map 遍历顺序故意不稳定
+
+Go 故意不保证 map 遍历顺序。你不能把 `range map` 的输出顺序作为业务逻辑、测试快照或签名输入。
+
+如果需要稳定输出，先收集 key，再排序：
+
+```go
+names := make([]string, 0, len(ages))
+for name := range ages {
+    names = append(names, name)
+}
+sort.Strings(names)
+
+for _, name := range names {
+    fmt.Printf("%s=%d\n", name, ages[name])
+}
+```
+
+这个习惯对后端非常重要：日志、导出文件、缓存 key、签名字符串和测试快照都应该稳定，否则排障成本会很高。
+
+## 用 map 表达 set 和计数器
+
+Go 没有内置 set 类型，但可以用 map 的 key 唯一性表达集合。
+
+```go
+seen := map[string]bool{}
+for _, id := range ids {
+    if seen[id] {
+        continue
+    }
+    seen[id] = true
+    fmt.Println(id)
+}
+```
+
+也可以用 `map[string]int` 做计数器：
+
+```go
+counts := map[string]int{}
+for _, status := range statuses {
+    counts[status]++
+}
+```
+
+如果 value 完全不重要，有些代码会用 `map[string]struct{}` 节省一点空间。但对初学和业务代码来说，`map[string]bool` 往往更直观。
+
+## Struct：把字段组织成业务对象
+
+结构体把多个字段聚合成一个实体。每个字段有名字和类型。
+
+```go
+type Employee struct {
+    ID        int
+    Name      string
+    Position  string
+    Salary    int
+    ManagerID int
+}
+```
+
+字段通过点操作符访问。结构体变量的字段也是变量，可以直接赋值；结构体指针也可以直接用点操作符访问字段，Go 会自动解引用。
+
+```go
+var e Employee
+e.Name = "Gopher"
+
+p := &e
+p.Position = "Backend Intern"
+```
+
+结构体的字段顺序是类型定义的一部分。相关字段应该放在一起，导出的字段首字母大写，未导出的字段首字母小写。结构体可以包含指向自身类型的指针，从而表达树、链表等递归结构。
+
+结构体零值是所有字段的零值。好的结构体设计会尽量让零值有意义，但不是所有领域对象都适合零值可用。对于必须填写的字段，应该在构造函数或校验函数里显式检查。
+
+## 结构体字面量和指针
+
+结构体字面量有两种常见写法。按字段顺序写：
+
+```go
+type Point struct{ X, Y int }
+p := Point{1, 2}
+```
+
+以及按字段名写：
+
+```go
+p := Point{X: 1, Y: 2}
+```
+
+工程代码更推荐字段名形式，尤其是字段较多、类型导出、或字段未来可能调整时。字段名形式可读性更好，也更不容易因为字段顺序变化导致误赋值。
+
+较大的结构体通常通过指针传递；如果函数要修改结构体字段，也必须接收指针，因为函数参数本身是值拷贝。
+
+```go
+func AwardAnnualRaise(e *Employee) {
+    e.Salary = e.Salary * 105 / 100
+}
+```
+
+## JSON：结构体就是协议边界
+
+JSON 是后端服务最常见的数据交换格式之一。Go 标准库的 `encoding/json` 可以把结构体、slice、map 和基础类型编码为 JSON，也可以从 JSON 解码回 Go 结构。
+
+```go
+type Movie struct {
+    Title  string
+    Year   int  `json:"released"`
+    Color  bool `json:"color,omitempty"`
+    Actors []string
+}
+```
+
+结构体字段 tag 控制 JSON 字段名和编码行为。只有导出字段会被 `encoding/json` 默认处理，因此 JSON DTO 的字段通常需要大写开头，再通过 tag 指定外部协议里的小写或下划线字段名。
+
+```go
+data, err := json.MarshalIndent(movie, "", "  ")
+if err != nil {
+    return err
+}
+fmt.Println(string(data))
+```
+
+解码时，结构体可以只声明自己关心的字段，其他 JSON 字段会被忽略。这很适合接入第三方 API，但也要小心：字段被忽略可能掩盖协议变更。重要接口应该有测试覆盖和必要的 schema 校验。
+
+## 请求、响应和内部模型不要随意混用
+
+真实后端项目里，结构体不是越少越好。很多初学者会把数据库模型、请求参数、响应 DTO 和内部领域对象混成一个结构体，短期省事，长期会把边界问题扩散到所有地方。
+
+更稳妥的做法是按边界建模：
+
+```go
+type CreateUserRequest struct {
+    Name  string `json:"name"`
+    Email string `json:"email"`
+}
+
+type User struct {
+    ID    int64
+    Name  string
+    Email string
+}
+
+type UserResponse struct {
+    ID   int64  `json:"id"`
+    Name string `json:"name"`
+}
+```
+
+这样可以避免把内部字段泄漏给前端，也方便在请求层做校验、在响应层隐藏敏感信息、在内部模型中保持业务语义。
+
+## 本章工程视角
+
+复合类型真正考验的是“共享”和“边界”。slice 共享底层数组，map 是引用类型且顺序不稳定，struct tag 会影响外部协议，JSON 解码可能忽略未知字段。你需要在每个边界上明确：数据是否独立？顺序是否稳定？字段是否可以为空？修改是否会影响调用方？
+
+写小程序时，这些问题看起来不严重；写服务时，它们会变成内存泄漏、偶发测试失败、API 兼容性事故和数据泄漏。理解复合类型，就是理解 Go 后端数据流的基本形状。

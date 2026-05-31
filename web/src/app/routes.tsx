@@ -4,18 +4,23 @@ import { Dashboard } from "./pages/Dashboard";
 import { MissionDetail } from "./pages/MissionDetail";
 import { GoBasicsCourse } from "./pages/GoBasicsCourse";
 import { GoBasicsChapter } from "./pages/GoBasicsChapter";
-import { Layout } from "./components/Layout";
+import { PublicLayout, LearningLayout } from "./components/Layout";
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    Component: Layout,
+    Component: PublicLayout,
     children: [
       { index: true, Component: Landing },
-      { path: "dashboard", Component: Dashboard },
-      { path: "missions/:slug", Component: MissionDetail },
-      { path: "courses/go-basics", Component: GoBasicsCourse },
-      { path: "courses/go-basics/:chapterSlug", Component: GoBasicsChapter },
+    ],
+  },
+  {
+    Component: LearningLayout,
+    children: [
+      { path: "/dashboard", Component: Dashboard },
+      { path: "/missions/:slug", Component: MissionDetail },
+      { path: "/courses/go-basics", Component: GoBasicsCourse },
+      { path: "/courses/go-basics/:chapterSlug", Component: GoBasicsChapter },
     ],
   },
 ]);

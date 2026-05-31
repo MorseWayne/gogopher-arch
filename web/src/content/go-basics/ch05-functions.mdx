@@ -1,0 +1,241 @@
+# 函数：把业务步骤拆成可测试的小单元
+
+函数把一组语句打包成可复用的单元。它让大任务被拆成小任务，也隐藏实现细节。《Go 程序设计语言》第 5 章用网页抓取器贯穿递归、错误处理、函数值、匿名函数、defer 和 panic。对后端开发来说，函数设计决定了代码是否容易测试、复用和排障。
+
+这一章的重点不是“会写 `func` 关键字”，而是学会让函数签名表达边界：调用者需要给什么，成功时返回什么，失败时如何知道原因，资源由谁关闭，状态是否被隐藏在闭包里。
+
+## 函数签名是最小接口
+
+函数声明由函数名、参数列表、返回值列表和函数体组成：
+
+```go
+func name(parameterList) (resultList) {
+    // body
+}
+```
+
+例如：
+
+```go
+func hypot(x, y float64) float64 {
+    return math.Sqrt(x*x + y*y)
+}
+```
+
+参数是局部变量，调用时会接收实参的拷贝。返回值可以命名，也可以不命名。形参名和返回值名不参与函数类型判断；真正决定函数类型的是参数和返回值的类型序列。
+
+```go
+func add(x, y int) int { return x + y }
+func sub(x, y int) int { return x - y }
+```
+
+这两个函数有相同签名：`func(int, int) int`。
+
+Go 没有默认参数，也不能按参数名传参。因此函数签名要保持清楚、短小。参数过多通常说明函数承担了太多职责，应该考虑拆分配置结构体或更小的函数。
+
+## 值传递和引用类型
+
+Go 函数调用是值传递。修改普通参数不会影响调用者变量。
+
+```go
+func reset(x int) {
+    x = 0
+}
+```
+
+但如果参数是指针、slice、map、channel、函数等引用语义明显的类型，函数可以通过间接引用修改底层数据。
+
+```go
+func markDone(tasks map[string]bool, id string) {
+    tasks[id] = true
+}
+```
+
+这不是“按引用传参”的例外，而是 map 值本身包含对底层哈希表的引用。工程代码里要明确：函数是否会修改传入的数据？如果会，最好在名字、注释或类型设计中表达出来。
+
+## 多返回值和错误返回
+
+Go 用多返回值自然表达“结果 + 错误”：
+
+```go
+value, err := strconv.Atoi(input)
+if err != nil {
+    return 0, err
+}
+return value, nil
+```
+
+`error` 是普通返回值，不是异常。对于可预期失败，例如 I/O、解析、网络请求、权限不足、输入非法，应该返回错误并让调用方决定处理方式。
+
+当函数返回非 nil error 时，其他返回值通常不应继续使用，除非文档明确说明它们仍然有意义。比如 `io.Reader.Read` 可能同时返回已读取字节数和错误，调用方就需要先处理部分数据，再处理错误。
+
+## 错误处理的几种策略
+
+调用返回错误的函数后，调用者必须做选择。常见策略包括：
+
+1. **向上传播错误**：最常见，把子步骤失败变成当前函数失败；
+2. **添加上下文后传播**：说明哪个文件、URL、任务 ID 或参数失败；
+3. **重试**：适合偶发网络或临时服务不可用，但必须限制次数或时间；
+4. **记录后继续**：适合降级功能，不影响主流程；
+5. **终止程序**：通常只在 `main` 中做；
+6. **明确忽略**：只有当失败确实不影响逻辑时，并最好写出意图。
+
+不要返回缺少上下文的裸错误。比较好的错误信息应该能串起因果链：
+
+```go
+func loadConfig(path string) ([]byte, error) {
+    data, err := os.ReadFile(path)
+    if err != nil {
+        return nil, fmt.Errorf("read config %s: %w", path, err)
+    }
+    return data, nil
+}
+```
+
+`%w` 会保留原始错误，后续可以用 `errors.Is` 或 `errors.As` 判断底层原因。
+
+## 错误优先，成功路径左对齐
+
+Go 的常见风格是先处理错误，错误分支直接返回，让成功路径保持左对齐。
+
+```go
+f, err := os.Open(name)
+if err != nil {
+    return err
+}
+defer f.Close()
+
+return process(f)
+```
+
+不要把主要逻辑放进深层 `else`：
+
+```go
+if err != nil {
+    return err
+} else {
+    // 成功逻辑缩进一层，读起来更累
+}
+```
+
+这种风格让失败路径和成功路径都清楚，也让资源释放更容易放在正确位置。
+
+## 递归：适合树和图，但要知道退出条件
+
+递归函数可以调用自身，适合处理树形结构。教材中用 HTML 节点树做例子：访问当前节点，再递归访问子节点。
+
+```go
+func visit(n *Node) {
+    if n == nil {
+        return
+    }
+    handle(n)
+    for c := n.FirstChild; c != nil; c = c.NextSibling {
+        visit(c)
+    }
+}
+```
+
+Go 的 goroutine 栈会按需增长，递归深度不像固定栈语言那样容易早早溢出。但这不代表可以忽略退出条件。处理用户输入、文件系统、依赖图和网页链接时，必须考虑环、重复访问和最大深度。
+
+## 函数值：用行为参数化函数
+
+函数在 Go 中是一等值，可以赋给变量、作为参数传递、从函数返回。
+
+```go
+func square(n int) int { return n * n }
+
+f := square
+fmt.Println(f(3)) // 9
+```
+
+函数值让我们可以把“遍历逻辑”和“操作逻辑”分开。例如一个通用树遍历函数可以接收 `pre` 和 `post` 回调，在访问子节点前后分别执行。
+
+```go
+func forEachNode(n *Node, pre, post func(*Node)) {
+    if pre != nil {
+        pre(n)
+    }
+    for c := n.FirstChild; c != nil; c = c.NextSibling {
+        forEachNode(c, pre, post)
+    }
+    if post != nil {
+        post(n)
+    }
+}
+```
+
+这类设计在中间件、过滤器、排序比较函数、重试策略和测试替身中很常见。
+
+## 匿名函数和闭包
+
+函数字面量可以在表达式中定义匿名函数。匿名函数可以访问外层词法环境，这就是闭包。
+
+```go
+func squares() func() int {
+    var x int
+    return func() int {
+        x++
+        return x * x
+    }
+}
+```
+
+每次调用 `squares` 都会生成新的 `x`。返回的函数继续持有这个变量，即使 `squares` 已经返回。这说明变量生命周期不由词法作用域简单决定，而由是否仍可达决定。
+
+闭包适合封装小状态，但也容易隐藏共享状态。并发场景中尤其要谨慎：如果多个 goroutine 共享同一个闭包变量，可能产生数据竞争或逻辑混乱。能显式传参时，通常比让读者猜捕获了什么更清楚。
+
+## defer：让清理靠近资源获取
+
+`defer` 会把函数调用推迟到当前函数返回前执行。无论函数正常返回还是因为 panic 展开，defer 都会执行。多个 defer 按后进先出顺序执行。
+
+资源获取成功后，应尽快写 defer：
+
+```go
+resp, err := http.Get(url)
+if err != nil {
+    return err
+}
+defer resp.Body.Close()
+```
+
+defer 适合成对操作：打开/关闭、加锁/解锁、连接/断开、记录进入/退出。它能让清理逻辑靠近资源获取位置，避免多个 return 分支漏掉释放。
+
+但循环中大量 defer 要小心，因为 defer 在当前函数结束时才执行，不是在本轮循环结束时执行。
+
+```go
+for _, name := range filenames {
+    if err := processFile(name); err != nil {
+        return err
+    }
+}
+
+func processFile(name string) error {
+    f, err := os.Open(name)
+    if err != nil {
+        return err
+    }
+    defer f.Close()
+    return process(f)
+}
+```
+
+把循环体拆成小函数，可以让每次迭代及时释放资源。
+
+## panic：表示程序内部不一致，不是普通失败
+
+panic 会中断当前 goroutine 的正常执行，运行已注册的 defer，然后输出 panic 值和堆栈信息。数组越界、nil 指针解引用等运行时错误会 panic，代码也可以主动调用 `panic`。
+
+但在健壮程序中，panic 不应该用来处理普通输入错误、I/O 失败或配置缺失。这些都是可预期失败，应该返回 error。panic 更适合表达程序内部逻辑不可能到达的状态，或者类似 `regexp.MustCompile` 这种“源码常量不合法就是程序员 bug”的场景。
+
+```go
+var routePattern = regexp.MustCompile(`^/users/\d+$`)
+```
+
+命名里带 `Must` 的函数通常约定：失败就 panic。调用者只有在确信输入固定且合法时才应该使用。
+
+## 本章工程视角
+
+函数是 Go 项目最基本的设计单位。一个好函数应该短小、签名清晰、错误有上下文、资源释放位置明确、状态依赖可见。业务代码可以按“解析 → 校验 → 执行 → 输出”拆成多个函数，每个函数都能单独测试。
+
+当你写一个函数时，问自己几个问题：这个函数失败时调用者能知道原因吗？它是否偷偷读写全局状态？它会不会修改传入参数？资源由谁关闭？闭包捕获了哪些变量？如果这些问题答案清楚，函数就更容易在真实项目中长期维护。

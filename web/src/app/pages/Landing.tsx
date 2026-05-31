@@ -1,320 +1,223 @@
-import { motion } from "motion/react";
+import type { ReactNode } from "react";
 import { Link } from "react-router";
-import { ArrowRight, Shield, Beaker, Zap, Bot, Map, ChevronRight, CheckCircle2, Circle, Activity, BookOpen } from "lucide-react";
+import { ArrowRight, BookOpen, Bot, CheckCircle2, Code2, Github, Map, Rocket, ShieldCheck, Sparkles, Terminal } from "lucide-react";
+import { Badge } from "../components/ui/badge";
+import { Button } from "../components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { Separator } from "../components/ui/separator";
+import { goBasicsChapters } from "../data/goBasicsCourse";
+import { missions } from "../data/missions";
+
+const paths = [
+  {
+    title: "Go 基础训练营",
+    description: "13 章内置课程，从第一段 Go 程序到测试、并发和工程实践。",
+    href: "/courses/go-basics",
+    status: "可学习",
+    icon: BookOpen,
+  },
+  {
+    title: "后端实习任务线",
+    description: "围绕真实团队第一周任务，练习修 Bug、读日志、写验收。",
+    href: `/missions/${missions[0].slug}`,
+    status: "可挑战",
+    icon: Code2,
+  },
+  {
+    title: "工程能力进阶",
+    description: "数据库、缓存、并发、可观测性和部署可靠性路线。",
+    status: "即将开放",
+    icon: ShieldCheck,
+  },
+  {
+    title: "AI 全栈路线",
+    description: "LLM API、RAG、Agent、评测和 AI 产品工程能力。",
+    status: "即将开放",
+    icon: Bot,
+  },
+];
 
 export function Landing() {
   return (
-    <div className="flex flex-col w-full">
-      {/* Hero Section */}
-      <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden">
-        <div 
-          className="absolute inset-0 opacity-10 mix-blend-overlay pointer-events-none"
-          style={{
-            backgroundImage: 'url("https://images.unsplash.com/photo-1601042879364-f3947d3f9c16?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjeWJlcnB1bmslMjBjaXR5fGVufDF8fHx8MTc3ODA0NjM4M3ww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral")',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#00ADD8]/20 via-neutral-950 to-neutral-950"></div>
-        <div className="container mx-auto px-6 relative z-10">
-          <div className="max-w-4xl mx-auto text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-900 border border-neutral-800 text-sm text-neutral-300 mb-8"
-            >
-              <span className="flex h-2 w-2 rounded-full bg-[#00ADD8]"></span>
-              v1.0 MVP 闭环开发中
-            </motion.div>
-            
-            <motion.h1 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8"
-            >
-              GoGopher Arch
-              <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00ADD8] to-blue-500">
-                架构师进化之路
-              </span>
-            </motion.h1>
-
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="text-xl text-neutral-400 mb-12 max-w-2xl mx-auto leading-relaxed"
-            >
-              一个沉浸式、由浅入深、强互动的 Go 语言全栈进阶学习平台。拒绝枯燥文档灌输，通过虚拟职场实战和可视化反馈，带你从 Go 语言实习生进化为资深架构师。
-            </motion.p>
-
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="flex flex-col sm:flex-row items-center justify-center gap-4"
-            >
-              <Link
-                to="/courses/go-basics"
-                className="w-full sm:w-auto px-8 py-4 bg-[#00ADD8] text-neutral-950 font-bold rounded-xl hover:bg-[#00ADD8]/90 transition-colors flex items-center justify-center gap-2 text-lg group"
-              >
-                开始 Go 基础训练营
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
-              <Link
-                to="/dashboard"
-                className="w-full sm:w-auto px-8 py-4 bg-neutral-900 text-white font-medium rounded-xl hover:bg-neutral-800 border border-neutral-800 transition-colors flex items-center justify-center gap-2 text-lg"
-              >
-                进入沙盒体验
-              </Link>
-            </motion.div>
-          </div>
-        </div>
-
-        {/* Badges/Stack */}
-        <div className="mt-20 border-y border-neutral-900 bg-neutral-950/50 backdrop-blur-sm py-8">
-          <div className="container mx-auto px-6 flex flex-wrap justify-center gap-8 md:gap-16 opacity-60">
-            <div className="flex items-center gap-2 font-mono text-lg font-bold">
-              <span className="text-[#00ADD8]">Go</span> 1.24+
-            </div>
-            <div className="flex items-center gap-2 font-mono text-lg font-bold">
-              <span className="text-[#61DAFB]">React</span>
-            </div>
-            <div className="flex items-center gap-2 font-mono text-lg font-bold">
-              <span className="text-blue-400">Docker</span> Sandbox
-            </div>
-            <div className="flex items-center gap-2 font-mono text-lg font-bold">
-              <span className="text-purple-400">Gemini</span> AI
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section id="features" className="py-24 bg-neutral-950">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold mb-4">核心特性</h2>
-            <p className="text-neutral-400 text-lg max-w-2xl mx-auto">
-              打破传统学习方式，通过游戏化和可视化技术重塑学习体验
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <FeatureCard
-              icon={<BookOpen className="w-8 h-8 text-[#00ADD8]" />}
-              title="Go 基础训练营"
-              description="GoGopher Arch 内置 Go 1.24+ 基础课程，13 章覆盖语法、并发、测试与工程实践，每章配可运行 sandbox 练习。"
-            />
-            <FeatureCard
-              icon={<Shield className="w-8 h-8 text-yellow-500" />}
-              title="战役模式 (RPG Style)"
-              description="扮演职场角色，通过解决“双十一抢单限流”、“高并发 IM 系统崩溃”等真实业务挑战来晋升。"
-            />
-            <FeatureCard 
-              icon={<Beaker className="w-8 h-8 text-green-500" />}
-              title="交互式沙盒 (Sandbox)"
-              description="内置 Cloud IDE 和模拟集群压测环境，即写即练，直观观察系统吞吐量与 P99 延迟。"
-            />
-            <FeatureCard 
-              icon={<Zap className="w-8 h-8 text-red-500" />}
-              title="可视化“大爆炸”"
-              description="当代码导致协程爆炸或内存泄露时，通过动态动画直观展示 Go Runtime 内部故障过程。"
-            />
-            <FeatureCard 
-              icon={<Bot className="w-8 h-8 text-blue-500" />}
-              title="AI CTO 评审"
-              description="集成大语言模型，模仿专家口吻进行 Code Review，指出并发陷阱并推荐架构优化方案。"
-            />
-            <FeatureCard 
-              icon={<Map className="w-8 h-8 text-purple-500" />}
-              title="全栈地图"
-              description="覆盖基础语法、高性能网络编程、云原生 (K8s/gRPC)、区块链及 Go Runtime 深度调优。"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Immersive Preview Section */}
-      <section className="py-24 bg-neutral-900 border-y border-neutral-800 relative overflow-hidden">
-        <div 
-          className="absolute inset-0 opacity-[0.03] mix-blend-screen pointer-events-none"
-          style={{
-            backgroundImage: 'url("https://images.unsplash.com/photo-1558494949-ef010cbdcc31?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzZXJ2ZXIlMjByb29tfGVufDF8fHx8MTc3Nzk5Mjk5OHww&ixlib=rb-4.1.0&q=80&w=1080")',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        />
-        <div className="container mx-auto px-6 relative z-10">
-          <div className="flex flex-col lg:flex-row items-center gap-16">
-            <div className="flex-1 space-y-8">
-              <h2 className="text-3xl md:text-5xl font-bold leading-tight">
-                不止于代码，<br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-[#00ADD8]">洞察 Runtime 级真相</span>
-              </h2>
-              <p className="text-lg text-neutral-400 leading-relaxed">
-                在真实的微服务压测环境中，你的每一行代码都可能引发雪崩。我们的内置沙盒不仅能运行代码，更能透视 CPU、内存和 Goroutine 的实时状态。当故障发生时，AI CTO 将立刻介入，带你复盘灾难现场。
-              </p>
-              <ul className="space-y-4">
-                <li className="flex items-center gap-3 text-neutral-300 font-medium">
-                  <div className="w-8 h-8 rounded-full bg-[#00ADD8]/10 flex items-center justify-center text-[#00ADD8]">
-                    <Activity className="w-4 h-4" />
-                  </div>
-                  真实容器隔离，毫秒级指标监控
-                </li>
-                <li className="flex items-center gap-3 text-neutral-300 font-medium">
-                  <div className="w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-400">
-                    <Bot className="w-4 h-4" />
-                  </div>
-                  Gemini 驱动的资深架构师 Code Review
-                </li>
-              </ul>
-            </div>
-            
-            {/* Mock Dashboard Window */}
-            <div className="flex-1 w-full">
-              <div className="bg-neutral-950 border border-neutral-800 rounded-2xl overflow-hidden shadow-2xl shadow-[#00ADD8]/10 transform perspective-1000 rotate-y-[-5deg] rotate-x-[2deg]">
-                <div className="h-10 bg-neutral-900 border-b border-neutral-800 flex items-center px-4 gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
-                  <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
-                  <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
-                </div>
-                <div className="p-6 font-mono text-sm leading-relaxed">
-                  <div className="text-[#00ADD8]">$ go test -bench=. -benchmem</div>
-                  <div className="text-neutral-500 mt-2">goos: linux</div>
-                  <div className="text-neutral-500">goarch: amd64</div>
-                  <div className="text-neutral-500 mb-4">pkg: github.com/gogopher/im</div>
-                  <div className="flex justify-between text-neutral-300 border-b border-neutral-800 pb-2 mb-2">
-                    <span>BenchmarkBroadcast-8</span>
-                    <span>100000</span>
-                    <span>14562 ns/op</span>
-                    <span className="text-red-400">4502 B/op</span>
-                  </div>
-                  <motion.div 
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }}
-                    className="mt-6 p-4 bg-purple-950/30 border border-purple-900/50 rounded-xl"
-                  >
-                    <div className="flex gap-3">
-                      <Bot className="w-5 h-5 text-purple-400 shrink-0" />
-                      <div className="text-purple-200">
-                        <span className="font-bold text-purple-400">AI CTO: </span>
-                        每次广播分配了 4.5KB 内存，在高并发下 GC 压力极大。建议引入 <code>sync.Pool</code> 复用 Message 对象。
-                      </div>
-                    </div>
-                  </motion.div>
-                </div>
+    <div className="bg-background">
+      <section className="relative overflow-hidden border-b">
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,_rgba(0,173,216,0.18),_transparent_34%)]" />
+        <div className="mx-auto grid min-h-[calc(100svh-4rem)] w-full max-w-7xl items-center gap-12 px-4 py-20 md:px-6 lg:grid-cols-[minmax(0,1.08fr)_minmax(360px,0.92fr)]">
+          <div className="flex flex-col gap-8">
+            <div className="flex flex-col gap-5">
+              <Badge variant="secondary" className="w-fit">
+                <Sparkles data-icon="inline-start" />
+                Go 后端实习成长平台
+              </Badge>
+              <div className="flex flex-col gap-4">
+                <h1 className="max-w-4xl text-4xl font-bold tracking-tight text-foreground md:text-6xl lg:text-7xl">
+                  从 Go 基础到真实后端任务
+                </h1>
+                <p className="max-w-2xl text-lg leading-8 text-muted-foreground md:text-xl">
+                  GoGopher Arch 把课程正文、浏览器沙盒和虚拟职场任务放在同一条路径里，帮助你从第一行 Go 代码走到后端实习基本功。
+                </p>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
 
-      {/* Roadmap Section */}
-      <section id="roadmap" className="py-24 bg-neutral-900 border-y border-neutral-800">
-        <div className="container mx-auto px-6">
-          <div className="max-w-3xl mx-auto">
-            <h2 className="text-3xl md:text-5xl font-bold mb-16 text-center">路线图 (Roadmap)</h2>
-            
-            <div className="space-y-12 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-neutral-800 before:to-transparent">
-              
-              {/* Stage 1 */}
-              <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-neutral-900 bg-[#00ADD8] text-white shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-[0_0_0_4px_rgba(0,173,216,0.2)]">
-                  <span className="font-bold">1</span>
-                </div>
-                <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-neutral-950 p-6 rounded-2xl border border-neutral-800 hover:border-[#00ADD8]/50 transition-colors">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-bold text-xl text-white">第一阶段：MVP 闭环</h3>
-                    <span className="text-xs font-semibold px-3 py-1 rounded-full bg-[#00ADD8]/10 text-[#00ADD8] border border-[#00ADD8]/20 animate-pulse">正在进行</span>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Button asChild size="lg">
+                <Link to="/courses/go-basics">
+                  开始 Go 基础训练营
+                  <ArrowRight data-icon="inline-end" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="lg">
+                <Link to="/dashboard">进入学习总览</Link>
+              </Button>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-3">
+              <HeroMetric label="内置章节" value={`${goBasicsChapters.length}`} />
+              <HeroMetric label="实习任务" value={`${missions.length}`} />
+              <HeroMetric label="沙盒链路" value="可运行" />
+            </div>
+          </div>
+
+          <Card className="border-primary/20 bg-background/90 shadow-2xl shadow-primary/10 backdrop-blur">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Terminal className="text-primary" />
+                今日推荐路径
+              </CardTitle>
+              <CardDescription>先补齐 Go 基础，再进入任务线动手修复真实问题。</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-5">
+              <div className="rounded-2xl border bg-muted/40 p-4">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div>
+                    <div className="font-semibold">Go 基础训练营 · 第 1 章</div>
+                    <div className="text-sm text-muted-foreground">从可运行程序入口开始</div>
                   </div>
-                  <ul className="space-y-3">
-                    <RoadmapItem text="项目立项与设计文档确认" done={true} />
-                    <RoadmapItem text="Go Monorepo 基础脚手架搭建" done={false} />
-                    <RoadmapItem text="基于 Docker 的安全代码运行沙盒 (Sandbox)" done={false} />
-                    <RoadmapItem text="Lv.1 实习生基础任务包 (Slice/Map/Defer 陷阱)" done={false} />
-                  </ul>
+                  <Badge>推荐</Badge>
+                </div>
+                <div className="h-2 rounded-full bg-muted">
+                  <div className="h-2 w-[18%] rounded-full bg-primary" />
                 </div>
               </div>
 
-              {/* Stage 2 */}
-              <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
-                <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-neutral-900 bg-neutral-800 text-neutral-400 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
-                  <span className="font-bold">2</span>
-                </div>
-                <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-neutral-950/50 p-6 rounded-2xl border border-neutral-800/50">
-                  <h3 className="font-bold text-xl text-white mb-4">第二阶段：深度反馈</h3>
-                  <ul className="space-y-3">
-                    <RoadmapItem text="实时监控指标可视化 (Goroutine/Memory)" done={false} />
-                    <RoadmapItem text="“大爆炸”崩溃动画引擎" done={false} />
-                    <RoadmapItem text="AI CTO 初版接入" done={false} />
-                  </ul>
-                </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <MiniStep icon={<BookOpen />} title="阅读正文" text="学习目标、现代 Go 说明、工程实践" />
+                <MiniStep icon={<Terminal />} title="运行练习" text="在沙盒中查看 stdout/stderr/exit code" />
+                <MiniStep icon={<Code2 />} title="挑战任务" text="进入实习任务线修复真实问题" />
+                <MiniStep icon={<Map />} title="查看路线" text="工程进阶与 AI 全栈路线标记为即将开放" />
               </div>
-
-              {/* Stage 3 */}
-              <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
-                <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-neutral-900 bg-neutral-800 text-neutral-400 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
-                  <span className="font-bold">3</span>
-                </div>
-                <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-neutral-950/50 p-6 rounded-2xl border border-neutral-800/50">
-                  <h3 className="font-bold text-xl text-white mb-4">第三阶段：全栈进阶</h3>
-                  <ul className="space-y-3">
-                    <RoadmapItem text="高性能网络编程实战 (IM 系统)" done={false} />
-                    <RoadmapItem text="云原生微服务治理与区块链实战" done={false} />
-                  </ul>
-                </div>
-              </div>
-
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-24 bg-neutral-950 text-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-t from-[#00ADD8]/10 to-transparent"></div>
-        <div className="container mx-auto px-6 relative z-10">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">准备好开始进化了吗？</h2>
-          <p className="text-xl text-neutral-400 mb-10 max-w-2xl mx-auto">
-            加入我们，在真实的业务场景中锤炼你的架构能力。
+      <section id="paths" className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-16 md:px-6">
+        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <div>
+            <Badge variant="outline" className="mb-3">学习路径</Badge>
+            <h2 className="text-3xl font-bold tracking-tight md:text-4xl">一条清晰的成长路线</h2>
+            <p className="mt-3 max-w-2xl text-muted-foreground">已实现的入口可以直接学习或挑战；未实现路线只做预告，不制造假功能。</p>
+          </div>
+          <Button asChild variant="outline">
+            <a href="https://github.com/MorseWayne/gogopher-arch" target="_blank" rel="noreferrer">
+              <Github data-icon="inline-start" />
+              查看源码
+            </a>
+          </Button>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {paths.map((path) => (
+            <PathCard key={path.title} path={path} />
+          ))}
+        </div>
+      </section>
+
+      <Separator />
+
+      <section className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-16 md:px-6 lg:grid-cols-[0.9fr_1.1fr]">
+        <div className="flex flex-col gap-4">
+          <Badge variant="secondary" className="w-fit">
+            <Rocket data-icon="inline-start" />
+            MVP 闭环
+          </Badge>
+          <h2 className="text-3xl font-bold tracking-tight">不是单纯看文档，而是边学边运行</h2>
+          <p className="text-muted-foreground leading-7">
+            课程页采用清爽阅读布局，任务页保留工作台和终端反馈。你会看到每段代码的输出、错误和下一步建议，而不是只在目录里跳转。
           </p>
-          <div className="bg-neutral-900 border border-neutral-800 p-4 rounded-xl inline-flex flex-col items-start gap-2 mb-8">
-            <span className="text-neutral-500 text-sm font-mono">快速克隆项目</span>
-            <code className="text-[#00ADD8] font-mono text-sm sm:text-base">git clone https://github.com/MorseWayne/gogopher-arch.git</code>
-          </div>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Feature icon={<CheckCircle2 />} title="内置课程" text="内容完整留在应用内，外部资料只作参考。" />
+          <Feature icon={<Terminal />} title="沙盒反馈" text="运行结果、错误和 timeout 是学习反馈。" />
+          <Feature icon={<ShieldCheck />} title="无假功能" text="Coming soon 路线明确标识，不伪装成已实现能力。" />
         </div>
       </section>
     </div>
   );
 }
 
-function FeatureCard({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) {
+function HeroMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-neutral-900/50 border border-neutral-800 p-8 rounded-2xl hover:bg-neutral-900 transition-colors">
-      <div className="mb-6 p-4 bg-neutral-950 rounded-xl inline-block border border-neutral-800">
-        {icon}
-      </div>
-      <h3 className="text-xl font-bold mb-3 text-white">{title}</h3>
-      <p className="text-neutral-400 leading-relaxed">{description}</p>
+    <div className="rounded-2xl border bg-background/70 p-4 shadow-sm">
+      <div className="text-2xl font-bold text-foreground">{value}</div>
+      <div className="text-sm text-muted-foreground">{label}</div>
     </div>
   );
 }
 
-function RoadmapItem({ text, done }: { text: string, done: boolean }) {
+function MiniStep({ icon, title, text }: { icon: ReactNode; title: string; text: string }) {
   return (
-    <li className="flex items-start gap-3 text-sm md:text-base">
-      {done ? (
-        <CheckCircle2 className="w-5 h-5 text-[#00ADD8] shrink-0 mt-0.5" />
-      ) : (
-        <Circle className="w-5 h-5 text-neutral-600 shrink-0 mt-0.5" />
-      )}
-      <span className={done ? "text-neutral-300 line-through decoration-neutral-600 opacity-80" : "text-neutral-300"}>
-        {text}
-      </span>
-    </li>
+    <div className="rounded-xl border bg-background p-3">
+      <div className="mb-2 flex items-center gap-2 font-medium">
+        <span className="text-primary">{icon}</span>
+        {title}
+      </div>
+      <p className="text-sm text-muted-foreground">{text}</p>
+    </div>
+  );
+}
+
+function PathCard({ path }: { path: (typeof paths)[number] }) {
+  const Icon = path.icon;
+  const available = Boolean(path.href);
+  const card = (
+    <Card className="h-full transition-colors hover:border-primary/40">
+      <CardHeader>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Icon />
+          </span>
+          <Badge variant={available ? "default" : "secondary"}>{path.status}</Badge>
+        </div>
+        <CardTitle>{path.title}</CardTitle>
+        <CardDescription>{path.description}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="inline-flex items-center gap-2 text-sm font-medium text-primary">
+          {available ? "进入路径" : "即将开放"}
+          {available && <ArrowRight className="size-4" />}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  if (!path.href) {
+    return <div aria-disabled="true">{card}</div>;
+  }
+
+  return <Link to={path.href}>{card}</Link>;
+}
+
+function Feature({ icon, title, text }: { icon: ReactNode; title: string; text: string }) {
+  return (
+    <Card>
+      <CardHeader>
+        <div className="mb-2 text-primary">{icon}</div>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm leading-6 text-muted-foreground">{text}</p>
+      </CardContent>
+    </Card>
   );
 }
