@@ -31,6 +31,11 @@ export const mdxGoBasicsChapterMetadata: GoBasicsMdxChapter[] = [
     { title: "输出格式不稳定", symptom: "人工看起来正确，自动匹配却失败。", fix: "明确换行、空格和字段顺序；需要格式化时优先使用 fmt.Printf。" },
   ],
   exercise: {
+    id: "ch1-welcome-output",
+    kind: "run",
+    difficulty: "warmup",
+    concepts: ["package main", "fmt.Printf", "stdout"],
+    estimatedMinutes: 6,
     title: "打印入职欢迎信息",
     prompt: "运行一段最小 Go 程序，确认你能通过 sandbox 得到稳定输出。",
     starterCode: `package main
@@ -42,9 +47,82 @@ func main() {
     fmt.Printf("welcome, %s\\n", name)
 }`,
     expectedOutput: "welcome, Gopher",
-    outputMatch: "contains",
+    outputMatch: "trimmed-exact",
     hints: ["程序必须声明 package main。", "fmt.Printf 不会自动换行，必要时写入 \\n。"],
+    solutionOutline: ["声明 main 包并导入 fmt。", "在 main 中准备 name。", "使用 fmt.Printf 输出稳定格式和换行。"],
   },
+  exercises: [
+    {
+      id: "ch1-welcome-output",
+      kind: "run",
+      difficulty: "warmup",
+      concepts: ["package main", "fmt.Printf", "stdout"],
+      estimatedMinutes: 6,
+      title: "打印入职欢迎信息",
+      prompt: "运行一段最小 Go 程序，确认你能通过 sandbox 得到稳定输出。",
+      starterCode: `package main
+
+import "fmt"
+
+func main() {
+    name := "Gopher"
+    fmt.Printf("welcome, %s\\n", name)
+}`,
+      expectedOutput: "welcome, Gopher",
+      outputMatch: "trimmed-exact",
+      hints: ["程序必须声明 package main。", "fmt.Printf 不会自动换行，必要时写入 \\n。"],
+      solutionOutline: ["声明 main 包并导入 fmt。", "在 main 中准备 name。", "使用 fmt.Printf 输出稳定格式和换行。"],
+    },
+    {
+      id: "ch1-format-welcome",
+      kind: "edit",
+      difficulty: "core",
+      concepts: ["function", "fmt.Sprintf", "stable output"],
+      estimatedMinutes: 12,
+      title: "封装稳定欢迎文本",
+      prompt: "补全 Welcome，让输出格式稳定且便于测试。",
+      context: "真实项目里，输出格式经常是 CLI、日志、CI 或课程平台之间的协议。",
+      starterCode: `package main
+
+import "fmt"
+
+func Welcome(name string) string {
+    // TODO: 返回 welcome, <name>
+    return ""
+}
+
+func main() {
+    fmt.Println(Welcome("Gopher"))
+}`,
+      expectedOutput: "welcome, Gopher",
+      outputMatch: "trimmed-exact",
+      hints: ["用 fmt.Sprintf 构造字符串。", "注意逗号后面有一个空格。", "fmt.Println 会负责最后的换行。"],
+      solutionOutline: ["让 Welcome 接收 name。", "使用 fmt.Sprintf(\"welcome, %s\", name) 返回文本。", "main 中只负责打印函数结果。"],
+    },
+    {
+      id: "ch1-fix-output-format",
+      kind: "debug",
+      difficulty: "challenge",
+      concepts: ["fmt.Print", "fmt.Printf", "output matching"],
+      estimatedMinutes: 10,
+      title: "修复输出格式不匹配",
+      prompt: "当前程序能运行，但输出不符合自动检查要求。修复空格、标点和换行。",
+      context: "课程平台、CI 和脚本通常不会凭感觉判断输出，格式边界必须明确。",
+      starterCode: `package main
+
+import "fmt"
+
+func main() {
+    name := "Gopher"
+    fmt.Print("welcome")
+    fmt.Print(name)
+}`,
+      expectedOutput: "welcome, Gopher",
+      outputMatch: "trimmed-exact",
+      hints: ["fmt.Print 不会自动添加空格。", "期望输出里 welcome 后面有逗号和空格。", "可以用一个 fmt.Printf 一次性输出完整格式。"],
+      solutionOutline: ["观察当前输出和期望输出的差异。", "使用 fmt.Printf(\"welcome, %s\\n\", name)。", "确认最终输出去掉首尾空白后完全匹配。"],
+    },
+  ],
   checklist: [
     "能说出 package main 和普通业务包的差异。",
     "能解释 go run 与 go build 的不同反馈节奏。",
@@ -57,7 +135,7 @@ func main() {
   ],
   nextMissionSlugs: [],
   contentSource: {
-    primary: "本章基于 /home/wayne/source/open/gopl-zh.github.com/ch1/ch1.md 与 ch1/ch1-01.md 精简重组。",
+    primary: "本章基于 gopl-zh.github.com/ch1/ch1.md 与 ch1/ch1-01.md 精简重组。",
     references: ["The Go Programming Language 第 1 章", "Go 官方文档 go.dev/doc", "Go by Example"],
     license: "gopl-zh.github.com 使用 BSD 风格许可；后续批量迁移应保留项目级参考与许可说明。",
   },
@@ -92,6 +170,11 @@ func main() {
     { title: "init 函数做太多事", symptom: "导入包就发起网络连接或读取生产配置，测试难以隔离。", fix: "把有副作用的初始化改为显式函数调用，并返回错误。" },
   ],
   exercise: {
+    id: "ch2-scope-fix",
+    kind: "run",
+    difficulty: "warmup",
+    concepts: ["short variable declaration", "scope", "assignment"],
+    estimatedMinutes: 8,
     title: "修正变量作用域",
     prompt: "观察短变量声明如何影响外层变量，练习写出稳定的状态更新。",
     starterCode: `package main
@@ -99,17 +182,109 @@ func main() {
 import "fmt"
 
 func main() {
-    level := 1
+    level := "info"
     passed := true
     if passed {
-        level = 2
+        level = "ready"
     }
-    fmt.Printf("level=%d\\n", level)
+    fmt.Printf("level=%s\\n", level)
 }`,
-    expectedOutput: "level=2",
+    expectedOutput: "level=ready",
     outputMatch: "trimmed-exact",
-    hints: ["如果写成 level := 2，会创建一个只在 if 内有效的新变量。", "观察输出是否反映外层变量的最终值。"],
+    hints: ["如果写成 level := \"ready\"，会创建一个只在 if 内有效的新变量。", "观察输出是否反映外层变量的最终值。"],
+    solutionOutline: ["在 if 外声明 level。", "在 if 内用 = 更新已有变量。", "输出外层 level 的最终值。"],
   },
+  exercises: [
+    {
+      id: "ch2-scope-fix",
+      kind: "run",
+      difficulty: "warmup",
+      concepts: ["short variable declaration", "scope", "assignment"],
+      estimatedMinutes: 8,
+      title: "修正变量作用域",
+      prompt: "观察短变量声明如何影响外层变量，练习写出稳定的状态更新。",
+      starterCode: `package main
+
+import "fmt"
+
+func main() {
+    level := "info"
+    passed := true
+    if passed {
+        level = "ready"
+    }
+    fmt.Printf("level=%s\\n", level)
+}`,
+      expectedOutput: "level=ready",
+      outputMatch: "trimmed-exact",
+      hints: ["如果写成 level := \"ready\"，会创建一个只在 if 内有效的新变量。", "观察输出是否反映外层变量的最终值。"],
+      solutionOutline: ["在 if 外声明 level。", "在 if 内用 = 更新已有变量。", "输出外层 level 的最终值。"],
+    },
+    {
+      id: "ch2-config-defaults",
+      kind: "edit",
+      difficulty: "core",
+      concepts: ["zero value", "named type", "assignment"],
+      estimatedMinutes: 16,
+      title: "为配置应用默认值",
+      prompt: "补全 ApplyDefaults：当配置使用零值时，填入默认日志级别和重试次数。",
+      context: "配置结构体经常依赖零值，但进入业务逻辑前应该有清晰的默认化边界。",
+      starterCode: `package main
+
+import "fmt"
+
+type LogLevel string
+
+const DefaultLevel LogLevel = "info"
+
+type Config struct {
+    Level   LogLevel
+    Retries int
+}
+
+func ApplyDefaults(cfg Config) Config {
+    // TODO: Level 为空时使用 DefaultLevel
+    // TODO: Retries 为 0 时使用 3
+    return cfg
+}
+
+func main() {
+    cfg := ApplyDefaults(Config{})
+    fmt.Printf("level=%s retries=%d\\n", cfg.Level, cfg.Retries)
+}`,
+      expectedOutput: "level=info retries=3",
+      outputMatch: "trimmed-exact",
+      hints: ["字符串和命名字符串类型的零值都是空字符串。", "更新已有字段用 =，不是 :=。", "返回修改后的 cfg。"],
+      solutionOutline: ["判断 cfg.Level == \"\" 后赋值 DefaultLevel。", "判断 cfg.Retries == 0 后赋值 3。", "返回 cfg 并在 main 中输出。"],
+    },
+    {
+      id: "ch2-shadowed-status",
+      kind: "debug",
+      difficulty: "challenge",
+      concepts: ["shadowing", "lexical scope", "assignment"],
+      estimatedMinutes: 12,
+      title: "修复被遮蔽的状态变量",
+      prompt: "当前程序在 if 内看似设置了 ready，但最终输出仍是 pending。修复作用域问题。",
+      context: "真实服务里，这类遮蔽会让初始化、鉴权或状态机在局部看似成功，最终状态却没有改变。",
+      starterCode: `package main
+
+import "fmt"
+
+func main() {
+    status := "pending"
+    passed := true
+    if passed {
+        status := "ready"
+        _ = status
+    }
+    fmt.Printf("status=%s\\n", status)
+}`,
+      expectedOutput: "status=ready",
+      outputMatch: "trimmed-exact",
+      hints: ["if 内的 status := 创建了新变量。", "外层已经有 status，需要更新它。", "删除 _ = status 后程序仍应能编译。"],
+      solutionOutline: ["识别 if 内的 status 遮蔽外层 status。", "把 status := \"ready\" 改为 status = \"ready\"。", "删除不再需要的空白使用语句。"],
+    },
+  ],
   checklist: [
     "能解释 := 和 = 的差异。",
     "能指出变量的有效作用域。",
@@ -122,7 +297,7 @@ func main() {
   ],
   nextMissionSlugs: [],
   contentSource: {
-    primary: "本章基于 /home/wayne/source/open/gopl-zh.github.com/ch2 全章精简重组。",
+    primary: "本章基于 gopl-zh.github.com/ch2 全章精简重组。",
     references: ["The Go Programming Language 第 2 章", "Effective Go", "Go Code Review Comments"],
     license: "gopl-zh.github.com 使用 BSD 风格许可；后续批量迁移应保留项目级参考与许可说明。",
   },
@@ -157,6 +332,11 @@ func main() {
     { title: "忽略零值语义", symptom: "0、空串和未填写状态混在一起。", fix: "必要时使用指针、额外布尔字段或显式枚举区分未知和零值。" },
   ],
   exercise: {
+    id: "ch3-title-length",
+    kind: "run",
+    difficulty: "warmup",
+    concepts: ["string", "byte", "rune", "UTF-8"],
+    estimatedMinutes: 8,
     title: "统计中文标题长度",
     prompt: "比较字符串的字节长度和 rune 数量，建立处理多语言文本的直觉。",
     starterCode: `package main
@@ -170,7 +350,90 @@ func main() {
     expectedOutput: "bytes=8 runes=4",
     outputMatch: "trimmed-exact",
     hints: ["len(string) 返回底层字节数。", "[]rune 会按 Unicode 码点展开字符串。"],
+    solutionOutline: ["用 len(title) 得到字节数。", "把字符串转换成 []rune 后再取长度。", "用稳定格式输出两个结果。"],
   },
+  exercises: [
+    {
+      id: "ch3-title-length",
+      kind: "run",
+      difficulty: "warmup",
+      concepts: ["string", "byte", "rune", "UTF-8"],
+      estimatedMinutes: 8,
+      title: "统计中文标题长度",
+      prompt: "比较字符串的字节长度和 rune 数量，建立处理多语言文本的直觉。",
+      starterCode: `package main
+
+import "fmt"
+
+func main() {
+    title := "Go语言"
+    fmt.Printf("bytes=%d runes=%d\\n", len(title), len([]rune(title)))
+}`,
+      expectedOutput: "bytes=8 runes=4",
+      outputMatch: "trimmed-exact",
+      hints: ["len(string) 返回底层字节数。", "[]rune 会按 Unicode 码点展开字符串。"],
+      solutionOutline: ["用 len(title) 得到字节数。", "把字符串转换成 []rune 后再取长度。", "用稳定格式输出两个结果。"],
+    },
+    {
+      id: "ch3-parse-limits",
+      kind: "edit",
+      difficulty: "core",
+      concepts: ["strconv.ParseInt", "string", "rune", "error handling"],
+      estimatedMinutes: 18,
+      title: "解析分页大小和昵称长度",
+      prompt: "补全 Summary：把文本 page_size 转成 int64，并同时输出昵称的字节数和 rune 数量。",
+      context: "HTTP 查询参数、环境变量和命令行参数进入程序时通常都是字符串，进入业务逻辑前要转换成明确类型。",
+      starterCode: `package main
+
+import (
+    "fmt"
+    "strconv"
+)
+
+func Summary(pageSizeText, nickname string) string {
+    pageSize, err := strconv.ParseInt(pageSizeText, 10, 64)
+    if err != nil {
+        return "invalid page_size"
+    }
+    // TODO: 输出 pageSize、nickname 字节数和 rune 数量
+    return ""
+}
+
+func main() {
+    fmt.Println(Summary("20", "Go语言"))
+}`,
+      expectedOutput: "page_size=20 bytes=8 runes=4",
+      outputMatch: "trimmed-exact",
+      hints: ["strconv.ParseInt 会返回值和 error。", "len(nickname) 是字节数。", "len([]rune(nickname)) 是 rune 数量。"],
+      solutionOutline: ["解析 pageSizeText，错误时返回 invalid page_size。", "分别计算 len(nickname) 和 len([]rune(nickname))。", "用 fmt.Sprintf 返回稳定文本。"],
+    },
+    {
+      id: "ch3-fix-money-model",
+      kind: "debug",
+      difficulty: "challenge",
+      concepts: ["float64", "integer cents", "named type"],
+      estimatedMinutes: 14,
+      title: "修复金额精度模型",
+      prompt: "当前代码用 float64 表示金额并转换成 cents，结果可能少 1 分。改成整数最小货币单位。",
+      context: "金额是典型的业务边界：它需要精确十进制语义，不能依赖二进制浮点近似。",
+      starterCode: `package main
+
+import "fmt"
+
+func TotalCents() int64 {
+    price := 19.99
+    return int64(price * 100)
+}
+
+func main() {
+    fmt.Printf("cents=%d\\n", TotalCents())
+}`,
+      expectedOutput: "cents=1999",
+      outputMatch: "trimmed-exact",
+      hints: ["19.99 无法用二进制浮点精确表示。", "金额可以直接用最小货币单位保存。", "可以定义 type Cents int64，再返回 int64(Cents(1999))。"],
+      solutionOutline: ["去掉 float64 金额。", "用 int64 或命名类型 Cents 表示 1999 分。", "输出 cents=1999。"],
+    },
+  ],
   checklist: [
     "能解释字符串长度的两种常见含义。",
     "能说出基础类型的零值。",
@@ -183,7 +446,7 @@ func main() {
   ],
   nextMissionSlugs: [],
   contentSource: {
-    primary: "本章基于 /home/wayne/source/open/gopl-zh.github.com/ch3 全章精简重组。",
+    primary: "本章基于 gopl-zh.github.com/ch3 全章精简重组。",
     references: ["The Go Programming Language 第 3 章", "Go by Example", "Go 官方 strings/unicode/utf8 文档"],
     license: "gopl-zh.github.com 使用 BSD 风格许可；后续批量迁移应保留项目级参考与许可说明。",
   },
@@ -360,7 +623,7 @@ func main() {
   ],
   nextMissionSlugs: ["slice-memory-leak"],
   contentSource: {
-    primary: "本章基于 /home/wayne/source/open/gopl-zh.github.com/ch4/ch4.md 与 ch4-01 至 ch4-05 精简重组。",
+    primary: "本章基于 gopl-zh.github.com/ch4/ch4.md 与 ch4-01 至 ch4-05 精简重组。",
     references: ["The Go Programming Language 第 4 章", "Go by Example", "encoding/json 官方文档", "Go Code Review Comments"],
     license: "gopl-zh.github.com 使用 BSD 风格许可；后续批量迁移应保留项目级参考与许可说明。",
   },
@@ -395,8 +658,13 @@ func main() {
     { title: "闭包隐藏共享状态", symptom: "回调执行后外层变量被改变，测试顺序影响结果。", fix: "减少可变捕获；需要状态时封装结构体并提供方法。" },
   ],
   exercise: {
+    id: "ch5-parse-duration",
+    kind: "run",
+    difficulty: "warmup",
+    concepts: ["function signature", "error handling", "strconv.Atoi"],
+    estimatedMinutes: 8,
     title: "解析任务耗时",
-    prompt: "把字符串中的分钟数解析为整数，并输出业务需要的耗时格式。",
+    prompt: "运行一个返回结果和 error 的函数，确认 main 会先处理失败路径，再使用成功结果。",
     starterCode: `package main
 
 import (
@@ -406,8 +674,11 @@ import (
 )
 
 func parseMinutes(input string) (int, error) {
-    parts := strings.Split(input, "m")
-    return strconv.Atoi(parts[0])
+    text, ok := strings.CutSuffix(input, "m")
+    if !ok {
+        return 0, fmt.Errorf("duration %q must end with m", input)
+    }
+    return strconv.Atoi(text)
 }
 
 func main() {
@@ -420,8 +691,151 @@ func main() {
 }`,
     expectedOutput: "duration=45min",
     outputMatch: "trimmed-exact",
-    hints: ["函数可以返回结果和 error。", "main 中先处理 err，再使用结果。"],
+    hints: ["函数可以同时返回结果和 error。", "strings.CutSuffix 可以验证单位后缀。", "main 中先判断 err，再使用 minutes。"],
+    solutionOutline: ["让 parseMinutes 返回 (int, error)。", "去掉 m 后缀并用 strconv.Atoi 解析数字。", "main 中错误优先处理，成功时输出稳定格式。"],
   },
+  exercises: [
+    {
+      id: "ch5-parse-duration",
+      kind: "run",
+      difficulty: "warmup",
+      concepts: ["function signature", "error handling", "strconv.Atoi"],
+      estimatedMinutes: 8,
+      title: "解析任务耗时",
+      prompt: "运行一个返回结果和 error 的函数，确认 main 会先处理失败路径，再使用成功结果。",
+      starterCode: `package main
+
+import (
+    "fmt"
+    "strconv"
+    "strings"
+)
+
+func parseMinutes(input string) (int, error) {
+    text, ok := strings.CutSuffix(input, "m")
+    if !ok {
+        return 0, fmt.Errorf("duration %q must end with m", input)
+    }
+    return strconv.Atoi(text)
+}
+
+func main() {
+    minutes, err := parseMinutes("45m")
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
+    fmt.Printf("duration=%dmin\\n", minutes)
+}`,
+      expectedOutput: "duration=45min",
+      outputMatch: "trimmed-exact",
+      hints: ["函数可以同时返回结果和 error。", "strings.CutSuffix 可以验证单位后缀。", "main 中先判断 err，再使用 minutes。"],
+      solutionOutline: ["让 parseMinutes 返回 (int, error)。", "去掉 m 后缀并用 strconv.Atoi 解析数字。", "main 中错误优先处理，成功时输出稳定格式。"],
+    },
+    {
+      id: "ch5-format-task-summary",
+      kind: "edit",
+      difficulty: "core",
+      concepts: ["fmt.Errorf", "error wrapping", "strings.Cut", "function composition"],
+      estimatedMinutes: 18,
+      title: "补全任务摘要函数",
+      prompt: "补全 TaskSummary：复用 parseTask 的结果，失败时保留上下文，成功时输出稳定摘要。",
+      context: "真实服务的边界层经常先解析文本输入，再把明确类型交给业务逻辑。错误信息要能定位哪个输入失败。",
+      starterCode: `package main
+
+import (
+    "fmt"
+    "strconv"
+    "strings"
+)
+
+func parseTask(input string) (string, int, error) {
+    name, duration, ok := strings.Cut(input, ":")
+    if !ok || name == "" || duration == "" {
+        return "", 0, fmt.Errorf("invalid task %q", input)
+    }
+
+    minutesText, ok := strings.CutSuffix(duration, "m")
+    if !ok {
+        return "", 0, fmt.Errorf("duration %q must end with m", duration)
+    }
+    minutes, err := strconv.Atoi(minutesText)
+    if err != nil {
+        return "", 0, fmt.Errorf("parse duration %q: %w", duration, err)
+    }
+    return name, minutes, nil
+}
+
+func TaskSummary(input string) (string, error) {
+    name, minutes, err := parseTask(input)
+    if err != nil {
+        return "", fmt.Errorf("build task summary: %w", err)
+    }
+    _ = name
+    _ = minutes
+    // TODO: 返回 task=<name> duration=<minutes>min
+    return "", nil
+}
+
+func main() {
+    summary, err := TaskSummary("deploy:45m")
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
+    fmt.Println(summary)
+}`,
+      expectedOutput: "task=deploy duration=45min",
+      outputMatch: "trimmed-exact",
+      hints: ["parseTask 已经返回 name、minutes 和 error。", "TaskSummary 中继续错误优先处理。", "用 fmt.Sprintf 返回稳定文本。"],
+      solutionOutline: ["调用 parseTask 并处理 err。", "成功时用 fmt.Sprintf(\"task=%s duration=%dmin\", name, minutes) 构造结果。", "返回 summary 和 nil error。"],
+    },
+    {
+      id: "ch5-fix-defer-loop",
+      kind: "debug",
+      difficulty: "challenge",
+      concepts: ["defer", "resource lifecycle", "function scope"],
+      estimatedMinutes: 16,
+      title: "修复循环中的延迟释放",
+      prompt: "当前代码在循环里 defer Close，资源会等 processAll 返回才释放。拆出单次处理函数，让每轮结束后及时释放。",
+      context: "批量处理文件、连接或锁时，defer 的作用域是当前函数，不是当前循环迭代。",
+      starterCode: `package main
+
+import "fmt"
+
+var opened int
+
+type Resource struct {
+    name string
+}
+
+func Open(name string) *Resource {
+    opened++
+    return &Resource{name: name}
+}
+
+func (r *Resource) Close() {
+    opened--
+}
+
+func processAll(names []string) {
+    for _, name := range names {
+        resource := Open(name)
+        defer resource.Close()
+        fmt.Printf("%s open=%d\\n", name, opened)
+    }
+}
+
+func main() {
+    processAll([]string{"a", "b", "c"})
+    fmt.Printf("final=%d\\n", opened)
+}`,
+      expectedOutput: "a open=1\nb open=1\nc open=1\nfinal=0",
+      outputMatch: "trimmed-exact",
+      hints: ["defer 会在 processAll 返回前执行，而不是每轮循环结束。", "把循环体拆成 processOne(name string)。", "在 processOne 中 Open 后立刻 defer Close。"],
+      solutionOutline: ["新增 processOne 处理单个 name。", "把 Open、defer Close 和打印移动到 processOne。", "processAll 只负责遍历并调用 processOne。"],
+    },
+  ],
   checklist: [
     "能写出返回 error 的函数。",
     "能解释 defer 的执行时机。",
@@ -434,7 +848,7 @@ func main() {
   ],
   nextMissionSlugs: ["defer-order"],
   contentSource: {
-    primary: "本章基于 /home/wayne/source/open/gopl-zh.github.com/ch5 全章精简重组。",
+    primary: "本章基于 gopl-zh.github.com/ch5 全章精简重组。",
     references: ["The Go Programming Language 第 5 章", "Effective Go", "Go blog: errors are values", "Go by Example"],
     license: "gopl-zh.github.com 使用 BSD 风格许可；后续批量迁移应保留项目级参考与许可说明。",
   },
@@ -469,8 +883,13 @@ func main() {
     { title: "接口实现卡在指针和值", symptom: "T 不能赋给接口，但 *T 可以。", fix: "检查方法接收者，必要时统一使用指针实例。" },
   ],
   exercise: {
+    id: "ch6-account-points",
+    kind: "run",
+    difficulty: "warmup",
+    concepts: ["method", "pointer receiver", "state mutation"],
+    estimatedMinutes: 8,
     title: "给积分账户增加方法",
-    prompt: "为结构体定义指针接收者方法，更新账户积分并输出最终值。",
+    prompt: "运行一个指针接收者方法，确认方法会修改原账户而不是副本。",
     starterCode: `package main
 
 import "fmt"
@@ -491,7 +910,114 @@ func main() {
     expectedOutput: "points=25",
     outputMatch: "trimmed-exact",
     hints: ["需要修改原结构体时，接收者应是 *Account。", "方法调用语法会自动处理部分取址，但语义仍要清楚。"],
+    solutionOutline: ["为 Account 定义 Add 方法。", "使用 *Account 接收者修改 Points。", "main 中调用方法并输出最终积分。"],
   },
+  exercises: [
+    {
+      id: "ch6-account-points",
+      kind: "run",
+      difficulty: "warmup",
+      concepts: ["method", "pointer receiver", "state mutation"],
+      estimatedMinutes: 8,
+      title: "给积分账户增加方法",
+      prompt: "运行一个指针接收者方法，确认方法会修改原账户而不是副本。",
+      starterCode: `package main
+
+import "fmt"
+
+type Account struct {
+    Points int
+}
+
+func (a *Account) Add(points int) {
+    a.Points += points
+}
+
+func main() {
+    account := &Account{Points: 10}
+    account.Add(15)
+    fmt.Printf("points=%d\\n", account.Points)
+}`,
+      expectedOutput: "points=25",
+      outputMatch: "trimmed-exact",
+      hints: ["需要修改原结构体时，接收者应是 *Account。", "方法调用语法会自动处理部分取址，但语义仍要清楚。"],
+      solutionOutline: ["为 Account 定义 Add 方法。", "使用 *Account 接收者修改 Points。", "main 中调用方法并输出最终积分。"],
+    },
+    {
+      id: "ch6-cart-methods",
+      kind: "edit",
+      difficulty: "core",
+      concepts: ["method", "value receiver", "pointer receiver", "encapsulation"],
+      estimatedMinutes: 18,
+      title: "补全购物车方法",
+      prompt: "补全 Cart 的 Add 和 Total 方法：Add 修改购物车，Total 只读取状态并计算总价。",
+      context: "购物车、账户、订单这类领域对象适合把行为放到数据旁边，同时用接收者选择表达是否修改状态。",
+      starterCode: `package main
+
+import "fmt"
+
+type Item struct {
+    Name  string
+    Cents int
+}
+
+type Cart struct {
+    items []Item
+}
+
+func (c *Cart) Add(item Item) {
+    // TODO: 把 item 追加到 c.items
+}
+
+func (c Cart) Total() int {
+    total := 0
+    // TODO: 累加每个 item 的 Cents
+    return total
+}
+
+func main() {
+    var cart Cart
+    cart.Add(Item{Name: "book", Cents: 1200})
+    cart.Add(Item{Name: "pen", Cents: 300})
+    fmt.Printf("total=%d\\n", cart.Total())
+}`,
+      expectedOutput: "total=1500",
+      outputMatch: "trimmed-exact",
+      hints: ["Add 需要修改 Cart，适合 *Cart 接收者。", "Total 只读取字段，值接收者也可以。", "append 的返回值必须重新赋给 slice 字段。"],
+      solutionOutline: ["在 Add 中执行 c.items = append(c.items, item)。", "在 Total 中遍历 c.items 并累加 Cents。", "main 中通过方法调用得到稳定输出。"],
+    },
+    {
+      id: "ch6-fix-value-receiver",
+      kind: "debug",
+      difficulty: "challenge",
+      concepts: ["value receiver", "pointer receiver", "method set"],
+      estimatedMinutes: 12,
+      title: "修复值接收者更新失效",
+      prompt: "当前 Add 方法内部修改的是副本，最终积分仍是 10。改用正确接收者，让账户状态真的更新。",
+      context: "这类 bug 在评审中很常见：方法看起来像在修改对象，实际只改了接收者副本。",
+      starterCode: `package main
+
+import "fmt"
+
+type Account struct {
+    Points int
+}
+
+func (a Account) Add(points int) {
+    a.Points += points
+}
+
+func main() {
+    account := Account{Points: 10}
+    account.Add(15)
+    fmt.Printf("points=%d\\n", account.Points)
+}`,
+      expectedOutput: "points=25",
+      outputMatch: "trimmed-exact",
+      hints: ["值接收者会复制 Account。", "需要修改原对象时使用 *Account。", "调用方可以继续写 account.Add(15)，编译器会对可寻址变量自动取址。"],
+      solutionOutline: ["把 Add 的接收者从 Account 改为 *Account。", "保持方法体内修改 a.Points。", "确认 main 中输出 points=25。"],
+    },
+  ],
   checklist: [
     "能定义带接收者的方法。",
     "能说明值接收者和指针接收者差异。",
@@ -504,7 +1030,7 @@ func main() {
   ],
   nextMissionSlugs: [],
   contentSource: {
-    primary: "本章基于 /home/wayne/source/open/gopl-zh.github.com/ch6 全章精简重组。",
+    primary: "本章基于 gopl-zh.github.com/ch6 全章精简重组。",
     references: ["The Go Programming Language 第 6 章", "Effective Go", "Go Code Review Comments"],
     license: "gopl-zh.github.com 使用 BSD 风格许可；后续批量迁移应保留项目级参考与许可说明。",
   },
@@ -539,8 +1065,13 @@ func main() {
     { title: "在实现方过早抽象", symptom: "只有一个实现却先定义复杂接口层。", fix: "等出现真实替换需求，或从测试隔离需求出发定义接口。" },
   ],
   exercise: {
+    id: "ch7-notifier-interface",
+    kind: "run",
+    difficulty: "warmup",
+    concepts: ["interface", "implicit implementation", "method set"],
+    estimatedMinutes: 8,
     title: "用接口统一通知渠道",
-    prompt: "定义一个小接口，让发送逻辑不关心具体通知实现。",
+    prompt: "运行一个最小接口示例，观察 EmailNotifier 不需要显式声明 implements 也能被传入。",
     starterCode: `package main
 
 import "fmt"
@@ -565,7 +1096,128 @@ func main() {
     expectedOutput: "email:build passed",
     outputMatch: "trimmed-exact",
     hints: ["接口只需要包含调用方真正使用的方法。", "EmailNotifier 不需要显式声明 implements。"],
+    solutionOutline: ["定义包含 Notify 的小接口。", "让 EmailNotifier 拥有同名方法。", "send 只依赖 Notifier 行为。"],
   },
+  exercises: [
+    {
+      id: "ch7-notifier-interface",
+      kind: "run",
+      difficulty: "warmup",
+      concepts: ["interface", "implicit implementation", "method set"],
+      estimatedMinutes: 8,
+      title: "用接口统一通知渠道",
+      prompt: "运行一个最小接口示例，观察 EmailNotifier 不需要显式声明 implements 也能被传入。",
+      starterCode: `package main
+
+import "fmt"
+
+type Notifier interface {
+    Notify(message string) string
+}
+
+type EmailNotifier struct{}
+
+func (EmailNotifier) Notify(message string) string {
+    return "email:" + message
+}
+
+func send(n Notifier, message string) string {
+    return n.Notify(message)
+}
+
+func main() {
+    fmt.Println(send(EmailNotifier{}, "build passed"))
+}`,
+      expectedOutput: "email:build passed",
+      outputMatch: "trimmed-exact",
+      hints: ["接口只需要包含调用方真正使用的方法。", "EmailNotifier 不需要显式声明 implements。"],
+      solutionOutline: ["定义包含 Notify 的小接口。", "让 EmailNotifier 拥有同名方法。", "send 只依赖 Notifier 行为。"],
+    },
+    {
+      id: "ch7-build-publisher",
+      kind: "edit",
+      difficulty: "core",
+      concepts: ["small interface", "fake", "dependency injection"],
+      estimatedMinutes: 18,
+      title: "用 fake 发布构建结果",
+      prompt: "补全 PublishBuildResult：根据构建是否通过发送稳定消息，并用 fakeNotifier 记录发送内容。",
+      context: "业务逻辑只应该依赖当前需要的 Notify 能力，测试时可以注入 fake，不需要真实邮件或 Webhook。",
+      starterCode: `package main
+
+import (
+    "fmt"
+    "strings"
+)
+
+type Notifier interface {
+    Notify(message string) error
+}
+
+type fakeNotifier struct {
+    messages []string
+}
+
+func (f *fakeNotifier) Notify(message string) error {
+    f.messages = append(f.messages, message)
+    return nil
+}
+
+func PublishBuildResult(n Notifier, passed bool) error {
+    // TODO: passed 为 true 时发送 build passed，否则发送 build failed
+    return nil
+}
+
+func main() {
+    fake := &fakeNotifier{}
+    _ = PublishBuildResult(fake, true)
+    fmt.Println(strings.Join(fake.messages, ","))
+}`,
+      expectedOutput: "build passed",
+      outputMatch: "trimmed-exact",
+      hints: ["PublishBuildResult 不需要知道 fakeNotifier 的具体字段。", "根据 passed 选择消息。", "调用 n.Notify(message) 并返回它的 error。"],
+      solutionOutline: ["定义 message 变量。", "passed 时设置 build passed，否则 build failed。", "返回 n.Notify(message) 的结果。"],
+    },
+    {
+      id: "ch7-fix-nil-writer",
+      kind: "debug",
+      difficulty: "challenge",
+      concepts: ["nil interface", "dynamic type", "io.Writer"],
+      estimatedMinutes: 14,
+      title: "修复 typed nil 接口陷阱",
+      prompt: "当前 MaybeWriter(false) 返回的是装着 nil *bytes.Buffer 的 io.Writer，导致 nil 判断失效。修复它，让关闭写入时输出 disabled。",
+      context: "接口值只有动态类型和动态值都为 nil 时才等于 nil。返回可选接口时要直接返回 nil 接口。",
+      starterCode: `package main
+
+import (
+    "bytes"
+    "fmt"
+    "io"
+)
+
+func MaybeWriter(enabled bool) io.Writer {
+    var buf *bytes.Buffer
+    if enabled {
+        buf = &bytes.Buffer{}
+    }
+    return buf
+}
+
+func Describe(w io.Writer) string {
+    if w == nil {
+        return "disabled"
+    }
+    return fmt.Sprintf("writer=%T", w)
+}
+
+func main() {
+    fmt.Println(Describe(MaybeWriter(false)))
+}`,
+      expectedOutput: "disabled",
+      outputMatch: "trimmed-exact",
+      hints: ["return buf 会把动态类型 *bytes.Buffer 装进接口。", "没有 writer 时直接 return nil。", "enabled 为 true 时再创建并返回 &bytes.Buffer{}。"],
+      solutionOutline: ["在 MaybeWriter 开头判断 !enabled 并 return nil。", "enabled 为 true 时返回 &bytes.Buffer{}。", "确认 Describe 能正确识别 nil 接口。"],
+    },
+  ],
   checklist: [
     "能写出小接口。",
     "能说明隐式实现。",
@@ -578,7 +1230,7 @@ func main() {
   ],
   nextMissionSlugs: [],
   contentSource: {
-    primary: "本章基于 /home/wayne/source/open/gopl-zh.github.com/ch7 重点章节精简重组。",
+    primary: "本章基于 gopl-zh.github.com/ch7 重点章节精简重组。",
     references: ["The Go Programming Language 第 7 章", "Effective Go", "Go Code Review Comments", "Go 官方 errors 文档"],
     license: "gopl-zh.github.com 使用 BSD 风格许可；后续批量迁移应保留项目级参考与许可说明。",
   },
@@ -648,7 +1300,7 @@ func main() {
   ],
   nextMissionSlugs: ["slice-memory-leak"],
   contentSource: {
-    primary: "本章基于 /home/wayne/source/open/gopl-zh.github.com/ch8 全章精简重组。",
+    primary: "本章基于 gopl-zh.github.com/ch8 全章精简重组。",
     references: ["The Go Programming Language 第 8 章", "Go blog: Pipelines and cancellation", "context 官方文档", "Go by Example"],
     license: "gopl-zh.github.com 使用 BSD 风格许可；后续批量迁移应保留项目级参考与许可说明。",
   },
@@ -726,7 +1378,7 @@ func main() {
   ],
   nextMissionSlugs: ["map-concurrent-write"],
   contentSource: {
-    primary: "本章基于 /home/wayne/source/open/gopl-zh.github.com/ch9 全章精简重组。",
+    primary: "本章基于 gopl-zh.github.com/ch9 全章精简重组。",
     references: ["The Go Programming Language 第 9 章", "Go Memory Model", "Data Race Detector 官方文档", "sync 与 sync/atomic 官方文档"],
     license: "gopl-zh.github.com 使用 BSD 风格许可；后续批量迁移应保留项目级参考与许可说明。",
   },
@@ -794,7 +1446,7 @@ func main() {
   ],
   nextMissionSlugs: [],
   contentSource: {
-    primary: "本章基于 /home/wayne/source/open/gopl-zh.github.com/ch10 全章精简重组。",
+    primary: "本章基于 gopl-zh.github.com/ch10 全章精简重组。",
     references: ["The Go Programming Language 第 10 章", "Go Modules Reference", "go command 官方文档", "Effective Go", "Go Code Review Comments"],
     license: "gopl-zh.github.com 使用 BSD 风格许可；后续批量迁移应保留项目级参考与许可说明。",
   },
@@ -1014,7 +1666,7 @@ func main() {
   ],
   nextMissionSlugs: [],
   contentSource: {
-    primary: "本章基于 /home/wayne/source/open/gopl-zh.github.com/ch11 全章精简重组。",
+    primary: "本章基于 gopl-zh.github.com/ch11 全章精简重组。",
     references: ["The Go Programming Language 第 11 章", "testing 包官方文档", "Go fuzzing 官方教程", "Go blog: Profiling Go Programs"],
     license: "gopl-zh.github.com 使用 BSD 风格许可；后续批量迁移应保留项目级参考与许可说明。",
   },
@@ -1090,7 +1742,7 @@ func main() {
   ],
   nextMissionSlugs: [],
   contentSource: {
-    primary: "本章基于 /home/wayne/source/open/gopl-zh.github.com/ch12 全章精简重组。",
+    primary: "本章基于 gopl-zh.github.com/ch12 全章精简重组。",
     references: ["The Go Programming Language 第 12 章", "reflect 包官方文档", "encoding/json 官方文档", "Go generics 官方教程"],
     license: "gopl-zh.github.com 使用 BSD 风格许可；后续批量迁移应保留项目级参考与许可说明。",
   },
@@ -1163,7 +1815,7 @@ func main() {
   ],
   nextMissionSlugs: [],
   contentSource: {
-    primary: "本章基于 /home/wayne/source/open/gopl-zh.github.com/ch13 全章精简重组。",
+    primary: "本章基于 gopl-zh.github.com/ch13 全章精简重组。",
     references: ["The Go Programming Language 第 13 章", "unsafe 包官方文档", "cgo 官方文档", "Go blog: Profiling Go Programs"],
     license: "gopl-zh.github.com 使用 BSD 风格许可；后续批量迁移应保留项目级参考与许可说明。",
   },

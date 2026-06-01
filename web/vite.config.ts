@@ -47,4 +47,40 @@ export default defineConfig({
 
   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
   assetsInclude: ['**/*.svg', '**/*.csv'],
+
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) {
+            return undefined
+          }
+
+          if (id.includes('/react-router/')) {
+            return 'vendor-router'
+          }
+          if (id.includes('/@radix-ui/') || id.includes('/cmdk/') || id.includes('/vaul/')) {
+            return 'vendor-ui'
+          }
+          if (id.includes('/@codemirror/') || id.includes('/@uiw/') || id.includes('/@lezer/')) {
+            return 'vendor-editor'
+          }
+          if (id.includes('/lucide-react/')) {
+            return 'vendor-icons'
+          }
+          if (id.includes('/recharts/') || id.includes('/d3-')) {
+            return 'vendor-charts'
+          }
+          if (id.includes('/motion/')) {
+            return 'vendor-motion'
+          }
+          if (id.includes('/@mdx-js/') || id.includes('/highlight.js/') || id.includes('/hast-util-') || id.includes('/rehype-') || id.includes('/remark-')) {
+            return 'vendor-mdx'
+          }
+
+          return 'vendor'
+        },
+      },
+    },
+  },
 })

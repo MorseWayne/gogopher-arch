@@ -8,8 +8,8 @@ Claude Code 开发工作的轻量级可恢复台账。
 Status: Active
 Level: 2
 Started: 2026-05-31
-Updated: 2026-05-31
-Current phase: P15 — Go 课程设计原则与章节改造 Skill 固化完成。
+Updated: 2026-06-01
+Current phase: P17 — Batch 2 ch05-ch07 顺序章节补强。
 
 Intent: 将 Go 基础课程内容从前端 TypeScript 硬编码数据逐步迁移到 Markdown/MDX 管理，保留现有 React 课程页、sandbox 练习和任务衔接体验，并为后续基于 gopl-zh 与开源教程资料的内容改编打基础。
 
@@ -29,43 +29,39 @@ Plan:
 - [done] P13 — 第 11 章测试样板改造：按“基础概念 → 场景 → 对照示例 → 常见坑 → 练习”的结构重写测试章节，整合 gopl-zh、Go 官方 testing/fuzz/pprof 文档和 Learn Go with Tests 思路。
 - [done] P14 — 概念地图呈现顺序调整：根据反馈将第 4/11 章概念地图从文章前部移动到具体讲解后的回看/总结位置，避免开篇过于晦涩。
 - [done] P15 — 固化课程设计方法：项目 `CLAUDE.md` 增加 Go 课程设计原则，新增 `.claude/skills/go-course-chapter-redesign/SKILL.md` 固化章节改造流程。
+- [done] P16 — Batch 1：按教程级标准补强 ch01-ch03，并同步检查 metadata/exercises。
+- [doing] P17 — Batch 2：按教程级标准补强 ch05-ch07，并同步检查 metadata/exercises。
+- [todo] P18 — Batch 3：按教程级标准补强 ch08-ch10，并同步检查 metadata/exercises。
+- [todo] P19 — Batch 4：按教程级标准补强 ch12-ch13，并同步检查 metadata/exercises。
 
 Current todo:
-- [x] 已完成 React + MDX 基础设施：Vite 接入 MDX/GFM/heading slug，课程数据层支持 MDX 覆盖硬编码章节，第 1 章已迁移为 `web/src/content/go-basics/ch01-getting-started.mdx` 样章。
-- [x] 验证通过：`npm run build --prefix web` 与 `git diff --check`。
-- [x] 后续批量迁移第 2-13 章时，应先阅读 gopl-zh 对应章节和优秀开源教程，再做精简重组与工程化补充。
-- [x] 已迁移第 2-4 章：`ch02-program-structure.mdx`、`ch03-basic-data-types.mdx`、`ch04-composite-types.mdx`，均基于本地 gopl-zh 对应章节重组。
-- [x] 验证通过：`npm run build --prefix web` 与 `git diff --check`；构建出现 Vite chunk >500kB 警告，属于内容打包体积提示，未阻断构建。
-- [x] 下一批迁移第 5-7 章：函数、方法、接口。
-- [x] 已迁移第 5-7 章：`ch05-functions.mdx`、`ch06-methods.mdx`、`ch07-interfaces.mdx`，均基于本地 gopl-zh 对应章节重组。
-- [x] 验证通过：`npm run build --prefix web` 与 `git diff --check`；构建仍有 Vite chunk >500kB 体积警告，随着 MDX eager 打包章节增加更明显，后续应考虑章节懒加载。
-- [x] 下一批迁移第 8-9 章：Goroutines/Channels 与共享变量并发。
-- [x] 已迁移第 8-9 章：`ch08-goroutines-channels.mdx`、`ch09-shared-variable-concurrency.mdx`，均基于本地 gopl-zh 对应章节重组。
-- [x] 验证通过：`npm run build --prefix web` 与 `git diff --check`；构建仍有 Vite chunk >500kB 体积警告，当前主 JS 约 633.52 kB，后续迁移剩余章节前建议优先做 MDX 正文懒加载。
-- [x] 已优化 MDX 章节正文懒加载：`web/src/content/go-basics/courseChapters.ts` 保存 metadata，MDX 文件只保留正文；`goBasicsCourse.ts` 只 eager 加载 metadata，章节页通过 `loadContent()` 动态 import 对应 MDX。
-- [x] 验证通过：`npm run build --prefix web` 与 `git diff --check`；MDX 正文已分出 per-chapter chunks，主 JS 从约 633.52 kB 降至约 517.22 kB（gzip 约 168.76 kB），仍有 >500kB 警告但已不再随正文线性增长。
-- [x] 已迁移第 10-13 章：`ch10-packages-tools.mdx`、`ch11-testing.mdx`、`ch12-reflection.mdx`、`ch13-low-level-programming.mdx`，metadata 已写入 `courseChapters.ts`，正文继续按章节动态加载。
-- [x] 验证通过：新 MDX 章节单独编译检查通过；`npm run build --prefix web` 与 `git diff --check` 通过；构建仍有 Vite chunk >500kB 警告，主 JS 约 533.86 kB（gzip 约 174.59 kB），第 10-13 章各自拆成 lazy chunks。
-- [x] 已完成练习系统 v2 竖切：数据模型支持 `exercises[]` 和练习类型，练习面板支持多练习切换、可编辑代码、localStorage 草稿、重置、运行用户代码；ch4/ch11 已改为样板章节。
-- [x] 验证通过：`npm run build --prefix web` 与 `git diff --check`；构建仍有 Vite chunk >500kB 警告，主 JS 约 546.67 kB（gzip 约 178.44 kB）。
-- [x] 已完成 CodeMirror Go 编辑器竖切：新增 `GoCodeEditor`，练习区从 Textarea 改为 CodeMirror，支持 Go 语法高亮、行号、括号匹配、基础补全和基于练习 concepts 的课程 snippets；编辑器通过 React lazy/Suspense 按需加载。
-- [x] 验证通过：`npm run build --prefix web` 与 `git diff --check`；CodeMirror 被拆成 `GoCodeEditor` lazy chunk 约 460.12 kB（gzip 约 152.99 kB），主 JS 约 546.28 kB（gzip 约 178.40 kB），仍有 Vite chunk >500kB 警告。
-- [x] 已完成第 4 章优秀资料整合样板：`CourseMdxContent` 新增 `SourceNote`、`CompareNote`、`ExamplePair`、`DeepDive`、`PitfallCard`、`PracticeBridge` 等 MDX 组件；`ch04-composite-types.mdx` 改为订单状态统计与 API 响应边界场景，整合 gopl-zh 主干、Go by Example 短例子风格、Effective Go 工程实践和练习衔接。
-- [x] 验证通过：`npm run build --prefix web` 与 `git diff --check`；第 4 章 lazy chunk 约 32.43 kB（gzip 约 9.31 kB），主 JS 约 549.39 kB（gzip 约 179.00 kB），仍有 Vite chunk >500kB 警告。
-- [x] 已根据反馈补强第 4 章基础概念：新增“基础概念地图”，并扩展数组、slice、map、struct 的定义形式、初始化方式、内存/语义模型、值复制/引用共享、可比较性、nil/空值、`make`/字面量、指针传参和常见误区说明。
-- [x] 验证通过：`npm run build --prefix web` 与 `git diff --check`；第 4 章 lazy chunk 约 50.05 kB（gzip 约 12.25 kB），主 JS 约 549.39 kB（gzip 约 179.00 kB），仍有 Vite chunk >500kB 警告。
-- [x] 已完成第 11 章测试样板改造：`ch11-testing.mdx` 按“基础概念 → 回归场景 → go test 约定 → 测试函数/表驱动/子测试 → 随机与 fuzzing → 命令测试/替身/覆盖率 → benchmark/pprof/example → 常见坑与练习衔接”重写；整合 gopl-zh 第 11 章、Go 官方 testing/fuzz/pprof 文档和 Learn Go with Tests 的先测试后实现思路。
-- [x] 验证通过：`npm run build --prefix web` 与 `git diff --check`；第 11 章 lazy chunk 约 39.97 kB（gzip 约 10.61 kB），主 JS 约 549.39 kB（gzip 约 179.00 kB），仍有 Vite chunk >500kB 警告。
-- [x] 已根据反馈调整概念地图位置：第 4 章“基础概念地图”改为讲解后的“概念回看：四类复合类型怎么区分”；第 11 章“基础概念地图”改为讲解后的“测试概念回看：go test 工具链怎么串起来”，避免文章开头出现晦涩表格。
-- [x] 验证通过：`npm run build --prefix web` 与 `git diff --check`；第 4 章 lazy chunk 约 50.18 kB（gzip 约 12.34 kB），第 11 章 lazy chunk 约 40.07 kB（gzip 约 10.64 kB），主 JS 约 549.39 kB（gzip 约 179.00 kB），仍有 Vite chunk >500kB 警告。
-- [x] 已固化课程设计方法：`CLAUDE.md` 增加 Go 课程设计原则；新增 `.claude/skills/go-course-chapter-redesign/SKILL.md`，沉淀章节改造流程、来源使用、MDX 组件使用、练习分层、验证要求和反模式。
-- [x] 验证通过：`git diff --check`；并用脚本检查 `CLAUDE.md` 与 Skill 文件非空可读。
-- [ ] 下一步建议：浏览器抽样 smoke 第 4/11 章样板组件展示、PracticeBridge 跳转、ch4/ch11 练习切换、CodeMirror 高亮/补全、草稿保存和运行反馈；若体验稳定，再批量按同一标准补强其他章节。
+- [ ] P17 — Batch 2：按教程级标准补强 ch05-ch07，并同步检查 metadata/exercises；正文与练习已改，构建、空白检查和 starter code 抽查通过，待用户确认体验验证结果后 checkpoint。
+
+Changes:
+- P17 ch05-ch07 正文与 metadata/exercises 已完成，自动验证通过，待用户确认体验验证结果后再切换到 P18。
+
+History so far:
+- Intent: 将 Go 基础课程从 TypeScript 硬编码迁移到 MDX 内容系统，同时保留 React 课程页、sandbox 练习和任务衔接体验。
+- Completed milestones:
+  - [done] P1-P8 — MDX 基础设施、metadata/content 拆分、13 章内容迁移和章节懒加载已完成。
+  - [done] P9-P10 — 练习系统 v2 与 lazy CodeMirror Go 编辑器竖切已完成，并以 ch4/ch11 作为样板。
+  - [done] P11-P15 — 第 4/11 章教程级样板、概念地图顺序调整，以及课程改造原则/Skill 固化已完成。
+  - [done] P16 — Batch 1 ch01-ch03 教程级补强、练习分层和 metadata/exercises 同步已完成。
+- Key changes:
+  - 课程章节现在使用 TypeScript metadata + 动态 MDX 正文；练习支持多题、可编辑草稿、重置和运行反馈。
+  - 章节改造标准已明确为场景引入、基础概念逐步讲解、对照示例、讲解后概念回看和分层练习。
+- Validation:
+  - 多轮 `npm run build --prefix web` 与 `git diff --check` 通过；P15 通过 `git diff --check` 和 CLAUDE.md/Skill 文件可读性检查。
+  - 用户已确认第 4/11 章样板体验稳定。
+  - P16 验证：`npm run build --prefix web` 与 `git diff --check` 通过；ch01/ch02/ch03 warmup starter code 抽查输出匹配；Vite >500kB chunk 警告已消失；用户已确认体验验证通过。
+  - P17 当前验证：`npm run build --prefix web` 与 `git diff --check` 通过；ch05/ch06/ch07 共 9 个 starter code 抽查可运行，warmup 输出匹配。
+- Deferred / gaps:
+  - P17 还需用户确认体验验证结果；后续已明确按 P18 ch08-ch10、P19 ch12-ch13 顺序推进，全部批次完成后做最终构建/空白检查与归档。
 
 Prerequisites:
 - 用户确认采用 React + MDX 方案，不引入 VuePress 作为主课程框架。
 
-Resume next: 浏览器抽样 smoke 第 4/11 章样板组件展示、PracticeBridge 跳转、ch4/ch11 练习切换、CodeMirror 高亮/补全、草稿保存和运行反馈；若体验稳定，再使用 `go-course-chapter-redesign` Skill 批量按“场景引入 → 基础概念逐步讲解 → 对照示例 → 概念回看/总结 → 练习”的标准补强其他章节，后续可继续扩展 exercise kind 的 `test` 模式（main.go + main_test.go / go test）、接入更完整的 gopls/LSP 智能提示，或批量丰富其他章节练习。
+Resume next: 向用户请求 P17 手动体验验证结果；若通过，checkpoint：P17 -> done、P18 -> doing，并继续 ch08-ch10。
 
 ### WF-2026-05-31-001 — 全站 shadcn 视觉系统重构
 Status: Active
@@ -107,6 +103,20 @@ Changes:
 - 已实现全站 light/dark/system 主题支持：App 接入 next-themes，公开区与学习区顶部加入 ThemeToggle，dark token 保持 Go 蓝 primary，并修正 Landing/课程页硬编码浅色样式；`npm run build --prefix web` 与 `git diff --check` 通过。
 - 修复 ThemeToggle 交互：为避免 Radix DropdownMenu trigger 与直接切换点击互相干扰，已改为本地受控主题菜单；按钮点击会打开 light/dark/system 选项，选择后调用 next-themes 并关闭菜单；构建和空白检查通过。
 - 用户反馈频繁 `docker compose up --build` 影响开发效率；已新增 `scripts/dev.sh` 封装 full Docker、Docker 后端 + 本地 Vite、本地 Go 服务 + Docker 依赖等启动场景，并更新 README。
+
+History so far:
+- Intent: 将前端重构为 shadcn/ui 视觉系统，并优化首页、学习区、课程阅读和任务工作台的信息架构。
+- Completed milestones:
+  - [done] P1-P3 — 需求澄清、设计规格和实施计划已完成。
+  - [done] P4-P5 — 全站 shadcn 重构和 light/dark/system 主题支持已完成。
+  - [done] P6 — 本地开发启动脚本与 README 使用场景补充已完成。
+- Key changes:
+  - 用户选择混合视觉方向、分区 App Shell 和未实现路线保留“即将开放”入口。
+  - 开发脚本支持 full Docker、Docker 后端 + 本地 Vite、本地 Go 服务 + Docker 依赖等场景。
+- Validation:
+  - 视觉/主题阶段 `npm run build --prefix web` 与 `git diff --check` 通过；P6 脚本语法、help 输出和空白检查通过。
+- Deferred / gaps:
+  - 仍需浏览器 smoke light/dark/system、首页、Dashboard、课程、章节、任务、沙盒锚点和移动端 Sidebar，并可按需实跑开发脚本。
 
 Prerequisites:
 - 规格已由用户批准，可开始实施；提交仍需用户明确要求。
