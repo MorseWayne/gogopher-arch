@@ -4,65 +4,6 @@ Claude Code 开发工作的轻量级可恢复台账。
 
 ## Active
 
-### WF-2026-05-31-002 — Go 基础课程 React + MDX 内容系统
-Status: Active
-Level: 2
-Started: 2026-05-31
-Updated: 2026-06-01
-Current phase: P17 — Batch 2 ch05-ch07 顺序章节补强。
-
-Intent: 将 Go 基础课程内容从前端 TypeScript 硬编码数据逐步迁移到 Markdown/MDX 管理，保留现有 React 课程页、sandbox 练习和任务衔接体验，并为后续基于 gopl-zh 与开源教程资料的内容改编打基础。
-
-Plan:
-- [done] P1 — 引入 MDX/Markdown 依赖与 Vite 配置，建立章节内容加载层。
-- [done] P2 — 迁移首个样章到 MDX，验证页面仍能渲染课程目录、正文、练习和校验信息。
-- [done] P3 — 跑前端构建和空白检查，记录迁移边界与后续批量内容改编路径。
-- [done] P4 — 批量迁移第 2-4 章为 MDX 内容，基于 gopl-zh 对应章节精简重组。
-- [done] P5 — 批量迁移第 5-7 章为 MDX 内容，基于 gopl-zh 函数、方法、接口章节精简重组。
-- [done] P6 — 批量迁移第 8-9 章为 MDX 内容，基于 gopl-zh 并发章节精简重组。
-- [done] P7 — 优化 MDX 加载：metadata 独立为 TypeScript 数据，章节正文通过动态 import 按需加载。
-- [done] P8 — 批量迁移第 10-13 章为 MDX 内容，基于 gopl-zh 包/工具、测试、反射、底层编程章节精简重组。
-- [done] P9 — 练习系统 v2 竖切：多练习、可编辑代码、草稿保存、运行用户代码，并用 ch4/ch11 做样板。
-- [done] P10 — CodeMirror Go 编辑器竖切：练习区替换 Textarea，支持 Go 高亮、行号、括号匹配和课程定制补全，并按需懒加载编辑器 chunk。
-- [done] P11 — 第 4 章优秀资料整合样板：新增 MDX 教学组件，改造复合类型章节为“场景 → 来源 → 对照示例 → 常见坑 → 练习衔接”结构。
-- [done] P12 — 第 4 章基础概念补强：根据反馈补充数组、slice、map、struct 的定义形式、初始化方式、内存/语义模型和常见误区。
-- [done] P13 — 第 11 章测试样板改造：按“基础概念 → 场景 → 对照示例 → 常见坑 → 练习”的结构重写测试章节，整合 gopl-zh、Go 官方 testing/fuzz/pprof 文档和 Learn Go with Tests 思路。
-- [done] P14 — 概念地图呈现顺序调整：根据反馈将第 4/11 章概念地图从文章前部移动到具体讲解后的回看/总结位置，避免开篇过于晦涩。
-- [done] P15 — 固化课程设计方法：项目 `CLAUDE.md` 增加 Go 课程设计原则，新增 `.claude/skills/go-course-chapter-redesign/SKILL.md` 固化章节改造流程。
-- [done] P16 — Batch 1：按教程级标准补强 ch01-ch03，并同步检查 metadata/exercises。
-- [doing] P17 — Batch 2：按教程级标准补强 ch05-ch07，并同步检查 metadata/exercises。
-- [todo] P18 — Batch 3：按教程级标准补强 ch08-ch10，并同步检查 metadata/exercises。
-- [todo] P19 — Batch 4：按教程级标准补强 ch12-ch13，并同步检查 metadata/exercises。
-
-Current todo:
-- [ ] P17 — Batch 2：按教程级标准补强 ch05-ch07，并同步检查 metadata/exercises；正文与练习已改，构建、空白检查和 starter code 抽查通过，待用户确认体验验证结果后 checkpoint。
-
-Changes:
-- P17 ch05-ch07 正文与 metadata/exercises 已完成，自动验证通过，待用户确认体验验证结果后再切换到 P18。
-
-History so far:
-- Intent: 将 Go 基础课程从 TypeScript 硬编码迁移到 MDX 内容系统，同时保留 React 课程页、sandbox 练习和任务衔接体验。
-- Completed milestones:
-  - [done] P1-P8 — MDX 基础设施、metadata/content 拆分、13 章内容迁移和章节懒加载已完成。
-  - [done] P9-P10 — 练习系统 v2 与 lazy CodeMirror Go 编辑器竖切已完成，并以 ch4/ch11 作为样板。
-  - [done] P11-P15 — 第 4/11 章教程级样板、概念地图顺序调整，以及课程改造原则/Skill 固化已完成。
-  - [done] P16 — Batch 1 ch01-ch03 教程级补强、练习分层和 metadata/exercises 同步已完成。
-- Key changes:
-  - 课程章节现在使用 TypeScript metadata + 动态 MDX 正文；练习支持多题、可编辑草稿、重置和运行反馈。
-  - 章节改造标准已明确为场景引入、基础概念逐步讲解、对照示例、讲解后概念回看和分层练习。
-- Validation:
-  - 多轮 `npm run build --prefix web` 与 `git diff --check` 通过；P15 通过 `git diff --check` 和 CLAUDE.md/Skill 文件可读性检查。
-  - 用户已确认第 4/11 章样板体验稳定。
-  - P16 验证：`npm run build --prefix web` 与 `git diff --check` 通过；ch01/ch02/ch03 warmup starter code 抽查输出匹配；Vite >500kB chunk 警告已消失；用户已确认体验验证通过。
-  - P17 当前验证：`npm run build --prefix web` 与 `git diff --check` 通过；ch05/ch06/ch07 共 9 个 starter code 抽查可运行，warmup 输出匹配。
-- Deferred / gaps:
-  - P17 还需用户确认体验验证结果；后续已明确按 P18 ch08-ch10、P19 ch12-ch13 顺序推进，全部批次完成后做最终构建/空白检查与归档。
-
-Prerequisites:
-- 用户确认采用 React + MDX 方案，不引入 VuePress 作为主课程框架。
-
-Resume next: 向用户请求 P17 手动体验验证结果；若通过，checkpoint：P17 -> done、P18 -> doing，并继续 ch08-ch10。
-
 ### WF-2026-05-31-001 — 全站 shadcn 视觉系统重构
 Status: Active
 Level: 3
@@ -128,6 +69,35 @@ Resume next: 如需收尾，进行浏览器人工 smoke（light/dark/system、�
 - [ ] 若课程数据继续膨胀，后续可考虑将 13 章拆分为独立章节文件；当前计划明确首版保留单文件。
 
 ## Completed
+
+### WF-2026-05-31-002 — Go 基础课程 React + MDX 内容系统
+Completed: 2026-06-01
+Level: 2
+
+Close summary:
+- Outcome: 已完成 Go 基础课程 React + MDX 内容系统：课程章节使用 metadata + 动态 MDX 正文，保留 React 课程页、sandbox 练习和任务衔接体验，并完成全部 13 章迁移、练习系统 v2、CodeMirror Go 编辑器、章节教程级补强和课程改造流程固化。
+- Validation: 多轮 `npm run build --prefix web`、`git diff --check` 和 starter code 抽查通过；用户已确认第 4/11 章样板、P16、P17、P18 和 P19 体验验证通过。
+- Gaps: None.
+
+Archived execution:
+- Intent: 将 Go 基础课程从 TypeScript 硬编码迁移到 MDX 内容系统，同时保留 React 课程页、sandbox 练习和任务衔接体验。
+- Plan:
+  - [done] P1-P8 — MDX 基础设施、metadata/content 拆分、13 章内容迁移和章节懒加载已完成。
+  - [done] P9-P10 — 练习系统 v2 与 lazy CodeMirror Go 编辑器竖切已完成，并以 ch4/ch11 作为样板。
+  - [done] P11-P15 — 第 4/11 章教程级样板、概念地图顺序调整，以及课程改造原则/Skill 固化已完成。
+  - [done] P16-P19 — ch01-ch03、ch05-ch10、ch12-ch13 按教程级标准补强，并同步 metadata/exercises。
+- Key changes:
+  - 课程章节现在使用 TypeScript metadata + 动态 MDX 正文；练习支持多题、可编辑草稿、重置、运行反馈和 CodeMirror Go 编辑器。
+  - 章节改造标准已明确为场景引入、基础概念逐步讲解、对照示例、讲解后概念回看和 warmup/core/challenge 分层练习。
+  - `.claude/skills/go-course-chapter-redesign/SKILL.md` 与项目 CLAUDE.md 固化了 Go 课程设计原则。
+- Validation:
+  - 多轮 `npm run build --prefix web` 与 `git diff --check` 通过。
+  - P16 验证：ch01/ch02/ch03 warmup starter code 抽查输出匹配，用户确认体验通过。
+  - P17 验证：ch05/ch06/ch07 共 9 个 starter code 抽查可运行，warmup 输出匹配，用户确认体验通过。
+  - P18 验证：ch08/ch09/ch10 共 9 个 starter code 抽查可运行，warmup 输出匹配，用户确认可推进。
+  - P19 验证：ch12/ch13 共 6 个 starter code 抽查可运行，warmup 输出匹配，用户确认体验通过。
+- Deferred / gaps:
+  - None.
 
 ### WF-2026-05-30-002 — 本地部署 P0/P1 稳定化
 Completed: 2026-05-30

@@ -1265,6 +1265,11 @@ func main() {
     { title: "关闭 channel 的所有权混乱", symptom: "panic: send on closed channel。", fix: "通常由发送方关闭 channel，并确保只有一个关闭所有者。" },
   ],
   exercise: {
+    id: "ch8-collect-results",
+    kind: "run",
+    difficulty: "warmup",
+    concepts: ["goroutine", "channel", "buffered channel", "sort"],
+    estimatedMinutes: 10,
     title: "并发收集两个任务结果",
     prompt: "启动两个 goroutine，把结果发送到 channel，再按稳定顺序输出。",
     starterCode: `package main
@@ -1286,8 +1291,152 @@ func main() {
 }`,
     expectedOutput: "results=cache,db",
     outputMatch: "trimmed-exact",
-    hints: ["带缓冲 channel 可以容纳两个结果。", "并发返回顺序不稳定，输出前排序。"],
+    hints: ["带缓冲 channel 可以容纳两个结果。", "并发返回顺序不稳定，输出前排序。", "main goroutine 必须接收两个结果后再退出。"],
+    solutionOutline: ["创建容量为 2 的结果 channel。", "两个 goroutine 分别发送 cache 和 db。", "接收两个结果、排序并用 strings.Join 输出。"],
   },
+  exercises: [
+    {
+      id: "ch8-collect-results",
+      kind: "run",
+      difficulty: "warmup",
+      concepts: ["goroutine", "channel", "buffered channel", "sort"],
+      estimatedMinutes: 10,
+      title: "并发收集两个任务结果",
+      prompt: "启动两个 goroutine，把结果发送到 channel，再按稳定顺序输出。",
+      starterCode: `package main
+
+import (
+    "fmt"
+    "sort"
+    "strings"
+)
+
+func main() {
+    results := make(chan string, 2)
+    go func() { results <- "cache" }()
+    go func() { results <- "db" }()
+
+    collected := []string{<-results, <-results}
+    sort.Strings(collected)
+    fmt.Printf("results=%s\\n", strings.Join(collected, ","))
+}`,
+      expectedOutput: "results=cache,db",
+      outputMatch: "trimmed-exact",
+      hints: ["带缓冲 channel 可以容纳两个结果。", "并发返回顺序不稳定，输出前排序。", "main goroutine 必须接收两个结果后再退出。"],
+      solutionOutline: ["创建容量为 2 的结果 channel。", "两个 goroutine 分别发送 cache 和 db。", "接收两个结果、排序并用 strings.Join 输出。"],
+    },
+    {
+      id: "ch8-worker-results",
+      kind: "edit",
+      difficulty: "core",
+      concepts: ["sync.WaitGroup", "channel", "close", "deterministic output"],
+      estimatedMinutes: 20,
+      title: "补全并发结果收集器",
+      prompt: "补全 Collect：每个任务启动一个 goroutine，发送稳定结果，等待所有 worker 结束后关闭结果 channel。",
+      context: "真实服务经常并发查询缓存、数据库和队列。调用方既要收集所有结果，也要保证结果 channel 会被关闭。",
+      starterCode: `package main
+
+import (
+    "fmt"
+    "sort"
+    "strings"
+    "sync"
+)
+
+func Collect(tasks []string) string {
+    results := make(chan string, len(tasks))
+    var wg sync.WaitGroup
+
+    for _, task := range tasks {
+        task := task
+        wg.Add(1)
+        go func() {
+            defer wg.Done()
+            // TODO: 发送 "<task>=ready" 到 results
+            _ = task
+        }()
+    }
+
+    go func() {
+        wg.Wait()
+        close(results)
+    }()
+
+    collected := []string{}
+    for result := range results {
+        collected = append(collected, result)
+    }
+    sort.Strings(collected)
+    return strings.Join(collected, " ")
+}
+
+func main() {
+    fmt.Println(Collect([]string{"db", "cache", "queue"}))
+}`,
+      expectedOutput: "cache=ready db=ready queue=ready",
+      outputMatch: "trimmed-exact",
+      hints: ["goroutine 内使用当前 task，可以保留 task := task。", "发送内容可以用 fmt.Sprintf 构造。", "close(results) 应该在 wg.Wait() 之后执行。"],
+      solutionOutline: ["在 worker 中发送 fmt.Sprintf(\"%s=ready\", task)。", "使用 WaitGroup 等待所有 worker。", "等待结束后关闭 results，让 range 能正常退出。", "排序后拼接输出，避免并发顺序影响结果。"],
+    },
+    {
+      id: "ch8-close-results",
+      kind: "debug",
+      difficulty: "challenge",
+      concepts: ["goroutine leak", "channel close", "select", "timeout"],
+      estimatedMinutes: 18,
+      title: "修复结果 channel 永不关闭",
+      prompt: "当前程序能收到 worker 结果，但因为 results 没有关闭，最终只能超时返回。补上关闭所有权，让输出稳定。",
+      context: "并发代码里，接收方常用 range 或 ok 判断等待 channel 关闭。发送方完成后不关闭，接收方就无法知道结果已经结束。",
+      starterCode: `package main
+
+import (
+    "fmt"
+    "sort"
+    "strings"
+    "sync"
+    "time"
+)
+
+func Gather(tasks []string) string {
+    results := make(chan string)
+    var wg sync.WaitGroup
+
+    for _, task := range tasks {
+        task := task
+        wg.Add(1)
+        go func() {
+            defer wg.Done()
+            results <- task
+        }()
+    }
+
+    // TODO: 在所有 worker 结束后关闭 results
+
+    collected := []string{}
+    timeout := time.After(50 * time.Millisecond)
+    for {
+        select {
+        case result, ok := <-results:
+            if !ok {
+                sort.Strings(collected)
+                return strings.Join(collected, ",")
+            }
+            collected = append(collected, result)
+        case <-timeout:
+            return "timeout"
+        }
+    }
+}
+
+func main() {
+    fmt.Println(Gather([]string{"db", "cache", "queue"}))
+}`,
+      expectedOutput: "cache,db,queue",
+      outputMatch: "trimmed-exact",
+      hints: ["不能在启动 worker 前关闭 results。", "关闭 channel 的 goroutine 应该先 wg.Wait()。", "只有发送方完成后关闭，接收方的 ok 才会变成 false。"],
+      solutionOutline: ["新增 goroutine 调用 wg.Wait()。", "Wait 返回后 close(results)。", "接收方在 ok=false 时排序并返回结果。"],
+    },
+  ],
   checklist: [
     "能用 channel 收集 goroutine 结果。",
     "能说明 channel 关闭所有权。",
@@ -1335,6 +1484,11 @@ func main() {
     { title: "defer 解锁放错位置", symptom: "提前返回忘记解锁或锁持有时间过长。", fix: "小函数中 Lock 后立即 defer Unlock；大函数拆分临界区。" },
   ],
   exercise: {
+    id: "ch9-safe-counter",
+    kind: "run",
+    difficulty: "warmup",
+    concepts: ["sync.Mutex", "sync.WaitGroup", "data race"],
+    estimatedMinutes: 10,
     title: "安全累加请求数",
     prompt: "用 Mutex 保护共享计数器，确保 100 个 goroutine 的更新都被保留。",
     starterCode: `package main
@@ -1364,8 +1518,158 @@ func main() {
 }`,
     expectedOutput: "total=100",
     outputMatch: "trimmed-exact",
-    hints: ["WaitGroup 等待所有 goroutine 完成。", "total++ 不是原子操作，需要同步保护。"],
+    hints: ["WaitGroup 等待所有 goroutine 完成。", "total++ 不是原子操作，需要同步保护。", "Lock 和 Unlock 必须成对出现。"],
+    solutionOutline: ["声明 WaitGroup 和 Mutex。", "每个 goroutine 在临界区内执行 total++。", "等待所有 goroutine 结束后输出 total。"],
   },
+  exercises: [
+    {
+      id: "ch9-safe-counter",
+      kind: "run",
+      difficulty: "warmup",
+      concepts: ["sync.Mutex", "sync.WaitGroup", "data race"],
+      estimatedMinutes: 10,
+      title: "安全累加请求数",
+      prompt: "用 Mutex 保护共享计数器，确保 100 个 goroutine 的更新都被保留。",
+      starterCode: `package main
+
+import (
+    "fmt"
+    "sync"
+)
+
+func main() {
+    var wg sync.WaitGroup
+    var mu sync.Mutex
+    total := 0
+
+    for i := 0; i < 100; i++ {
+        wg.Add(1)
+        go func() {
+            defer wg.Done()
+            mu.Lock()
+            total++
+            mu.Unlock()
+        }()
+    }
+
+    wg.Wait()
+    fmt.Printf("total=%d\\n", total)
+}`,
+      expectedOutput: "total=100",
+      outputMatch: "trimmed-exact",
+      hints: ["WaitGroup 等待所有 goroutine 完成。", "total++ 不是原子操作，需要同步保护。", "Lock 和 Unlock 必须成对出现。"],
+      solutionOutline: ["声明 WaitGroup 和 Mutex。", "每个 goroutine 在临界区内执行 total++。", "等待所有 goroutine 结束后输出 total。"],
+    },
+    {
+      id: "ch9-safe-counts-map",
+      kind: "edit",
+      difficulty: "core",
+      concepts: ["sync.Mutex", "map", "sort", "stable snapshot"],
+      estimatedMinutes: 22,
+      title: "补全并发安全状态计数器",
+      prompt: "补全 StatusCounter 的 Add 和 Snapshot：并发写入 map 时要加锁，输出快照时按 key 排序。",
+      context: "统计接口、限流器和内存缓存经常把 map 放在结构体里。只要多个 goroutine 会读写，就要把锁和被保护状态放在一起。",
+      starterCode: `package main
+
+import (
+    "fmt"
+    "sort"
+    "strings"
+    "sync"
+)
+
+type StatusCounter struct {
+    mu     sync.Mutex
+    counts map[string]int
+}
+
+func NewStatusCounter() *StatusCounter {
+    return &StatusCounter{counts: map[string]int{}}
+}
+
+func (c *StatusCounter) Add(status string) {
+    // TODO: 加锁后更新 c.counts[status]
+}
+
+func (c *StatusCounter) Snapshot() string {
+    c.mu.Lock()
+    defer c.mu.Unlock()
+
+    keys := make([]string, 0, len(c.counts))
+    // TODO: 收集 keys 并排序
+    sort.Strings(keys)
+
+    parts := make([]string, 0, len(keys))
+    for _, key := range keys {
+        parts = append(parts, fmt.Sprintf("%s=%d", key, c.counts[key]))
+    }
+    return strings.Join(parts, " ")
+}
+
+func main() {
+    counter := NewStatusCounter()
+    statuses := []string{"paid", "pending", "paid", "failed"}
+
+    var wg sync.WaitGroup
+    for _, status := range statuses {
+        status := status
+        wg.Add(1)
+        go func() {
+            defer wg.Done()
+            counter.Add(status)
+        }()
+    }
+    wg.Wait()
+
+    fmt.Println(counter.Snapshot())
+}`,
+      expectedOutput: "failed=1 paid=2 pending=1",
+      outputMatch: "trimmed-exact",
+      hints: ["Add 中 Lock 后 defer Unlock。", "map 的读写都应该受同一把锁保护。", "Snapshot 中先收集 key，再 sort.Strings(keys)。"],
+      solutionOutline: ["在 Add 中持锁执行 c.counts[status]++。", "Snapshot 持锁读取 map，收集所有 key。", "排序 key 后拼接稳定输出。"],
+    },
+    {
+      id: "ch9-once-policy",
+      kind: "debug",
+      difficulty: "challenge",
+      concepts: ["sync.Once", "lazy initialization", "memory visibility"],
+      estimatedMinutes: 16,
+      title: "修复重复加载策略配置",
+      prompt: "当前 Policy 每次调用都会重新加载配置，loads=3。使用 sync.Once 保证策略只初始化一次。",
+      context: "只读配置、模板和静态索引适合用 sync.Once 懒加载。Once 不只是防止重复调用，也保证初始化写入对后续调用可见。",
+      starterCode: `package main
+
+import (
+    "fmt"
+    "sync"
+)
+
+var once sync.Once
+var loads int
+var policy string
+
+func loadPolicy() {
+    loads++
+    policy = "strict"
+}
+
+func Policy() string {
+    // TODO: 使用 once.Do(loadPolicy)，不要每次都直接调用 loadPolicy
+    loadPolicy()
+    return policy
+}
+
+func main() {
+    _ = Policy()
+    _ = Policy()
+    fmt.Printf("loads=%d policy=%s\\n", loads, Policy())
+}`,
+      expectedOutput: "loads=1 policy=strict",
+      outputMatch: "trimmed-exact",
+      hints: ["sync.Once 的 Do 方法接收一个无参数函数。", "同一个 once 只会执行一次传入函数。", "Policy 仍然应该返回已经初始化好的 policy。"],
+      solutionOutline: ["保留包级 once。", "把 Policy 中的 loadPolicy() 改为 once.Do(loadPolicy)。", "多次调用 Policy 后 loads 仍为 1。"],
+    },
+  ],
   checklist: [
     "能解释数据竞争。",
     "能用 Mutex 保护共享变量。",
@@ -1416,6 +1720,11 @@ func main() {
     { title: "只在本机能构建", symptom: "开发机通过，CI 或容器里 go env 不同导致失败。", fix: "固定工具链版本，记录 GOOS/GOARCH/CGO_ENABLED，并用脚本复现 CI 命令。" },
   ],
   exercise: {
+    id: "ch10-toolchain-env",
+    kind: "run",
+    difficulty: "warmup",
+    concepts: ["runtime.GOOS", "runtime.GOARCH", "toolchain"],
+    estimatedMinutes: 8,
     title: "查看工具链环境",
     prompt: "读取 runtime 提供的目标系统信息，理解构建环境会影响程序行为。",
     starterCode: `package main
@@ -1431,7 +1740,124 @@ func main() {
     expectedOutput: "goos=",
     outputMatch: "contains",
     hints: ["不同 sandbox 可能运行在不同 GOOS/GOARCH 上。", "contains 匹配允许保留平台差异。", "真实项目还可以用 go env 查看更完整工具链环境。"],
+    solutionOutline: ["导入 runtime 包。", "读取 runtime.GOOS 和 runtime.GOARCH。", "使用稳定前缀输出，允许不同平台差异。"],
   },
+  exercises: [
+    {
+      id: "ch10-toolchain-env",
+      kind: "run",
+      difficulty: "warmup",
+      concepts: ["runtime.GOOS", "runtime.GOARCH", "toolchain"],
+      estimatedMinutes: 8,
+      title: "查看工具链环境",
+      prompt: "读取 runtime 提供的目标系统信息，理解构建环境会影响程序行为。",
+      starterCode: `package main
+
+import (
+    "fmt"
+    "runtime"
+)
+
+func main() {
+    fmt.Printf("goos=%s goarch=%s\\n", runtime.GOOS, runtime.GOARCH)
+}`,
+      expectedOutput: "goos=",
+      outputMatch: "contains",
+      hints: ["不同 sandbox 可能运行在不同 GOOS/GOARCH 上。", "contains 匹配允许保留平台差异。", "真实项目还可以用 go env 查看更完整工具链环境。"],
+      solutionOutline: ["导入 runtime 包。", "读取 runtime.GOOS 和 runtime.GOARCH。", "使用稳定前缀输出，允许不同平台差异。"],
+    },
+    {
+      id: "ch10-import-summary",
+      kind: "edit",
+      difficulty: "core",
+      concepts: ["import path", "sort", "strings", "standard library"],
+      estimatedMinutes: 18,
+      title: "整理导入路径摘要",
+      prompt: "补全 ImportSummary：把导入路径分成 standard 和 external，并在每组内按字典序输出。",
+      context: "工具脚本和评审机器人常需要分析依赖清单。真实项目应优先用 go list，这里先用字符串规则建立 import path 身份意识。",
+      starterCode: `package main
+
+import (
+    "fmt"
+    "sort"
+    "strings"
+)
+
+func ImportSummary(paths []string) string {
+    standard := []string{}
+    external := []string{}
+    for _, path := range paths {
+        if strings.Contains(path, ".") {
+            // TODO: 第三方或组织域名路径放入 external
+        } else {
+            // TODO: 标准库路径放入 standard
+        }
+    }
+    sort.Strings(standard)
+    sort.Strings(external)
+    return fmt.Sprintf("standard=%s external=%s", strings.Join(standard, ","), strings.Join(external, ","))
+}
+
+func main() {
+    paths := []string{"github.com/lib/pq", "fmt", "net/http", "golang.org/x/net/html"}
+    fmt.Println(ImportSummary(paths))
+}`,
+      expectedOutput: "standard=fmt,net/http external=github.com/lib/pq,golang.org/x/net/html",
+      outputMatch: "trimmed-exact",
+      hints: ["这里用是否包含点号粗略区分外部域名路径。", "append 的结果要重新赋值给 slice。", "输出前分别 sort.Strings。"],
+      solutionOutline: ["遍历 paths。", "包含点号的路径 append 到 external，否则 append 到 standard。", "分别排序后用 strings.Join 拼接。"],
+    },
+    {
+      id: "ch10-internal-rule",
+      kind: "debug",
+      difficulty: "challenge",
+      concepts: ["internal package", "strings", "import boundary"],
+      estimatedMinutes: 20,
+      title: "判断 internal 包导入边界",
+      prompt: "当前 CanImportInternal 过于宽松，允许仓库外部路径导入 internal 包。修复判断逻辑。",
+      context: "Go 的 internal 规则能防止不稳定内部实现被外部项目依赖。理解这个规则有助于设计大型仓库边界。",
+      starterCode: `package main
+
+import (
+    "fmt"
+    "strings"
+)
+
+func CanImportInternal(importer, target string) bool {
+    marker := "/internal/"
+    index := strings.Index(target, marker)
+    if index == -1 {
+        return true
+    }
+    parent := target[:index]
+    // TODO: 只有 importer 等于 parent 或在 parent 子树下时才允许
+    _ = parent
+    return true
+}
+
+func main() {
+    tests := []struct {
+        importer string
+        target   string
+    }{
+        {"example.com/service/cmd/server", "example.com/service/internal/cache"},
+        {"example.com/other/app", "example.com/service/internal/cache"},
+    }
+
+    allowed := 0
+    for _, tt := range tests {
+        if CanImportInternal(tt.importer, tt.target) {
+            allowed++
+        }
+    }
+    fmt.Printf("allowed=%d/%d\\n", allowed, len(tests))
+}`,
+      expectedOutput: "allowed=1/2",
+      outputMatch: "trimmed-exact",
+      hints: ["target 中 /internal/ 前面的部分是允许导入的父目录树。", "importer == parent 应允许。", "strings.HasPrefix(importer, parent+\"/\") 可判断子树。"],
+      solutionOutline: ["找到 /internal/ 的位置。", "取 internal 父路径 parent。", "允许 importer == parent 或 strings.HasPrefix(importer, parent+\"/\")。", "其他路径返回 false。"],
+    },
+  ],
   checklist: [
     "能解释 package 和 module 的差异。",
     "能说出 import path 为什么是依赖身份。",
@@ -1704,6 +2130,11 @@ func main() {
     { title: "忽略性能成本", symptom: "请求热点路径 CPU 和分配异常。", fix: "用 benchmark/pprof 验证，考虑缓存字段信息、泛型或代码生成。" },
   ],
   exercise: {
+    id: "ch12-read-json-tag",
+    kind: "run",
+    difficulty: "warmup",
+    concepts: ["reflect.Type", "struct tag", "FieldByName", "json"],
+    estimatedMinutes: 8,
     title: "读取 JSON 标签",
     prompt: "使用 reflect 读取结构体字段上的 json 标签，理解框架如何识别序列化名称。",
     starterCode: `package main
@@ -1727,7 +2158,130 @@ func main() {
     expectedOutput: "json=name",
     outputMatch: "trimmed-exact",
     hints: ["结构体标签是反射可读取的元数据。", "FieldByName 返回字段和是否存在的布尔值。", "真实 JSON tag 还可能包含 omitempty 等选项。"],
+    solutionOutline: ["用 reflect.TypeOf(User{}) 获取类型。", "调用 FieldByName(\"Name\") 找到字段。", "使用 field.Tag.Get(\"json\") 读取标签值。"],
   },
+  exercises: [
+    {
+      id: "ch12-read-json-tag",
+      kind: "run",
+      difficulty: "warmup",
+      concepts: ["reflect.Type", "struct tag", "FieldByName", "json"],
+      estimatedMinutes: 8,
+      title: "读取 JSON 标签",
+      prompt: "使用 reflect 读取结构体字段上的 json 标签，理解框架如何识别序列化名称。",
+      starterCode: `package main
+
+import (
+    "fmt"
+    "reflect"
+)
+
+type User struct {
+    Name string \`json:"name"\`
+}
+
+func main() {
+    field, ok := reflect.TypeOf(User{}).FieldByName("Name")
+    if !ok {
+        panic("missing field")
+    }
+    fmt.Printf("json=%s\\n", field.Tag.Get("json"))
+}`,
+      expectedOutput: "json=name",
+      outputMatch: "trimmed-exact",
+      hints: ["结构体标签是反射可读取的元数据。", "FieldByName 返回字段和是否存在的布尔值。", "真实 JSON tag 还可能包含 omitempty 等选项。"],
+      solutionOutline: ["用 reflect.TypeOf(User{}) 获取类型。", "调用 FieldByName(\"Name\") 找到字段。", "使用 field.Tag.Get(\"json\") 读取标签值。"],
+    },
+    {
+      id: "ch12-field-summary",
+      kind: "edit",
+      difficulty: "core",
+      concepts: ["reflect.Type", "Kind", "struct field", "json tag", "sort"],
+      estimatedMinutes: 20,
+      title: "生成结构体字段摘要",
+      prompt: "补全 FieldSummary：读取结构体字段名、字段类型和 json 标签，并按字段名排序输出。",
+      context: "配置绑定器、ORM 和 API 文档工具都会先扫描结构体元数据，再把反射细节封装成稳定摘要或缓存。",
+      starterCode: `package main
+
+import (
+    "fmt"
+    "reflect"
+    "sort"
+    "strings"
+)
+
+type User struct {
+    ID    int64  \`json:"id"\`
+    Name  string \`json:"name"\`
+    Email string \`json:"email,omitempty"\`
+}
+
+func FieldSummary(model any) string {
+    t := reflect.TypeOf(model)
+    if t.Kind() == reflect.Pointer {
+        t = t.Elem()
+    }
+
+    fields := []string{}
+    for i := 0; i < t.NumField(); i++ {
+        field := t.Field(i)
+        // TODO: 追加 "<Name>:<Type>:<json tag>"
+        _ = field
+    }
+    sort.Strings(fields)
+    return strings.Join(fields, " ")
+}
+
+func main() {
+    fmt.Println(FieldSummary(User{}))
+}`,
+      expectedOutput: "Email:string:email,omitempty ID:int64:id Name:string:name",
+      outputMatch: "trimmed-exact",
+      hints: ["field.Name 是字段名。", "field.Type.String() 可以得到字段类型文本。", "field.Tag.Get(\"json\") 可以读取 json 标签。"],
+      solutionOutline: ["处理指针输入时用 Elem 得到底层结构体类型。", "遍历 NumField 并读取 StructField。", "用 fmt.Sprintf 生成字段摘要。", "排序后拼接，保证输出稳定。"],
+    },
+    {
+      id: "ch12-fix-set-value",
+      kind: "debug",
+      difficulty: "challenge",
+      concepts: ["reflect.Value", "Elem", "CanSet", "SetString"],
+      estimatedMinutes: 18,
+      title: "补全反射字段设置",
+      prompt: "补全 SetName：传入结构体指针，找到 Name 字段并安全设置字符串值。",
+      context: "解码器和参数绑定器必须修改调用方传入的目标值。反射设置前要确认目标是指针、字段存在且可以设置。",
+      starterCode: `package main
+
+import (
+    "fmt"
+    "reflect"
+)
+
+type User struct {
+    Name string
+}
+
+func SetName(target any, name string) error {
+    v := reflect.ValueOf(target)
+    _ = v
+    _ = name
+    // TODO: target 必须是指向结构体的指针；用 Elem().FieldByName("Name") 找到可设置字段
+    return nil
+}
+
+func main() {
+    user := User{}
+    if err := SetName(&user, "Gopher"); err != nil {
+        fmt.Println(err)
+        return
+    }
+    fmt.Printf("name=%s\\n", user.Name)
+}`,
+      expectedOutput: "name=Gopher",
+      outputMatch: "trimmed-exact",
+      hints: ["reflect.ValueOf(target).Kind() 应该是 reflect.Pointer。", "用 Elem() 取得指针指向的结构体。", "字段设置前检查 field.IsValid()、field.CanSet() 和 field.Kind()。"],
+      solutionOutline: ["确认 target 是非 nil 指针。", "调用 Elem 得到结构体 Value。", "FieldByName(\"Name\") 找到字段。", "确认字段可设置且是 string 后调用 SetString(name)。"],
+    },
+  ],
   checklist: [
     "能用 TypeOf 和 ValueOf 观察动态类型和值。",
     "能读取结构体标签。",
@@ -1780,6 +2334,11 @@ func main() {
     { title: "低估 cgo 部署成本", symptom: "本机能构建，CI 或容器缺头文件/动态库失败。", fix: "明确 C 依赖安装方式，提供构建镜像或纯 Go fallback。" },
   ],
   exercise: {
+    id: "ch13-struct-size",
+    kind: "run",
+    difficulty: "warmup",
+    concepts: ["unsafe.Sizeof", "struct layout", "alignment"],
+    estimatedMinutes: 8,
     title: "观察结构体大小",
     prompt: "使用 unsafe.Sizeof 观察结构体布局带来的大小，建立字段对齐直觉。",
     starterCode: `package main
@@ -1800,7 +2359,129 @@ func main() {
     expectedOutput: "size=16",
     outputMatch: "trimmed-exact",
     hints: ["int64 通常需要 8 字节对齐。", "bool 只有 1 字节，但结构体整体会包含填充。", "不同架构上大小可能不同，课程 sandbox 通常是 64 位环境。"],
+    solutionOutline: ["导入 unsafe 包。", "定义包含 int64 和 bool 的 Metric。", "用 unsafe.Sizeof(Metric{}) 输出结构体固定大小。"],
   },
+  exercises: [
+    {
+      id: "ch13-struct-size",
+      kind: "run",
+      difficulty: "warmup",
+      concepts: ["unsafe.Sizeof", "struct layout", "alignment"],
+      estimatedMinutes: 8,
+      title: "观察结构体大小",
+      prompt: "使用 unsafe.Sizeof 观察结构体布局带来的大小，建立字段对齐直觉。",
+      starterCode: `package main
+
+import (
+    "fmt"
+    "unsafe"
+)
+
+type Metric struct {
+    Count   int64
+    Healthy bool
+}
+
+func main() {
+    fmt.Printf("size=%d\\n", unsafe.Sizeof(Metric{}))
+}`,
+      expectedOutput: "size=16",
+      outputMatch: "trimmed-exact",
+      hints: ["int64 通常需要 8 字节对齐。", "bool 只有 1 字节，但结构体整体会包含填充。", "不同架构上大小可能不同，课程 sandbox 通常是 64 位环境。"],
+      solutionOutline: ["导入 unsafe 包。", "定义包含 int64 和 bool 的 Metric。", "用 unsafe.Sizeof(Metric{}) 输出结构体固定大小。"],
+    },
+    {
+      id: "ch13-layout-offset",
+      kind: "edit",
+      difficulty: "core",
+      concepts: ["unsafe.Sizeof", "unsafe.Offsetof", "field padding", "struct layout"],
+      estimatedMinutes: 18,
+      title: "比较字段顺序和偏移",
+      prompt: "补全 Layout：输出两个字段集合相同但顺序不同的结构体大小，并观察 B.Flag 的字段偏移。",
+      context: "大量对象、缓存项或协议边界中，字段顺序可能影响内存占用。但只有在测量证明收益明显时，才值得为了布局调整可读性。",
+      starterCode: `package main
+
+import (
+    "fmt"
+    "unsafe"
+)
+
+type A struct {
+    Flag  bool
+    Count int64
+    Code  int16
+}
+
+type B struct {
+    Count int64
+    Code  int16
+    Flag  bool
+}
+
+func Layout() string {
+    var a A
+    var b B
+    _ = unsafe.Sizeof(a)
+    _ = unsafe.Sizeof(b)
+    _ = unsafe.Offsetof(b.Flag)
+    // TODO: 返回 a=<A大小> b=<B大小> offset=<B.Flag偏移>
+    return "a=0 b=0 offset=0"
+}
+
+func main() {
+    fmt.Println(Layout())
+}`,
+      expectedOutput: "a=24 b=16 offset=10",
+      outputMatch: "trimmed-exact",
+      hints: ["unsafe.Sizeof(a) 返回结构体固定大小。", "unsafe.Offsetof(b.Flag) 返回字段相对结构体起点的偏移。", "fmt.Sprintf 可以把 uintptr 大小格式化为十进制。"],
+      solutionOutline: ["创建 A 和 B 的零值变量。", "分别调用 unsafe.Sizeof。", "使用 unsafe.Offsetof(b.Flag) 观察字段偏移。", "用 fmt.Sprintf 返回稳定文本。"],
+    },
+    {
+      id: "ch13-risk-review",
+      kind: "review",
+      difficulty: "challenge",
+      concepts: ["unsafe review", "benchmark", "cgo", "platform tests"],
+      estimatedMinutes: 16,
+      title: "评审底层优化风险",
+      prompt: "补全 Review：根据底层优化变更是否缺少 benchmark、是否泄漏 unsafe API、是否缺少平台验证，输出风险清单。",
+      context: "很多 unsafe/cgo 改动的问题不在语法，而在工程证据不足。评审时要先看测量、封装和目标平台验证。",
+      starterCode: `package main
+
+import (
+    "fmt"
+    "strings"
+)
+
+type Change struct {
+    UsesUnsafe       bool
+    HasBenchmark     bool
+    LeaksUnsafeAPI   bool
+    HasPlatformTests bool
+}
+
+func Review(change Change) string {
+    risks := []string{}
+    if change.UsesUnsafe && !change.HasBenchmark {
+        risks = append(risks, "missing benchmark")
+    }
+    // TODO: LeaksUnsafeAPI 时追加 "unsafe API leak"
+    // TODO: UsesUnsafe 但没有平台测试时追加 "missing platform tests"
+    if len(risks) == 0 {
+        return "approved"
+    }
+    return strings.Join(risks, ",")
+}
+
+func main() {
+    change := Change{UsesUnsafe: true, HasBenchmark: false, LeaksUnsafeAPI: true, HasPlatformTests: false}
+    fmt.Println(Review(change))
+}`,
+      expectedOutput: "missing benchmark,unsafe API leak,missing platform tests",
+      outputMatch: "trimmed-exact",
+      hints: ["泄漏 unsafe API 表示业务层也需要理解 unsafe，不应通过。", "底层代码通常要验证目标 GOOS/GOARCH。", "风险顺序保持 benchmark、API、platform，输出更稳定。"],
+      solutionOutline: ["保留已有 benchmark 检查。", "LeaksUnsafeAPI 为 true 时追加 unsafe API leak。", "UsesUnsafe 且 !HasPlatformTests 时追加 missing platform tests。", "没有风险时返回 approved。"],
+    },
+  ],
   checklist: [
     "能说明 unsafe 的主要风险。",
     "能观察结构体大小和字段对齐。",

@@ -2,9 +2,59 @@
 
 Go 的日常编程建立在类型安全、边界检查、垃圾回收和可移植运行时之上。你不能随便把字符串当数字写，不能越界访问数组，不能手动释放对象，也不需要知道 goroutine 正在哪个 OS 线程上。这些限制让 Go 程序更容易预测，也更适合团队维护。
 
-《Go 程序设计语言》第 13 章讨论这些安全边界之外的能力：`unsafe`、内存布局、指针转换、`cgo` 和底层系统交互。它们很强，也很危险。大多数业务代码永远不该直接使用这些工具；真正需要时，也应封装在极小范围并用测试、基准和注释守住边界。
+这一章围绕一个小场景展开：**你需要观察结构体大小、理解字段对齐，并判断是否真的值得引入 unsafe 或 cgo**。你会学习 `unsafe.Sizeof`、`Alignof`、`Offsetof`、`unsafe.Pointer`、`uintptr`、结构体布局、cgo、build tag 和底层优化的边界。
 
-## 为什么 Go 要隐藏底层细节
+<SourceNote
+  source="gopl-zh"
+  title="第 13 章：底层编程"
+  note="本章主干基于本地 gopl-zh 第 13 章重组：保留 unsafe.Sizeof/Alignof/Offsetof、unsafe.Pointer、uintptr、DeepEqual 环检测、cgo 和底层系统差异的核心内容，并改写为后端性能优化、跨平台和风险隔离场景。"
+/>
+
+<CompareNote
+  title="本章如何整合外部优秀资料"
+  points={[
+    "gopl-zh 负责底层语义主线：内存布局、unsafe 指针转换、uintptr 地址计算、DeepEqual 示例和 cgo 边界。",
+    "unsafe 官方文档用于校准指针转换规则：uintptr 是整数，不是可由 GC 跟踪的引用。",
+    "cgo 官方文档用于强调构建、部署、指针传递和交叉编译成本。",
+    "Go 性能分析实践被纳入工程判断：底层优化前先用 benchmark、pprof 或 trace 找到真实瓶颈。"
+  ]}
+/>
+
+## 你会解决什么问题
+
+我们从一个最小观察开始：查看结构体大小。
+
+```go
+type Metric struct {
+    Count   int64
+    Healthy bool
+}
+```
+
+在常见 64 位环境中，目标输出是：
+
+```text
+size=16
+```
+
+这件小事会牵出本章大多数知识：
+
+| 任务 | 需要的底层能力 | 工程关注点 |
+|---|---|---|
+| 观察结构体大小 | `unsafe.Sizeof` | 大小包含填充，不包含指针指向数据 |
+| 理解字段偏移 | `Alignof`、`Offsetof` | 字段顺序可能影响内存占用 |
+| 做指针转换 | `unsafe.Pointer` | 绕开类型系统后风险自负 |
+| 地址计算 | `uintptr` | 不能长期保存地址整数 |
+| 调用 C 库 | cgo | 构建、部署和指针规则成本很高 |
+| 隔离平台差异 | build tag、GOOS/GOARCH | 跨平台要验证目标环境 |
+| 判断是否优化 | benchmark、pprof | 没有数据不要引入 unsafe |
+
+<PracticeBridge
+  exercise="ch13-struct-size"
+  text="先完成热身练习：使用 unsafe.Sizeof 观察结构体大小，建立字段对齐和填充的第一印象。"
+/>
+
+## 为什么 Go 默认隐藏底层细节
 
 Go 故意不暴露很多实现细节：
 
@@ -14,32 +64,38 @@ Go 故意不暴露很多实现细节：
 - 垃圾回收器管理对象生命周期；
 - map、string、slice、interface 的内部表示不是稳定 API。
 
-这些抽象换来的是可移植性和安全性。你可以在 Linux、macOS、Windows、amd64、arm64 上编写同一套大部分代码，不必关心每个 CPU 的指令和 ABI。
+这些抽象换来的是安全性和可移植性。你可以在 Linux、macOS、Windows、amd64、arm64 上编写同一套大部分代码，不必关心每个 CPU 的指令、ABI 和内存模型细节。
 
-但少数场景需要突破抽象：
+少数场景确实需要突破抽象：
 
 - 和操作系统或硬件接口交互；
-- 调用 C 库；
-- 实现极低层运行时或序列化优化；
+- 调用已有 C 库；
 - 检查结构体布局和对齐；
-- 在性能关键路径上避免不必要转换。
+- 实现极低层运行时或序列化优化；
+- 在性能关键路径上避免无法接受的转换成本。
 
 进入这些场景前，先确认：普通 Go、标准库、泛型、代码生成、算法优化、批量 I/O、缓存和 pprof 是否已经用尽。
 
-## unsafe.Sizeof、Alignof、Offsetof
+<PitfallCard
+  title="把 unsafe 当性能捷径"
+  symptom="代码变得难懂，但 profile 显示真正瓶颈在数据库、网络、分配或算法复杂度。"
+  fix="先测量再优化；没有 benchmark/pprof 数据，不要为了猜测收益引入 unsafe。"
+/>
 
-`unsafe` 包里有几个相对安全的观察函数。
+## Sizeof：观察固定部分的字节大小
+
+`unsafe.Sizeof` 返回值在内存中固定部分的字节大小：
 
 ```go
 fmt.Println(unsafe.Sizeof(float64(0))) // 8
 ```
 
-`Sizeof` 返回值在内存中固定部分的字节大小。它不会计算指针指向的数据。例如字符串大小通常是两个机器字：数据指针和长度，不包含字符串内容本身。
+它不会递归计算指针指向的数据。字符串大小通常是两个机器字：数据指针和长度，不包含字符串内容本身；slice 通常是三个机器字：数据指针、长度、容量，不包含底层数组。
 
 常见大小直觉：
 
 | 类型 | 典型大小 |
-| --- | --- |
+|---|---|
 | `bool` | 1 字节 |
 | `int32` / `float32` | 4 字节 |
 | `int64` / `float64` | 8 字节 |
@@ -51,37 +107,41 @@ fmt.Println(unsafe.Sizeof(float64(0))) // 8
 
 这些大小是理解成本模型的入口，不是跨版本协议。不要把 Go 内部表示直接当网络协议或磁盘格式。
 
-## 对齐和结构体空洞
+## Alignof 和 Offsetof：字段对齐会制造填充
 
 CPU 访问对齐地址通常更高效。Go 编译器会在结构体字段之间插入填充字节，让字段满足对齐要求。
 
 ```go
 type A struct {
-    Flag bool
+    Flag  bool
     Count int64
-    Code int16
+    Code  int16
 }
 
 type B struct {
     Count int64
-    Code int16
-    Flag bool
+    Code  int16
+    Flag  bool
 }
 ```
 
 两个结构体包含同样字段，但大小可能不同。`A` 里 `bool` 后面可能插入大量填充，让后面的 `int64` 对齐；`B` 通常更紧凑。
 
-可以用：
+可以观察大小、对齐和字段偏移：
 
 ```go
-unsafe.Sizeof(x)
-unsafe.Alignof(x.Field)
-unsafe.Offsetof(x.Field)
+var metric Metric
+fmt.Println(unsafe.Sizeof(metric))
+fmt.Println(unsafe.Alignof(metric.Count))
+fmt.Println(unsafe.Offsetof(metric.Healthy))
 ```
 
-观察大小、对齐和字段偏移。
-
 工程上不要为了节省几个字节把字段顺序改得难读。只有当对象数量巨大、内存占用真实成为问题，并且 benchmark/profile 证明收益明显时，才值得优化布局。优化后要写注释说明原因。
+
+<PracticeBridge
+  exercise="ch13-layout-offset"
+  text="核心练习会让你输出两个结构体的大小和关键字段偏移，观察字段顺序如何影响填充。"
+/>
 
 ## unsafe.Pointer：逃离类型系统
 
@@ -97,7 +157,25 @@ func Float64bits(f float64) uint64 {
 
 这能观察浮点数位模式，也能破坏类型系统。编译器不再保证你写入的类型和原对象一致。
 
-`unsafe.Pointer` 还可以和 `uintptr` 转换，用于地址计算：
+unsafe 的关键问题不是“能不能编译”，而是：对象生命周期、对齐、别名关系、未来 Go 版本和目标平台是否都满足你的假设。
+
+<ExamplePair
+  title="边界设计：到处 unsafe vs 小函数封装"
+  leftTitle="风险扩散到业务层"
+  rightTitle="风险集中在小边界"
+  left={`func Handle(x *Metric) {
+    p := (*uint64)(unsafe.Pointer(x))
+    fmt.Println(*p)
+}`}
+  right={`func MetricBits(x *Metric) uint64 {
+    // package-private: documented layout assumption
+    return *(*uint64)(unsafe.Pointer(x))
+}`}
+/>
+
+## uintptr：地址整数不能长期保存
+
+`unsafe.Pointer` 可以和 `uintptr` 转换，用于地址计算：
 
 ```go
 pb := (*int16)(unsafe.Pointer(
@@ -106,7 +184,7 @@ pb := (*int16)(unsafe.Pointer(
 *pb = 42
 ```
 
-这类写法必须极其谨慎。`uintptr` 是整数，不是指针。垃圾回收器不会把 `uintptr` 当作对象引用，也不会在对象移动时更新它。不要把地址长期保存在 `uintptr` 变量里。
+`uintptr` 是整数，不是指针。垃圾回收器不会把 `uintptr` 当作对象引用，也不会在对象移动时更新它。不要把地址长期保存在 `uintptr` 变量里。
 
 错误模式：
 
@@ -115,17 +193,23 @@ tmp := uintptr(unsafe.Pointer(&x)) + unsafe.Offsetof(x.b)
 pb := (*int16)(unsafe.Pointer(tmp)) // 可能已经失效
 ```
 
-即使当前 Go 实现没有通用移动 GC，goroutine 栈增长也可能移动栈上变量。写 unsafe 代码不能依赖“当前实现刚好没出事”。
+即使当前 Go 实现没有通用移动 GC，goroutine 栈增长也可能移动栈上变量。unsafe 代码不能依赖“当前实现刚好没出事”。
 
-## DeepEqual 和环检测：unsafe 的一个真实用途
+<PitfallCard
+  title="uintptr 保存地址"
+  symptom="代码偶发崩溃或读到损坏数据，且难以复现。"
+  fix="不要长期保存地址整数；必要的 Pointer↔uintptr↔Pointer 转换尽量保持在单个表达式内。"
+/>
 
-`reflect.DeepEqual` 可以比较任意值，但有一些语义不一定符合业务期望。例如 nil slice 和空 slice 会被认为不同：
+## DeepEqual 和环检测：unsafe 的合理封装示例
+
+`reflect.DeepEqual` 可以比较任意值，但语义不一定符合业务期望。例如 nil slice 和空 slice 会被认为不同：
 
 ```go
 reflect.DeepEqual([]string(nil), []string{}) // false
 ```
 
-教材实现了一个自定义 `Equal`，把 nil slice/map 和空 slice/map 视作相等。为了避免递归比较带环结构时无限循环，它记录已经比较过的一对地址和类型：
+gopl-zh 实现过一个自定义 `Equal`，把 nil slice/map 和空 slice/map 视作相等。为了避免递归比较带环结构时无限循环，它记录已经比较过的一对地址和类型：
 
 ```go
 type comparison struct {
@@ -137,7 +221,7 @@ type comparison struct {
 这展示了 `unsafe` 的合理用法：在极小内部实现里处理 reflect 无法直接表达的地址身份，同时对外暴露普通 API：
 
 ```go
-func Equal(x, y interface{}) bool
+func Equal(x, y any) bool
 ```
 
 调用方不需要接触 `unsafe.Pointer`。风险被封装在包内部，测试可以集中覆盖。
@@ -169,7 +253,7 @@ cgo 的成本包括：
 
 如果只是调用一个命令行工具，`os/exec` 可能更简单；如果库很小，纯 Go 重写可能更可维护；只有当 C 库复杂、成熟且性能/能力不可替代时，cgo 才值得引入。
 
-## 系统调用和平台差异
+## 系统调用、GOOS/GOARCH 和 build tag
 
 底层代码常常和 GOOS、GOARCH 绑定。文件描述符、socket 选项、内存映射、进程信号、终端控制，在不同系统上差异很大。
 
@@ -187,7 +271,12 @@ poll_windows.go
 //go:build linux
 ```
 
-跨平台库至少要在 CI 中覆盖目标平台的构建。无法运行全部测试时，也要做交叉编译或用最小 smoke test 验证文件选择和 API 形状。
+跨平台库至少要在 CI 中覆盖目标平台的构建。无法运行全部测试时，也要做交叉编译或最小 smoke test，验证文件选择和 API 形状。
+
+<PracticeBridge
+  exercise="ch13-risk-review"
+  text="挑战练习会让你做一次底层优化评审：根据风险清单判断某段 unsafe/cgo 改动是否应该进入业务代码。"
+/>
 
 ## 底层优化前先测量
 
@@ -215,34 +304,42 @@ poll_windows.go
 - 避免把 Go 内部结构当作长期协议；
 - 升级 Go 版本时重点回归。
 
-示例：不要让业务代码到处写 `unsafe.Pointer`。应该封装成：
+示例：不要让业务代码到处写 `unsafe.Pointer`。如果确实需要，应封装成小函数，并在注释中明确可变性、生命周期和平台假设。
 
 ```go
 func BytesView(s string) []byte
 ```
 
-然后在函数注释中明确：返回 slice 不允许修改、仅用于短期只读、依赖当前实现。即便如此，能不用就不用。
+即便如此，能不用就不用。标准库、泛型和编译器优化已经覆盖了许多过去需要底层技巧的场景。
 
-## 常见事故模式
+## 底层编程概念回看
 
-### 把 Go 内部布局当协议
-
-直接把结构体内存写到网络或文件，字段顺序、对齐、字节序、指针大小都会成为隐患。协议应使用显式编码，例如 `encoding/binary`、JSON、Protobuf 或自定义稳定格式。
-
-### uintptr 保存地址
-
-地址转成 `uintptr` 后存起来，GC 不知道它引用对象。对象可能被回收或移动，之后再转回指针就是悬空引用。
-
-### cgo 持有 Go 指针
-
-C 函数不能在返回后继续保存 Go 指针。否则 Go GC 和栈移动无法正确追踪。cgo 指针规则复杂，写前必须读官方文档。
-
-### 优化破坏可读性
-
-为了微小收益引入 unsafe，让多数维护者不敢改代码。除非数据证明收益重要，否则这是负债。
+| 概念 | 最小定义 | 工程判断 |
+|---|---|---|
+| `unsafe.Sizeof` | 固定部分字节大小 | 是否误以为包含指向数据 |
+| `unsafe.Alignof` | 类型或字段对齐要求 | 是否影响结构体填充 |
+| `unsafe.Offsetof` | 字段相对结构体起点偏移 | 是否依赖稳定布局 |
+| `unsafe.Pointer` | 可转任意指针的逃生门 | 是否封装在小边界内 |
+| `uintptr` | 可保存地址数值的整数 | 是否避免长期保存地址 |
+| 结构体填充 | 编译器插入的对齐字节 | 是否有测量再调整字段顺序 |
+| cgo | Go 调 C 的机制 | 构建和部署成本是否可接受 |
+| build tag | 条件编译文件选择 | 是否用于平台差异而非业务开关 |
+| benchmark | 固定操作性能测量 | 是否证明优化有效 |
+| pprof/trace | 找真实热点 | 是否先定位瓶颈再优化 |
 
 ## 本章工程视角
 
 Go 的安全默认值是生产力来源。`unsafe`、cgo 和系统调用不是炫技工具，而是不得不触碰底层边界时的最后手段。
 
-评审底层代码时，要问：为什么普通 Go 不够？有没有 benchmark 和 profile？风险是否封装？是否依赖未承诺的运行时布局？是否跨平台验证？是否有注释解释不变量？如果这些问题回答不清，最好的选择通常是删除 unsafe，回到清晰、安全、可维护的 Go。
+评审底层代码时可以用这组问题自查：
+
+- 为什么普通 Go、标准库、泛型或代码生成不够？
+- 有没有 benchmark、pprof 或 trace 证明瓶颈和收益？
+- unsafe 是否被封装在极小范围，对外 API 是否仍然类型安全？
+- 是否依赖未承诺的运行时布局、字符串/slice/map 内部结构或平台 ABI？
+- 是否避免长期保存 `uintptr` 地址？
+- cgo 是否评估了 C 编译器、头文件、动态库和交叉编译成本？
+- 目标 GOOS/GOARCH 是否经过构建或测试验证？
+- 注释是否写清不变量、生命周期和平台假设？
+
+如果这些问题回答不清，最好的选择通常是删除 unsafe，回到清晰、安全、可维护的 Go。
