@@ -1039,199 +1039,234 @@ func main() {
   slug: "ch7-interfaces",
   order: 7,
   title: "接口",
-  duration: "约 95 分钟",
+  duration: "约 100 分钟",
   difficulty: "进阶",
-  summary: "基于《Go 程序设计语言》第 7 章重组：用小接口表达能力边界，理解隐式实现、接口值、nil 接口、类型断言和错误分类，让代码更容易测试和替换。",
+  summary: "基于《Go 程序设计语言》第 7 章重组：用订单通知场景理解接口如何表达行为边界，掌握小接口、隐式实现、方法集、接口值、nil 陷阱、any、类型断言和错误分类，并为后续测试替身打基础。",
   goals: [
-    "能定义只包含必要方法的小接口。",
+    "能定义只包含调用方真正需要的方法的小接口。",
     "能解释 Go 的接口是隐式实现，以及方法集如何影响接口满足关系。",
-    "能识别 nil 接口和带类型 nil 值的差异。",
-    "能用接口替换外部依赖，并在必要时使用类型断言或类型分支。",
+    "能识别 nil 接口、带类型 nil 值和 any 滥用带来的风险。",
+    "能用接口隔离外部依赖，并通过 SpyNotifier 一类测试替身观察行为。",
   ],
   lessonCount: 10,
   lessons: [],
   modernNotes: [
-    { title: "泛型没有淘汰接口", body: "泛型适合表达同构算法，接口适合表达运行时行为能力。后端代码中二者会并存：接口隔离依赖，泛型减少容器样板。" },
-    { title: "context.Context 是接口协作的典型边界", body: "现代服务几乎每条请求链都会传递 context，用于取消、超时和少量请求级元数据。它体现了小接口和约定式协作的价值。" },
+    { title: "接口是行为边界，不是默认架构层", body: "现代 Go 后端项目通常让服务依赖最小行为，例如 Notifier、Reader、Clock 或 Repository，而不是为每个结构体提前生成一套接口。接口应从调用方需要和测试隔离需求中长出来。" },
+    { title: "泛型没有淘汰接口", body: "泛型适合表达同构算法和容器操作，接口适合表达运行时行为能力。订单通知、HTTP Handler、io.Writer 和 error 都是接口仍然不可替代的场景。" },
+    { title: "接口是测试章节的前置能力", body: "本章的 SpyNotifier / FailingNotifier 思路会在 ch11 Testing 中继续展开：先设计可替换边界，再用测试保护边界行为。" },
   ],
   engineeringPractices: [
-    "在消费方定义接口，只暴露当前函数实际需要的方法。",
-    "为外部系统依赖定义小接口，测试时注入 fake 或 stub。",
-    "返回 error 接口时确认没有把 nil 指针包装成非 nil 接口。",
+    "在消费方附近定义接口，只暴露当前业务函数实际调用的方法。",
+    "为邮件、短信、数据库、消息队列等外部依赖定义小接口，测试时注入 fake、spy 或 stub。",
+    "没有替换需求时先使用具体类型；当出现多个实现、外部依赖边界或测试隔离需求时再抽接口。",
+    "返回 error 或可选接口时确认没有把 nil 指针包装成非 nil 接口。",
   ],
   pitfalls: [
-    { title: "接口过大", symptom: "测试 fake 必须实现一堆用不到的方法。", fix: "按调用场景拆成多个小接口。" },
-    { title: "nil 判断失效", symptom: "看起来返回 nil，调用方 if err != nil 却成立。", fix: "避免返回带类型的 nil 指针；直接返回 nil 接口值。" },
-    { title: "在实现方过早抽象", symptom: "只有一个实现却先定义复杂接口层。", fix: "等出现真实替换需求，或从测试隔离需求出发定义接口。" },
+    { title: "接口过大", symptom: "订单服务只需要 Notify，却被迫实现模板渲染、健康检查、批量发送等无关方法。", fix: "按调用场景拆成小接口，让接口贴近使用方。" },
+    { title: "在实现方过早抽象", symptom: "只有一个实现却先定义复杂接口层，测试替身也要跟着实现一堆方法。", fix: "先写具体类型；等出现真实替换点或测试接缝需求时，再从消费方抽接口。" },
+    { title: "nil 判断失效", symptom: "看起来返回 nil，调用方 if err != nil 或 if notifier != nil 却成立。", fix: "避免返回带类型的 nil 指针；没有实现时直接返回 nil 接口值。" },
+    { title: "把 any 当万能参数", symptom: "函数接收 any，内部到处类型断言，调用方不知道应该传什么。", fix: "需要行为时定义明确接口；只有日志字段、JSON 任意值等开放边界才使用 any。" },
   ],
   exercise: {
     id: "ch7-notifier-interface",
     kind: "run",
     difficulty: "warmup",
-    concepts: ["interface", "implicit implementation", "method set"],
+    concepts: ["interface", "implicit implementation", "small interface"],
     estimatedMinutes: 8,
-    title: "用接口统一通知渠道",
-    prompt: "运行一个最小接口示例，观察 EmailNotifier 不需要显式声明 implements 也能被传入。",
+    title: "定义最小通知接口",
+    prompt: "运行一个最小 Notifier 接口示例，观察 ConsoleNotifier 不需要显式声明 implements 也能被传入 SendWelcome。",
+    context: "订单服务只需要一个能发送消息的行为边界，不需要知道具体实现是邮件、短信还是控制台输出。",
     starterCode: `package main
 
 import "fmt"
 
 type Notifier interface {
-    Notify(message string) string
+    Notify(message string) error
 }
 
-type EmailNotifier struct{}
+type ConsoleNotifier struct{}
 
-func (EmailNotifier) Notify(message string) string {
-    return "email:" + message
+func (ConsoleNotifier) Notify(message string) error {
+    fmt.Println("notify:", message)
+    return nil
 }
 
-func send(n Notifier, message string) string {
-    return n.Notify(message)
+func SendWelcome(n Notifier) error {
+    return n.Notify("welcome, gopher")
 }
 
 func main() {
-    fmt.Println(send(EmailNotifier{}, "build passed"))
+    _ = SendWelcome(ConsoleNotifier{})
 }`,
-    expectedOutput: "email:build passed",
+    expectedOutput: "notify: welcome, gopher",
     outputMatch: "trimmed-exact",
-    hints: ["接口只需要包含调用方真正使用的方法。", "EmailNotifier 不需要显式声明 implements。"],
-    solutionOutline: ["定义包含 Notify 的小接口。", "让 EmailNotifier 拥有同名方法。", "send 只依赖 Notifier 行为。"],
+    hints: ["接口只需要包含调用方真正使用的方法。", "ConsoleNotifier 不需要写 implements Notifier。", "SendWelcome 只依赖 Notifier 行为。"],
+    solutionOutline: ["定义包含 Notify 的小接口。", "让 ConsoleNotifier 拥有同名方法。", "SendWelcome 接收 Notifier 并调用 Notify。"],
   },
   exercises: [
     {
       id: "ch7-notifier-interface",
       kind: "run",
       difficulty: "warmup",
-      concepts: ["interface", "implicit implementation", "method set"],
+      concepts: ["interface", "implicit implementation", "small interface"],
       estimatedMinutes: 8,
-      title: "用接口统一通知渠道",
-      prompt: "运行一个最小接口示例，观察 EmailNotifier 不需要显式声明 implements 也能被传入。",
+      title: "定义最小通知接口",
+      prompt: "运行一个最小 Notifier 接口示例，观察 ConsoleNotifier 不需要显式声明 implements 也能被传入 SendWelcome。",
+      context: "订单服务只需要一个能发送消息的行为边界，不需要知道具体实现是邮件、短信还是控制台输出。",
       starterCode: `package main
 
 import "fmt"
 
 type Notifier interface {
-    Notify(message string) string
+    Notify(message string) error
+}
+
+type ConsoleNotifier struct{}
+
+func (ConsoleNotifier) Notify(message string) error {
+    fmt.Println("notify:", message)
+    return nil
+}
+
+func SendWelcome(n Notifier) error {
+    return n.Notify("welcome, gopher")
+}
+
+func main() {
+    _ = SendWelcome(ConsoleNotifier{})
+}`,
+      expectedOutput: "notify: welcome, gopher",
+      outputMatch: "trimmed-exact",
+      hints: ["接口只需要包含调用方真正使用的方法。", "ConsoleNotifier 不需要写 implements Notifier。", "SendWelcome 只依赖 Notifier 行为。"],
+      solutionOutline: ["定义包含 Notify 的小接口。", "让 ConsoleNotifier 拥有同名方法。", "SendWelcome 接收 Notifier 并调用 Notify。"],
+    },
+    {
+      id: "ch7-order-service-interface",
+      kind: "edit",
+      difficulty: "core",
+      concepts: ["consumer-defined interface", "dependency injection", "small interface", "order service"],
+      estimatedMinutes: 18,
+      title: "重构订单通知服务",
+      prompt: "补全 OrderService：让它依赖 Notifier 行为边界，而不是直接绑定 EmailSender，并保持订单通知输出稳定。",
+      context: "业务逻辑应该依赖“能通知用户”的行为。这样邮件、短信、日志和测试替身都能替换进入订单服务。",
+      starterCode: `package main
+
+import "fmt"
+
+type Notifier interface {
+    Notify(userID string, message string) error
 }
 
 type EmailNotifier struct{}
 
-func (EmailNotifier) Notify(message string) string {
-    return "email:" + message
+func (EmailNotifier) Notify(userID string, message string) error {
+    fmt.Printf("email user=%s message=%q\\n", userID, message)
+    return nil
 }
 
-func send(n Notifier, message string) string {
-    return n.Notify(message)
+type OrderService struct {
+    notifier Notifier
+}
+
+func NewOrderService(notifier Notifier) *OrderService {
+    return &OrderService{notifier: notifier}
+}
+
+func (s *OrderService) PlaceOrder(userID string, item string) error {
+    // TODO: 生成 order placed: <item> 消息，并通过 s.notifier.Notify 发送
+    return nil
 }
 
 func main() {
-    fmt.Println(send(EmailNotifier{}, "build passed"))
+    service := NewOrderService(EmailNotifier{})
+    _ = service.PlaceOrder("u-1001", "book")
 }`,
-      expectedOutput: "email:build passed",
+      expectedOutput: "email user=u-1001 message=\"order placed: book\"",
       outputMatch: "trimmed-exact",
-      hints: ["接口只需要包含调用方真正使用的方法。", "EmailNotifier 不需要显式声明 implements。"],
-      solutionOutline: ["定义包含 Notify 的小接口。", "让 EmailNotifier 拥有同名方法。", "send 只依赖 Notifier 行为。"],
+      hints: ["OrderService 不需要知道 EmailNotifier 的内部细节。", "消息格式应为 order placed: <item>。", "PlaceOrder 应返回 s.notifier.Notify 的 error。"],
+      solutionOutline: ["OrderService 保存 Notifier 字段。", "NewOrderService 通过构造函数注入 Notifier。", "PlaceOrder 构造稳定消息并调用 Notify。"],
     },
     {
-      id: "ch7-build-publisher",
-      kind: "edit",
-      difficulty: "core",
-      concepts: ["small interface", "fake", "dependency injection"],
-      estimatedMinutes: 18,
-      title: "用 fake 发布构建结果",
-      prompt: "补全 PublishBuildResult：根据构建是否通过发送稳定消息，并用 fakeNotifier 记录发送内容。",
-      context: "业务逻辑只应该依赖当前需要的 Notify 能力，测试时可以注入 fake，不需要真实邮件或 Webhook。",
+      id: "ch7-spy-notifier",
+      kind: "debug",
+      difficulty: "challenge",
+      concepts: ["test seam", "spy", "failing notifier", "error propagation"],
+      estimatedMinutes: 22,
+      title: "用 SpyNotifier 观察订单通知",
+      prompt: "当前 PlaceOrder 吞掉了通知错误。修复它：成功路径记录通知消息，失败路径把错误向上传递。",
+      context: "接口让测试可以注入 spy 或 failing notifier。ch11 会继续用这个思路，把行为检查写成真正的测试。",
       starterCode: `package main
 
 import (
+    "errors"
     "fmt"
-    "strings"
 )
 
 type Notifier interface {
-    Notify(message string) error
+    Notify(userID string, message string) error
 }
 
-type fakeNotifier struct {
-    messages []string
+type OrderService struct {
+    notifier Notifier
 }
 
-func (f *fakeNotifier) Notify(message string) error {
-    f.messages = append(f.messages, message)
+func (s *OrderService) PlaceOrder(userID string, item string) error {
+    message := "order placed: " + item
+    _ = s.notifier.Notify(userID, message)
     return nil
 }
 
-func PublishBuildResult(n Notifier, passed bool) error {
-    // TODO: passed 为 true 时发送 build passed，否则发送 build failed
+type SpyNotifier struct {
+    userID  string
+    message string
+}
+
+func (s *SpyNotifier) Notify(userID string, message string) error {
+    s.userID = userID
+    s.message = message
     return nil
 }
 
-func main() {
-    fake := &fakeNotifier{}
-    _ = PublishBuildResult(fake, true)
-    fmt.Println(strings.Join(fake.messages, ","))
-}`,
-      expectedOutput: "build passed",
-      outputMatch: "trimmed-exact",
-      hints: ["PublishBuildResult 不需要知道 fakeNotifier 的具体字段。", "根据 passed 选择消息。", "调用 n.Notify(message) 并返回它的 error。"],
-      solutionOutline: ["定义 message 变量。", "passed 时设置 build passed，否则 build failed。", "返回 n.Notify(message) 的结果。"],
-    },
-    {
-      id: "ch7-fix-nil-writer",
-      kind: "debug",
-      difficulty: "challenge",
-      concepts: ["nil interface", "dynamic type", "io.Writer"],
-      estimatedMinutes: 14,
-      title: "修复 typed nil 接口陷阱",
-      prompt: "当前 MaybeWriter(false) 返回的是装着 nil *bytes.Buffer 的 io.Writer，导致 nil 判断失效。修复它，让关闭写入时输出 disabled。",
-      context: "接口值只有动态类型和动态值都为 nil 时才等于 nil。返回可选接口时要直接返回 nil 接口。",
-      starterCode: `package main
+type FailingNotifier struct{}
 
-import (
-    "bytes"
-    "fmt"
-    "io"
-)
-
-func MaybeWriter(enabled bool) io.Writer {
-    var buf *bytes.Buffer
-    if enabled {
-        buf = &bytes.Buffer{}
-    }
-    return buf
-}
-
-func Describe(w io.Writer) string {
-    if w == nil {
-        return "disabled"
-    }
-    return fmt.Sprintf("writer=%T", w)
+func (FailingNotifier) Notify(userID string, message string) error {
+    return errors.New("notify failed")
 }
 
 func main() {
-    fmt.Println(Describe(MaybeWriter(false)))
+    spy := &SpyNotifier{}
+    service := &OrderService{notifier: spy}
+    _ = service.PlaceOrder("u-1001", "book")
+    fmt.Printf("notified user=%s message=%q\\n", spy.userID, spy.message)
+
+    failing := &OrderService{notifier: FailingNotifier{}}
+    err := failing.PlaceOrder("u-1002", "pen")
+    fmt.Printf("error propagated=%v\\n", err != nil)
 }`,
-      expectedOutput: "disabled",
+      expectedOutput: "notified user=u-1001 message=\"order placed: book\"\nerror propagated=true",
       outputMatch: "trimmed-exact",
-      hints: ["return buf 会把动态类型 *bytes.Buffer 装进接口。", "没有 writer 时直接 return nil。", "enabled 为 true 时再创建并返回 &bytes.Buffer{}。"],
-      solutionOutline: ["在 MaybeWriter 开头判断 !enabled 并 return nil。", "enabled 为 true 时返回 &bytes.Buffer{}。", "确认 Describe 能正确识别 nil 接口。"],
+      hints: ["SpyNotifier 已经记录 userID 和 message。", "PlaceOrder 不应该吞掉 Notify 返回的 error。", "直接 return s.notifier.Notify(userID, message) 可以保留错误路径。"],
+      solutionOutline: ["保留订单消息构造。", "把 Notify 的返回值作为 PlaceOrder 的返回值。", "确认成功路径记录 spy 字段，失败路径 err != nil。"],
     },
   ],
   checklist: [
-    "能写出小接口。",
-    "能说明隐式实现。",
-    "能描述 nil 接口问题。",
+    "能写出只包含调用方所需方法的小接口。",
+    "能解释具体类型为什么不需要显式声明 implements。",
+    "能判断 T 和 *T 的方法集是否满足同一接口。",
+    "能说明 nil 接口和装着 nil 指针的接口为什么不同。",
+    "能用接口为外部依赖创建测试接缝。",
   ],
   reviewQuestions: [
-    "为什么接口应尽量由消费方定义？",
-    "接口值在什么情况下等于 nil？",
-    "泛型和接口分别适合解决什么问题？",
+    "为什么接口应尽量由消费方定义，而不是由实现方提前导出？",
+    "什么时候应该先使用具体类型，而不是马上抽接口？",
+    "接口值在什么情况下等于 nil？typed nil 为什么容易误导调用方？",
+    "any、泛型和明确接口分别适合解决什么问题？",
+    "SpyNotifier 为什么能帮助 ch11 Testing 检查订单服务行为？",
   ],
   nextMissionSlugs: [],
   contentSource: {
-    primary: "本章基于 gopl-zh.github.com/ch7 重点章节精简重组。",
-    references: ["The Go Programming Language 第 7 章", "Effective Go", "Go Code Review Comments", "Go 官方 errors 文档"],
+    primary: "本章基于 gopl-zh.github.com/ch7 重点章节精简重组，并用订单通知场景改写为 GoGopher Arch 的接口样板章。",
+    references: ["The Go Programming Language 第 7 章", "Effective Go", "Go Code Review Comments", "Go 官方 io/errors 文档", "Learn Go with Tests"],
     license: "gopl-zh.github.com 使用 BSD 风格许可；后续批量迁移应保留项目级参考与许可说明。",
   },
 },
