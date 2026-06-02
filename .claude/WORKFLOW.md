@@ -4,7 +4,31 @@ Claude Code 开发工作的轻量级可恢复台账。
 
 ## Active
 
-None.
+### WF-2026-06-02-001 — Go 课程质量样板设计
+Status: Active
+Level: 3
+Started: 2026-06-02
+Updated: 2026-06-02
+Current phase: P2 — 用户 review 设计规格。
+
+Intent: 建立 Go 课程质量升级样板：完整设计 ch07 Interfaces 样板章，并为 ch11 Testing 形成审计与改造蓝图。
+
+Plan:
+- [done] P1 — 确认样板路线、课程质量标准、ch07 设计和 ch11 蓝图边界。
+- [doing] P2 — 写入并评审设计规格文档，等待用户 review。
+- [todo] P3 — 用户批准后制定实现计划。
+
+Current todo:
+- [ ] P2 — 请用户 review `docs/superpowers/specs/2026-06-02-go-course-quality-sample-design.md`，确认是否进入实现计划。
+
+Changes:
+- 用户选择方案 D：先做样板和标准；样板章选择 ch07 Interfaces + ch11 Testing；产物边界选择完整改造 ch07、ch11 只做审计和蓝图。
+- 用户确认目标学习者为“后端新手到实习”。
+
+Prerequisites:
+- 用户已批准写入设计文档；实现计划仍需用户 review 规格后确认。
+
+Resume next: 完成 spec review 和提交后，请用户 review `docs/superpowers/specs/2026-06-02-go-course-quality-sample-design.md`；用户确认后再制定实现计划。
 
 ## Backlog / Future
 
