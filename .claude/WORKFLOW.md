@@ -9,27 +9,35 @@ Status: Active
 Level: 3
 Started: 2026-06-02
 Updated: 2026-06-02
-Current phase: P3 — 用户 review 实施计划。
+Current phase: P2 — 改造 ch07 MDX 正文为接口样板章。
 
-Intent: 建立 Go 课程质量升级样板：完整设计 ch07 Interfaces 样板章，并为 ch11 Testing 形成审计与改造蓝图。
+Intent: 建立 Go 课程质量升级样板：完整升级 ch07 Interfaces 为样板章，并为 ch11 Testing 形成审计与改造蓝图。
 
 Plan:
-- [done] P1 — 确认样板路线、课程质量标准、ch07 设计和 ch11 蓝图边界。
-- [done] P2 — 写入并评审设计规格文档，等待用户 review。
-- [doing] P3 — 用户批准后制定实现计划。
+- [done] D1 — 确认样板路线、课程质量标准、ch07 设计和 ch11 蓝图边界。
+- [done] D2 — 写入并评审设计规格文档。
+- [done] D3 — 制定实施计划。
+- [done] P1 — 审计当前 ch07/ch11 与来源映射。
+- [doing] P2 — 改造 ch07 MDX 正文为接口样板章。
+- [todo] P3 — 更新 ch07 metadata 与 warmup/core/challenge 练习。
+- [todo] P4 — 落实 ch11 审计与改造蓝图。
+- [todo] P5 — 验证 ch07 内容、练习和构建。
+- [todo] P6 — 更新持久状态并准备关闭或进入下一轮。
 
 Current todo:
-- [ ] P3 — 请用户 review `docs/superpowers/plans/2026-06-02-go-course-quality-sample-implementation.md`，确认是否开始 P1 审计。
+- [ ] P2 — 按订单通知主线重写 `web/src/content/go-basics/ch07-interfaces.mdx`，保留接口语义强项并重组为样板章。
 
 Changes:
 - 用户选择方案 D：先做样板和标准；样板章选择 ch07 Interfaces + ch11 Testing；产物边界选择完整改造 ch07、ch11 只做审计和蓝图。
 - 用户确认目标学习者为“后端新手到实习”。
 - 用户以“实施计划”确认设计规格可进入实现计划；设计规格状态已更新为 Approved for implementation planning。
+- 用户确认实施计划，开始执行 P1 审计。
+- P1 审计已记录在实施计划：ch07 当前语义覆盖强但需从构建通知切换到订单通知主线；ch11 当前 NormalizeName 主线保持不重写，只记录未来迁移蓝图。
 
 Prerequisites:
-- 用户已批准设计规格进入实施计划；开始执行 P1 审计前需用户确认实施计划。
+- None.
 
-Resume next: 请用户 review `docs/superpowers/plans/2026-06-02-go-course-quality-sample-implementation.md`；用户确认后开始 P1 审计当前 ch07/ch11 与来源映射。
+Resume next: 执行 P2：按订单通知主线重写 `web/src/content/go-basics/ch07-interfaces.mdx`，保留 gopl-zh 接口语义、nil 接口、类型断言/分支和小接口建议，并将标准库示例/错误分类等放入支撑或 DeepDive。
 
 ## Backlog / Future
 

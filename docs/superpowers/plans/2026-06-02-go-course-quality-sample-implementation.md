@@ -166,6 +166,86 @@ Spec: `docs/superpowers/specs/2026-06-02-go-course-quality-sample-design.md`
 - 本轮已提交或明确说明未提交原因。
 - 后续 ch11 或批量推广有清晰入口。
 
+## P1 audit results
+
+Completed: 2026-06-02
+
+### ch07 current state
+
+Current files:
+
+- `web/src/content/go-basics/ch07-interfaces.mdx`
+- `web/src/content/go-basics/courseChapters.ts` `ch7-interfaces` entry
+
+Findings:
+
+- Current ch07 already has strong coverage of core interface semantics: method sets, implicit implementation, interface values, typed nil, `any`, type assertions, type switches, `error`, and standard library interfaces.
+- Current structure is close to the preferred flow, but the main scenario is “build result notification”; the approved sample design requires a more backend-product-oriented “order notification” scenario that can connect directly to ch11 testing.
+- Current exercise set is coherent but not aligned with the new sample route:
+  - warmup uses `EmailNotifier` and `build passed`.
+  - core uses `PublishBuildResult` and a fake notifier.
+  - challenge focuses on typed nil `io.Writer`.
+- P2 should retain the strong interface semantics but reorganize them around the order notification story. Standard library examples (`Stringer`, `flag.Value`, `http.Handler`, `sort.Interface`) should support the concept rather than interrupt the main route; `sort.Interface`, interface comparability, type switch, and deeper error classification can move to `DeepDive` or later sections.
+- P3 should replace or substantially revise ch07 exercises so all three levels anchor to the order notification route: minimal `Notifier`, `OrderService` refactor, and `SpyNotifier` / failing notifier for test-seam preparation.
+
+### ch11 current state
+
+Current files:
+
+- `web/src/content/go-basics/ch11-testing.mdx`
+- `web/src/content/go-basics/courseChapters.ts` `ch11-testing` entry
+
+Findings:
+
+- Current ch11 is already tutorial-grade and covers `go test`, test package modes, failure messages, table-driven tests, random/fuzz testing, test doubles, coverage, benchmark, pprof, examples, concept recap, fragile tests, and engineering review.
+- Current main route is `NormalizeName`, not order notification. It is internally coherent, so P4 must not rewrite it wholesale in this slice.
+- Current exercises are useful but not aligned with the approved future ch11 route:
+  - warmup simulates table-driven add cases.
+  - core fixes `NormalizeName`.
+  - challenge compares `strings.Builder` behavior before benchmarking.
+- P4 should record the delta from the future route rather than replace current content: future ch11 should introduce `FormatOrderMessage(userID, item string)`, table-driven tests for order behavior, `SpyNotifier` / `FailingNotifier`, regression tests, and an order-notification checklist.
+- A minimal ch11 touch, if any, should only add a forward/backward bridge to ch07 and future blueprint notes. If this becomes a full rewrite, stop and ask before expanding scope.
+
+### Source mapping
+
+ch07 primary sources:
+
+- `gopl-zh.github.com/ch7/ch7-01.md`: interface as a contract, `io.Writer`, replaceability.
+- `gopl-zh.github.com/ch7/ch7-02.md`: interface type, small `Reader`/`Closer`, interface embedding.
+- `gopl-zh.github.com/ch7/ch7-03.md`: implementation conditions, method sets, `interface{}` / `any`, compile-time satisfaction assertions.
+- `gopl-zh.github.com/ch7/ch7-05.md`: interface value model, dynamic type/value, nil-interface trap, comparability caveat.
+- `gopl-zh.github.com/ch7/ch7-10.md`: type assertions and `value, ok` form.
+- `gopl-zh.github.com/ch7/ch7-11.md`: structured error classification; modern implementation should prefer `errors.Is` / `errors.As` framing.
+- `gopl-zh.github.com/ch7/ch7-13.md`: type switch as a discriminated-union style use of interface values.
+- `gopl-zh.github.com/ch7/ch7-15.md`: avoid premature one-implementation interfaces; ask only for what you need.
+
+ch07 auxiliary sources:
+
+- Effective Go / Go Code Review Comments: small interfaces, naming by behavior, consumer-side interfaces, avoid unnecessary abstraction.
+- Go official docs: `any`, `io.Reader` / `io.Writer`, `errors.Is` / `errors.As` semantics.
+- Learn Go with Tests: interface as a test seam; use only as teaching-method inspiration.
+
+ch11 primary sources:
+
+- `gopl-zh.github.com/ch11/ch11-01.md`: `go test` discovery and temporary test main model.
+- `gopl-zh.github.com/ch11/ch11-02.md`: `TestXxx`, failure messages, regression from bug reports, table-driven tests, `t.Fatal` / `t.Error` distinction.
+- `gopl-zh.github.com/ch11/ch11-03.md`: coverage as a heuristic, not a proof of correctness.
+- `gopl-zh.github.com/ch11/ch11-04.md`: benchmark structure, `b.N`, `-benchmem`, compare before optimizing.
+- `gopl-zh.github.com/ch11/ch11-05.md`: pprof and measurement-before-optimization framing.
+- `gopl-zh.github.com/ch11/ch11-06.md`: examples as executable documentation.
+
+ch11 auxiliary sources:
+
+- Go official `testing` documentation: subtests, `t.Helper`, `t.Cleanup`, fuzzing, examples, benchmarks.
+- Learn Go with Tests: behavior-first testing and using tests as design feedback.
+- Effective Go / Go Code Review Comments: readable assertions, stable behavior over implementation details, avoid over-mocking.
+
+### P2/P3 execution implications
+
+- P2 should rewrite ch07 in one coherent pass rather than patching isolated sections, because the scenario switch from build notification to order notification affects introduction, examples, PracticeBridge, and checklist.
+- P3 must update ch07 metadata and exercise output together with P2; otherwise the chapter body and exercise panel will diverge.
+- P4 should be deliberately small and may be represented as a blueprint section rather than a full ch11 rewrite.
+
 ## Validation commands
 
 至少运行：
