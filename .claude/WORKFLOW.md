@@ -9,7 +9,7 @@ Status: Active
 Level: 3
 Started: 2026-06-02
 Updated: 2026-06-02
-Current phase: P2 — 改造 ch07 MDX 正文为接口样板章。
+Current phase: P3 — 更新 ch07 metadata 与 warmup/core/challenge 练习。
 
 Intent: 建立 Go 课程质量升级样板：完整升级 ch07 Interfaces 为样板章，并为 ch11 Testing 形成审计与改造蓝图。
 
@@ -18,14 +18,14 @@ Plan:
 - [done] D2 — 写入并评审设计规格文档。
 - [done] D3 — 制定实施计划。
 - [done] P1 — 审计当前 ch07/ch11 与来源映射。
-- [doing] P2 — 改造 ch07 MDX 正文为接口样板章。
-- [todo] P3 — 更新 ch07 metadata 与 warmup/core/challenge 练习。
+- [done] P2 — 改造 ch07 MDX 正文为接口样板章。
+- [doing] P3 — 更新 ch07 metadata 与 warmup/core/challenge 练习。
 - [todo] P4 — 落实 ch11 审计与改造蓝图。
 - [todo] P5 — 验证 ch07 内容、练习和构建。
 - [todo] P6 — 更新持久状态并准备关闭或进入下一轮。
 
 Current todo:
-- [ ] P2 — 按订单通知主线重写 `web/src/content/go-basics/ch07-interfaces.mdx`，保留接口语义强项并重组为样板章。
+- [ ] P3 — 更新 `courseChapters.ts` 中 ch07 summary/goals/notes/practices/pitfalls/checklist/reviewQuestions/exercises，使其与订单通知样板正文一致。
 
 Changes:
 - 用户选择方案 D：先做样板和标准；样板章选择 ch07 Interfaces + ch11 Testing；产物边界选择完整改造 ch07、ch11 只做审计和蓝图。
@@ -34,10 +34,12 @@ Changes:
 - 用户确认实施计划，开始执行 P1 审计。
 - P1 审计已记录在实施计划：ch07 当前语义覆盖强但需从构建通知切换到订单通知主线；ch11 当前 NormalizeName 主线保持不重写，只记录未来迁移蓝图。
 
+- P2 已完成 ch07 MDX 正文改造：从构建通知切换为订单通知主线，保留并重组接口方法集、隐式实现、接口值、nil 陷阱、any、类型断言/分支、error、小接口和工程 checklist；`npm run build --prefix web` 与 `git diff --check` 通过。
+
 Prerequisites:
 - None.
 
-Resume next: 执行 P2：按订单通知主线重写 `web/src/content/go-basics/ch07-interfaces.mdx`，保留 gopl-zh 接口语义、nil 接口、类型断言/分支和小接口建议，并将标准库示例/错误分类等放入支撑或 DeepDive。
+Resume next: 执行 P3：更新 `courseChapters.ts` 中 ch07 metadata 和 warmup/core/challenge 练习，使练习锚定订单通知主线并可稳定运行。
 
 ## Backlog / Future
 
