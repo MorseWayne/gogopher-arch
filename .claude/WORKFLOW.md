@@ -9,7 +9,7 @@ Status: Active
 Level: 3
 Started: 2026-06-02
 Updated: 2026-06-02
-Current phase: P4 — 落实 ch11 审计与改造蓝图。
+Current phase: P5 — 验证 ch07 内容、练习和构建。
 
 Intent: 建立 Go 课程质量升级样板：完整升级 ch07 Interfaces 为样板章，并为 ch11 Testing 形成审计与改造蓝图。
 
@@ -20,12 +20,12 @@ Plan:
 - [done] P1 — 审计当前 ch07/ch11 与来源映射。
 - [done] P2 — 改造 ch07 MDX 正文为接口样板章。
 - [done] P3 — 更新 ch07 metadata 与 warmup/core/challenge 练习。
-- [doing] P4 — 落实 ch11 审计与改造蓝图。
-- [todo] P5 — 验证 ch07 内容、练习和构建。
+- [done] P4 — 落实 ch11 审计与改造蓝图。
+- [doing] P5 — 验证 ch07 内容、练习和构建。
 - [todo] P6 — 更新持久状态并准备关闭或进入下一轮。
 
 Current todo:
-- [ ] P4 — 轻量记录 ch11 与订单通知测试蓝图的差距和衔接，不完整重写 ch11 正文。
+- [ ] P5 — 做最终验证：前端构建、空白检查、ch07 练习抽查和内容质量人工检查。
 
 Changes:
 - 用户选择方案 D：先做样板和标准；样板章选择 ch07 Interfaces + ch11 Testing；产物边界选择完整改造 ch07、ch11 只做审计和蓝图。
@@ -36,11 +36,12 @@ Changes:
 
 - P2 已完成 ch07 MDX 正文改造：从构建通知切换为订单通知主线，保留并重组接口方法集、隐式实现、接口值、nil 陷阱、any、类型断言/分支、error、小接口和工程 checklist；`npm run build --prefix web` 与 `git diff --check` 通过。
 - P3 已完成 ch07 metadata 和练习同步：summary/goals/notes/practices/pitfalls/checklist/reviewQuestions/exercises 全部切到订单通知主线；`npm run build --prefix web`、`git diff --check` 通过，warmup starter 输出匹配，core/challenge starter 可运行且参考解法输出匹配。
+- P4 已轻量落实 ch11 蓝图：保留当前 NormalizeName 主线，新增与 ch07 Interfaces 的衔接说明、测试替身桥接和下一轮订单通知测试样板蓝图；未完整重写 ch11，`npm run build --prefix web` 通过。
 
 Prerequisites:
 - None.
 
-Resume next: 执行 P4：轻量落实 ch11 审计与改造蓝图，记录当前 NormalizeName 主线与未来订单通知测试主线的差距和衔接，不完整重写 ch11 正文。
+Resume next: 执行 P5：运行最终 `npm run build --prefix web`、`git diff --check`、ch07 warmup/core/challenge starter/参考解法抽查，并人工检查 ch07 rubric 与 ch11 蓝图范围。
 
 ## Backlog / Future
 

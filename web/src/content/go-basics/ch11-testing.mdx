@@ -20,6 +20,16 @@
   ]}
 />
 
+<CompareNote
+  title="与 ch07 Interfaces 的衔接蓝图"
+  points={[
+    "当前章节仍保留 NormalizeName 主线，因为它已经能完整讲清回归测试、表驱动测试、覆盖率和 benchmark。",
+    "下一轮 Testing 样板会承接 ch07 的订单通知场景：用 FormatOrderMessage 建立最小测试，再为 OrderService.PlaceOrder 写表驱动测试。",
+    "ch07 的 SpyNotifier / FailingNotifier 会变成本章的测试替身案例，用来验证通知行为和错误传播。",
+    "本轮只记录蓝图和衔接，不完整重写 ch11，避免把已经自洽的测试章节一次性换线。"
+  ]}
+/>
+
 ## 你会解决什么问题
 
 假设线上出现一个 bug：用户输入名字时有多余空格，系统保存后无法稳定匹配。
@@ -357,6 +367,8 @@ func (f *fakeMailer) Send(to, body string) error {
 }
 ```
 
+这和 ch07 的 `Notifier` 是同一类设计：生产代码依赖行为边界，测试代码注入替身。后续把本章改造成订单通知测试样板时，可以直接使用 `SpyNotifier` 记录 `userID` 和 `message`，再用 `FailingNotifier` 验证 `PlaceOrder` 没有吞掉错误。
+
 如果必须临时替换全局变量，要用 `defer` 或 `t.Cleanup` 恢复，避免污染其他测试：
 
 ```go
@@ -495,6 +507,22 @@ func ExampleNormalizeName() {
 如果包含 `// Output:` 注释，`go test` 会运行示例并比对标准输出。示例同时出现在文档中，成为真实可编译的用法说明。
 
 公共库尤其适合写 Example：它比长篇说明更直观，也能防止文档示例随着 API 变化而失效。
+
+## 下一轮蓝图：把订单通知写成测试样板
+
+当前章节用 `NormalizeName` 主线讲清了测试工具链和反馈循环。下一轮如果要和 ch07 形成完整样板，可以把主线切换为订单通知，但应保持同样的测试递进：先测纯函数，再测服务行为，最后测错误路径。
+
+建议的改造顺序是：
+
+| 改造点 | 具体对象 | 教学目的 |
+|---|---|---|
+| 最小测试 | `FormatOrderMessage(userID, item string)` | 用稳定输入输出讲清 `TestXxx`、got/want 和失败信息 |
+| 表驱动测试 | 多组 userID/item/异常输入 | 用 `t.Run` 和 case name 定位失败场景 |
+| 测试替身 | `SpyNotifier` | 验证 `OrderService.PlaceOrder` 发送了正确通知 |
+| 错误路径 | `FailingNotifier` | 验证通知失败会向上传递，而不是被吞掉 |
+| 回归测试 | 消息格式漏掉 userID、空 item 仍下单等 bug | 把历史问题固化成长期保护 |
+
+这条蓝图的重点不是替换掉当前章节的所有内容，而是把 ch07 的接口边界延伸成测试反馈：**先设计可替换边界，再用测试保护边界行为**。
 
 ## 测试概念回看：go test 工具链怎么串起来
 

@@ -246,6 +246,30 @@ ch11 auxiliary sources:
 - P3 must update ch07 metadata and exercise output together with P2; otherwise the chapter body and exercise panel will diverge.
 - P4 should be deliberately small and may be represented as a blueprint section rather than a full ch11 rewrite.
 
+### P4 results
+
+Completed: 2026-06-02
+
+Implemented lightweight ch11 blueprint notes without rewriting the chapter:
+
+- Added a top-level `CompareNote` explaining that current ch11 keeps the `NormalizeName` route, while the future sample route will extend ch07's order notification interface boundary.
+- Added a bridge in the “测试替身” section: ch07 `Notifier` maps directly to ch11 fake/spy/stub testing, especially `SpyNotifier` and `FailingNotifier` for behavior and error propagation.
+- Added “下一轮蓝图：把订单通知写成测试样板” before the concept recap, specifying the future sequence:
+  - `FormatOrderMessage(userID, item string)` minimal test.
+  - table-driven order-message tests with `t.Run`.
+  - `SpyNotifier` for `OrderService.PlaceOrder` behavior.
+  - `FailingNotifier` for error propagation.
+  - regression tests for message-format and invalid-order bugs.
+
+Validation:
+
+- `npm run build --prefix web` passed after the ch11 blueprint update.
+
+Scope control:
+
+- ch11 remains on the existing `NormalizeName` route in this slice.
+- No exercise, sandbox, or full chapter rewrite was introduced.
+
 ## Validation commands
 
 至少运行：
