@@ -4,12 +4,43 @@ Claude Code 开发工作的轻量级可恢复台账。
 
 ## Active
 
+### WF-2026-06-02-002 — DeepTutor 离线课程内容工作流 Spike
+Status: Active
+Level: 3
+Started: 2026-06-02
+Updated: 2026-06-02
+Priority: Current discussion/design; WF-2026-06-02-001 remains paused.
+Current phase: D1 — 澄清 DeepTutor Spike 目标、边界和成功标准。
+
+Intent: 设计一个研究型集成 Spike，验证 DeepTutor 能否辅助 GoGopher Arch 接入外部资料、生成/改造课程内容，并为后续 AI 导师能力保留扩展路径。
+
+Plan:
+- [doing] D1 — 澄清 Spike 目标、边界、成功标准和资料范围。
+- [todo] D2 — 提出 2-3 个 DeepTutor 接入方案并选择推荐路线。
+- [todo] D3 — 呈现离线内容工作流设计，覆盖架构、组件、数据流、错误处理和测试。
+- [todo] D4 — 写入并评审设计规格文档。
+- [todo] D5 — 用户审阅规格后转入实施计划。
+
+Current todo:
+- [ ] D1 — 明确课程内容生成的资料来源、人工校验边界、样例章节范围和 AI 导师是否纳入本次 Spike。
+
+Changes:
+- 用户选择研究型集成 Spike，而不是立即产品化或直接深度集成。
+- 用户明确优先方向为离线内容工作流：利用 DeepTutor 集成外部资料并辅助生成/改造课程内容；AI 导师作为第二关注方向。
+- 课程内容方向需遵守项目原则：外部资料作为知识来源层，最终转化为站内课程正文；不直接外链替代、不自动发布未经校验内容。
+
+Prerequisites:
+- 需要确认 DeepTutor 可用入口：CLI/API/KB/Memory/TutorBot 中哪些适合本地验证。
+- 需要确认用于 Spike 的课程样例章节和外部资料边界。
+
+Resume next: 继续 D1，确认离线内容工作流优先验证的产物类型：章节正文、练习、复盘、知识图谱或来源审计。
+
 ### WF-2026-06-02-001 — Go 课程质量样板设计
 Status: Active
 Level: 3
 Started: 2026-06-02
 Updated: 2026-06-02
-Current phase: P5 — 验证 ch07 内容、练习和构建。
+Current phase: P6 — 更新持久状态并准备关闭或进入下一轮。
 
 Intent: 建立 Go 课程质量升级样板：完整升级 ch07 Interfaces 为样板章，并为 ch11 Testing 形成审计与改造蓝图。
 
@@ -21,11 +52,11 @@ Plan:
 - [done] P2 — 改造 ch07 MDX 正文为接口样板章。
 - [done] P3 — 更新 ch07 metadata 与 warmup/core/challenge 练习。
 - [done] P4 — 落实 ch11 审计与改造蓝图。
-- [doing] P5 — 验证 ch07 内容、练习和构建。
-- [todo] P6 — 更新持久状态并准备关闭或进入下一轮。
+- [done] P5 — 验证 ch07 内容、练习和构建。
+- [doing] P6 — 更新持久状态并准备关闭或进入下一轮。
 
 Current todo:
-- [ ] P5 — 做最终验证：前端构建、空白检查、ch07 练习抽查和内容质量人工检查。
+- [ ] P6 — 记录最终验证结果，将 ch11 完整订单通知测试样板和后续章节推广加入 Backlog/Future，准备关闭本任务。
 
 Changes:
 - 用户选择方案 D：先做样板和标准；样板章选择 ch07 Interfaces + ch11 Testing；产物边界选择完整改造 ch07、ch11 只做审计和蓝图。
@@ -37,11 +68,12 @@ Changes:
 - P2 已完成 ch07 MDX 正文改造：从构建通知切换为订单通知主线，保留并重组接口方法集、隐式实现、接口值、nil 陷阱、any、类型断言/分支、error、小接口和工程 checklist；`npm run build --prefix web` 与 `git diff --check` 通过。
 - P3 已完成 ch07 metadata 和练习同步：summary/goals/notes/practices/pitfalls/checklist/reviewQuestions/exercises 全部切到订单通知主线；`npm run build --prefix web`、`git diff --check` 通过，warmup starter 输出匹配，core/challenge starter 可运行且参考解法输出匹配。
 - P4 已轻量落实 ch11 蓝图：保留当前 NormalizeName 主线，新增与 ch07 Interfaces 的衔接说明、测试替身桥接和下一轮订单通知测试样板蓝图；未完整重写 ch11，`npm run build --prefix web` 通过。
+- P5 最终验证通过：`npm run build --prefix web`、`git diff --check`、ch07 三个 starter 可运行、三份参考解法输出匹配；ch07 rubric 人工检查通过，ch11 保持蓝图范围。
 
 Prerequisites:
 - None.
 
-Resume next: 执行 P5：运行最终 `npm run build --prefix web`、`git diff --check`、ch07 warmup/core/challenge starter/参考解法抽查，并人工检查 ch07 rubric 与 ch11 蓝图范围。
+Resume next: 执行 P6：将 ch11 完整订单通知测试样板和后续章节推广加入 Backlog/Future，关闭或请求用户确认关闭本任务。
 
 ## Backlog / Future
 

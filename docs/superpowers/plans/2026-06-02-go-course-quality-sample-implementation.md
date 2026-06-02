@@ -270,6 +270,36 @@ Scope control:
 - ch11 remains on the existing `NormalizeName` route in this slice.
 - No exercise, sandbox, or full chapter rewrite was introduced.
 
+### P5 results
+
+Completed: 2026-06-02
+
+Final validation passed:
+
+- `npm run build --prefix web` passed.
+- `git diff --check` passed.
+- ch07 starter-code checks:
+  - `ch7-notifier-interface`: starter runs and output matches `notify: welcome, gopher`.
+  - `ch7-order-service-interface`: starter runs; as an `edit` exercise it intentionally produces empty output before completion.
+  - `ch7-spy-notifier`: starter runs; as a `debug` exercise it intentionally shows `error propagated=false` before completion.
+- ch07 reference solution checks:
+  - `ch7-notifier-interface` output matches expected output.
+  - `ch7-order-service-interface` output matches `email user=u-1001 message="order placed: book"`.
+  - `ch7-spy-notifier` output matches the two-line expected result with `error propagated=true`.
+
+Content rubric check:
+
+- Concept: ch07 covers interface definition, implicit implementation, method sets, interface values, nil traps, `any`, type assertions, type switches, `error`, and structured error checks.
+- Progression: ch07 now follows order notification → behavior boundary → minimal example → engineering example → pitfalls → PracticeBridge → concept recap → checklist.
+- Practice: ch07 exercises are layered warmup/core/challenge and map to the same order notification route.
+- Source: ch07 keeps gopl-zh as the primary source while using Effective Go / Go Code Review Comments / Go official docs / Learn Go with Tests as calibration or teaching-method references.
+- Backend relevance: ch07 uses order service, notification dependency, test seams, error propagation, and review checklist suitable for backend-newbie-to-intern learners.
+
+Scope check:
+
+- ch11 remains a lightweight blueprint bridge and was not fully rewritten.
+- No sandbox, exercise kind, or new MDX component was introduced.
+
 ## Validation commands
 
 至少运行：
