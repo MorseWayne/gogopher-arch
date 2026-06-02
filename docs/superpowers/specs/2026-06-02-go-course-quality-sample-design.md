@@ -1,7 +1,7 @@
 # Go 课程质量样板设计：ch07 Interfaces 与 ch11 Testing 蓝图
 
 Date: 2026-06-02
-Status: Draft for user review
+Status: Approved for implementation planning
 
 ## 背景
 
