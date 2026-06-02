@@ -4,71 +4,40 @@ Claude Code 开发工作的轻量级可恢复台账。
 
 ## Active
 
-### WF-2026-05-31-001 — 全站 shadcn 视觉系统重构
-Status: Active
-Level: 3
-Started: 2026-05-31
-Updated: 2026-05-31
-Current phase: P6 — 补充本地开发启动脚本。
-
-Intent: 将前端重构为 shadcn/ui 驱动的统一视觉系统，并优化首页、导航、课程阅读和任务工作台的信息架构。
-
-Plan:
-- [done] P1 — 完成需求澄清、视觉方向和信息架构设计确认。
-- [done] P2 — 编写并评审设计规格文档。
-- [done] P3 — 制定实施计划。
-- [done] P4 — 分阶段实施全站 shadcn 重构并验证。
-- [done] P5 — 增加全站 light/dark/system 主题支持。
-- [done] P6 — 补充本地开发启动脚本，封装 Docker、混合开发和本地服务启动场景。
-
-Current todo:
-- [x] P6 — 已新增 `scripts/dev.sh` 启动助手，README 已补充常用场景；脚本语法、help 输出和空白检查通过。
-
-Changes:
-- 用户选择方案 B：保持核心功能，但允许优化首页、导航、课程阅读布局和 Dashboard 信息层级。
-- 用户选择混合视觉方向：首页/Dashboard 保留平台感，课程页偏文档站，任务页偏工作台，并用 shadcn token 与 Go 蓝统一。
-- 用户确认导航骨架采用分区混合壳：首页为公开营销入口，学习区使用统一 App Shell/侧栏。
-- 用户确认视觉语言采用自适应混合：课程正文浅色阅读，沙盒/任务反馈局部深色终端。
-- 用户确认学习区 Sidebar 采用“工作区 + 学习路径 + 项目”分组，支持 Go 基础、后端实习、工程进阶和 AI 全栈路线。
-- 用户确认未实现路线在 UI 中保留入口并标记“即将开放”，不做假功能。
-- 用户确认核心页面采用职责重排：首页负责品牌和路径入口，Dashboard 负责下一步行动，课程页负责系统学习，任务页负责动手实战。
-- 用户确认采用方案 B：分区 App Shell + 页面职责重排，作为后续设计主方案。
-- 用户确认设计第 1 部分：架构与路由分区，公开区使用 PublicLayout，学习区使用 LearningLayout/App Shell。
-- 用户确认设计第 2 部分：shadcn 组件系统与 Design Token，采用 Go 蓝 primary、浅色阅读 surface 和局部深色终端 surface。
-- 用户确认设计第 3 部分：核心页面布局，包含 Landing、Dashboard、课程总览、章节详情和任务详情的页面职责。
-- 用户确认设计第 4 部分：数据流、状态与错误处理，课程/任务数据保持本地，沙盒运行沿用现有 API，状态用 shadcn 组件表达。
-- 用户确认设计第 5 部分：验证与实施切片策略。
-- 设计规格文档已写入 docs/superpowers/specs/2026-05-31-shadcn-visual-system-redesign.md，并在第三轮独立评审通过。
-- 已完成全站 shadcn 视觉系统重构：布局拆分、学习区 Sidebar、首页、Dashboard、课程页、章节页、任务页和练习面板均已迁移；`npm run build --prefix web` 与 `git diff --check` 通过。
-- 用户追加确认全站支持深色模式：默认跟随系统，并提供 light/dark/system 手动切换；采用 next-themes。
-- 已实现全站 light/dark/system 主题支持：App 接入 next-themes，公开区与学习区顶部加入 ThemeToggle，dark token 保持 Go 蓝 primary，并修正 Landing/课程页硬编码浅色样式；`npm run build --prefix web` 与 `git diff --check` 通过。
-- 修复 ThemeToggle 交互：为避免 Radix DropdownMenu trigger 与直接切换点击互相干扰，已改为本地受控主题菜单；按钮点击会打开 light/dark/system 选项，选择后调用 next-themes 并关闭菜单；构建和空白检查通过。
-- 用户反馈频繁 `docker compose up --build` 影响开发效率；已新增 `scripts/dev.sh` 封装 full Docker、Docker 后端 + 本地 Vite、本地 Go 服务 + Docker 依赖等启动场景，并更新 README。
-
-History so far:
-- Intent: 将前端重构为 shadcn/ui 视觉系统，并优化首页、学习区、课程阅读和任务工作台的信息架构。
-- Completed milestones:
-  - [done] P1-P3 — 需求澄清、设计规格和实施计划已完成。
-  - [done] P4-P5 — 全站 shadcn 重构和 light/dark/system 主题支持已完成。
-  - [done] P6 — 本地开发启动脚本与 README 使用场景补充已完成。
-- Key changes:
-  - 用户选择混合视觉方向、分区 App Shell 和未实现路线保留“即将开放”入口。
-  - 开发脚本支持 full Docker、Docker 后端 + 本地 Vite、本地 Go 服务 + Docker 依赖等场景。
-- Validation:
-  - 视觉/主题阶段 `npm run build --prefix web` 与 `git diff --check` 通过；P6 脚本语法、help 输出和空白检查通过。
-- Deferred / gaps:
-  - 仍需浏览器 smoke light/dark/system、首页、Dashboard、课程、章节、任务、沙盒锚点和移动端 Sidebar，并可按需实跑开发脚本。
-
-Prerequisites:
-- 规格已由用户批准，可开始实施；提交仍需用户明确要求。
-
-Resume next: 如需收尾，进行浏览器人工 smoke（light/dark/system、首页、Dashboard、课程、章节、任务、沙盒锚点和移动端 Sidebar），按需实跑 `./scripts/dev.sh backend`/`web` 检查开发启动体验，然后按用户要求提交。
+None.
 
 ## Backlog / Future
 
 - [ ] 若课程数据继续膨胀，后续可考虑将 13 章拆分为独立章节文件；当前计划明确首版保留单文件。
 
 ## Completed
+
+### WF-2026-05-31-001 — 全站 shadcn 视觉系统重构
+Completed: 2026-06-02
+Level: 3
+
+Close summary:
+- Outcome: 已完成全站 shadcn/ui 视觉系统重构、分区 App Shell、核心页面信息架构优化、light/dark/system 主题支持，以及本地开发启动脚本补充。
+- Validation: 视觉/主题阶段 `npm run build --prefix web` 与 `git diff --check` 通过；P6 脚本语法、help 输出和空白检查通过；用户已手工验证 light/dark/system、首页、Dashboard、课程、章节、任务、沙盒锚点和移动端 Sidebar。
+- Gaps: None.
+
+Archived execution:
+- Intent: 将前端重构为 shadcn/ui 视觉系统，并优化首页、学习区、课程阅读和任务工作台的信息架构。
+- Plan:
+  - [done] P1-P3 — 需求澄清、设计规格和实施计划已完成。
+  - [done] P4 — 全站 shadcn 重构已完成。
+  - [done] P5 — light/dark/system 主题支持已完成。
+  - [done] P6 — 本地开发启动脚本与 README 使用场景补充已完成。
+- Key changes:
+  - 用户选择混合视觉方向、分区 App Shell、页面职责重排，并保留未实现路线的“即将开放”入口。
+  - 公开区、学习区、Dashboard、课程页、章节页、任务页和练习面板迁移到统一 shadcn token 与 Go 蓝视觉系统。
+  - 主题支持默认跟随系统并提供 light/dark/system 手动切换；开发脚本支持 full Docker、Docker 后端 + 本地 Vite、本地 Go 服务 + Docker 依赖等场景。
+- Validation:
+  - `npm run build --prefix web` 与 `git diff --check` 通过。
+  - P6 脚本语法、help 输出和空白检查通过。
+  - 用户手工验证 light/dark/system、首页、Dashboard、课程、章节、任务、沙盒锚点和移动端 Sidebar 通过。
+- Deferred / gaps:
+  - None.
 
 ### WF-2026-05-31-002 — Go 基础课程 React + MDX 内容系统
 Completed: 2026-06-01
