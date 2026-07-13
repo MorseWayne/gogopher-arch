@@ -18,6 +18,7 @@ import (
 	"github.com/MorseWayne/gogopher-arch/internal/learning/execution"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/httpapi"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/observability"
+	"github.com/MorseWayne/gogopher-arch/internal/learning/projection"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/session"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/submission"
 	"github.com/MorseWayne/gogopher-arch/internal/platform/config"
@@ -34,6 +35,7 @@ type App struct {
 	workerCancel      context.CancelFunc
 	workerDone        chan error
 	evaluationDone    chan error
+	projectionDone    chan error
 	closeOnce         sync.Once
 	closeError        error
 }
@@ -144,6 +146,23 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 	if err != nil {
 		return fail(err)
 	}
+	projector, err := projection.NewPostgresProjector(db, registry, projection.RepositoryOptions{})
+	if err != nil {
+		return fail(err)
+	}
+	projectionRepository, err := projection.NewPostgresRequestRepository(db, projection.RepositoryOptions{})
+	if err != nil {
+		return fail(err)
+	}
+	projectionWorker, err := projection.NewWorker(projectionRepository, projector, projection.WorkerOptions{
+		Owner: cfg.ExecutionWorkerID + ":projection", Lease: cfg.ProjectionLease,
+		PollInterval: cfg.ProjectionPoll, MaxAttempts: cfg.ProjectionMaxAttempts,
+		BaseBackoff: cfg.ProjectionBaseBackoff, MaxBackoff: cfg.ProjectionMaxBackoff,
+		Observer: metrics,
+	})
+	if err != nil {
+		return fail(err)
+	}
 	sandboxClient, err := execution.NewSandboxClient(execution.SandboxClientOptions{Endpoint: cfg.SandboxEndpoint})
 	if err != nil {
 		return fail(err)
@@ -165,6 +184,7 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 	workerContext, workerCancel := context.WithCancel(ctx)
 	workerDone := make(chan error, 1)
 	evaluationDone := make(chan error, 1)
+	projectionDone := make(chan error, 1)
 	go func() {
 		for {
 			err := worker.Run(workerContext)
@@ -178,6 +198,24 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 			case <-workerContext.Done():
 				timer.Stop()
 				workerDone <- workerContext.Err()
+				return
+			case <-timer.C:
+			}
+		}
+	}()
+	go func() {
+		for {
+			err := projectionWorker.Run(workerContext)
+			if errors.Is(err, context.Canceled) || workerContext.Err() != nil {
+				projectionDone <- workerContext.Err()
+				return
+			}
+			slog.Error("projection worker restarting", "error", err)
+			timer := time.NewTimer(time.Second)
+			select {
+			case <-workerContext.Done():
+				timer.Stop()
+				projectionDone <- workerContext.Err()
 				return
 			case <-timer.C:
 			}
@@ -206,6 +244,7 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 		database: db, assistanceService: assistanceService, executionService: executionService,
 		ruleGenerator: ruleGenerator, submissionService: submissionService,
 		workerCancel: workerCancel, workerDone: workerDone, evaluationDone: evaluationDone,
+		projectionDone: projectionDone,
 	}, nil
 }
 
@@ -217,6 +256,9 @@ func (a *App) Close() error {
 				a.closeError = err
 			}
 			if err := <-a.evaluationDone; err != nil && !errors.Is(err, context.Canceled) {
+				a.closeError = errors.Join(a.closeError, err)
+			}
+			if err := <-a.projectionDone; err != nil && !errors.Is(err, context.Canceled) {
 				a.closeError = errors.Join(a.closeError, err)
 			}
 		}

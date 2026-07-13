@@ -1,6 +1,6 @@
 # 能力证据纵向切片 Plan C：投影与复习调度
 
-> 状态：In progress — C1 accepted
+> 状态：In progress — C1–C3 accepted
 > 日期：2026-07-13
 > 上游：Plan B 已验收的 Evidence、EvaluationBatch、RuleResult 和 outbox 契约
 
@@ -45,13 +45,15 @@
 
 ### C3 — Outbox worker
 
-- [ ] 为 projection 和 review scheduler 定义 versioned outbox payload。
-- [ ] 使用数据库 claim/lease 领取事件；处理成功后记录 consumer/version。
-- [ ] worker 崩溃后可重领，重复处理必须安全。
-- [ ] 失败使用有上限 backoff，并记录 retry metric 和最后错误摘要。
-- [ ] 增加“EvaluationBatch 已提交但投影进程崩溃”的恢复测试。
+- [x] 为 projection 和 review scheduler 定义 versioned outbox payload。
+- [x] 使用数据库 claim/lease 领取事件；处理成功后记录 consumer/version。
+- [x] worker 崩溃后可重领，重复处理必须安全。
+- [x] 失败使用有上限 backoff，并记录 retry metric 和最后错误摘要。
+- [x] 增加“EvaluationBatch 已提交但投影进程崩溃”的恢复测试。
 
 完成条件：事实事务和派生处理解耦，任何进程边界失败都不需要人工补写 Snapshot。
+
+验收记录：真实 PostgreSQL 中先提交 EvaluationBatch、Evidence 与 `capability_projection.requested`，旧 owner claim 后模拟崩溃；lease 到期后新 owner 成功重领并生成 Snapshot，request 记录 `capability_projector@1` 且 `attempt_count=2`。重复 Rebuild 不改变 `projected_at` 或增加 scheduler event；不支持的 event version 按 1 秒上限 backoff 重试两次后进入 `failed`，保留单行、限长 `last_error` 与 `failed_at`。
 
 ### C4 — 首次 review 调度
 

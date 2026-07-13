@@ -27,6 +27,11 @@ type Config struct {
 	ExecutionPoll         time.Duration
 	ExecutionMaxClaims    int
 	ExecutionWorkerID     string
+	ProjectionLease       time.Duration
+	ProjectionPoll        time.Duration
+	ProjectionMaxAttempts int
+	ProjectionBaseBackoff time.Duration
+	ProjectionMaxBackoff  time.Duration
 }
 
 func Load() (Config, error) {
@@ -65,6 +70,18 @@ func Load() (Config, error) {
 	if config.ExecutionPoll, err = time.ParseDuration(env("EXECUTION_WORKER_POLL", "250ms")); err != nil {
 		return Config{}, fmt.Errorf("parse EXECUTION_WORKER_POLL: %w", err)
 	}
+	if config.ProjectionLease, err = time.ParseDuration(env("PROJECTION_WORKER_LEASE", "30s")); err != nil {
+		return Config{}, fmt.Errorf("parse PROJECTION_WORKER_LEASE: %w", err)
+	}
+	if config.ProjectionPoll, err = time.ParseDuration(env("PROJECTION_WORKER_POLL", "250ms")); err != nil {
+		return Config{}, fmt.Errorf("parse PROJECTION_WORKER_POLL: %w", err)
+	}
+	if config.ProjectionBaseBackoff, err = time.ParseDuration(env("PROJECTION_WORKER_BASE_BACKOFF", "1s")); err != nil {
+		return Config{}, fmt.Errorf("parse PROJECTION_WORKER_BASE_BACKOFF: %w", err)
+	}
+	if config.ProjectionMaxBackoff, err = time.ParseDuration(env("PROJECTION_WORKER_MAX_BACKOFF", "1m")); err != nil {
+		return Config{}, fmt.Errorf("parse PROJECTION_WORKER_MAX_BACKOFF: %w", err)
+	}
 	if config.DBMaxOpenConnections, err = parsePositiveInt("DB_MAX_OPEN_CONNECTIONS", 10); err != nil {
 		return Config{}, err
 	}
@@ -74,10 +91,17 @@ func Load() (Config, error) {
 	if config.ExecutionMaxClaims, err = parsePositiveInt("EXECUTION_MAX_CLAIMS", 3); err != nil {
 		return Config{}, err
 	}
+	if config.ProjectionMaxAttempts, err = parsePositiveInt("PROJECTION_WORKER_MAX_ATTEMPTS", 5); err != nil {
+		return Config{}, err
+	}
 	if config.SessionTTL <= 0 || config.DBConnectionLifetime <= 0 || config.SandboxResponseGrace <= 0 ||
 		config.SandboxRPCDeadline <= 0 || config.ExecutionPersistGrace <= 0 || config.ExecutionLease <= 0 ||
-		config.ExecutionHeartbeat <= 0 || config.ExecutionPoll <= 0 {
+		config.ExecutionHeartbeat <= 0 || config.ExecutionPoll <= 0 || config.ProjectionLease <= 0 ||
+		config.ProjectionPoll <= 0 || config.ProjectionBaseBackoff <= 0 || config.ProjectionMaxBackoff <= 0 {
 		return Config{}, fmt.Errorf("session, database, Sandbox, and worker durations must be positive")
+	}
+	if config.ProjectionMaxBackoff < config.ProjectionBaseBackoff {
+		return Config{}, fmt.Errorf("PROJECTION_WORKER_MAX_BACKOFF must be at least PROJECTION_WORKER_BASE_BACKOFF")
 	}
 	if config.DBMaxIdleConnections > config.DBMaxOpenConnections {
 		return Config{}, fmt.Errorf("DB_MAX_IDLE_CONNECTIONS may not exceed DB_MAX_OPEN_CONNECTIONS")

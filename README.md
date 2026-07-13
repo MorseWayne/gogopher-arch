@@ -263,6 +263,11 @@ API 网关默认监听 `http://localhost:8080`，健康检查地址为 `http://l
 | `SANDBOX_RPC_DEADLINE` | `gateway` | `35s` | Gateway 等待 Sandbox 完整响应的上限 |
 | `EXECUTION_WORKER_LEASE` | `gateway` | `45s` | PostgreSQL execution worker lease 时长 |
 | `EXECUTION_MAX_CLAIMS` | `gateway` | `3` | worker crash/lease expiry 后允许的最大 claim 次数 |
+| `PROJECTION_WORKER_LEASE` | `gateway` | `30s` | Capability projection outbox claim 的 lease 时长 |
+| `PROJECTION_WORKER_POLL` | `gateway` | `250ms` | 无可用 projection request 时的 poll 间隔 |
+| `PROJECTION_WORKER_MAX_ATTEMPTS` | `gateway` | `5` | projection request 进入 `failed` 前的最大处理次数 |
+| `PROJECTION_WORKER_BASE_BACKOFF` | `gateway` | `1s` | projection retry 的首次等待时间 |
+| `PROJECTION_WORKER_MAX_BACKOFF` | `gateway` | `1m` | projection retry 指数 backoff 的上限 |
 | `POSTGRES_USER` | `postgres` | `user` | 数据库用户名 |
 | `POSTGRES_PASSWORD` | `postgres` | `pass` | 数据库密码 |
 | `POSTGRES_DB` | `postgres` | `gogopher` | 数据库名 |

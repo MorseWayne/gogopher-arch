@@ -54,6 +54,7 @@ func TestPostgresProjectorRebuildsFactsIdempotently(t *testing.T) {
 	batchID := "00000000-0000-4000-8000-000000000105"
 	evidenceOne := "00000000-0000-4000-8000-000000000106"
 	evidenceTwo := "00000000-0000-4000-8000-000000000107"
+	projectionRequestID := "00000000-0000-4000-8000-000000000115"
 	tx, _ := db.BeginTx(ctx, nil)
 	defer tx.Rollback()
 	_, _ = tx.ExecContext(ctx, `SET LOCAL search_path TO "`+schema+`"`)
@@ -68,6 +69,7 @@ func TestPostgresProjectorRebuildsFactsIdempotently(t *testing.T) {
 		{`INSERT INTO evaluation_batches (id,submission_id,execution_id,rule_set_hash,rule_results,created_at) VALUES ($1,$2,$3,$4,'[]',$5)`, []any{batchID, submissionID, executionID, hash64("f"), now}},
 		{`INSERT INTO evidence_records (id,evaluation_batch_id,learner_id,capability_id,capability_version,capability_hash,attempt_id,activity_id,evidence_rule_id,evidence_type,result,independence,context_level,evaluator,rule_version,reason,occurred_at,created_at) VALUES ($1,$2,$3,'M1-03',1,$4,$5,'assessment-check-config',$6,'implement','passed','independent','same_context','deterministic',1,'passed',$7,$7)`, []any{evidenceOne, batchID, learnerID, policy.ContentHash, attemptID, "error-chain-preserved", now.Add(-time.Minute)}},
 		{`INSERT INTO evidence_records (id,evaluation_batch_id,learner_id,capability_id,capability_version,capability_hash,attempt_id,activity_id,evidence_rule_id,evidence_type,result,independence,context_level,evaluator,rule_version,reason,occurred_at,created_at) VALUES ($1,$2,$3,'M1-03',1,$4,$5,'assessment-check-config',$6,'implement','passed','independent','same_context','deterministic',1,'passed',$7,$7)`, []any{evidenceTwo, batchID, learnerID, policy.ContentHash, attemptID, "resource-closed", now}},
+		{`INSERT INTO learning_outbox (id,topic,aggregate_type,aggregate_id,idempotency_key,payload,status,available_at,created_at) VALUES ($1,'capability_projection.requested','evaluation_batch',$2,$3,$4::jsonb,'pending',$5,$5)`, []any{projectionRequestID, batchID, "capability-projection:" + batchID, fmt.Sprintf(`{"event_version":1,"evaluation_batch_id":%q,"learner_id":%q}`, batchID, learnerID), now}},
 	}
 	for _, statement := range statements {
 		if _, err := tx.ExecContext(ctx, statement.query, statement.args...); err != nil {
@@ -81,10 +83,23 @@ func TestPostgresProjectorRebuildsFactsIdempotently(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	input := RebuildInput{LearnerID: learnerID, ReleaseID: registry.CurrentReleaseID(), CapabilityID: "M1-03", CapabilityVersion: 1, AsOf: now}
+	requestRepository, _ := NewPostgresRequestRepository(db, RepositoryOptions{Schema: schema})
+	if _, ok, err := requestRepository.ClaimRequest(ctx, "crashed-projector", now.Add(time.Minute), time.Minute); err != nil || !ok {
+		t.Fatalf("crashed ClaimRequest() ok=%v error=%v", ok, err)
+	}
+	projectionAsOf := now.Add(3 * time.Minute)
+	projectionWorker, _ := NewWorker(requestRepository, projector, WorkerOptions{
+		Owner: "replacement-projector", Lease: time.Minute, PollInterval: time.Millisecond,
+		MaxAttempts: 3, BaseBackoff: time.Second, MaxBackoff: time.Minute,
+		Now: func() time.Time { return projectionAsOf },
+	})
+	if processed, err := projectionWorker.RunOnce(ctx); err != nil || !processed {
+		t.Fatalf("replacement RunOnce() processed=%v error=%v", processed, err)
+	}
+	input := RebuildInput{LearnerID: learnerID, ReleaseID: registry.CurrentReleaseID(), CapabilityID: "M1-03", CapabilityVersion: 1, AsOf: projectionAsOf}
 	snapshot, changed, err := projector.Rebuild(ctx, input)
-	if err != nil || !changed || snapshot.AcquisitionState != AcquisitionVerified || snapshot.IndependenceState != IndependenceIndependent {
-		t.Fatalf("first Rebuild() = %#v, changed=%v, error=%v", snapshot, changed, err)
+	if err != nil || changed || snapshot.AcquisitionState != AcquisitionVerified || snapshot.IndependenceState != IndependenceIndependent {
+		t.Fatalf("worker Rebuild() = %#v, changed=%v, error=%v", snapshot, changed, err)
 	}
 	again, changed, err := projector.Rebuild(ctx, input)
 	if err != nil || changed || !again.ProjectedAt.Equal(snapshot.ProjectedAt) {
@@ -99,6 +114,13 @@ func TestPostgresProjectorRebuildsFactsIdempotently(t *testing.T) {
 	}
 	if snapshots != 1 || schedulerRequests != 1 {
 		t.Fatalf("counts = snapshots %d scheduler requests %d", snapshots, schedulerRequests)
+	}
+	var requestStatus, consumer string
+	var consumerVersion, requestAttempts int
+	if err := db.QueryRowContext(ctx, `SELECT status,consumer,consumer_version,attempt_count FROM "`+schema+`".learning_outbox WHERE id=$1`, projectionRequestID).Scan(
+		&requestStatus, &consumer, &consumerVersion, &requestAttempts,
+	); err != nil || requestStatus != "completed" || consumer != projectionConsumer || consumerVersion != ProjectionConsumerVersion || requestAttempts != 2 {
+		t.Fatalf("recovered request = status %q consumer %q version %d attempts %d error %v", requestStatus, consumer, consumerVersion, requestAttempts, err)
 	}
 	openReviewID := "00000000-0000-4000-8000-000000000108"
 	if _, err := db.ExecContext(ctx, `
@@ -158,6 +180,33 @@ func TestPostgresProjectorRebuildsFactsIdempotently(t *testing.T) {
 	}
 	if err := db.QueryRowContext(ctx, `SELECT count(*) FROM "`+schema+`".learning_outbox WHERE topic='review_scheduler.requested'`).Scan(&schedulerRequests); err != nil || schedulerRequests != 2 {
 		t.Fatalf("scheduler requests after rebuild = %d, %v", schedulerRequests, err)
+	}
+
+	poisonRequestID := "00000000-0000-4000-8000-000000000116"
+	poisonAvailableAt := now.Add(2 * time.Hour)
+	if _, err := db.ExecContext(ctx, `INSERT INTO "`+schema+`".learning_outbox (id,topic,aggregate_type,aggregate_id,idempotency_key,payload,status,available_at,created_at) VALUES ($1,'capability_projection.requested','evaluation_batch',$2,$3,'{"event_version":999}'::jsonb,'pending',$4,$4)`, poisonRequestID, batchID, "poison-projection", poisonAvailableAt); err != nil {
+		t.Fatal(err)
+	}
+	poisonClock := poisonAvailableAt
+	poisonWorker, _ := NewWorker(requestRepository, projector, WorkerOptions{
+		Owner: "poison-projector", Lease: time.Minute, PollInterval: time.Millisecond,
+		MaxAttempts: 2, BaseBackoff: time.Second, MaxBackoff: time.Second,
+		Now: func() time.Time { return poisonClock },
+	})
+	if processed, err := poisonWorker.RunOnce(ctx); err != nil || !processed {
+		t.Fatalf("first poison RunOnce() processed=%v error=%v", processed, err)
+	}
+	poisonClock = poisonClock.Add(time.Second)
+	if processed, err := poisonWorker.RunOnce(ctx); err != nil || !processed {
+		t.Fatalf("second poison RunOnce() processed=%v error=%v", processed, err)
+	}
+	var poisonStatus, lastError string
+	var poisonAttempts int
+	var failedAt time.Time
+	if err := db.QueryRowContext(ctx, `SELECT status,attempt_count,last_error,failed_at FROM "`+schema+`".learning_outbox WHERE id=$1`, poisonRequestID).Scan(
+		&poisonStatus, &poisonAttempts, &lastError, &failedAt,
+	); err != nil || poisonStatus != "failed" || poisonAttempts != 2 || lastError == "" || failedAt.IsZero() {
+		t.Fatalf("poison request = status %q attempts %d last_error %q failed_at %s error %v", poisonStatus, poisonAttempts, lastError, failedAt, err)
 	}
 }
 

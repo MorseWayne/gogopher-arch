@@ -1,6 +1,15 @@
 package projection
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
+
+const (
+	ProjectionRequestEventVersion = 1
+	ReviewSchedulerEventVersion   = 1
+	ProjectionConsumerVersion     = 1
+)
 
 type AcquisitionState string
 
@@ -91,4 +100,22 @@ type RebuildInput struct {
 	CapabilityID      string
 	CapabilityVersion int
 	AsOf              time.Time
+}
+
+type Request struct {
+	ID           string
+	Payload      json.RawMessage
+	AttemptCount int
+}
+
+type ProjectionRequestPayload struct {
+	EventVersion      int    `json:"event_version"`
+	EvaluationBatchID string `json:"evaluation_batch_id"`
+	LearnerID         string `json:"learner_id"`
+}
+
+type RetryResult struct {
+	AttemptCount int
+	AvailableAt  *time.Time
+	Exhausted    bool
 }

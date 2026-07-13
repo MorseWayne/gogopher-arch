@@ -52,6 +52,87 @@ func NewPostgresProjector(db *sql.DB, registry *definition.Registry, options Rep
 	return &PostgresProjector{db: db, schema: schema, registry: registry, random: options.Random, now: options.Now}, nil
 }
 
+func (p *PostgresProjector) RebuildRequest(ctx context.Context, request Request, asOf time.Time) error {
+	var payload ProjectionRequestPayload
+	if err := json.Unmarshal(request.Payload, &payload); err != nil {
+		return fmt.Errorf("decode projection request payload: %w", err)
+	}
+	if payload.EventVersion != ProjectionRequestEventVersion {
+		return fmt.Errorf("unsupported projection request event version %d", payload.EventVersion)
+	}
+	if payload.EvaluationBatchID == "" || payload.LearnerID == "" || asOf.IsZero() {
+		return fmt.Errorf("projection request batch, learner, and as_of are required")
+	}
+	targets, err := p.requestTargets(ctx, payload, asOf.UTC())
+	if err != nil {
+		return err
+	}
+	for _, target := range targets {
+		if _, _, err := p.Rebuild(ctx, target); err != nil {
+			return fmt.Errorf("rebuild requested capability %s@%d: %w", target.CapabilityID, target.CapabilityVersion, err)
+		}
+	}
+	return nil
+}
+
+func (p *PostgresProjector) requestTargets(ctx context.Context, payload ProjectionRequestPayload, asOf time.Time) ([]RebuildInput, error) {
+	tx, err := p.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	if err != nil {
+		return nil, fmt.Errorf("begin projection request target query: %w", err)
+	}
+	defer tx.Rollback()
+	if _, err := tx.ExecContext(ctx, `SET LOCAL search_path TO "`+p.schema+`"`); err != nil {
+		return nil, fmt.Errorf("set projection request search path: %w", err)
+	}
+	rows, err := tx.QueryContext(ctx, `
+		SELECT a.release_id, e.capability_id, e.capability_version
+		FROM evaluation_batches b
+		JOIN attempt_submissions s ON s.id = b.submission_id
+		JOIN learning_attempts a ON a.id = s.attempt_id AND a.learner_id = s.learner_id
+		LEFT JOIN evidence_records e ON e.evaluation_batch_id = b.id AND e.learner_id = a.learner_id
+		WHERE b.id = $1 AND a.learner_id = $2
+		ORDER BY e.capability_id NULLS LAST, e.capability_version NULLS LAST`,
+		payload.EvaluationBatchID, payload.LearnerID)
+	if err != nil {
+		return nil, fmt.Errorf("query projection request targets: %w", err)
+	}
+	defer rows.Close()
+	var targets []RebuildInput
+	foundBatch := false
+	seen := make(map[string]struct{})
+	for rows.Next() {
+		foundBatch = true
+		var releaseID string
+		var capabilityID sql.NullString
+		var capabilityVersion sql.NullInt64
+		if err := rows.Scan(&releaseID, &capabilityID, &capabilityVersion); err != nil {
+			return nil, fmt.Errorf("scan projection request target: %w", err)
+		}
+		if !capabilityID.Valid || !capabilityVersion.Valid {
+			continue
+		}
+		key := fmt.Sprintf("%s@%d", capabilityID.String, capabilityVersion.Int64)
+		if _, exists := seen[key]; exists {
+			continue
+		}
+		seen[key] = struct{}{}
+		targets = append(targets, RebuildInput{
+			LearnerID: payload.LearnerID, ReleaseID: releaseID,
+			CapabilityID: capabilityID.String, CapabilityVersion: int(capabilityVersion.Int64), AsOf: asOf,
+		})
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate projection request targets: %w", err)
+	}
+	if !foundBatch {
+		return nil, fmt.Errorf("projection request evaluation batch was not found for learner")
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("commit projection request target query: %w", err)
+	}
+	return targets, nil
+}
+
 func (p *PostgresProjector) Rebuild(ctx context.Context, input RebuildInput) (Snapshot, bool, error) {
 	if input.LearnerID == "" || input.ReleaseID == "" || input.CapabilityID == "" || input.CapabilityVersion < 1 || input.AsOf.IsZero() {
 		return Snapshot{}, false, fmt.Errorf("learner, release, capability version, and as_of are required")
@@ -239,7 +320,8 @@ func (p *PostgresProjector) upsert(ctx context.Context, tx *sql.Tx, value Snapsh
 
 func (p *PostgresProjector) enqueueScheduler(ctx context.Context, tx *sql.Tx, value Snapshot) error {
 	payload, err := json.Marshal(map[string]any{
-		"projection_version": value.ProjectionVersion, "learner_id": value.LearnerID,
+		"event_version": ReviewSchedulerEventVersion, "projection_version": value.ProjectionVersion,
+		"learner_id":    value.LearnerID,
 		"capability_id": value.CapabilityID, "capability_version": value.CapabilityVersion,
 		"acquisition_state": value.AcquisitionState, "retention_base_state": value.RetentionBase,
 	})

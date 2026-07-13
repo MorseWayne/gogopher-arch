@@ -216,7 +216,8 @@ func (r *PostgresRepository) Persist(ctx context.Context, record PersistRecord) 
 		WHERE id = $1 AND learner_id = $2`, record.AttemptID, record.LearnerID, record.OccurredAt); err != nil {
 		return Batch{}, false, fmt.Errorf("complete evaluated attempt: %w", err)
 	}
-	projectionPayload, _ := json.Marshal(map[string]string{
+	projectionPayload, _ := json.Marshal(map[string]any{
+		"event_version":       1,
 		"evaluation_batch_id": record.Batch.ID,
 		"learner_id":          record.LearnerID,
 	})

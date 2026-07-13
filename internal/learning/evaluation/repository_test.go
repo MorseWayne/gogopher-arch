@@ -158,6 +158,10 @@ func TestPostgresEvaluationWorkerCommitsAtomicEvidenceBatch(t *testing.T) {
 		t.Fatalf("persisted counts = batch %d artifacts %d evidence %d completed %d projection %d",
 			batches, artifacts, evidenceRecords, completedRequests, projectionRequests)
 	}
+	var projectionEventVersion int
+	if err := db.QueryRowContext(ctx, `SELECT (payload->>'event_version')::integer FROM "`+schema+`".learning_outbox WHERE topic='capability_projection.requested'`).Scan(&projectionEventVersion); err != nil || projectionEventVersion != 1 {
+		t.Fatalf("projection event version = %d, %v", projectionEventVersion, err)
+	}
 
 	rollbackAttempt, err := attemptService.Create(ctx, attempt.CreateInput{
 		LearnerID: learnerID, ActivityID: "assessment-check-config", ActivityVersion: 1,
