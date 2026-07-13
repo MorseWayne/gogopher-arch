@@ -314,6 +314,27 @@ func (r *PostgresRepository) Complete(ctx context.Context, executionID, owner st
 		if err != nil {
 			return fmt.Errorf("mark submission infrastructure failure: %w", err)
 		}
+	} else {
+		_, err = tx.ExecContext(ctx, `
+			INSERT INTO learning_outbox (
+				id, topic, aggregate_type, aggregate_id, idempotency_key, payload,
+				status, available_at, created_at
+			)
+			SELECT e.id, 'submission.evaluate', 'submission', e.submission_id,
+				'submission-evaluate:' || e.id::text,
+				jsonb_build_object(
+					'learner_id', s.learner_id,
+					'submission_id', e.submission_id,
+					'execution_id', e.id
+				),
+				'pending', $2, $2
+			FROM attempt_executions e
+			JOIN attempt_submissions s ON s.id = e.submission_id
+			WHERE e.id = $1 AND e.submission_id IS NOT NULL
+			ON CONFLICT (idempotency_key) DO NOTHING`, executionID, now)
+		if err != nil {
+			return fmt.Errorf("enqueue submission evaluation: %w", err)
+		}
 	}
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("commit execution completion: %w", err)

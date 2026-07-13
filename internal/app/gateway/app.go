@@ -31,6 +31,7 @@ type App struct {
 	submissionService *submission.Service
 	workerCancel      context.CancelFunc
 	workerDone        chan error
+	evaluationDone    chan error
 	closeOnce         sync.Once
 	closeError        error
 }
@@ -114,6 +115,23 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 	if err != nil {
 		return fail(err)
 	}
+	evaluationRepository, err := evaluation.NewPostgresRepository(db, evaluation.RepositoryOptions{})
+	if err != nil {
+		return fail(err)
+	}
+	evaluationService, err := evaluation.NewService(
+		evaluationRepository, submissionService, executionService, assistanceService,
+		registry, ruleGenerator, evaluation.ServiceOptions{},
+	)
+	if err != nil {
+		return fail(err)
+	}
+	evaluationWorker, err := evaluation.NewWorker(evaluationRepository, evaluationService, evaluation.WorkerOptions{
+		Owner: cfg.ExecutionWorkerID + ":evaluation", Lease: cfg.ExecutionLease, PollInterval: cfg.ExecutionPoll,
+	})
+	if err != nil {
+		return fail(err)
+	}
 	sandboxClient, err := execution.NewSandboxClient(execution.SandboxClientOptions{Endpoint: cfg.SandboxEndpoint})
 	if err != nil {
 		return fail(err)
@@ -134,6 +152,7 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 	}
 	workerContext, workerCancel := context.WithCancel(ctx)
 	workerDone := make(chan error, 1)
+	evaluationDone := make(chan error, 1)
 	go func() {
 		for {
 			err := worker.Run(workerContext)
@@ -152,11 +171,29 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 			}
 		}
 	}()
+	go func() {
+		for {
+			err := evaluationWorker.Run(workerContext)
+			if errors.Is(err, context.Canceled) || workerContext.Err() != nil {
+				evaluationDone <- workerContext.Err()
+				return
+			}
+			slog.Error("evaluation worker restarting", "error", err)
+			timer := time.NewTimer(time.Second)
+			select {
+			case <-workerContext.Done():
+				timer.Stop()
+				evaluationDone <- workerContext.Err()
+				return
+			case <-timer.C:
+			}
+		}
+	}()
 	return &App{
 		Handler:  httpapi.NewRouter(true, sessionHandler, attemptHandler, httpapi.NewDefinitionHandler(registry)),
 		database: db, assistanceService: assistanceService, executionService: executionService,
 		ruleGenerator: ruleGenerator, submissionService: submissionService,
-		workerCancel: workerCancel, workerDone: workerDone,
+		workerCancel: workerCancel, workerDone: workerDone, evaluationDone: evaluationDone,
 	}, nil
 }
 
@@ -166,6 +203,9 @@ func (a *App) Close() error {
 			a.workerCancel()
 			if err := <-a.workerDone; err != nil && !errors.Is(err, context.Canceled) {
 				a.closeError = err
+			}
+			if err := <-a.evaluationDone; err != nil && !errors.Is(err, context.Canceled) {
+				a.closeError = errors.Join(a.closeError, err)
 			}
 		}
 		if a.database != nil {

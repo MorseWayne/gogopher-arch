@@ -112,12 +112,12 @@
 
 ### B8 — EvidenceEvaluator 和原子批次
 
-- [ ] 根据冻结 release/rule set、终态 Execution、cutoff AssistanceEvent 和 Activity mode 计算 Evidence。
-- [ ] `passed/failed` 每规则追加 Evidence；`not_evaluated` 只保留在 EvaluationBatch。
-- [ ] 在同一事务写 EvaluationBatch、全部 Evidence、Submission/Attempt completed 和 projection outbox。
-- [ ] 使用唯一约束保证相同 Submission/rule set 重放不重复追加 Evidence。
-- [ ] 保存最终 workspace、关键 diff、解释和测试报告 Artifact，并执行 JSONB 大小上限。
-- [ ] infra failure 路径断言没有 EvaluationBatch、Evidence 或 passed 状态。
+- [x] 根据冻结 release/rule set、终态 Execution、cutoff AssistanceEvent 和 Activity mode 计算 Evidence。
+- [x] `passed/failed` 每规则追加 Evidence；`not_evaluated` 只保留在 EvaluationBatch。
+- [x] 在同一事务写 EvaluationBatch、全部 Evidence、Submission/Attempt completed 和 projection outbox。
+- [x] 使用唯一约束保证相同 Submission/rule set 重放不重复追加 Evidence。
+- [x] 保存最终 workspace、关键 diff、解释和测试报告 Artifact，并执行 JSONB 大小上限。
+- [x] infra failure 路径断言没有 EvaluationBatch、Evidence 或 passed 状态。
 
 完成条件：重放 evaluator 或重复 HTTP submit 不改变 Evidence 数量；完整批次要么全部提交，要么全部回滚。
 
