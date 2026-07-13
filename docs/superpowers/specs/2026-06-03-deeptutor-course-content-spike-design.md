@@ -1,6 +1,6 @@
 # DeepTutor 离线课程内容工作流 Spike 设计
 
-Status: Draft for review  
+Status: Approved for implementation planning
 Date: 2026-06-03
 
 ## 背景
