@@ -1,11 +1,14 @@
 import { AlertTriangle, Check, Cloud, CloudOff, GitCompareArrows, LoaderCircle, RotateCcw, Save } from 'lucide-react'
 
 import type { AttemptResponse, Task } from '../../../api/learning'
+import { useAttemptExecution } from '../../hooks/useAttemptExecution'
 import { useAttemptWorkspace } from '../../hooks/useAttemptWorkspace'
 import { GoCodeEditor } from '../GoCodeEditor'
 import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
 import { WorkspaceExplorer } from './WorkspaceExplorer'
+import { ActionBar } from './ActionBar'
+import { ExecutionPanel } from './ExecutionPanel'
 
 export function MultiFileEditor({
   attempt,
@@ -17,6 +20,11 @@ export function MultiFileEditor({
   onAttemptChange: (attempt: AttemptResponse) => void
 }) {
   const workspace = useAttemptWorkspace(attempt, task, onAttemptChange)
+  const execution = useAttemptExecution(attempt, {
+    revision: workspace.baseRevision,
+    hash: workspace.baseHash,
+    dirty: workspace.dirty,
+  }, onAttemptChange)
   const editable = task.editable_paths.includes(workspace.selectedPath)
   const selectedContents = workspace.files[workspace.selectedPath] ?? ''
 
@@ -78,6 +86,16 @@ export function MultiFileEditor({
           />
         </div>
       </div>
+      <ActionBar
+        allowedActions={task.allowed_actions}
+        disabled={workspace.dirty || attempt.status !== 'active'}
+        busy={execution.commandState.status === 'sending' || execution.pollingExecutionID !== null}
+        error={execution.commandState.status === 'error' ? execution.commandState.message : execution.pollingFailure?.message}
+        retryLabel={execution.commandState.status === 'error' ? undefined : '重新读取 Execution 状态'}
+        onRun={execution.run}
+        onRetry={execution.commandState.status === 'error' ? execution.retry : execution.retryPolling}
+      />
+      <ExecutionPanel executions={attempt.executions} ruleResults={attempt.rule_results} />
     </div>
   )
 }

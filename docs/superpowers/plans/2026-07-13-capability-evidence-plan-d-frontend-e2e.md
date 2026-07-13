@@ -1,6 +1,6 @@
 # 能力证据纵向切片 Plan D：前端闭环与端到端验证
 
-> 状态：In progress — D1–D4 accepted
+> 状态：In progress — D1–D5 accepted
 > 日期：2026-07-13
 > 上游：Plan A–C 已验收的 Learning API 和状态语义
 
@@ -80,12 +80,12 @@ web/e2e/learning-slice.spec.ts
 
 ### D5 — Build/Test/Vet 操作和 Execution 反馈
 
-- [ ] ActionBar 只渲染 Activity 公开允许的 action。
-- [ ] 每次动作创建 request key，并随 workspace revision/hash 提交；响应丢失重试复用同 key。
-- [ ] 展示 queued/running/succeeded/user_failed/infra_failed 和轮询恢复。
-- [ ] 分开展示编译、visible test、vet、held-out 摘要、RuleResult 和 truncation。
-- [ ] timeout 文案区分用户代码超时与基础设施失败；不能把 infra failure 显示为任务失败。
-- [ ] 页面刷新后从 GET Attempt 恢复公开 Execution history。
+- [x] ActionBar 只渲染 Activity 公开允许的 action。
+- [x] 每次动作创建 request key，并随 workspace revision/hash 提交；响应丢失重试复用同 key。
+- [x] 展示 queued/running/succeeded/user_failed/infra_failed 和轮询恢复。
+- [x] 分开展示编译、visible test、vet、held-out 摘要、RuleResult 和 truncation。
+- [x] timeout 文案区分用户代码超时与基础设施失败；不能把 infra failure 显示为任务失败。
+- [x] 页面刷新后从 GET Attempt 恢复公开 Execution history。
 
 完成条件：UI 状态来自服务端 Execution，不根据 stdout/exit code自行重算规则。
 
