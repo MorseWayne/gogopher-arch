@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/MorseWayne/gogopher-arch/internal/learning/assistance"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/attempt"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/definition"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/execution"
@@ -20,13 +21,14 @@ import (
 )
 
 type App struct {
-	Handler          http.Handler
-	database         *sql.DB
-	executionService *execution.Service
-	workerCancel     context.CancelFunc
-	workerDone       chan error
-	closeOnce        sync.Once
-	closeError       error
+	Handler           http.Handler
+	database          *sql.DB
+	assistanceService *assistance.Service
+	executionService  *execution.Service
+	workerCancel      context.CancelFunc
+	workerDone        chan error
+	closeOnce         sync.Once
+	closeError        error
 }
 
 func Build(ctx context.Context, cfg config.Config) (*App, error) {
@@ -66,6 +68,14 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 		return fail(err)
 	}
 	attemptService, err := attempt.NewService(attemptRepository, registry, attempt.ServiceOptions{})
+	if err != nil {
+		return fail(err)
+	}
+	assistanceRepository, err := assistance.NewPostgresRepository(db, assistance.RepositoryOptions{})
+	if err != nil {
+		return fail(err)
+	}
+	assistanceService, err := assistance.NewService(assistanceRepository, attemptService, registry, assistance.ServiceOptions{})
 	if err != nil {
 		return fail(err)
 	}
@@ -128,7 +138,7 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 	}()
 	return &App{
 		Handler:  httpapi.NewRouter(true, sessionHandler, attemptHandler, httpapi.NewDefinitionHandler(registry)),
-		database: db, executionService: executionService,
+		database: db, assistanceService: assistanceService, executionService: executionService,
 		workerCancel: workerCancel, workerDone: workerDone,
 	}, nil
 }

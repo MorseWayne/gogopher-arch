@@ -10,7 +10,7 @@ Level: 3
 Started: 2026-07-12
 Updated: 2026-07-13
 Priority: Product redesign specification; independent from the active DeepTutor spike.
-Current phase: B5 — PostgreSQL execution queue/lease 已完成，开始 AssistanceEvent 与 independence cutoff。
+Current phase: B6 — AssistanceEvent 与 independence cutoff 已完成，开始 SubmissionWorkflow。
 
 Intent: 为 M1-01、M1-03、M1-07、M1-09 建立第一条端到端能力训练切片，验证版本化能力定义、服务端 Attempt/Evidence、派生能力状态、多文件 Go 任务和维护调度闭环。
 
@@ -31,7 +31,7 @@ Plan:
 - [done] A7 — 实现 Gateway wiring、Learning feature gate、路由和旧 API 删除。
 
 Current todo:
-- [ ] B5 — 实现 AssistanceEvent 幂等 sequence、先写后 reveal、submit cutoff 并发边界和 independence 计算。
+- [ ] B6 — 实现 Submission 冻结、提交幂等、并发边界与显式 retry workflow。
 
 Changes:
 - 用户确认 M1 14 节点、M2 16 节点、`gocheck`/`gocheck-hub` 内容原型和 Miniflux v2.3.2 训练项目方向。
@@ -64,12 +64,14 @@ Changes:
 - B4 已新增 `000002_learning_execution_evidence` migration，并为 normal Execution 固定 request fingerprint、queued snapshot 与 `attempt_id + request_key` 幂等边界。
 - PostgreSQL lease 使用 `FOR UPDATE SKIP LOCKED`、heartbeat 和 owner-only terminal update；过期 job 可重领，达到 claim 上限后落为 `infra_failed`。
 - 真实 PostgreSQL → worker → HTTP Sandbox process → terminal write 集成测试通过；完整 Compose 已应用两份 migration，Gateway 启动时校验 task/RPC/lease 时限顺序。
+- B5 已实现 `attempt_id + event_key` 幂等 AssistanceEvent、Attempt 行锁内单调 `event_seq`、active-only 写入和先记录后返回提示内容。
+- 真实 PostgreSQL 竞争测试验证 AssistanceEvent 与 Submission cutoff 共用 Attempt 行锁；`event_seq <= cutoff` 可重复计算 guided/hinted/referenced/ai_assisted/independent。
 
 Prerequisites:
 - 当前 Sandbox 仅支持单个 `main.go` 且缺少生产级隔离；规格必须限制为本地可信环境，并明确公开运行前的安全门槛。
 - 现有 DeepTutor Spike 和用户对其 ledger/spec 的修改必须保持不变。
 
-Resume next: 实施 B5；先完成 AssistanceEvent 与 Submission cutoff 的 Attempt 行锁并发语义，再进入 B6 SubmissionWorkflow。
+Resume next: 实施 B6；先完成冻结事务、submission key/fingerprint 幂等与不同 key 并发测试，再接入 submit Execution retry。
 
 ### WF-2026-06-02-002 — DeepTutor 离线课程内容工作流 Spike
 Status: Active

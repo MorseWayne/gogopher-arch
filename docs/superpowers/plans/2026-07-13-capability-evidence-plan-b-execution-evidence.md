@@ -80,12 +80,12 @@
 
 ### B5 — AssistanceEvent 与 independence cutoff
 
-- [ ] 创建 `assistance_events`，实现 `attempt_id + event_key` 幂等和 Attempt 内单调 `event_seq`。
-- [ ] 提示 reveal 必须先在事务中记录事件，提交成功后才返回提示内容。
-- [ ] `hint_revealed`、`reference_opened`、`solution_viewed`、`ai_declared` 使用固定 enum。
-- [ ] 只允许 active Attempt 写事件；Submission 冻结后返回 `409 attempt_already_submitted`。
-- [ ] 为 assistance 与 submit 并发写测试，验证同一 Attempt 行锁决定唯一 cutoff。
-- [ ] 实现基于 `event_seq <= assistance_cutoff_seq` 的 independence 计算。
+- [x] 创建 `assistance_events`，实现 `attempt_id + event_key` 幂等和 Attempt 内单调 `event_seq`。
+- [x] 提示 reveal 必须先在事务中记录事件，提交成功后才返回提示内容。
+- [x] `hint_revealed`、`reference_opened`、`solution_viewed`、`ai_declared` 使用固定 enum。
+- [x] 只允许 active Attempt 写事件；Submission 冻结后返回 `409 attempt_already_submitted`。
+- [x] 为 assistance 与 submit 并发写测试，验证同一 Attempt 行锁决定唯一 cutoff。
+- [x] 实现基于 `event_seq <= assistance_cutoff_seq` 的 independence 计算。
 
 完成条件：无论提示与 submit 谁先获得锁，都可以从持久化事实重复得到同一 independence。
 
