@@ -1,5 +1,5 @@
 {
-  "id":"guided-run-model-v2","version":2,"language":"go1.25","workspace_root":"workspace",
+  "id":"guided-run-model-v2","version":3,"language":"go1.25","workspace_root":"workspace",
   "files":[
     {"source":"README.md","path":"README.md","role":"readme","editable":false,"sha256":"805b42efaa2573f82859bc075a981812a158df7906013255d1271454830dafdd"},
     {"source":"starter/go.mod","path":"go.mod","role":"starter","editable":false,"sha256":"456b0a3cb8249977843635cfe811ff0ad8979c9cc0c94da14d97bc3906f26184"},
@@ -9,6 +9,10 @@
   "editable_paths":["main.go"],"readonly_paths":["README.md","go.mod","main_test.go"],
   "limits":{"max_files":8,"max_file_bytes":65536,"max_total_bytes":262144},
   "actions":{"build":{"timeout_ms":5000,"max_output_bytes":65536,"network":"none"},"test":{"timeout_ms":5000,"max_output_bytes":65536,"network":"none"},"vet":{"timeout_ms":5000,"max_output_bytes":65536,"network":"none"}},
+  "hints":[
+    {"id":"read-first-error","level":1,"title":"先定位第一条失败信息","body":"从输出顶部找到第一个失败 stage，再区分它来自编译、测试还是 Vet。后续错误可能只是第一处失败的连锁结果。"},
+    {"id":"compare-tool-contracts","level":2,"title":"比较三个工具的职责","body":"Build 验证代码能否编译，Test 验证可执行行为，Vet 报告静态可疑模式。记录每个动作验证的对象，而不是只记录退出码。"}
+  ],
   "visible_tests":["main_test.go"],"held_out_tests":[],
   "assessment_rules":[{"rule_id":"tool-feedback-explained","stage":"build","selector":{"exit_code":0},"capability_refs":[{"id":"M1-01","version":2}],"evidence_type":"diagnose","condition":"passed"}],
   "artifact_rules":{"workspace":"diff","logs":["build","test","vet"]}

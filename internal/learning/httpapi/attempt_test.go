@@ -43,9 +43,13 @@ func TestAttemptHandlerRequiresReviewItemClaim(t *testing.T) {
 }
 
 func TestAttemptHandlerReturnsPublicRelatedState(t *testing.T) {
-	service := &attemptServiceStub{got: attempt.Attempt{ID: "attempt-id", LearnerID: "owner", Workspace: map[string]string{}}}
+	service := &attemptServiceStub{got: attempt.Attempt{ID: "attempt-id", LearnerID: "owner", Mode: "assessment", Workspace: map[string]string{}}}
 	details := &attemptDetailsStub{related: attemptview.Related{
 		Submission: &attemptview.Submission{ID: "submission-id", Status: "evaluated"},
+		Assistance: []assistance.Event{{
+			ID: "assistance-id", AttemptID: "attempt-id", EventKey: "hint:trace-contract",
+			Sequence: 1, Type: assistance.HintRevealed, Payload: []byte(`{"hint_id":"trace-contract"}`),
+		}},
 		Executions: []execution.Execution{{
 			ID: "execution-id", AttemptID: "attempt-id", Status: execution.ExecutionSucceeded,
 			Response: &execution.ExecutionResponse{Stages: []execution.StageResult{{
@@ -70,8 +74,10 @@ func TestAttemptHandlerReturnsPublicRelatedState(t *testing.T) {
 
 	body := response.Body.String()
 	if response.Code != http.StatusOK || !strings.Contains(body, `"submission":{"id":"submission-id"`) ||
+		!strings.Contains(body, `"level":"hinted"`) || !strings.Contains(body, `"event_key":"hint:trace-contract"`) ||
+		!strings.Contains(body, `"payload":{"hint_id":"trace-contract"}`) ||
 		!strings.Contains(body, `"capability_id":"M1-09"`) || !strings.Contains(body, "private checks passed") ||
-		strings.Contains(body, "hidden output") || strings.Contains(body, "HiddenCase") || strings.Contains(body, "private/package") {
+		strings.Contains(body, "learner_id") || strings.Contains(body, "hidden output") || strings.Contains(body, "HiddenCase") || strings.Contains(body, "private/package") {
 		t.Fatalf("detail response = %d %s", response.Code, body)
 	}
 }

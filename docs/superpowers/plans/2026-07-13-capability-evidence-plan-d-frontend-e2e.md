@@ -1,6 +1,6 @@
 # 能力证据纵向切片 Plan D：前端闭环与端到端验证
 
-> 状态：In progress — D1–D5 accepted
+> 状态：In progress — D1–D6 accepted
 > 日期：2026-07-13
 > 上游：Plan A–C 已验收的 Learning API 和状态语义
 
@@ -91,11 +91,11 @@ web/e2e/learning-slice.spec.ts
 
 ### D6 — Assistance 与独立性提示
 
-- [ ] 提示分级展示；点击 reveal 先请求服务端记录，再显示正文。
-- [ ] reference/solution/AI 声明使用 event key，重复点击不重复降级。
-- [ ] 显示当前平台观察到的 assistance level，并明确无法检测外部帮助。
-- [ ] Submit 后禁用所有帮助动作；409 时刷新 Attempt 状态。
-- [ ] component tests 覆盖记录失败时不泄露提示正文、重复事件和 submit 并发。
+- [x] 提示分级展示；点击 reveal 先请求服务端记录，再显示正文。
+- [x] reference/solution/AI 声明使用 event key，重复点击不重复降级。
+- [x] 显示当前平台观察到的 assistance level，并明确无法检测外部帮助。
+- [x] Submit 后禁用所有帮助动作；409 时刷新 Attempt 状态。
+- [x] component tests 覆盖记录失败时不泄露提示正文、重复事件和 submit 并发。
 
 完成条件：前端不会在 AssistanceEvent 持久化前展示受控内容。
 

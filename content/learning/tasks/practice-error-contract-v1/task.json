@@ -1,5 +1,5 @@
 {
-  "id":"practice-error-contract-v1","version":1,"language":"go1.25","workspace_root":"workspace",
+  "id":"practice-error-contract-v1","version":2,"language":"go1.25","workspace_root":"workspace",
   "files":[
     {"source":"README.md","path":"README.md","role":"readme","editable":false,"sha256":"9744e7383edae627bfcdbc97d5d872aaed162997b212fbbaee1969cd6f4cffe6"},
     {"source":"starter/go.mod","path":"go.mod","role":"starter","editable":false,"sha256":"456b0a3cb8249977843635cfe811ff0ad8979c9cc0c94da14d97bc3906f26184"},
@@ -9,6 +9,10 @@
   "editable_paths":["config.go"],"readonly_paths":["README.md","go.mod","config_test.go"],
   "limits":{"max_files":8,"max_file_bytes":65536,"max_total_bytes":262144},
   "actions":{"test":{"timeout_ms":5000,"max_output_bytes":65536,"network":"none"},"submit":{"timeout_ms":8000,"max_output_bytes":65536,"network":"none"}},
+  "hints":[
+    {"id":"close-at-owner","level":1,"title":"在取得资源后立即安排关闭","body":"成功打开资源后立即 defer Close，让所有后续 return path 都共享同一清理保证。"},
+    {"id":"wrap-with-cause","level":2,"title":"补充上下文但保留 cause","body":"使用 fmt.Errorf 的 %w 包装底层错误；错误文案增加操作与路径，但不要把原始错误降成普通字符串。"}
+  ],
   "visible_tests":["config_test.go"],"held_out_tests":[],
   "assessment_rules":[
     {"rule_id":"error-chain-preserved","stage":"visible_test","selector":{"test":"TestLoadPreservesPathError"},"capability_refs":[{"id":"M1-03","version":1}],"evidence_type":"implement","condition":"passed"},

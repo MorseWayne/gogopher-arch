@@ -37,6 +37,10 @@ export const activityFixture: ActivityResponse = {
     readonly_paths: ['README.md', 'go.mod', 'main_test.go'],
     visible_tests: ['main_test.go'],
     allowed_actions: ['build', 'test', 'vet'],
+    hints: [
+      { id: 'read-first-error', level: 1, title: '先定位第一条失败信息' },
+      { id: 'compare-tool-contracts', level: 2, title: '比较三个工具的职责' },
+    ],
     limits: { max_files: 8, max_file_bytes: 65536, max_total_bytes: 262144 },
     readme: '# 读懂工具链反馈\n\n依次运行 Build、Test、Vet，记录每个动作验证的对象。',
   },
@@ -91,6 +95,7 @@ export const attemptFixture: AttemptResponse = {
   },
   workspace_revision: 0,
   workspace_hash: 'workspace-hash',
+  assistance: { level: 'guided', events: [] },
   executions: [],
   rule_results: [],
   evidence: [],

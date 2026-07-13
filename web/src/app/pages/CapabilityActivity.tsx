@@ -25,6 +25,7 @@ import type { ActivityResponse, AttemptResponse, CapabilityResponse } from '../.
 import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
 import { ThemeToggle } from '../components/ThemeToggle'
+import { AssistancePanel } from '../components/learning/AssistancePanel'
 import { MultiFileEditor } from '../components/learning/MultiFileEditor'
 import { useLearningSession } from '../hooks/useLearningSession'
 
@@ -211,6 +212,7 @@ function ActivityWorkspace({
               <AttemptOverview
                 key={attempt.value.id}
                 attempt={attempt.value}
+                activity={activity}
                 task={task}
                 phase={phase}
                 onAttemptChange={onAttemptChange}
@@ -261,11 +263,13 @@ function ActivityWorkspace({
 
 function AttemptOverview({
   attempt,
+  activity,
   task,
   phase,
   onAttemptChange,
 }: {
   attempt: AttemptResponse
+  activity: ActivityResponse['activity']
   task: ActivityResponse['task']
   phase: AttemptPhase
   onAttemptChange: (attempt: AttemptResponse) => void
@@ -292,6 +296,13 @@ function AttemptOverview({
         <Metric label="公开文件" value={String(Object.keys(attempt.workspace).length)} />
         <Metric label="Evidence" value={String(attempt.evidence.length)} />
       </div>
+      <AssistancePanel
+        attempt={attempt}
+        task={task}
+        policy={activity.assistance_policy}
+        contentRef={activity.content_ref}
+        onAttemptChange={onAttemptChange}
+      />
       <MultiFileEditor attempt={attempt} task={task} onAttemptChange={onAttemptChange} />
     </div>
   )

@@ -140,7 +140,7 @@ func TestGeneratorConsumesRealAssessmentSandboxResult(t *testing.T) {
 		t.Fatal(err)
 	}
 	releaseID := registry.CurrentReleaseID()
-	activity, err := registry.ActivityView(releaseID, "assessment-check-config", 2)
+	activity, err := registry.ActivityView(releaseID, "assessment-check-config", 3)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -210,7 +210,7 @@ func setupGenerator(t *testing.T) (*Generator, submission.Submission) {
 		t.Fatal(err)
 	}
 	releaseID := registry.CurrentReleaseID()
-	task, err := registry.ExecutionTask(releaseID, "assessment-check-config-v2", 2)
+	task, err := registry.ExecutionTask(releaseID, "assessment-check-config-v2", 3)
 	if err != nil {
 		t.Fatal(err)
 	}

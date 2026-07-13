@@ -42,6 +42,12 @@ type WorkspaceLimitsView struct {
 	MaxTotalBytes int `json:"max_total_bytes"`
 }
 
+type HintSummaryView struct {
+	ID    string `json:"id"`
+	Level int    `json:"level"`
+	Title string `json:"title"`
+}
+
 type TaskView struct {
 	ID              string              `json:"id"`
 	Version         int                 `json:"version"`
@@ -53,6 +59,7 @@ type TaskView struct {
 	ReadonlyPaths   []string            `json:"readonly_paths"`
 	VisibleTests    []string            `json:"visible_tests"`
 	AllowedActions  []string            `json:"allowed_actions"`
+	Hints           []HintSummaryView   `json:"hints"`
 	WorkspaceLimits WorkspaceLimitsView `json:"limits"`
 	Readme          string              `json:"readme"`
 }
@@ -315,7 +322,12 @@ func (r *Registry) TaskView(releaseID, id string, version int) (TaskView, error)
 		ReadonlyPaths []string                   `json:"readonly_paths"`
 		VisibleTests  []string                   `json:"visible_tests"`
 		Actions       map[string]json.RawMessage `json:"actions"`
-		Limits        WorkspaceLimitsView        `json:"limits"`
+		Hints         []struct {
+			ID    string `json:"id"`
+			Level int    `json:"level"`
+			Title string `json:"title"`
+		} `json:"hints"`
+		Limits WorkspaceLimitsView `json:"limits"`
 	}
 	if err := json.Unmarshal(definition.Document, &document); err != nil {
 		return TaskView{}, fmt.Errorf("decode task view: %w", err)
@@ -325,6 +337,14 @@ func (r *Registry) TaskView(releaseID, id string, version int) (TaskView, error)
 		allowedActions = append(allowedActions, action)
 	}
 	sort.Strings(allowedActions)
+	hints := make([]HintSummaryView, 0, len(document.Hints))
+	for _, hint := range document.Hints {
+		hints = append(hints, HintSummaryView{ID: hint.ID, Level: hint.Level, Title: hint.Title})
+	}
+	sort.Slice(hints, func(i, j int) bool {
+		return hints[i].Level < hints[j].Level ||
+			(hints[i].Level == hints[j].Level && hints[i].ID < hints[j].ID)
+	})
 	readme, err := r.publicTaskReadme(releaseID, id, version)
 	if err != nil {
 		return TaskView{}, err
@@ -335,7 +355,7 @@ func (r *Registry) TaskView(releaseID, id string, version int) (TaskView, error)
 		EditablePaths: append([]string(nil), document.EditablePaths...),
 		ReadonlyPaths: append([]string(nil), document.ReadonlyPaths...),
 		VisibleTests:  append([]string(nil), document.VisibleTests...), AllowedActions: allowedActions,
-		WorkspaceLimits: document.Limits, Readme: readme,
+		Hints: hints, WorkspaceLimits: document.Limits, Readme: readme,
 	}, nil
 }
 

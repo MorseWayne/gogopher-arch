@@ -14,12 +14,12 @@ import (
 func TestServiceCreatesFrozenStarterAndEnforcesOwner(t *testing.T) {
 	service, repository := newTestService(t)
 	created, err := service.Create(context.Background(), CreateInput{
-		LearnerID: "owner", ActivityID: "assessment-check-config", ActivityVersion: 2,
+		LearnerID: "owner", ActivityID: "assessment-check-config", ActivityVersion: 3,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if created.ReleaseID != "m1-first-slice-v2" || created.ActivityHash == "" || created.TaskHash == "" || len(created.CapabilityRefs) != 4 {
+	if created.ReleaseID != "m1-first-slice-v3" || created.ActivityHash == "" || created.TaskHash == "" || len(created.CapabilityRefs) != 4 {
 		t.Fatalf("frozen attempt = %#v", created)
 	}
 	if _, exists := created.Workspace["internal/config/heldout_test.go"]; exists {
@@ -48,7 +48,7 @@ func TestServiceRequiresReviewItemClaimForReviewActivity(t *testing.T) {
 
 func TestServiceSavesCompleteWorkspaceWithRevisionCAS(t *testing.T) {
 	service, _ := newTestService(t)
-	created, err := service.Create(context.Background(), CreateInput{LearnerID: "owner", ActivityID: "assessment-check-config", ActivityVersion: 2})
+	created, err := service.Create(context.Background(), CreateInput{LearnerID: "owner", ActivityID: "assessment-check-config", ActivityVersion: 3})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -70,7 +70,7 @@ func TestServiceSavesCompleteWorkspaceWithRevisionCAS(t *testing.T) {
 
 func TestServiceRejectsWorkspaceContractViolations(t *testing.T) {
 	service, _ := newTestService(t)
-	created, err := service.Create(context.Background(), CreateInput{LearnerID: "owner", ActivityID: "assessment-check-config", ActivityVersion: 2})
+	created, err := service.Create(context.Background(), CreateInput{LearnerID: "owner", ActivityID: "assessment-check-config", ActivityVersion: 3})
 	if err != nil {
 		t.Fatal(err)
 	}

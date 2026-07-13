@@ -26,7 +26,7 @@ func TestLoadRegistryIndexesCurrentAndHistoricalDefinitions(t *testing.T) {
 	if got, want := len(definitions), 17; got != want {
 		t.Fatalf("len(Definitions()) = %d, want %d", got, want)
 	}
-	ref := DefinitionRef{ReleaseID: testReleaseID, Kind: KindActivity, ID: "assessment-check-config", Version: 2}
+	ref := DefinitionRef{ReleaseID: testReleaseID, Kind: KindActivity, ID: "assessment-check-config", Version: 3}
 	definition, err := registry.Get(ref)
 	if err != nil {
 		t.Fatal(err)
@@ -52,7 +52,7 @@ func TestRegistryViewsExcludePrivateEvaluationContract(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	activity, err := registry.ActivityView(testReleaseID, "assessment-check-config", 2)
+	activity, err := registry.ActivityView(testReleaseID, "assessment-check-config", 3)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -83,13 +83,16 @@ func TestRegistryViewsExcludePrivateEvaluationContract(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, forbidden := range []string{"held_out_tests", "assessment_rules", "evidence_rules", `"actions":`, "bundle_path", "source", "sha256"} {
+	for _, forbidden := range []string{"held_out_tests", "assessment_rules", "evidence_rules", `"actions":`, "bundle_path", "source", "sha256", "先阅读 README"} {
 		if strings.Contains(string(encoded), forbidden) {
 			t.Fatalf("public view contains private field %q: %s", forbidden, encoded)
 		}
 	}
 	if task.Readme == "" || len(task.AllowedActions) == 0 {
 		t.Fatalf("public Task context is incomplete: %#v", task)
+	}
+	if len(task.Hints) != 3 || task.Hints[0].ID != "trace-contract" || task.Hints[0].Level != 1 {
+		t.Fatalf("public Task hint summaries = %#v", task.Hints)
 	}
 
 	workspace, err := registry.PublicWorkspace(testReleaseID, activity.TaskRef.ID, activity.TaskRef.Version)

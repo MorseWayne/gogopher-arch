@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/MorseWayne/gogopher-arch/internal/learning/assistance"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/evaluation"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/execution"
 )
@@ -43,7 +44,13 @@ func (r *PostgresRepository) Load(ctx context.Context, learnerID, attemptID stri
 	if _, err := tx.ExecContext(ctx, `SET LOCAL search_path TO "`+r.schema+`"`); err != nil {
 		return Related{}, fmt.Errorf("set attempt detail search path: %w", err)
 	}
-	result := Related{Executions: []execution.Execution{}, RuleResults: []execution.RuleResult{}, Evidence: []evaluation.Evidence{}}
+	result := Related{
+		Assistance: []assistance.Event{}, Executions: []execution.Execution{},
+		RuleResults: []execution.RuleResult{}, Evidence: []evaluation.Evidence{},
+	}
+	if err := r.readAssistance(ctx, tx, learnerID, attemptID, &result); err != nil {
+		return Related{}, err
+	}
 	if err := r.readSubmission(ctx, tx, learnerID, attemptID, &result); err != nil {
 		return Related{}, err
 	}
@@ -57,6 +64,35 @@ func (r *PostgresRepository) Load(ctx context.Context, learnerID, attemptID stri
 		return Related{}, fmt.Errorf("commit attempt detail read: %w", err)
 	}
 	return result, nil
+}
+
+func (r *PostgresRepository) readAssistance(
+	ctx context.Context,
+	tx *sql.Tx,
+	learnerID, attemptID string,
+	result *Related,
+) error {
+	rows, err := tx.QueryContext(ctx, `
+		SELECT e.id, e.attempt_id, e.event_key, e.event_seq, e.event_type, e.payload, e.created_at
+		FROM assistance_events e
+		JOIN learning_attempts a ON a.id = e.attempt_id AND a.learner_id = $1
+		WHERE e.attempt_id = $2
+		ORDER BY e.event_seq`, learnerID, attemptID)
+	if err != nil {
+		return fmt.Errorf("read attempt assistance: %w", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var value assistance.Event
+		if err := rows.Scan(
+			&value.ID, &value.AttemptID, &value.EventKey, &value.Sequence,
+			&value.Type, &value.Payload, &value.CreatedAt,
+		); err != nil {
+			return fmt.Errorf("scan attempt assistance: %w", err)
+		}
+		result.Assistance = append(result.Assistance, value)
+	}
+	return rows.Err()
 }
 
 func (r *PostgresRepository) readSubmission(ctx context.Context, tx *sql.Tx, learnerID, attemptID string, result *Related) error {

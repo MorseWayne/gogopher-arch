@@ -44,7 +44,7 @@ func TestRevealHintReturnsContentOnlyAfterEventCommit(t *testing.T) {
 	registry := loadAssistanceRegistry(t)
 	current := attempt.Attempt{
 		ID: "attempt-1", LearnerID: "learner-1", ReleaseID: registry.CurrentReleaseID(),
-		ActivityID: "assessment-check-config", ActivityVersion: 2,
+		ActivityID: "assessment-check-config", ActivityVersion: 3,
 	}
 	hint := Hint{ID: "first", Title: "First step", Body: "Inspect the failing contract."}
 	repository := &repositoryStub{err: errors.New("commit failed")}

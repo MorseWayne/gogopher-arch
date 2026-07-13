@@ -149,6 +149,7 @@ type attemptDTO struct {
 	Workspace         map[string]string                   `json:"workspace"`
 	WorkspaceRevision int64                               `json:"workspace_revision"`
 	WorkspaceHash     string                              `json:"workspace_hash"`
+	Assistance        assistanceDTO                       `json:"assistance"`
 	Submission        *submissionDTO                      `json:"submission,omitempty"`
 	Executions        []executionDTO                      `json:"executions"`
 	RuleResults       []ruleResultDTO                     `json:"rule_results"`
@@ -162,8 +163,17 @@ func attemptResponse(value attempt.Attempt) attemptDTO {
 		TaskID: value.TaskID, TaskVersion: value.TaskVersion, TaskHash: value.TaskHash,
 		CapabilityRefs: value.CapabilityRefs, Mode: value.Mode, Status: value.Status,
 		Workspace: value.Workspace, WorkspaceRevision: value.WorkspaceRevision, WorkspaceHash: value.WorkspaceHash,
+		Assistance: assistanceDTO{
+			Level:  assistance.CalculateIndependence(value.Mode, nil, 0),
+			Events: []assistance.Event{},
+		},
 		Executions: []executionDTO{}, RuleResults: []ruleResultDTO{}, Evidence: []evidenceDTO{},
 	}
+}
+
+type assistanceDTO struct {
+	Level  assistance.Independence `json:"level"`
+	Events []assistance.Event      `json:"events"`
 }
 
 type submissionDTO struct {
@@ -207,6 +217,14 @@ type evidenceDTO struct {
 }
 
 func attemptDetailResponse(response attemptDTO, related attemptview.Related) attemptDTO {
+	response.Assistance.Events = append([]assistance.Event(nil), related.Assistance...)
+	var assistanceCutoff int64
+	for _, event := range related.Assistance {
+		if event.Sequence > assistanceCutoff {
+			assistanceCutoff = event.Sequence
+		}
+	}
+	response.Assistance.Level = assistance.CalculateIndependence(response.Mode, related.Assistance, assistanceCutoff)
 	if related.Submission != nil {
 		value := related.Submission
 		response.Submission = &submissionDTO{

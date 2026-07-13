@@ -59,7 +59,7 @@ func TestPostgresEvaluationWorkerCommitsAtomicEvidenceBatch(t *testing.T) {
 	attemptRepository, _ := attempt.NewPostgresRepository(db, attempt.RepositoryOptions{Schema: schema})
 	attemptService, _ := attempt.NewService(attemptRepository, registry, attempt.ServiceOptions{})
 	current, err := attemptService.Create(ctx, attempt.CreateInput{
-		LearnerID: learnerID, ActivityID: "assessment-check-config", ActivityVersion: 2,
+		LearnerID: learnerID, ActivityID: "assessment-check-config", ActivityVersion: 3,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -164,7 +164,7 @@ func TestPostgresEvaluationWorkerCommitsAtomicEvidenceBatch(t *testing.T) {
 	}
 
 	rollbackAttempt, err := attemptService.Create(ctx, attempt.CreateInput{
-		LearnerID: learnerID, ActivityID: "assessment-check-config", ActivityVersion: 2,
+		LearnerID: learnerID, ActivityID: "assessment-check-config", ActivityVersion: 3,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -225,7 +225,7 @@ func TestPostgresEvaluationWorkerCommitsAtomicEvidenceBatch(t *testing.T) {
 	}
 
 	infraAttempt, err := attemptService.Create(ctx, attempt.CreateInput{
-		LearnerID: learnerID, ActivityID: "assessment-check-config", ActivityVersion: 2,
+		LearnerID: learnerID, ActivityID: "assessment-check-config", ActivityVersion: 3,
 	})
 	if err != nil {
 		t.Fatal(err)

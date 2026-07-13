@@ -56,7 +56,7 @@ func TestPostgresRepositorySerializesConcurrentWorkspaceSaves(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	created, err := service.Create(ctx, CreateInput{LearnerID: learnerID, ActivityID: "assessment-check-config", ActivityVersion: 2})
+	created, err := service.Create(ctx, CreateInput{LearnerID: learnerID, ActivityID: "assessment-check-config", ActivityVersion: 3})
 	if err != nil {
 		t.Fatal(err)
 	}

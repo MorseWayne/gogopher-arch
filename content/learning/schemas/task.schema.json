@@ -31,6 +31,19 @@
         "submit": {"$ref": "#/$defs/action"}
       }
     },
+    "hints": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "level", "title", "body"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+          "level": {"type": "integer", "minimum": 1, "maximum": 5},
+          "title": {"type": "string", "minLength": 1, "maxLength": 120},
+          "body": {"type": "string", "minLength": 1, "maxLength": 4000}
+        }
+      }
+    },
     "visible_tests": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/path"}},
     "held_out_tests": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/path"}},
     "assessment_rules": {

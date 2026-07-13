@@ -1,5 +1,5 @@
 {
-  "id":"practice-table-tests-v1","version":1,"language":"go1.25","workspace_root":"workspace",
+  "id":"practice-table-tests-v1","version":2,"language":"go1.25","workspace_root":"workspace",
   "files":[
     {"source":"README.md","path":"README.md","role":"readme","editable":false,"sha256":"73d40e8dd4588294532ec3e1a611a5da836235b7fb9f9de3a74069eb5aae9e43"},
     {"source":"starter/go.mod","path":"go.mod","role":"starter","editable":false,"sha256":"456b0a3cb8249977843635cfe811ff0ad8979c9cc0c94da14d97bc3906f26184"},
@@ -10,6 +10,10 @@
   "editable_paths":["name_test.go"],"readonly_paths":["README.md","go.mod","name.go","contract_test.go"],
   "limits":{"max_files":8,"max_file_bytes":65536,"max_total_bytes":262144},
   "actions":{"test":{"timeout_ms":5000,"max_output_bytes":65536,"network":"none"},"submit":{"timeout_ms":8000,"max_output_bytes":65536,"network":"none"}},
+  "hints":[
+    {"id":"name-behaviors","level":1,"title":"让 case 名称描述行为","body":"每个 table case 的 name 应说明输入条件和预期结果，使失败输出无需查看实现也能定位契约。"},
+    {"id":"cover-boundaries","level":2,"title":"用边界拆分 case","body":"至少覆盖正常值、空值和包含分隔符的值；每个 case 只表达一个可观察行为。"}
+  ],
   "visible_tests":["contract_test.go"],"held_out_tests":[],
   "assessment_rules":[
     {"rule_id":"learner-tests-present","stage":"ast","selector":{"file":"name_test.go","minimum_cases":3},"capability_refs":[{"id":"M1-09","version":1}],"evidence_type":"test","condition":"passed"},

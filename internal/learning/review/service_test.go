@@ -57,7 +57,7 @@ func TestServiceClaimsReviewGroupOnceAcrossConcurrentItems(t *testing.T) {
 	executionID := "00000000-0000-4000-8000-000000000105"
 	batchID := "00000000-0000-4000-8000-000000000106"
 	releaseID := registry.CurrentReleaseID()
-	assessment, _ := registry.ActivityView(releaseID, "assessment-check-config", 2)
+	assessment, _ := registry.ActivityView(releaseID, "assessment-check-config", 3)
 	reviewActivity, _ := registry.ActivityView(releaseID, "review-check-config-variant", 2)
 	hash := strings.Repeat("a", 64)
 

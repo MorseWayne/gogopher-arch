@@ -327,7 +327,7 @@ func setupSubmissionIntegration(t *testing.T) submissionIntegrationFixture {
 func (f submissionIntegrationFixture) createAttempt(t *testing.T) attempt.Attempt {
 	t.Helper()
 	current, err := f.attempts.Create(f.ctx, attempt.CreateInput{
-		LearnerID: f.learnerID, ActivityID: "assessment-check-config", ActivityVersion: 2,
+		LearnerID: f.learnerID, ActivityID: "assessment-check-config", ActivityVersion: 3,
 	})
 	if err != nil {
 		t.Fatal(err)

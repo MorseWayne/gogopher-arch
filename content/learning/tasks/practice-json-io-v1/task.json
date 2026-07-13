@@ -1,5 +1,5 @@
 {
-  "id":"practice-json-io-v1","version":1,"language":"go1.25","workspace_root":"workspace",
+  "id":"practice-json-io-v1","version":2,"language":"go1.25","workspace_root":"workspace",
   "files":[
     {"source":"README.md","path":"README.md","role":"readme","editable":false,"sha256":"7c75933fcc11db535fd3234736ca533efccc43643fad6427912b2a97d4eb1d13"},
     {"source":"starter/go.mod","path":"go.mod","role":"starter","editable":false,"sha256":"456b0a3cb8249977843635cfe811ff0ad8979c9cc0c94da14d97bc3906f26184"},
@@ -9,6 +9,10 @@
   "editable_paths":["config.go"],"readonly_paths":["README.md","go.mod","config_test.go"],
   "limits":{"max_files":8,"max_file_bytes":65536,"max_total_bytes":262144},
   "actions":{"test":{"timeout_ms":5000,"max_output_bytes":65536,"network":"none"},"submit":{"timeout_ms":8000,"max_output_bytes":65536,"network":"none"}},
+  "hints":[
+    {"id":"validate-before-sort","level":1,"title":"先验证再规范化","body":"先拒绝空值与非法输入，再复制并排序有效 target；不要让排序掩盖输入契约错误。"},
+    {"id":"avoid-input-mutation","level":2,"title":"不要修改调用方 slice","body":"复制输入 slice 后再排序，确保 Normalize 的结果稳定且不会产生调用方可见的副作用。"}
+  ],
   "visible_tests":["config_test.go"],"held_out_tests":[],
   "assessment_rules":[
     {"rule_id":"invalid-input-rejected","stage":"visible_test","selector":{"test":"TestNormalizeSortsAndValidates"},"capability_refs":[{"id":"M1-07","version":1}],"evidence_type":"implement","condition":"passed"},

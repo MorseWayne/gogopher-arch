@@ -53,6 +53,12 @@ export interface ActivityResponse {
   task: Task
 }
 
+export interface TaskHintSummary {
+  id: string
+  level: number
+  title: string
+}
+
 export interface Task {
   id: string
   version: number
@@ -64,6 +70,7 @@ export interface Task {
   readonly_paths: string[]
   visible_tests: string[]
   allowed_actions: ExecutionAction[]
+  hints: TaskHintSummary[]
   limits: {
     max_files: number
     max_file_bytes: number
@@ -296,6 +303,10 @@ export interface AttemptResponse {
   workspace: Record<string, string>
   workspace_revision: number
   workspace_hash: string
+  assistance: {
+    level: Exclude<IndependenceState, 'unverified'>
+    events: AssistanceEvent[]
+  }
   submission?: Submission
   executions: Execution[]
   rule_results: RuleResult[]

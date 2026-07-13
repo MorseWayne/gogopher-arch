@@ -54,7 +54,7 @@ func TestActivityReturnsPublicTaskContextWithoutPrivateEvaluationRules(t *testin
 	if err != nil {
 		t.Fatal(err)
 	}
-	request := authenticatedDefinitionRequest(httptest.NewRequest(http.MethodGet, "/api/v1/learning/activities/guided-run-model?version=2", nil), "learner-activity")
+	request := authenticatedDefinitionRequest(httptest.NewRequest(http.MethodGet, "/api/v1/learning/activities/guided-run-model?version=3", nil), "learner-activity")
 	request.SetPathValue("id", "guided-run-model")
 	response := httptest.NewRecorder()
 	handler.Activity(response, request)
@@ -62,12 +62,12 @@ func TestActivityReturnsPublicTaskContextWithoutPrivateEvaluationRules(t *testin
 		t.Fatalf("response=%d body=%s", response.Code, response.Body.String())
 	}
 	body := response.Body.String()
-	for _, expected := range []string{`"task":`, `"allowed_actions":["build","test","vet"]`, `"readme":"# 读懂工具链反馈`} {
+	for _, expected := range []string{`"task":`, `"allowed_actions":["build","test","vet"]`, `"hints":[{"id":"read-first-error","level":1`, `"readme":"# 读懂工具链反馈`} {
 		if !strings.Contains(body, expected) {
 			t.Fatalf("body missing %s: %s", expected, body)
 		}
 	}
-	for _, forbidden := range []string{"held_out_tests", "assessment_rules", `"actions":`, "bundle_path"} {
+	for _, forbidden := range []string{"held_out_tests", "assessment_rules", `"actions":`, "bundle_path", "从输出顶部找到"} {
 		if strings.Contains(body, forbidden) {
 			t.Fatalf("body contains private field %q: %s", forbidden, body)
 		}

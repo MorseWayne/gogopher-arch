@@ -12,7 +12,7 @@ import (
 
 func TestSpecBuilderUsesWorkspaceOnlyForEditableAssets(t *testing.T) {
 	registry := releaseRegistry(t)
-	current := frozenAttempt(t, registry, "assessment-check-config-v2", 2)
+	current := frozenAttempt(t, registry, "assessment-check-config-v2", 3)
 	current.Workspace["internal/config/config.go"] += "\n// learner change\n"
 	current.WorkspaceHash = attempt.WorkspaceHash(current.Workspace)
 	builder, err := NewSpecBuilder(registry)
@@ -52,7 +52,7 @@ func TestRegistryReportsMaximumActionTimeoutForWorkerValidation(t *testing.T) {
 
 func TestSpecBuilderEnforcesFrozenActionAndWorkspace(t *testing.T) {
 	registry := releaseRegistry(t)
-	current := frozenAttempt(t, registry, "practice-error-contract-v1", 1)
+	current := frozenAttempt(t, registry, "practice-error-contract-v1", 2)
 	builder, err := NewSpecBuilder(registry)
 	if err != nil {
 		t.Fatal(err)

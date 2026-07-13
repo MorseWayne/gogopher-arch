@@ -3,6 +3,7 @@ package attemptview
 import (
 	"time"
 
+	"github.com/MorseWayne/gogopher-arch/internal/learning/assistance"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/evaluation"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/execution"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/submission"
@@ -24,6 +25,7 @@ type Submission struct {
 
 type Related struct {
 	Submission  *Submission
+	Assistance  []assistance.Event
 	Executions  []execution.Execution
 	RuleResults []execution.RuleResult
 	Evidence    []evaluation.Evidence
