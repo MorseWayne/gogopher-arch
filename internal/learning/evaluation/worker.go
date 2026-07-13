@@ -15,11 +15,16 @@ type Evaluator interface {
 	Evaluate(context.Context, string, string, string) (Batch, bool, error)
 }
 
+type EvaluationObserver interface {
+	EvaluationCompleted(Batch)
+}
+
 type WorkerOptions struct {
 	Owner        string
 	Lease        time.Duration
 	PollInterval time.Duration
 	Now          func() time.Time
+	Observer     EvaluationObserver
 }
 
 type Worker struct {
@@ -64,8 +69,12 @@ func (w *Worker) RunOnce(ctx context.Context) (bool, error) {
 	if err != nil || !ok {
 		return false, err
 	}
-	if _, _, err := w.evaluator.Evaluate(ctx, request.LearnerID, request.SubmissionID, request.ExecutionID); err != nil {
+	batch, created, err := w.evaluator.Evaluate(ctx, request.LearnerID, request.SubmissionID, request.ExecutionID)
+	if err != nil {
 		return true, err
+	}
+	if created && w.options.Observer != nil {
+		w.options.Observer.EvaluationCompleted(batch)
 	}
 	if err := w.repository.CompleteRequest(ctx, request.ID, w.options.Owner, w.options.Now().UTC()); err != nil {
 		return true, err

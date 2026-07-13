@@ -35,22 +35,31 @@ type HintLookup interface {
 	Hint(string, string, int, string) (definition.HintView, error)
 }
 
+type WorkflowObserver interface {
+	SubmissionQueued(submission.Result)
+}
+
 type WorkflowHandler struct {
 	executions  ExecutionCommands
 	submissions SubmissionCommands
 	assistance  AssistanceCommands
 	attempts    AttemptLookup
 	hints       HintLookup
+	observer    WorkflowObserver
 }
 
-func NewWorkflowHandler(executions ExecutionCommands, submissions SubmissionCommands, assistanceCommands AssistanceCommands, attempts AttemptLookup, hints HintLookup) (*WorkflowHandler, error) {
+func NewWorkflowHandler(executions ExecutionCommands, submissions SubmissionCommands, assistanceCommands AssistanceCommands, attempts AttemptLookup, hints HintLookup, observers ...WorkflowObserver) (*WorkflowHandler, error) {
 	if executions == nil || submissions == nil || assistanceCommands == nil || attempts == nil || hints == nil {
 		return nil, fmt.Errorf("learning workflow services and hint lookup are required")
 	}
-	return &WorkflowHandler{
+	handler := &WorkflowHandler{
 		executions: executions, submissions: submissions, assistance: assistanceCommands,
 		attempts: attempts, hints: hints,
-	}, nil
+	}
+	if len(observers) > 0 {
+		handler.observer = observers[0]
+	}
+	return handler, nil
 }
 
 func (h *WorkflowHandler) Execute(w http.ResponseWriter, request *http.Request, attemptID string) {
@@ -100,6 +109,9 @@ func (h *WorkflowHandler) Submit(w http.ResponseWriter, request *http.Request, a
 	if err != nil {
 		writeLearningError(w, err)
 		return
+	}
+	if h.observer != nil {
+		h.observer.SubmissionQueued(result)
 	}
 	status := http.StatusOK
 	if result.Created {

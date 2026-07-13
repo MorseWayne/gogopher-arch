@@ -17,7 +17,7 @@ import (
 
 func TestAttemptHandlerCreatesForAuthenticatedOwner(t *testing.T) {
 	service := &attemptServiceStub{created: attempt.Attempt{ID: "attempt-id", LearnerID: "owner", Status: "active", Workspace: map[string]string{}, CapabilityRefs: nil}}
-	handler, _ := NewAttemptHandler(service)
+	handler, _ := NewAttemptHandler(service, nil)
 	request := httptest.NewRequest(http.MethodPost, "/api/v1/learning/attempts", strings.NewReader(`{"activity_id":"assessment-check-config","activity_version":1}`))
 	request = request.WithContext(context.WithValue(request.Context(), sessionContextKey{}, learningsession.Session{LearnerID: "owner"}))
 	response := httptest.NewRecorder()
@@ -66,7 +66,7 @@ func TestAttemptHandlerReturnsPublicRelatedState(t *testing.T) {
 
 func TestAttemptHandlerMapsOwnershipAndRevisionConflict(t *testing.T) {
 	service := &attemptServiceStub{getErr: attempt.ErrNotFound, saveErr: &attempt.RevisionConflict{Revision: 3, Hash: "current-hash"}}
-	handler, _ := NewAttemptHandler(service)
+	handler, _ := NewAttemptHandler(service, nil)
 	ctx := context.WithValue(context.Background(), sessionContextKey{}, learningsession.Session{LearnerID: "owner"})
 	request := httptest.NewRequest(http.MethodGet, "/attempts/id", nil).WithContext(ctx)
 	response := httptest.NewRecorder()
@@ -83,7 +83,7 @@ func TestAttemptHandlerMapsOwnershipAndRevisionConflict(t *testing.T) {
 }
 
 func TestDisabledRouterReturnsExplicitUnavailableAndRemovesExecuteAPI(t *testing.T) {
-	router := NewRouter(false, nil, nil, nil, nil)
+	router := NewRouter(false, nil, nil, nil, nil, nil)
 	response := httptest.NewRecorder()
 	router.ServeHTTP(response, httptest.NewRequest(http.MethodPost, "/api/v1/learning/session", nil))
 	if response.Code != http.StatusServiceUnavailable || !strings.Contains(response.Body.String(), "learning_disabled") {

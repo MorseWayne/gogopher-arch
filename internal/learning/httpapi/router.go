@@ -2,7 +2,7 @@ package httpapi
 
 import "net/http"
 
-func NewRouter(enabled bool, sessions *SessionHandler, attempts *AttemptHandler, definitions *DefinitionHandler, workflows *WorkflowHandler) http.Handler {
+func NewRouter(enabled bool, sessions *SessionHandler, attempts *AttemptHandler, definitions *DefinitionHandler, workflows *WorkflowHandler, metrics http.Handler) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, _ *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
@@ -12,6 +12,9 @@ func NewRouter(enabled bool, sessions *SessionHandler, attempts *AttemptHandler,
 			writeError(w, http.StatusServiceUnavailable, "learning_disabled", "Learning slice is disabled")
 		})
 		return mux
+	}
+	if metrics != nil {
+		mux.Handle("GET /metrics", metrics)
 	}
 	mux.HandleFunc("POST /api/v1/learning/session", sessions.Establish)
 	protected := http.NewServeMux()

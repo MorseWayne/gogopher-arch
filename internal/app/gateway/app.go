@@ -17,6 +17,7 @@ import (
 	"github.com/MorseWayne/gogopher-arch/internal/learning/evaluation"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/execution"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/httpapi"
+	"github.com/MorseWayne/gogopher-arch/internal/learning/observability"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/session"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/submission"
 	"github.com/MorseWayne/gogopher-arch/internal/platform/config"
@@ -39,7 +40,7 @@ type App struct {
 
 func Build(ctx context.Context, cfg config.Config) (*App, error) {
 	if !cfg.LearningSliceEnabled {
-		return &App{Handler: httpapi.NewRouter(false, nil, nil, nil, nil)}, nil
+		return &App{Handler: httpapi.NewRouter(false, nil, nil, nil, nil, nil)}, nil
 	}
 	db, err := database.Open(ctx, cfg.DatabaseURL)
 	if err != nil {
@@ -48,6 +49,7 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 	db.SetMaxOpenConns(cfg.DBMaxOpenConnections)
 	db.SetMaxIdleConns(cfg.DBMaxIdleConnections)
 	db.SetConnMaxLifetime(cfg.DBConnectionLifetime)
+	metrics := observability.NewCollector()
 	fail := func(err error) (*App, error) { db.Close(); return nil, err }
 	history, err := definition.NewReleaseStore(db, definition.ReleaseStoreOptions{})
 	if err != nil {
@@ -89,7 +91,7 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 	if err != nil {
 		return fail(err)
 	}
-	attemptHandler, err := httpapi.NewAttemptHandler(attemptService, attemptViewRepository)
+	attemptHandler, err := httpapi.NewAttemptHandler(attemptService, attemptViewRepository, metrics)
 	if err != nil {
 		return fail(err)
 	}
@@ -116,7 +118,7 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 	if err != nil {
 		return fail(err)
 	}
-	workflowHandler, err := httpapi.NewWorkflowHandler(executionService, submissionService, assistanceService, attemptService, registry)
+	workflowHandler, err := httpapi.NewWorkflowHandler(executionService, submissionService, assistanceService, attemptService, registry, metrics)
 	if err != nil {
 		return fail(err)
 	}
@@ -137,6 +139,7 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 	}
 	evaluationWorker, err := evaluation.NewWorker(evaluationRepository, evaluationService, evaluation.WorkerOptions{
 		Owner: cfg.ExecutionWorkerID + ":evaluation", Lease: cfg.ExecutionLease, PollInterval: cfg.ExecutionPoll,
+		Observer: metrics,
 	})
 	if err != nil {
 		return fail(err)
@@ -154,7 +157,7 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 		SandboxResponseGrace: cfg.SandboxResponseGrace, RPCDeadline: cfg.SandboxRPCDeadline,
 		PersistenceGrace: cfg.ExecutionPersistGrace, LeaseDuration: cfg.ExecutionLease,
 		HeartbeatInterval: cfg.ExecutionHeartbeat, PollInterval: cfg.ExecutionPoll,
-		MaxClaims: cfg.ExecutionMaxClaims,
+		MaxClaims: cfg.ExecutionMaxClaims, Observer: metrics,
 	})
 	if err != nil {
 		return fail(err)
@@ -199,7 +202,7 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 		}
 	}()
 	return &App{
-		Handler:  httpapi.NewRouter(true, sessionHandler, attemptHandler, httpapi.NewDefinitionHandler(registry), workflowHandler),
+		Handler:  httpapi.NewRouter(true, sessionHandler, attemptHandler, httpapi.NewDefinitionHandler(registry), workflowHandler, metrics),
 		database: db, assistanceService: assistanceService, executionService: executionService,
 		ruleGenerator: ruleGenerator, submissionService: submissionService,
 		workerCancel: workerCancel, workerDone: workerDone, evaluationDone: evaluationDone,

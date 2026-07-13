@@ -28,18 +28,23 @@ type AttemptDetails interface {
 	Load(context.Context, string, string) (attemptview.Related, error)
 }
 
-type AttemptHandler struct {
-	service AttemptService
-	details AttemptDetails
+type AttemptObserver interface {
+	AttemptCreated(attempt.Attempt)
 }
 
-func NewAttemptHandler(service AttemptService, details ...AttemptDetails) (*AttemptHandler, error) {
+type AttemptHandler struct {
+	service  AttemptService
+	details  AttemptDetails
+	observer AttemptObserver
+}
+
+func NewAttemptHandler(service AttemptService, details AttemptDetails, observers ...AttemptObserver) (*AttemptHandler, error) {
 	if service == nil {
 		return nil, fmt.Errorf("attempt service is required")
 	}
-	handler := &AttemptHandler{service: service}
-	if len(details) > 0 {
-		handler.details = details[0]
+	handler := &AttemptHandler{service: service, details: details}
+	if len(observers) > 0 {
+		handler.observer = observers[0]
 	}
 	return handler, nil
 }
@@ -66,6 +71,9 @@ func (h *AttemptHandler) Create(w http.ResponseWriter, request *http.Request) {
 		}
 		writeError(w, http.StatusInternalServerError, "attempt_unavailable", "learning attempt is unavailable")
 		return
+	}
+	if h.observer != nil {
+		h.observer.AttemptCreated(created)
 	}
 	writeJSON(w, http.StatusCreated, attemptResponse(created))
 }

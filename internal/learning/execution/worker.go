@@ -17,6 +17,10 @@ type Sandbox interface {
 	Execute(context.Context, ExecutionSpec) (ExecutionResponse, error)
 }
 
+type ExecutionObserver interface {
+	ExecutionCompleted(Execution, ExecutionResponse)
+}
+
 type WorkerOptions struct {
 	Owner                string
 	MaxActionTimeout     time.Duration
@@ -28,6 +32,7 @@ type WorkerOptions struct {
 	PollInterval         time.Duration
 	MaxClaims            int
 	Now                  func() time.Time
+	Observer             ExecutionObserver
 }
 
 type Worker struct {
@@ -138,6 +143,9 @@ completed:
 	}
 	if err := w.repository.Complete(ctx, claimed.ID, w.options.Owner, response, w.options.Now().UTC()); err != nil {
 		return true, err
+	}
+	if w.options.Observer != nil {
+		w.options.Observer.ExecutionCompleted(claimed, response)
 	}
 	return true, nil
 }
