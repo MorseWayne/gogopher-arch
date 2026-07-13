@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gogopher-arch.local/schemas/activity.schema.json",
+  "title": "ActivityDefinition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "version", "title", "kind", "mode", "capability_refs", "task_ref", "assistance_policy", "evidence_rules"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+    "version": {"type": "integer", "minimum": 1},
+    "title": {"type": "string", "minLength": 1},
+    "kind": {"const": "learning_task"},
+    "mode": {"enum": ["guided", "practice", "assessment", "review"]},
+    "capability_refs": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/versionedRef"}},
+    "task_ref": {"$ref": "#/$defs/versionedRef"},
+    "content_ref": {"type": "string", "minLength": 1},
+    "assistance_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hints", "references", "solution", "ai_declaration"],
+      "properties": {
+        "hints": {"type": "boolean"},
+        "references": {"type": "boolean"},
+        "solution": {"type": "boolean"},
+        "ai_declaration": {"type": "boolean"}
+      }
+    },
+    "evidence_rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["rule_id", "capability_id", "capability_version", "evidence_type", "result"],
+        "properties": {
+          "rule_id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+          "capability_id": {"type": "string", "pattern": "^M[1-5]-[0-9]{2}$"},
+          "capability_version": {"type": "integer", "minimum": 1},
+          "evidence_type": {"enum": ["implement", "test", "diagnose"]},
+          "result": {"const": "passed"}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "versionedRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "version": {"type": "integer", "minimum": 1}
+      }
+    }
+  }
+}

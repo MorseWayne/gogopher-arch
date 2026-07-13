@@ -1,0 +1,18 @@
+{
+  "id":"practice-error-contract-v1","version":1,"language":"go1.25","workspace_root":"workspace",
+  "files":[
+    {"source":"README.md","path":"README.md","role":"readme","editable":false,"sha256":"9744e7383edae627bfcdbc97d5d872aaed162997b212fbbaee1969cd6f4cffe6"},
+    {"source":"starter/go.mod","path":"go.mod","role":"starter","editable":false,"sha256":"456b0a3cb8249977843635cfe811ff0ad8979c9cc0c94da14d97bc3906f26184"},
+    {"source":"starter/config.go","path":"config.go","role":"starter","editable":true,"sha256":"dc2849d98c308eb0ef0ddc729c2ba6169d72abdc64821a0d892760917cb329f7"},
+    {"source":"visible/config_test.go","path":"config_test.go","role":"visible_test","editable":false,"sha256":"fc24a25ffe9e0db5265cd192495349d88c42179e2bb1ffdb36a023a4bbc72e6f"}
+  ],
+  "editable_paths":["config.go"],"readonly_paths":["README.md","go.mod","config_test.go"],
+  "limits":{"max_files":8,"max_file_bytes":65536,"max_total_bytes":262144},
+  "actions":{"test":{"timeout_ms":5000,"max_output_bytes":65536,"network":"none"},"submit":{"timeout_ms":8000,"max_output_bytes":65536,"network":"none"}},
+  "visible_tests":["config_test.go"],"held_out_tests":[],
+  "assessment_rules":[
+    {"rule_id":"error-chain-preserved","stage":"visible_test","selector":{"test":"TestLoadPreservesPathError"},"capability_refs":[{"id":"M1-03","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"resource-closed","stage":"ast","selector":{"file":"config.go","deferred_call":"Close"},"capability_refs":[{"id":"M1-03","version":1}],"evidence_type":"implement","condition":"passed"}
+  ],
+  "artifact_rules":{"workspace":"diff","logs":["test","submit"]}
+}

@@ -1,0 +1,14 @@
+{
+  "id": "practice-table-tests",
+  "version": 1,
+  "title": "扩展表格驱动测试",
+  "kind": "learning_task",
+  "mode": "practice",
+  "capability_refs": [{"id": "M1-09", "version": 1}],
+  "task_ref": {"id": "practice-table-tests-v1", "version": 1},
+  "assistance_policy": {"hints": true, "references": true, "solution": false, "ai_declaration": true},
+  "evidence_rules": [
+    {"rule_id": "learner-tests-present", "capability_id": "M1-09", "capability_version": 1, "evidence_type": "test", "result": "passed"},
+    {"rule_id": "visible-tests-pass", "capability_id": "M1-09", "capability_version": 1, "evidence_type": "test", "result": "passed"}
+  ]
+}

@@ -1,5 +1,5 @@
 # 使用 golang 镜像作为运行环境，因为沙盒引擎需要调用 'go run' 命令
-FROM golang:1.24-alpine
+FROM golang:1.25-alpine
 
 # 安装基础构建工具（如需要编译 C 插件等）
 RUN apk add --no-cache build-base

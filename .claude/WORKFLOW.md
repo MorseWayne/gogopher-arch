@@ -10,7 +10,7 @@ Level: 3
 Started: 2026-07-12
 Updated: 2026-07-13
 Priority: Product redesign specification; independent from the active DeepTutor spike.
-Current phase: D5 — 用户审阅规格并决定是否进入分阶段实施计划。
+Current phase: A3 — 定义与 Task 资产已完成，开始构建不可变 release。
 
 Intent: 为 M1-01、M1-03、M1-07、M1-09 建立第一条端到端能力训练切片，验证版本化能力定义、服务端 Attempt/Evidence、派生能力状态、多文件 Go 任务和维护调度闭环。
 
@@ -19,22 +19,36 @@ Plan:
 - [done] D2 — 核对当前课程、任务、Dashboard、Gateway 和 Sandbox 数据流。
 - [done] D3 — 比较数据方案并确认“版本化定义 + 服务端证据”方案。
 - [done] D4 — 写入设计规格并完成五轮独立规格评审。
-- [doing] D5 — 用户审阅规格后再进入分阶段实施计划。
+- [done] D5 — 用户批准继续规格工作并进入分阶段实施计划。
+- [done] D6 — 按定义/Attempt、执行/证据、投影/复习、前端/E2E 拆分四份计划。
+- [done] P0 — 审查 Plan A 的工程边界，确认 migration、release command、Gateway package 和 Compose 边界。
+- [done] A1 — 建立 migration runner、schema history、Plan A 初始 migration 和 Compose 启动门。
+- [done] A2 — 建立 JSON Schema、四个 Capability、六个 Activity/Task 及完整资产。
+- [doing] A3 — 实现 canonical hash、release manifest、bundle 构建和 verify command。
 
 Current todo:
-- [ ] D5 — 用户审阅 `2026-07-12-capability-evidence-vertical-slice-design.md`；批准后拆分为定义/Attempt、执行/证据、投影/复习、前端/E2E 四份实施计划。
+- [ ] A3 — 先写 canonical JSON、task bundle hash 和完整 bundle hash golden tests，再实现 `cmd/learning-content`。
 
 Changes:
 - 用户确认 M1 14 节点、M2 16 节点、`gocheck`/`gocheck-hub` 内容原型和 Miniflux v2.3.2 训练项目方向。
 - 用户确认能力与活动使用仓库内版本化定义，用户尝试、证据、能力状态和复习队列使用服务端持久化。
 - 第一条实现规格只覆盖 M1-01、M1-03、M1-07、M1-09 和一个多文件完整程序任务。
 - 正式规格已通过独立审查，关闭发布包回放、幂等提交、多能力 ReviewItem、复习补救、帮助事件 cutoff、timeout 分类和本地网络边界等问题。
+- 已新增四份独立实施计划：Plan A 定义/会话/Attempt，Plan B 多文件执行/提交/Evidence，Plan C 投影/复习，Plan D 前端/E2E。
+- 四份计划按顺序设置验收门：后续计划只能依赖已验收契约，不得反向扩大前一计划范围。
+- Plan A 已按 breaking-change 边界重新审查：使用单 Go module、标准根目录布局和手工 DI，Plan A 只负责 definition/session/Attempt 表与 API。
+- 用户明确授权 breaking change：不兼容旧 API、旧数据库、旧页面、旧路由和旧视觉；前后端按新产品闭环重新设计。
+- Plan A 改用标准根目录 `cmd/`、`internal/`、`api/` 布局；旧 `src/services` 和单文件执行协议不再是兼容边界。
+- A1 已完成：使用 `pgx/v5`、Go 1.25、advisory lock、逐 migration transaction 和 SHA-256 drift 检测；真实 PostgreSQL 与 migrate Docker image 验证通过。
+- A2 已完成 Draft 2020-12 Capability/Activity/Task schema、Go validator、四个 Capability 和六个 Activity；仓库定义全目录校验通过。
+- 六个 TaskDefinition 已声明全部真实资产和 SHA-256；assessment 与 review 使用不同 module、字段和错误场景，starter/测试均通过编译基线检查。
+- A3 已固定 RFC 8785 canonical JSON 与 task bundle hash golden vectors；下一步补 rule set/full bundle hash 和 release command。
 
 Prerequisites:
 - 当前 Sandbox 仅支持单个 `main.go` 且缺少生产级隔离；规格必须限制为本地可信环境，并明确公开运行前的安全门槛。
 - 现有 DeepTutor Spike 和用户对其 ledger/spec 的修改必须保持不变。
 
-Resume next: 用户审阅正式规格；批准后按规格第 19 节分别编写四份独立实施计划，不合并成一个超大计划。
+Resume next: 实施 A3；先固定 RFC 8785 canonical JSON 与分层 hash golden vectors，再实现 release/verify command 和 `m1-first-slice-v1` bundle。
 
 ### WF-2026-06-02-002 — DeepTutor 离线课程内容工作流 Spike
 Status: Active

@@ -1,0 +1,14 @@
+{
+  "id": "practice-json-io",
+  "version": 1,
+  "title": "补全 JSON 读取与稳定输出",
+  "kind": "learning_task",
+  "mode": "practice",
+  "capability_refs": [{"id": "M1-07", "version": 1}],
+  "task_ref": {"id": "practice-json-io-v1", "version": 1},
+  "assistance_policy": {"hints": true, "references": true, "solution": false, "ai_declaration": true},
+  "evidence_rules": [
+    {"rule_id": "invalid-input-rejected", "capability_id": "M1-07", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "stable-output", "capability_id": "M1-07", "capability_version": 1, "evidence_type": "implement", "result": "passed"}
+  ]
+}

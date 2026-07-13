@@ -1,9 +1,8 @@
-FROM golang:1.24-alpine AS builder
+FROM golang:1.25-alpine AS builder
 
 WORKDIR /app
-COPY go.mod ./
-# Skip go sum for now as we don't have many dependencies yet
-# RUN go mod download
+COPY go.mod go.sum ./
+RUN go mod download
 
 COPY . .
 RUN go build -o main ./src/services/gateway/main.go

@@ -1,0 +1,14 @@
+{
+  "id": "M1-07",
+  "version": 1,
+  "name": "文件、流、JSON 与 CLI 契约",
+  "description": "能够从文件读取和校验 JSON，稳定编码输出，并通过 stdout、stderr 和退出码形成可自动化的 CLI 契约。",
+  "milestone": "M1",
+  "domain": "io-cli",
+  "prerequisites": {"hard": [{"id": "M1-01", "version": 1}, {"id": "M1-03", "version": 1}], "recommended": []},
+  "required_evidence": [
+    {"type": "implement", "independence": "independent", "context": "same_context", "rule_ids": ["invalid-input-rejected", "stable-output", "cli-failure-contract"]}
+  ],
+  "review_policy": {"first_review_after_days": 3, "success_interval_days": 14, "failure_remediation_after_days": 1},
+  "resource_refs": ["web/src/content/go-basics/ch04-composite-types.mdx", "web/src/content/go-basics/ch10-packages-tools.mdx"]
+}

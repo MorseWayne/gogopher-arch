@@ -1,4 +1,4 @@
-.PHONY: dev test build lint clean
+.PHONY: dev test build lint migrate-up migrate-status clean
 
 dev:
 	docker compose up postgres redis -d
@@ -16,6 +16,12 @@ build:
 
 lint:
 	go vet ./...
+
+migrate-up:
+	go run ./cmd/migrate up
+
+migrate-status:
+	go run ./cmd/migrate status
 
 clean:
 	docker compose down -v

@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gogopher-arch.local/schemas/capability.schema.json",
+  "title": "CapabilityDefinition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "version", "name", "description", "milestone", "domain", "prerequisites", "required_evidence", "review_policy", "resource_refs"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^M[1-5]-[0-9]{2}$"},
+    "version": {"type": "integer", "minimum": 1},
+    "name": {"type": "string", "minLength": 1},
+    "description": {"type": "string", "minLength": 1},
+    "milestone": {"type": "string", "pattern": "^M[1-5]$"},
+    "domain": {"type": "string", "minLength": 1},
+    "prerequisites": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hard", "recommended"],
+      "properties": {
+        "hard": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/capabilityRef"}},
+        "recommended": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/capabilityRef"}}
+      }
+    },
+    "required_evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "independence", "context", "rule_ids"],
+        "properties": {
+          "type": {"enum": ["implement", "test", "diagnose"]},
+          "independence": {"enum": ["guided", "ai_assisted", "hinted", "referenced", "independent"]},
+          "context": {"enum": ["same_context", "variant"]},
+          "rule_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"}}
+        }
+      }
+    },
+    "review_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["first_review_after_days", "success_interval_days", "failure_remediation_after_days"],
+      "properties": {
+        "first_review_after_days": {"type": "integer", "minimum": 1},
+        "success_interval_days": {"type": "integer", "minimum": 1},
+        "failure_remediation_after_days": {"type": "integer", "minimum": 1}
+      }
+    },
+    "resource_refs": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "supersedes": {"$ref": "#/$defs/capabilityRef"}
+  },
+  "$defs": {
+    "capabilityRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^M[1-5]-[0-9]{2}$"},
+        "version": {"type": "integer", "minimum": 1}
+      }
+    }
+  }
+}

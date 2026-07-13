@@ -1,0 +1,14 @@
+{
+  "id": "M1-09",
+  "version": 1,
+  "name": "自动化测试与测试设计",
+  "description": "能够用表格驱动测试、子测试和临时目录覆盖成功与失败路径，并让测试失败信息支持快速诊断。",
+  "milestone": "M1",
+  "domain": "testing",
+  "prerequisites": {"hard": [{"id": "M1-01", "version": 1}], "recommended": [{"id": "M1-03", "version": 1}]},
+  "required_evidence": [
+    {"type": "test", "independence": "independent", "context": "same_context", "rule_ids": ["learner-tests-present", "visible-tests-pass", "held-out-tests-pass"]}
+  ],
+  "review_policy": {"first_review_after_days": 3, "success_interval_days": 14, "failure_remediation_after_days": 1},
+  "resource_refs": ["web/src/content/go-basics/ch11-testing.mdx"]
+}

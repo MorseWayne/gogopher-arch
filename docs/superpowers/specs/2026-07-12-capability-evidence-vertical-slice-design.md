@@ -94,6 +94,12 @@ PostgreSQL 保存学习者、尝试、运行、帮助事件、产物、证据、
 - CapabilitySnapshot 和 ReviewItem 是 Evidence 的派生投影，可以重建。
 - 第一切片的“独立完成”只表示平台观察到的帮助使用情况。系统无法识别用户在外部设备或工具中使用 AI，不提供防作弊或认证承诺。
 
+### 4.4 Breaking-change 实施原则
+
+第一条切片是新产品定位的替代实现，不承担旧 API、旧数据库、旧前端路由、旧页面结构或旧 Sandbox 协议的兼容义务。实施时可以直接删除、迁移或替换现有实现，以当前规格的领域边界、可信证据和用户闭环为唯一产品契约。
+
+这项授权不放宽定义不可变性、Attempt/Evidence 可重放性、匿名会话所有权和本地 Sandbox 安全限制。这里的“不兼容”针对重设计之前的原型；新系统一旦写入 release、Attempt 或 Evidence，仍必须遵守本规格的历史事实与版本回放规则。
+
 ## 5. 第一条学习切片
 
 ### 5.1 覆盖能力
@@ -623,7 +629,7 @@ reference_opened→ referenced
 
 ## 12. 前端体验
 
-第一切片复用现有课程页面和 CodeMirror 资产，但新增一个能力活动工作台，不改造完整站点信息架构。
+第一切片可以重建现有学习区的信息架构、视觉语言和交互组件，不要求复用旧课程页面、Dashboard、CodeMirror 包装组件或 shadcn 组合方式。前端以“下一活动 → 多文件实作 → 服务端反馈 → Evidence/Snapshot”闭环为主线；是否复用资产只由实现质量和维护成本决定。
 
 工作台最小区域：
 
@@ -750,15 +756,15 @@ Dashboard 只需要把静态“今日建议”替换为 `/learning/next` 的一�
 
 ## 17. 迁移策略
 
-现有章节和练习继续可访问，不在本切片中批量迁移。
+本切片采用 breaking migration：旧章节、练习、Mission、单文件 Sandbox API 和静态 Dashboard 不构成兼容边界，可以被删除、替换或暂时下线。课程正文仍可作为内容素材，但不能限制新领域模型和信息架构。
 
 数据库 schema 使用 `db/migrations/` 下单调递增的 SQL 文件和 `schema_migrations` 表。新增 repo-local Go migration command 提供 `up` 与 `status`；Compose 在 Gateway 启动前运行 `up`。migration 必须幂等检测已应用版本，但已应用 SQL 文件不得原地修改。
 
 - 为四个能力节点新增版本化定义。
-- `check-config-normalizer-v1` 使用新的 Activity/Task 定义，不复用旧 `GoCourseExercise` 作为事实来源。
-- 现有 MDX 可以通过 `content_ref` 被新 Activity 引用。
-- 旧 `CourseExercisePanel` 保持现有行为；新的能力工作台使用服务端 Attempt API。
-- Dashboard 仅新增一个真实“下一活动”入口，其他静态展示保留并明确其演示性质。
+- `check-config-normalizer-v1` 使用新的 Activity/Task 定义，删除 `GoCourseExercise` 事实模型。
+- 仍有价值的 MDX 只能作为 `content_ref` 迁入新定义；未迁入内容不保证继续暴露路由。
+- 能力活动工作台直接替代旧 `CourseExercisePanel`、Mission 工作台和单文件执行体验。
+- Dashboard 改为服务端 `/learning/next` 驱动的真实入口，不保留静态进度作为产品状态。
 
 切片验证通过后，再制定 13 章内容向能力节点迁移的独立计划。
 
@@ -769,7 +775,7 @@ Dashboard 只需要把静态“今日建议”替换为 `/learning/next` 的一�
 发布前检查：
 
 - 定义校验、Go 测试、前端构建和数据库 migration 通过。
-- 新 API 未开启时不改变现有课程和 sandbox 行为。
+- Learning API 未开启时只提供明确的“本地学习切片未启用”状态，不承诺回退到旧课程或旧 Sandbox 行为。
 - 开启后可以完成端到端任务并重建 Snapshot。
 - 宿主原生模式下 Gateway 与 Vite/Web/同源反向代理只监听回环地址；Compose 模式下只有 Web 发布宿主端口，且宿主侧绑定 `127.0.0.1`，Gateway 和 Sandbox 不发布宿主端口。
 - 没有其他 ingress 把学习入口暴露到公网或局域网，相关启动检查与 Compose 配置断言通过。
@@ -788,4 +794,4 @@ Dashboard 只需要把静态“今日建议”替换为 `/learning/next` 的一�
 
 每份计划都必须单独接受工程审查、拥有自己的测试与完成条件，并允许在不启动下一份计划的情况下停下。Plan B 依赖 Plan A 的稳定契约，Plan C 依赖 Plan B 的 Evidence 事实，Plan D 最后集成前三者；后续计划不得借机反向扩大已验收计划的范围。
 
-四份计划都必须保持现有单文件课程练习可用，并能通过功能开关关闭。公开不可信代码执行需要另立安全设计和实施计划，不能随本切片默认上线。
+四份计划可以直接移除现有单文件课程练习、旧 API 和旧页面。Learning 执行仍必须通过功能开关限制在本地环境；公开不可信代码执行需要另立安全设计和实施计划，不能随本切片默认上线。
