@@ -13,6 +13,7 @@ import (
 	"github.com/MorseWayne/gogopher-arch/internal/learning/assistance"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/attempt"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/definition"
+	"github.com/MorseWayne/gogopher-arch/internal/learning/evaluation"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/execution"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/httpapi"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/session"
@@ -26,6 +27,7 @@ type App struct {
 	database          *sql.DB
 	assistanceService *assistance.Service
 	executionService  *execution.Service
+	ruleGenerator     *evaluation.Generator
 	submissionService *submission.Service
 	workerCancel      context.CancelFunc
 	workerDone        chan error
@@ -108,6 +110,10 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 	if err != nil {
 		return fail(err)
 	}
+	ruleGenerator, err := evaluation.NewGenerator(registry)
+	if err != nil {
+		return fail(err)
+	}
 	sandboxClient, err := execution.NewSandboxClient(execution.SandboxClientOptions{Endpoint: cfg.SandboxEndpoint})
 	if err != nil {
 		return fail(err)
@@ -148,7 +154,8 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 	}()
 	return &App{
 		Handler:  httpapi.NewRouter(true, sessionHandler, attemptHandler, httpapi.NewDefinitionHandler(registry)),
-		database: db, assistanceService: assistanceService, executionService: executionService, submissionService: submissionService,
+		database: db, assistanceService: assistanceService, executionService: executionService,
+		ruleGenerator: ruleGenerator, submissionService: submissionService,
 		workerCancel: workerCancel, workerDone: workerDone,
 	}, nil
 }

@@ -31,7 +31,36 @@ func (r *Runner) runSubmit(ctx context.Context, spec execution.ExecutionSpec, re
 	}); err != nil {
 		return infraResponse(response, started, "workspace_materialize_failed", "Sandbox could not materialize the visible test workspace")
 	}
-	visibleProcess := r.runProcess(ctx, time.Until(deadline), executionRoot, visibleRoot, []string{"test", "-json", "./..."}, spec.Policy.MaxOutputBytes)
+	remainingOutput := spec.Policy.MaxOutputBytes
+	for _, stage := range []struct {
+		name      execution.Stage
+		label     string
+		arguments []string
+	}{
+		{name: execution.StageBuild, label: "build", arguments: []string{"build", "./..."}},
+		{name: execution.StageVet, label: "vet", arguments: []string{"vet", "./..."}},
+	} {
+		process := r.runProcess(ctx, time.Until(deadline), executionRoot, visibleRoot, stage.arguments, remainingOutput)
+		if process.infrastructureFailure != nil {
+			return infraResponse(response, started, process.infrastructureFailure.Code, process.infrastructureFailure.Message)
+		}
+		stageResult := process.stageResult(stage.name, stage.label)
+		stageResult.Stdout = sanitizeOutput(stageResult.Stdout, executionRoot)
+		stageResult.Stderr = sanitizeOutput(stageResult.Stderr, executionRoot)
+		if process.outputTruncated {
+			stageResult.Status = execution.StageFailed
+			stageResult.PublicSummary = stage.label + " output exceeded the configured limit"
+		}
+		response.Stages = append(response.Stages, stageResult)
+		remainingOutput = remainingAfter(remainingOutput, process)
+		if stageResult.Status == execution.StageFailed {
+			response.Status = execution.ExecutionUserFailed
+			response.DurationMS = time.Since(started).Milliseconds()
+			return response
+		}
+	}
+
+	visibleProcess := r.runProcess(ctx, time.Until(deadline), executionRoot, visibleRoot, []string{"test", "-json", "./..."}, remainingOutput)
 	if visibleProcess.infrastructureFailure != nil {
 		return infraResponse(response, started, visibleProcess.infrastructureFailure.Code, visibleProcess.infrastructureFailure.Message)
 	}
@@ -48,6 +77,7 @@ func (r *Runner) runSubmit(ctx context.Context, spec execution.ExecutionSpec, re
 		visibleStage.PublicSummary = "visible test output exceeded the configured limit"
 	}
 	response.Stages = append(response.Stages, visibleStage)
+	remainingOutput = remainingAfter(remainingOutput, visibleProcess)
 	if visibleStage.Status == execution.StageFailed {
 		response.Status = execution.ExecutionUserFailed
 		response.DurationMS = time.Since(started).Milliseconds()
@@ -60,7 +90,7 @@ func (r *Runner) runSubmit(ctx context.Context, spec execution.ExecutionSpec, re
 		response.DurationMS = time.Since(started).Milliseconds()
 		return response
 	}
-	heldOutStage, failure := r.runHeldOut(ctx, spec, executionRoot, packages, deadline)
+	heldOutStage, failure := r.runHeldOut(ctx, spec, executionRoot, packages, deadline, remainingOutput)
 	if failure != nil {
 		return infraResponse(response, started, failure.Code, failure.Message)
 	}
@@ -74,7 +104,7 @@ func (r *Runner) runSubmit(ctx context.Context, spec execution.ExecutionSpec, re
 	return response
 }
 
-func (r *Runner) runHeldOut(ctx context.Context, spec execution.ExecutionSpec, executionRoot string, packages []string, deadline time.Time) (execution.StageResult, *execution.Failure) {
+func (r *Runner) runHeldOut(ctx context.Context, spec execution.ExecutionSpec, executionRoot string, packages []string, deadline time.Time, maxOutputBytes int) (execution.StageResult, *execution.Failure) {
 	started := time.Now()
 	buildRoot := filepath.Join(executionRoot, "held-out-source")
 	if err := materializeAssets(buildRoot, spec.Files, func(execution.FileAsset) bool { return true }); err != nil {
@@ -85,7 +115,7 @@ func (r *Runner) runHeldOut(ctx context.Context, spec execution.ExecutionSpec, e
 		return execution.StageResult{}, &execution.Failure{Code: "test_binary_directory_failed", Message: "Sandbox could not prepare held-out test binaries"}
 	}
 	binaries := make([]string, 0, len(packages))
-	remainingOutput := spec.Policy.MaxOutputBytes
+	remainingOutput := maxOutputBytes
 	truncated := false
 	for index, packagePath := range packages {
 		binary := filepath.Join(binaryRoot, fmt.Sprintf("package-%d.test", index))

@@ -82,6 +82,7 @@ func TestRunnerClassifiesUserFailureTimeoutAndOutputTruncation(t *testing.T) {
 			runnerAsset("spam_test.go", "package task\n\nimport (\"fmt\"; \"testing\")\n\nfunc TestSpam(t *testing.T) { for i := 0; i < 5000; i++ { fmt.Println(\"lots of output\") }; t.Fail() }\n", execution.OriginReleaseBundle, execution.AccessReadonly, execution.RoleVisibleTest),
 		})
 		spec.Policy.MaxOutputBytes = 1_024
+		spec.Policy.TimeoutMS = 15_000
 		response, err := runner.Run(context.Background(), spec)
 		if err != nil {
 			t.Fatal(err)
@@ -176,7 +177,7 @@ func runnerSpec(action execution.Action, files []execution.FileAsset) execution.
 		ProtocolVersion: execution.ProtocolVersion, ExecutionID: fmt.Sprintf("%s-execution", action),
 		Language: execution.GoLanguage, WorkspaceRoot: execution.WorkspaceRoot, Action: action, Files: files,
 		Limits: execution.WorkspaceLimits{MaxFiles: 16, MaxFileBytes: 1 << 16, MaxTotalBytes: 1 << 18},
-		Policy: execution.ActionPolicy{TimeoutMS: 5_000, MaxOutputBytes: 65_536, Network: execution.NetworkNone},
+		Policy: execution.ActionPolicy{TimeoutMS: 15_000, MaxOutputBytes: 65_536, Network: execution.NetworkNone},
 	}
 }
 

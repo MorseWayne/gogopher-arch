@@ -23,17 +23,18 @@ func TestSubmitRunsVisibleThenHeldOutTestsFromBinaries(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if response.Status != execution.ExecutionSucceeded || len(response.Stages) != 2 {
+	if response.Status != execution.ExecutionSucceeded || len(response.Stages) != 4 {
 		t.Fatalf("response = %#v", response)
 	}
-	if response.Stages[0].Stage != execution.StageVisibleTest || response.Stages[1].Stage != execution.StageHeldOutTest {
+	if response.Stages[0].Stage != execution.StageBuild || response.Stages[1].Stage != execution.StageVet ||
+		response.Stages[2].Stage != execution.StageVisibleTest || response.Stages[3].Stage != execution.StageHeldOutTest {
 		t.Fatalf("stages = %#v", response.Stages)
 	}
-	if !hasTestEvent(response.Stages[0].TestEvents, "TestVisible", "pass") || !hasTestEvent(response.Stages[1].TestEvents, "TestHeldOutSourceIsAbsent", "pass") {
+	if !hasTestEvent(response.Stages[2].TestEvents, "TestVisible", "pass") || !hasTestEvent(response.Stages[3].TestEvents, "TestHeldOutSourceIsAbsent", "pass") {
 		t.Fatalf("test events = %#v", response.Stages)
 	}
-	if response.Stages[1].Stdout != "" || response.Stages[1].Stderr != "" || strings.Contains(response.Stages[1].PublicSummary, "hidden_test.go") {
-		t.Fatalf("held-out stage leaks details: %#v", response.Stages[1])
+	if response.Stages[3].Stdout != "" || response.Stages[3].Stderr != "" || strings.Contains(response.Stages[3].PublicSummary, "hidden_test.go") {
+		t.Fatalf("held-out stage leaks details: %#v", response.Stages[3])
 	}
 }
 
@@ -51,7 +52,7 @@ func TestSubmitDoesNotInjectHeldOutTestsAfterVisibleFailure(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if response.Status != execution.ExecutionUserFailed || len(response.Stages) != 1 || response.Stages[0].Stage != execution.StageVisibleTest {
+	if response.Status != execution.ExecutionUserFailed || len(response.Stages) != 3 || response.Stages[2].Stage != execution.StageVisibleTest {
 		t.Fatalf("response = %#v", response)
 	}
 	if _, err := os.Stat(marker); !os.IsNotExist(err) {

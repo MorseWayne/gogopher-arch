@@ -102,11 +102,11 @@
 
 ### B7 — RuleResult 生成
 
-- [ ] 按 TaskDefinition assessment rules 把 stage result 转为 `passed|failed|not_evaluated` RuleResult。
-- [ ] 实现 module build、error chain、invalid input、stable output 和测试相关规则的 fixture。
-- [ ] `learner-tests-present` 使用 starter diff + Go AST：修改 `_test.go`、表格结构、至少三个命名 case，并要求普通测试通过。
-- [ ] RuleResult 保存匹配 package/test/analyzer、公开摘要和原始 Execution 引用。
-- [ ] 前置阶段失败时只把实际运行规则标为 failed，后续规则标为 not_evaluated。
+- [x] 按 TaskDefinition assessment rules 把 stage result 转为 `passed|failed|not_evaluated` RuleResult。
+- [x] 实现 module build、error chain、invalid input、stable output 和测试相关规则的 fixture。
+- [x] `learner-tests-present` 使用 starter diff + Go AST：修改 `_test.go`、表格结构、至少三个命名 case，并要求普通测试通过。
+- [x] RuleResult 保存匹配 package/test/analyzer、公开摘要和原始 Execution 引用。
+- [x] 前置阶段失败时只把实际运行规则标为 failed，后续规则标为 not_evaluated。
 
 完成条件：同一 Submission 可以对不同 Capability 产生混合结果，且每条结果有稳定 `rule_id`。
 

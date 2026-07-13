@@ -46,15 +46,35 @@ type ExecutionAsset struct {
 	Content  string
 }
 
+type AssessmentSelector struct {
+	Package      string `json:"package,omitempty"`
+	Test         string `json:"test,omitempty"`
+	File         string `json:"file,omitempty"`
+	DeferredCall string `json:"deferred_call,omitempty"`
+	Glob         string `json:"glob,omitempty"`
+	MinimumCases int    `json:"minimum_cases,omitempty"`
+	ExitCode     *int   `json:"exit_code,omitempty"`
+}
+
+type AssessmentRule struct {
+	RuleID         string                   `json:"rule_id"`
+	Stage          string                   `json:"stage"`
+	Selector       AssessmentSelector       `json:"selector"`
+	CapabilityRefs []VersionedDefinitionRef `json:"capability_refs"`
+	EvidenceType   string                   `json:"evidence_type"`
+	Condition      string                   `json:"condition"`
+}
+
 type ExecutionTask struct {
-	ID            string
-	Version       int
-	BundleHash    string
-	Language      string
-	WorkspaceRoot string
-	Files         []ExecutionAsset
-	Limits        WorkspaceLimitsView
-	Actions       map[string]ExecutionAction
+	ID              string
+	Version         int
+	BundleHash      string
+	Language        string
+	WorkspaceRoot   string
+	Files           []ExecutionAsset
+	Limits          WorkspaceLimitsView
+	Actions         map[string]ExecutionAction
+	AssessmentRules []AssessmentRule
 }
 
 // ExecutionTask returns the private, trusted task contract used to build a
@@ -66,13 +86,14 @@ func (r *Registry) ExecutionTask(releaseID, id string, version int) (ExecutionTa
 		return ExecutionTask{}, err
 	}
 	var document struct {
-		ID            string                     `json:"id"`
-		Version       int                        `json:"version"`
-		Language      string                     `json:"language"`
-		WorkspaceRoot string                     `json:"workspace_root"`
-		Files         []taskFile                 `json:"files"`
-		Limits        WorkspaceLimitsView        `json:"limits"`
-		Actions       map[string]ExecutionAction `json:"actions"`
+		ID              string                     `json:"id"`
+		Version         int                        `json:"version"`
+		Language        string                     `json:"language"`
+		WorkspaceRoot   string                     `json:"workspace_root"`
+		Files           []taskFile                 `json:"files"`
+		Limits          WorkspaceLimitsView        `json:"limits"`
+		Actions         map[string]ExecutionAction `json:"actions"`
+		AssessmentRules []AssessmentRule           `json:"assessment_rules"`
 	}
 	if err := json.Unmarshal(definition.Document, &document); err != nil {
 		return ExecutionTask{}, fmt.Errorf("decode execution task: %w", err)
@@ -95,10 +116,15 @@ func (r *Registry) ExecutionTask(releaseID, id string, version int) (ExecutionTa
 		ID: document.ID, Version: document.Version, BundleHash: definition.BundleHash,
 		Language: document.Language, WorkspaceRoot: document.WorkspaceRoot,
 		Files: make([]ExecutionAsset, 0, len(document.Files)), Limits: document.Limits,
-		Actions: make(map[string]ExecutionAction, len(document.Actions)),
+		Actions:         make(map[string]ExecutionAction, len(document.Actions)),
+		AssessmentRules: make([]AssessmentRule, len(document.AssessmentRules)),
 	}
 	for name, action := range document.Actions {
 		result.Actions[name] = action
+	}
+	for index, rule := range document.AssessmentRules {
+		rule.CapabilityRefs = append([]VersionedDefinitionRef(nil), rule.CapabilityRefs...)
+		result.AssessmentRules[index] = rule
 	}
 	for _, file := range document.Files {
 		asset, exists := assets[file.Path]

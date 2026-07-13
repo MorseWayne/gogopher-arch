@@ -10,7 +10,7 @@ Level: 3
 Started: 2026-07-12
 Updated: 2026-07-13
 Priority: Product redesign specification; independent from the active DeepTutor spike.
-Current phase: B7 — SubmissionWorkflow 已完成，开始确定性 RuleResult 生成。
+Current phase: B8 — 确定性 RuleResult 已完成，开始 EvidenceEvaluator 与原子批次。
 
 Intent: 为 M1-01、M1-03、M1-07、M1-09 建立第一条端到端能力训练切片，验证版本化能力定义、服务端 Attempt/Evidence、派生能力状态、多文件 Go 任务和维护调度闭环。
 
@@ -31,7 +31,7 @@ Plan:
 - [done] A7 — 实现 Gateway wiring、Learning feature gate、路由和旧 API 删除。
 
 Current todo:
-- [ ] B7 — 按冻结 TaskDefinition 和 terminal Execution 生成稳定 RuleResult。
+- [ ] B8 — 原子写入 EvaluationBatch、Evidence、Attempt terminal state 和 projection outbox。
 
 Changes:
 - 用户确认 M1 14 节点、M2 16 节点、`gocheck`/`gocheck-hub` 内容原型和 Miniflux v2.3.2 训练项目方向。
@@ -69,12 +69,15 @@ Changes:
 - B6 已实现唯一 Submission 冻结事务，原子保存 workspace revision/hash、rule_set_hash、assistance cutoff 并排入 submit Execution。
 - 相同 submission key 可安全回放，不同 fingerprint/key 返回带已有 Submission ID 的 domain conflict；真实 PostgreSQL 验证不同 key 竞争只有一个赢家。
 - submit Execution 的 RPC/lease `infra_failed` 会原子推进 Submission/Attempt；显式 retry 使用冻结 workspace 并按 sequence 追加幂等 Execution。
+- B7 已把 submit 固定为 build → vet → visible → held-out pipeline，并在共享 output/timeout budget 下保留阶段短路事实。
+- RuleResult generator 使用冻结 TaskDefinition 匹配 package/test，使用 Go AST 验证 deferred Close 与修改后的三组命名 table case，并保留原始 Execution ID。
+- 真实 assessment solution 已走完整 Sandbox 产生 10 条 passed RuleResult；人工 terminal fixture 验证 targeted pass、stage failure 和 not_evaluated 可同时出现。
 
 Prerequisites:
 - 当前 Sandbox 仅支持单个 `main.go` 且缺少生产级隔离；规格必须限制为本地可信环境，并明确公开运行前的安全门槛。
 - 现有 DeepTutor Spike 和用户对其 ledger/spec 的修改必须保持不变。
 
-Resume next: 实施 B7；先建立每种 assessment rule 的稳定 matcher 与阶段短路语义，再用真实 submit fixture 验证混合 RuleResult。
+Resume next: 实施 B8；先定义 Evidence 映射与 idempotent EvaluationBatch transaction，再把 terminal submit Execution 接入 evaluator。
 
 ### WF-2026-06-02-002 — DeepTutor 离线课程内容工作流 Spike
 Status: Active
