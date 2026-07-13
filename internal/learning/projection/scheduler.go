@@ -17,10 +17,15 @@ import (
 
 const firstReviewPolicyVersion = 1
 
+type ReviewTransitionObserver interface {
+	ReviewItemsTransitioned(string, int)
+}
+
 type SchedulerOptions struct {
-	Schema string
-	Random io.Reader
-	Now    func() time.Time
+	Schema   string
+	Random   io.Reader
+	Now      func() time.Time
+	Observer ReviewTransitionObserver
 }
 
 type ReviewScheduler struct {
@@ -29,6 +34,7 @@ type ReviewScheduler struct {
 	registry *definition.Registry
 	random   io.Reader
 	now      func() time.Time
+	observer ReviewTransitionObserver
 }
 
 type assessmentEvidenceBatch struct {
@@ -58,7 +64,10 @@ func NewReviewScheduler(db *sql.DB, registry *definition.Registry, options Sched
 	if options.Now == nil {
 		options.Now = time.Now
 	}
-	return &ReviewScheduler{db: db, schema: schema, registry: registry, random: options.Random, now: options.Now}, nil
+	return &ReviewScheduler{
+		db: db, schema: schema, registry: registry, random: options.Random,
+		now: options.Now, observer: options.Observer,
+	}, nil
 }
 
 func (s *ReviewScheduler) ProcessRequest(ctx context.Context, request Request, _ time.Time) error {
@@ -149,7 +158,7 @@ func (s *ReviewScheduler) processFirstReview(ctx context.Context, payload Review
 	dueAt := source.OccurredAt.AddDate(0, 0, policy.ReviewPolicy.FirstReviewAfterDays)
 	groupKey := fmt.Sprintf("assessment:%s:review:%s@%d:policy:%d",
 		source.ID, reviewActivity.ID, reviewActivity.Version, firstReviewPolicyVersion)
-	created, reviewItemID, err := s.insertFirstReview(ctx, tx, payload, source, reviewActivity, groupKey, dueAt, createdAt)
+	created, replaced, reviewItemID, err := s.insertFirstReview(ctx, tx, payload, source, reviewActivity, groupKey, dueAt, createdAt)
 	if err != nil {
 		return err
 	}
@@ -160,6 +169,14 @@ func (s *ReviewScheduler) processFirstReview(ctx context.Context, payload Review
 	}
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("commit first review scheduling: %w", err)
+	}
+	if s.observer != nil {
+		if replaced {
+			s.observer.ReviewItemsTransitioned("replaced", 1)
+		}
+		if created {
+			s.observer.ReviewItemsTransitioned("created", 1)
+		}
 	}
 	return nil
 }
@@ -239,6 +256,7 @@ func (s *ReviewScheduler) processReviewOutcome(ctx context.Context, payload Revi
 		return fmt.Errorf("review outcome Attempt has no linked ReviewItem")
 	}
 	createdAt := s.now().UTC()
+	transitioned := 0
 	for _, item := range items {
 		if item.Status == "completed" {
 			if !item.EvaluationBatchID.Valid || item.EvaluationBatchID.String != evaluation.BatchID || !item.Outcome.Valid {
@@ -316,9 +334,14 @@ func (s *ReviewScheduler) processReviewOutcome(ctx context.Context, payload Revi
 		if err := s.enqueueTargetProjection(ctx, tx, target, successorID, createdAt); err != nil {
 			return err
 		}
+		transitioned++
 	}
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("commit review outcome: %w", err)
+	}
+	if s.observer != nil && transitioned > 0 {
+		s.observer.ReviewItemsTransitioned("completed", transitioned)
+		s.observer.ReviewItemsTransitioned("created", transitioned)
 	}
 	return nil
 }
@@ -559,7 +582,7 @@ func (s *ReviewScheduler) firstQualifyingAssessment(ctx context.Context, tx *sql
 	return assessmentEvidenceBatch{}, false, nil
 }
 
-func (s *ReviewScheduler) insertFirstReview(ctx context.Context, tx *sql.Tx, payload ReviewSchedulerRequestPayload, source assessmentEvidenceBatch, activity definition.ActivityView, groupKey string, dueAt, createdAt time.Time) (bool, string, error) {
+func (s *ReviewScheduler) insertFirstReview(ctx context.Context, tx *sql.Tx, payload ReviewSchedulerRequestPayload, source assessmentEvidenceBatch, activity definition.ActivityView, groupKey string, dueAt, createdAt time.Time) (bool, bool, string, error) {
 	var existingID string
 	err := tx.QueryRowContext(ctx, `
 		SELECT id FROM review_items
@@ -568,11 +591,12 @@ func (s *ReviewScheduler) insertFirstReview(ctx context.Context, tx *sql.Tx, pay
 		payload.LearnerID, payload.CapabilityID, payload.CapabilityVersion,
 		source.SourceEvidence, firstReviewPolicyVersion).Scan(&existingID)
 	if err == nil {
-		return false, existingID, nil
+		return false, false, existingID, nil
 	}
 	if !errors.Is(err, sql.ErrNoRows) {
-		return false, "", fmt.Errorf("query existing first review: %w", err)
+		return false, false, "", fmt.Errorf("query existing first review: %w", err)
 	}
+	replaced := false
 	var activeID, activeStatus string
 	err = tx.QueryRowContext(ctx, `
 		SELECT id,status FROM review_items
@@ -582,19 +606,20 @@ func (s *ReviewScheduler) insertFirstReview(ctx context.Context, tx *sql.Tx, pay
 		payload.CapabilityVersion, firstReviewPolicyVersion).Scan(&activeID, &activeStatus)
 	if err == nil {
 		if activeStatus == "claimed" {
-			return false, activeID, nil
+			return false, false, activeID, nil
 		}
 		if _, err := tx.ExecContext(ctx, `
 			UPDATE review_items SET status='replaced',replaced_at=$2,updated_at=$2
 			WHERE id=$1 AND status='open'`, activeID, createdAt); err != nil {
-			return false, "", fmt.Errorf("replace stale first review: %w", err)
+			return false, false, "", fmt.Errorf("replace stale first review: %w", err)
 		}
+		replaced = true
 	} else if !errors.Is(err, sql.ErrNoRows) {
-		return false, "", fmt.Errorf("query active first review: %w", err)
+		return false, false, "", fmt.Errorf("query active first review: %w", err)
 	}
 	id, err := projectionUUID(s.random)
 	if err != nil {
-		return false, "", err
+		return false, false, "", err
 	}
 	_, err = tx.ExecContext(ctx, `
 		INSERT INTO review_items (
@@ -606,9 +631,9 @@ func (s *ReviewScheduler) insertFirstReview(ctx context.Context, tx *sql.Tx, pay
 		source.SourceEvidence, payload.ReleaseID, activity.ID, activity.Version,
 		activity.ContentHash, groupKey, dueAt.UTC(), firstReviewPolicyVersion, createdAt)
 	if err != nil {
-		return false, "", fmt.Errorf("insert first review item: %w", err)
+		return false, false, "", fmt.Errorf("insert first review item: %w", err)
 	}
-	return true, id, nil
+	return true, replaced, id, nil
 }
 
 func (s *ReviewScheduler) enqueueTargetProjection(ctx context.Context, tx *sql.Tx, payload ReviewSchedulerRequestPayload, reviewItemID string, createdAt time.Time) error {

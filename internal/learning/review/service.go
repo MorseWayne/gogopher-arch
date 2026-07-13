@@ -26,10 +26,15 @@ type ClaimResult struct {
 	Created bool
 }
 
+type TransitionObserver interface {
+	ReviewItemsTransitioned(string, int)
+}
+
 type ServiceOptions struct {
-	Schema string
-	Random io.Reader
-	Now    func() time.Time
+	Schema   string
+	Random   io.Reader
+	Now      func() time.Time
+	Observer TransitionObserver
 }
 
 type Service struct {
@@ -38,6 +43,7 @@ type Service struct {
 	registry *definition.Registry
 	random   io.Reader
 	now      func() time.Time
+	observer TransitionObserver
 }
 
 type reviewItem struct {
@@ -51,6 +57,7 @@ type reviewItem struct {
 	CapabilityVersion int
 	Reason            string
 	Status            string
+	DueAt             time.Time
 	AttemptID         sql.NullString
 }
 
@@ -71,7 +78,10 @@ func NewService(db *sql.DB, registry *definition.Registry, options ServiceOption
 	if options.Now == nil {
 		options.Now = time.Now
 	}
-	return &Service{db: db, schema: schema, registry: registry, random: options.Random, now: options.Now}, nil
+	return &Service{
+		db: db, schema: schema, registry: registry, random: options.Random,
+		now: options.Now, observer: options.Observer,
+	}, nil
 }
 
 func (s *Service) Claim(ctx context.Context, learnerID, reviewItemID string) (ClaimResult, error) {
@@ -86,6 +96,7 @@ func (s *Service) Claim(ctx context.Context, learnerID, reviewItemID string) (Cl
 	if _, err := tx.ExecContext(ctx, `SET LOCAL search_path TO "`+s.schema+`"`); err != nil {
 		return ClaimResult{}, fmt.Errorf("set review claim search path: %w", err)
 	}
+	claimedAt := s.now().UTC()
 	requested, err := loadRequestedItem(ctx, tx, learnerID, reviewItemID)
 	if err != nil {
 		return ClaimResult{}, err
@@ -93,7 +104,7 @@ func (s *Service) Claim(ctx context.Context, learnerID, reviewItemID string) (Cl
 	if requested.Status == "completed" || requested.Status == "replaced" {
 		return ClaimResult{}, ErrUnavailable
 	}
-	items, err := lockActiveGroup(ctx, tx, learnerID, requested)
+	items, err := lockActiveGroup(ctx, tx, learnerID, requested, claimedAt)
 	if err != nil {
 		return ClaimResult{}, err
 	}
@@ -144,7 +155,7 @@ func (s *Service) Claim(ctx context.Context, learnerID, reviewItemID string) (Cl
 			return ClaimResult{}, err
 		}
 	}
-	claimedAt := s.now().UTC()
+	claimedCount := 0
 	for _, item := range items {
 		if item.Status == "open" {
 			result, err := tx.ExecContext(ctx, `
@@ -162,6 +173,7 @@ func (s *Service) Claim(ctx context.Context, learnerID, reviewItemID string) (Cl
 			VALUES ($1,$2,$3)`, attemptID, item.ID, claimedAt); err != nil {
 				return ClaimResult{}, fmt.Errorf("link review item %s: %w", item.ID, err)
 			}
+			claimedCount++
 			continue
 		}
 		var linkedAttemptID string
@@ -176,6 +188,9 @@ func (s *Service) Claim(ctx context.Context, learnerID, reviewItemID string) (Cl
 	if err := tx.Commit(); err != nil {
 		return ClaimResult{}, fmt.Errorf("commit review claim: %w", err)
 	}
+	if s.observer != nil && claimedCount > 0 {
+		s.observer.ReviewItemsTransitioned("claimed", claimedCount)
+	}
 	return ClaimResult{Attempt: value, Created: created}, nil
 }
 
@@ -183,10 +198,10 @@ func loadRequestedItem(ctx context.Context, tx *sql.Tx, learnerID, reviewItemID 
 	var item reviewItem
 	err := tx.QueryRowContext(ctx, `
 		SELECT id,release_id,activity_id,activity_version,activity_hash,review_group_key,
-			capability_id,capability_version,reason,status,claimed_attempt_id
+			capability_id,capability_version,reason,status,due_at,claimed_attempt_id
 		FROM review_items WHERE id=$1 AND learner_id=$2`, reviewItemID, learnerID).Scan(
 		&item.ID, &item.ReleaseID, &item.ActivityID, &item.ActivityVersion, &item.ActivityHash,
-		&item.GroupKey, &item.CapabilityID, &item.CapabilityVersion, &item.Reason, &item.Status, &item.AttemptID)
+		&item.GroupKey, &item.CapabilityID, &item.CapabilityVersion, &item.Reason, &item.Status, &item.DueAt, &item.AttemptID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return reviewItem{}, ErrNotFound
 	}
@@ -196,15 +211,16 @@ func loadRequestedItem(ctx context.Context, tx *sql.Tx, learnerID, reviewItemID 
 	return item, nil
 }
 
-func lockActiveGroup(ctx context.Context, tx *sql.Tx, learnerID string, requested reviewItem) ([]reviewItem, error) {
+func lockActiveGroup(ctx context.Context, tx *sql.Tx, learnerID string, requested reviewItem, asOf time.Time) ([]reviewItem, error) {
 	rows, err := tx.QueryContext(ctx, `
 		SELECT id,release_id,activity_id,activity_version,activity_hash,review_group_key,
-			capability_id,capability_version,reason,status,claimed_attempt_id
+			capability_id,capability_version,reason,status,due_at,claimed_attempt_id
 		FROM review_items
 		WHERE learner_id=$1 AND review_group_key=$2 AND release_id=$3
-			AND activity_id=$4 AND activity_version=$5 AND status IN ('open','claimed')
+			AND activity_id=$4 AND activity_version=$5
+			AND (status='claimed' OR (status='open' AND due_at <= $6))
 		ORDER BY id FOR UPDATE`, learnerID, requested.GroupKey, requested.ReleaseID,
-		requested.ActivityID, requested.ActivityVersion)
+		requested.ActivityID, requested.ActivityVersion, asOf)
 	if err != nil {
 		return nil, fmt.Errorf("lock active review group: %w", err)
 	}
@@ -214,7 +230,7 @@ func lockActiveGroup(ctx context.Context, tx *sql.Tx, learnerID string, requeste
 		var item reviewItem
 		if err := rows.Scan(
 			&item.ID, &item.ReleaseID, &item.ActivityID, &item.ActivityVersion, &item.ActivityHash,
-			&item.GroupKey, &item.CapabilityID, &item.CapabilityVersion, &item.Reason, &item.Status, &item.AttemptID,
+			&item.GroupKey, &item.CapabilityID, &item.CapabilityVersion, &item.Reason, &item.Status, &item.DueAt, &item.AttemptID,
 		); err != nil {
 			return nil, fmt.Errorf("scan active review group: %w", err)
 		}

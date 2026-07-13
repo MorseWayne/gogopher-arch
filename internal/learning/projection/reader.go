@@ -169,6 +169,20 @@ func (r *Reader) Next(ctx context.Context, learnerID string, asOf time.Time) (*N
 	return selectAcquisition(capabilities, activities, states), nil
 }
 
+func (r *Reader) DueReviewCount(ctx context.Context, asOf time.Time) (int, error) {
+	if asOf.IsZero() {
+		return 0, fmt.Errorf("as_of is required")
+	}
+	var count int
+	err := r.db.QueryRowContext(ctx, `
+		SELECT count(*) FROM "`+r.schema+`".review_items
+		WHERE status='claimed' OR (status='open' AND due_at <= $1)`, asOf.UTC()).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("count due review items: %w", err)
+	}
+	return count, nil
+}
+
 func (r *Reader) setSearchPath(ctx context.Context, tx *sql.Tx) error {
 	if _, err := tx.ExecContext(ctx, `SET LOCAL search_path TO "`+r.schema+`"`); err != nil {
 		return fmt.Errorf("set learning query search path: %w", err)

@@ -10,9 +10,12 @@ import (
 
 func TestWorkerCompletesVersionedProjectionRequest(t *testing.T) {
 	now := time.Date(2026, time.July, 13, 13, 0, 0, 0, time.UTC)
-	repository := &projectionRequestRepositoryStub{request: Request{ID: "request-1", AttemptCount: 1}}
+	repository := &projectionRequestRepositoryStub{request: Request{ID: "request-1", AttemptCount: 1, CreatedAt: now.Add(-2 * time.Second)}}
 	projector := &requestProjectorStub{}
-	worker, err := NewWorker(repository, projector, projectionWorkerTestOptions(now))
+	observer := &projectionObserverStub{}
+	options := projectionWorkerTestOptions(now)
+	options.Observer = observer
+	worker, err := NewWorker(repository, projector, options)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -21,7 +24,7 @@ func TestWorkerCompletesVersionedProjectionRequest(t *testing.T) {
 		t.Fatalf("RunOnce() = %v, %v", processed, err)
 	}
 	if projector.calls != 1 || repository.completedConsumer != ProjectionConsumer ||
-		repository.completedVersion != ProjectionConsumerVersion {
+		repository.completedVersion != ProjectionConsumerVersion || observer.completedLag != 2*time.Second {
 		t.Fatalf("projector calls=%d consumer=%q version=%d",
 			projector.calls, repository.completedConsumer, repository.completedVersion)
 	}
@@ -105,8 +108,13 @@ func (s *requestProjectorStub) ProcessRequest(context.Context, Request, time.Tim
 }
 
 type projectionObserverStub struct {
-	calls     int
-	exhausted bool
+	calls        int
+	exhausted    bool
+	completedLag time.Duration
+}
+
+func (s *projectionObserverStub) OutboxCompleted(_ string, lag time.Duration) {
+	s.completedLag = lag
 }
 
 func (s *projectionObserverStub) OutboxRetried(_ string, exhausted bool) {

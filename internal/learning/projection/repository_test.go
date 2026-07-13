@@ -2,6 +2,8 @@ package projection
 
 import (
 	"context"
+	"database/sql"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -164,6 +166,21 @@ func TestPostgresProjectorRebuildsFactsIdempotently(t *testing.T) {
 		Consumer: ReviewSchedulerConsumer, ConsumerVersion: ReviewSchedulerConsumerVersion,
 		Now: func() time.Time { return now.Add(time.Hour) },
 	})
+	var concurrentPayload []byte
+	if err := db.QueryRowContext(ctx, `SELECT payload FROM "`+schema+`".learning_outbox WHERE topic='review_scheduler.requested' AND payload->>'capability_id'='M1-03' ORDER BY created_at,id LIMIT 1`).Scan(&concurrentPayload); err != nil {
+		t.Fatal(err)
+	}
+	concurrentErrors := make(chan error, 2)
+	for range 2 {
+		go func() {
+			concurrentErrors <- scheduler.ProcessRequest(ctx, Request{ID: "concurrent", Payload: concurrentPayload}, now.Add(time.Hour))
+		}()
+	}
+	for range 2 {
+		if err := <-concurrentErrors; err != nil {
+			t.Fatalf("concurrent scheduler: %v", err)
+		}
+	}
 	for range 4 {
 		if processed, err := schedulerWorker.RunOnce(ctx); err != nil || !processed {
 			t.Fatalf("scheduler RunOnce() processed=%v error=%v", processed, err)
@@ -405,7 +422,7 @@ func TestPostgresProjectorRebuildsFactsIdempotently(t *testing.T) {
 	if err := db.QueryRowContext(ctx, `SELECT id FROM "`+schema+`".review_items WHERE capability_id='M1-03' AND reason='remediation' AND status='open'`).Scan(&remediationItemID); err != nil {
 		t.Fatal(err)
 	}
-	remediationFinishedAt := reviewFinishedAt.AddDate(0, 0, 1)
+	remediationFinishedAt := reviewFinishedAt.AddDate(0, 0, 1).Add(3 * time.Minute)
 	remediationClaimService, _ := reviewflow.NewService(db, registry, reviewflow.ServiceOptions{
 		Schema: schema, Now: func() time.Time { return remediationFinishedAt.Add(-2 * time.Minute) },
 	})
@@ -516,11 +533,38 @@ func TestPostgresProjectorRebuildsFactsIdempotently(t *testing.T) {
 		t.Fatalf("remediated projection = %#v, %v", remediated, err)
 	}
 	input.AsOf = projectionClock
+	var evidenceBeforePreview, outboxBeforePreview int
+	if err := db.QueryRowContext(ctx, `SELECT count(*) FROM "`+schema+`".evidence_records`).Scan(&evidenceBeforePreview); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRowContext(ctx, `SELECT count(*) FROM "`+schema+`".learning_outbox`).Scan(&outboxBeforePreview); err != nil {
+		t.Fatal(err)
+	}
 	if _, err := db.ExecContext(ctx, `DELETE FROM "`+schema+`".capability_snapshots`); err != nil {
 		t.Fatal(err)
 	}
+	preview, err := projector.Preview(ctx, input)
+	if err != nil || preview.Change != "create" || preview.Before != nil {
+		t.Fatalf("Preview(create) = %#v, %v", preview, err)
+	}
+	var evidenceAfterPreview, outboxAfterPreview, snapshotsAfterPreview int
+	if err := db.QueryRowContext(ctx, `SELECT count(*) FROM "`+schema+`".evidence_records`).Scan(&evidenceAfterPreview); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRowContext(ctx, `SELECT count(*) FROM "`+schema+`".learning_outbox`).Scan(&outboxAfterPreview); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.QueryRowContext(ctx, `SELECT count(*) FROM "`+schema+`".capability_snapshots`).Scan(&snapshotsAfterPreview); err != nil {
+		t.Fatal(err)
+	}
+	if evidenceAfterPreview != evidenceBeforePreview || outboxAfterPreview != outboxBeforePreview || snapshotsAfterPreview != 0 {
+		t.Fatalf("preview mutated state: evidence %d/%d outbox %d/%d snapshots %d", evidenceBeforePreview, evidenceAfterPreview, outboxBeforePreview, outboxAfterPreview, snapshotsAfterPreview)
+	}
 	if _, changed, err := projector.Rebuild(ctx, input); err != nil || !changed {
 		t.Fatalf("rebuild after delete changed=%v error=%v", changed, err)
+	}
+	if repeated, err := projector.Preview(ctx, input); err != nil || repeated.Change != "none" {
+		t.Fatalf("Preview(repeated) = %#v, %v", repeated, err)
 	}
 	if err := db.QueryRowContext(ctx, `SELECT count(*) FROM "`+schema+`".learning_outbox WHERE id=$1 AND topic='review_scheduler.requested' AND status='completed'`, reviewRequestID).Scan(&schedulerRequests); err != nil || schedulerRequests != 1 {
 		t.Fatalf("completed review outcome requests = %d, %v", schedulerRequests, err)
@@ -552,6 +596,63 @@ func TestPostgresProjectorRebuildsFactsIdempotently(t *testing.T) {
 		&poisonStatus, &poisonAttempts, &lastError, &failedAt,
 	); err != nil || poisonStatus != "failed" || poisonAttempts != 2 || lastError == "" || failedAt.IsZero() {
 		t.Fatalf("poison request = status %q attempts %d last_error %q failed_at %s error %v", poisonStatus, poisonAttempts, lastError, failedAt, err)
+	}
+	assertOldReleaseReview(t, ctx, db, schema, registry, now)
+}
+
+func assertOldReleaseReview(t *testing.T, ctx context.Context, db *sql.DB, schema string, registry *definition.Registry, now time.Time) {
+	t.Helper()
+	const (
+		learnerID    = "00000000-0000-4000-8000-000000008001"
+		attemptID    = "00000000-0000-4000-8000-000000008002"
+		submissionID = "00000000-0000-4000-8000-000000008003"
+		executionID  = "00000000-0000-4000-8000-000000008004"
+		batchID      = "00000000-0000-4000-8000-000000008005"
+	)
+	releaseID := "m1-first-slice-v1"
+	activity, _ := registry.ActivityView(releaseID, "assessment-check-config", 1)
+	task, _ := registry.TaskView(releaseID, activity.TaskRef.ID, activity.TaskRef.Version)
+	policy, _ := registry.CapabilityPolicy(releaseID, "M1-03", 1)
+	statements := []struct {
+		query string
+		args  []any
+	}{
+		{`INSERT INTO "` + schema + `".learners (id,created_at) VALUES ($1,$2)`, []any{learnerID, now}},
+		{`INSERT INTO "` + schema + `".learning_attempts (id,learner_id,release_id,activity_id,activity_version,activity_hash,task_id,task_version,task_hash,capability_refs,mode,status,workspace,workspace_revision,workspace_hash,started_at,updated_at,submitted_at,completed_at) VALUES ($1,$2,$3,$4,1,$5,$6,1,$7,$8::jsonb,'assessment','completed','{}',0,$9,$10,$10,$10,$10)`, []any{attemptID, learnerID, releaseID, activity.ID, activity.ContentHash, task.ID, task.BundleHash, `[ {"id":"M1-03","version":1} ]`, hash64("8"), now}},
+		{`INSERT INTO "` + schema + `".attempt_submissions (id,attempt_id,learner_id,submission_key,request_fingerprint,workspace,workspace_revision,workspace_hash,rule_set_hash,status,created_at,evaluated_at) VALUES ($1,$2,$3,'old-submit',$4,'{}',0,$4,$5,'evaluated',$6,$6)`, []any{submissionID, attemptID, learnerID, hash64("9"), activity.RuleSetHash, now}},
+		{`INSERT INTO "` + schema + `".attempt_executions (id,attempt_id,submission_id,action,sequence,request_key,request_fingerprint,release_id,task_id,task_version,task_hash,workspace_revision,workspace_hash,spec,status,result,finished_at,created_at,updated_at) VALUES ($1,$2,$3,'submit',0,'old-submit:0',$4,$5,$6,1,$7,0,$4,'{}','succeeded','{}',$8,$8,$8)`, []any{executionID, attemptID, submissionID, hash64("a"), releaseID, task.ID, task.BundleHash, now}},
+		{`INSERT INTO "` + schema + `".evaluation_batches (id,submission_id,execution_id,rule_set_hash,rule_results,created_at) VALUES ($1,$2,$3,$4,'[]',$5)`, []any{batchID, submissionID, executionID, activity.RuleSetHash, now}},
+		{`INSERT INTO "` + schema + `".capability_snapshots (learner_id,capability_id,capability_version,capability_hash,acquisition_state,independence_state,transfer_state,retention_base_state,last_evidence_at,last_independent_at,projection_version,projected_at) VALUES ($1,'M1-03',1,$2,'verified','independent','same_context','fresh',$3,$3,1,$3)`, []any{learnerID, policy.ContentHash, now}},
+	}
+	for _, statement := range statements {
+		if _, err := db.ExecContext(ctx, statement.query, statement.args...); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for index, ruleID := range []string{"error-chain-preserved", "resource-closed"} {
+		id := fmt.Sprintf("00000000-0000-4000-8000-%012d", 8006+index)
+		if _, err := db.ExecContext(ctx, `INSERT INTO "`+schema+`".evidence_records (id,evaluation_batch_id,learner_id,capability_id,capability_version,capability_hash,attempt_id,activity_id,evidence_rule_id,evidence_type,result,independence,context_level,evaluator,rule_version,reason,occurred_at,created_at) VALUES ($1,$2,$3,'M1-03',1,$4,$5,$6,$7,'implement','passed','independent','same_context','deterministic',1,'passed',$8,$8)`, id, batchID, learnerID, policy.ContentHash, attemptID, activity.ID, ruleID, now); err != nil {
+			t.Fatal(err)
+		}
+	}
+	scheduler, _ := NewReviewScheduler(db, registry, SchedulerOptions{Schema: schema, Now: func() time.Time { return now }})
+	payload, _ := json.Marshal(ReviewSchedulerRequestPayload{
+		EventVersion: ReviewSchedulerEventVersion, ProjectionVersion: ProjectionVersion,
+		LearnerID: learnerID, ReleaseID: releaseID, CapabilityID: "M1-03", CapabilityVersion: 1,
+		CapabilityHash: policy.ContentHash, AcquisitionState: AcquisitionVerified,
+		IndependenceState: IndependenceIndependent, TransferState: TransferSameContext, RetentionBase: RetentionFresh,
+	})
+	if err := scheduler.ProcessRequest(ctx, Request{ID: "old-release", Payload: payload}, now); err != nil {
+		t.Fatal(err)
+	}
+	var reviewItemID string
+	if err := db.QueryRowContext(ctx, `SELECT id FROM "`+schema+`".review_items WHERE learner_id=$1 AND release_id=$2 AND status='open'`, learnerID, releaseID).Scan(&reviewItemID); err != nil {
+		t.Fatal(err)
+	}
+	claimer, _ := reviewflow.NewService(db, registry, reviewflow.ServiceOptions{Schema: schema, Now: func() time.Time { return now.AddDate(0, 0, 4) }})
+	claimed, err := claimer.Claim(ctx, learnerID, reviewItemID)
+	if err != nil || !claimed.Created || claimed.Attempt.ReleaseID != releaseID || claimed.Attempt.ActivityVersion != 1 || claimed.Attempt.TaskVersion != 1 {
+		t.Fatalf("old release Claim() = %#v, %v", claimed, err)
 	}
 }
 

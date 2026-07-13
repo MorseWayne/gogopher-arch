@@ -2,10 +2,12 @@ package observability
 
 import (
 	"bytes"
+	"context"
 	"log/slog"
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/MorseWayne/gogopher-arch/internal/learning/assistance"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/attempt"
@@ -20,7 +22,7 @@ func TestCollectorExportsBoundedMetricsWithoutSensitivePayloads(t *testing.T) {
 	slog.SetDefault(slog.New(slog.NewJSONHandler(&logs, nil)))
 	defer slog.SetDefault(previous)
 
-	collector := NewCollector()
+	collector := NewCollector(stateProviderStub{due: 3})
 	collector.AttemptCreated(attempt.Attempt{
 		ID: "attempt-id", LearnerID: "learner-id", ActivityID: "activity-id", TaskID: "task-id",
 		Workspace: map[string]string{"main.go": "SECRET_USER_CODE"},
@@ -56,6 +58,11 @@ func TestCollectorExportsBoundedMetricsWithoutSensitivePayloads(t *testing.T) {
 	})
 	collector.OutboxRetried("capability_projector", false)
 	collector.OutboxRetried("review_scheduler", true)
+	collector.OutboxCompleted("capability_projector", 2500*time.Millisecond)
+	collector.ReviewItemsTransitioned("created", 2)
+	collector.ReviewItemsTransitioned("claimed", 1)
+	collector.ReviewItemsTransitioned("completed", 1)
+	collector.ReviewItemsTransitioned("replaced", 1)
 
 	response := httptest.NewRecorder()
 	collector.ServeHTTP(response, httptest.NewRequest("GET", "/metrics", nil))
@@ -72,6 +79,12 @@ func TestCollectorExportsBoundedMetricsWithoutSensitivePayloads(t *testing.T) {
 		`gogopher_learning_evidence_total{type="test",independence="hinted",result="passed"} 1`,
 		`gogopher_learning_outbox_retry_total{consumer="capability_projector",outcome="scheduled"} 1`,
 		`gogopher_learning_outbox_retry_total{consumer="review_scheduler",outcome="exhausted"} 1`,
+		`gogopher_learning_projection_lag_seconds{consumer="capability_projector"} 2.5`,
+		`gogopher_learning_review_transition_total{outcome="created"} 2`,
+		`gogopher_learning_review_transition_total{outcome="claimed"} 1`,
+		`gogopher_learning_review_transition_total{outcome="completed"} 1`,
+		`gogopher_learning_review_transition_total{outcome="replaced"} 1`,
+		`gogopher_learning_review_due 3`,
 	} {
 		if !strings.Contains(body, metric) {
 			t.Fatalf("metrics missing %q:\n%s", metric, body)
@@ -83,3 +96,7 @@ func TestCollectorExportsBoundedMetricsWithoutSensitivePayloads(t *testing.T) {
 		}
 	}
 }
+
+type stateProviderStub struct{ due int }
+
+func (s stateProviderStub) DueReviewCount(context.Context, time.Time) (int, error) { return s.due, nil }

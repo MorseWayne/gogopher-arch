@@ -1,12 +1,14 @@
 package observability
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/MorseWayne/gogopher-arch/internal/learning/attempt"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/evaluation"
@@ -40,6 +42,10 @@ type executionMetrics struct {
 	DurationMS uint64
 }
 
+type LearningStateProvider interface {
+	DueReviewCount(context.Context, time.Time) (int, error)
+}
+
 type Collector struct {
 	mu          sync.Mutex
 	attempts    map[string]uint64
@@ -48,14 +54,23 @@ type Collector struct {
 	truncations map[truncationKey]uint64
 	evidence    map[evidenceKey]uint64
 	outbox      map[outboxKey]uint64
+	reviews     map[string]uint64
+	outboxLag   map[string]time.Duration
+	state       LearningStateProvider
+	now         func() time.Time
 }
 
-func NewCollector() *Collector {
-	return &Collector{
+func NewCollector(providers ...LearningStateProvider) *Collector {
+	collector := &Collector{
 		attempts: make(map[string]uint64), executions: make(map[executionKey]executionMetrics),
 		failures: make(map[string]uint64), truncations: make(map[truncationKey]uint64),
 		evidence: make(map[evidenceKey]uint64), outbox: make(map[outboxKey]uint64),
+		reviews: make(map[string]uint64), outboxLag: make(map[string]time.Duration), now: time.Now,
 	}
+	if len(providers) > 0 {
+		collector.state = providers[0]
+	}
+	return collector
 }
 
 func (c *Collector) OutboxRetried(consumer string, exhausted bool) {
@@ -65,6 +80,24 @@ func (c *Collector) OutboxRetried(consumer string, exhausted bool) {
 	}
 	c.mu.Lock()
 	c.outbox[outboxKey{Consumer: consumer, Outcome: outcome}]++
+	c.mu.Unlock()
+}
+
+func (c *Collector) OutboxCompleted(consumer string, lag time.Duration) {
+	if lag < 0 {
+		lag = 0
+	}
+	c.mu.Lock()
+	c.outboxLag[consumer] = lag
+	c.mu.Unlock()
+}
+
+func (c *Collector) ReviewItemsTransitioned(outcome string, count int) {
+	if count <= 0 {
+		return
+	}
+	c.mu.Lock()
+	c.reviews[outcome] += uint64(count)
 	c.mu.Unlock()
 }
 
@@ -147,9 +180,18 @@ func (c *Collector) EvaluationCompleted(batch evaluation.Batch) {
 		"rule_result_count", len(batch.RuleResults), "evidence_count", len(batch.Evidence))
 }
 
-func (c *Collector) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
+func (c *Collector) ServeHTTP(w http.ResponseWriter, request *http.Request) {
+	dueCount := -1
+	if c.state != nil {
+		value, err := c.state.DueReviewCount(request.Context(), c.now().UTC())
+		if err != nil {
+			slog.Warn("learning state metrics unavailable")
+		} else {
+			dueCount = value
+		}
+	}
 	c.mu.Lock()
-	lines := c.metricLines()
+	lines := c.metricLines(dueCount)
 	c.mu.Unlock()
 	sort.Strings(lines)
 	w.Header().Set("Content-Type", "text/plain; version=0.0.4; charset=utf-8")
@@ -157,8 +199,8 @@ func (c *Collector) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 	_, _ = fmt.Fprintln(w, strings.Join(lines, "\n"))
 }
 
-func (c *Collector) metricLines() []string {
-	lines := make([]string, 0, len(c.attempts)+len(c.executions)*3+len(c.failures)+len(c.truncations)+len(c.evidence)+len(c.outbox))
+func (c *Collector) metricLines(dueCount int) []string {
+	lines := make([]string, 0, len(c.attempts)+len(c.executions)*3+len(c.failures)+len(c.truncations)+len(c.evidence)+len(c.outbox)+len(c.reviews)+len(c.outboxLag)+1)
 	for status, count := range c.attempts {
 		lines = append(lines, fmt.Sprintf(`gogopher_learning_attempt_total{outcome=%q} %d`, status, count))
 	}
@@ -181,6 +223,15 @@ func (c *Collector) metricLines() []string {
 	}
 	for key, count := range c.outbox {
 		lines = append(lines, fmt.Sprintf(`gogopher_learning_outbox_retry_total{consumer=%q,outcome=%q} %d`, key.Consumer, key.Outcome, count))
+	}
+	for consumer, lag := range c.outboxLag {
+		lines = append(lines, fmt.Sprintf(`gogopher_learning_projection_lag_seconds{consumer=%q} %g`, consumer, lag.Seconds()))
+	}
+	for outcome, count := range c.reviews {
+		lines = append(lines, fmt.Sprintf(`gogopher_learning_review_transition_total{outcome=%q} %d`, outcome, count))
+	}
+	if dueCount >= 0 {
+		lines = append(lines, fmt.Sprintf(`gogopher_learning_review_due %d`, dueCount))
 	}
 	return lines
 }

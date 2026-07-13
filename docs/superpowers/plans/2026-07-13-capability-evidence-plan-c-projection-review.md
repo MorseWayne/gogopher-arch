@@ -106,18 +106,20 @@
 
 ### C8 — 重建 command 与可观测性
 
-- [ ] 新增 repo-local admin command，用于按 learner/Capability 或全量重建 Snapshot。
-- [ ] command 先 dry-run 输出差异，再显式 apply；不修改 Evidence。
-- [ ] 增加 projection lag、outbox retry、review created/claimed/completed/replaced 和 due count metrics。
-- [ ] 日志使用内部 ID，不包含用户代码或 session token。
-- [ ] 为重复重建、并发 scheduler 和旧 release review 写集成测试。
+- [x] 新增 repo-local admin command，用于按 learner/Capability 或全量重建 Snapshot。
+- [x] command 先 dry-run 输出差异，再显式 apply；不修改 Evidence。
+- [x] 增加 projection lag、outbox retry、review created/claimed/completed/replaced 和 due count metrics。
+- [x] 日志使用内部 ID，不包含用户代码或 session token。
+- [x] 为重复重建、并发 scheduler 和旧 release review 写集成测试。
+
+验收记录：新增 `cmd/learning-rebuild`，默认及 `--dry-run` 逐 Snapshot 输出 before/after/change JSON，只有显式 `--apply` 才调用原子 Rebuild；target 支持单 learner、单 Capability、组合或全部 versioned state，Preview 使用只读 transaction，集成测试断言 Snapshot/outbox/Evidence 均不变化。worker 以 outbox `created_at` 记录 projection lag，现有 retry counter 保留；scheduler 与 claim service 仅在 transaction commit 后记录 created/claimed/completed/replaced，metrics scrape 实时查询 due ReviewItem。并发处理同一 scheduler payload 只创建一个 ReviewItem，重复 Rebuild 返回 none，历史 release 的 ReviewItem 使用其冻结 Activity/Task 创建 Attempt；同时修正未到期 open ReviewItem 可被提前领取的问题。
 
 ## 验证
 
 ```bash
 go test ./...
-go test ./src/services/gateway/internal/learning/... -count=10
-go run ./src/cmd/learning-rebuild --dry-run
+go test ./internal/learning/... -count=10
+go run ./cmd/learning-rebuild --dry-run
 git diff --check
 ```
 

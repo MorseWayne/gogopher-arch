@@ -77,9 +77,9 @@ func (r *PostgresRequestRepository) ClaimRequest(ctx context.Context, owner stri
 			lease_owner = $3, lease_expires_at = $4
 		FROM candidate
 		WHERE o.id = candidate.id
-		RETURNING o.id, o.payload, o.attempt_count`,
+		RETURNING o.id, o.payload, o.attempt_count, o.created_at`,
 		r.topic, now, owner, now.Add(lease)).Scan(
-		&request.ID, &request.Payload, &request.AttemptCount)
+		&request.ID, &request.Payload, &request.AttemptCount, &request.CreatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		if err := tx.Commit(); err != nil {
 			return Request{}, false, fmt.Errorf("commit empty projection claim: %w", err)

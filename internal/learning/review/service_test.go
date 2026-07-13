@@ -147,7 +147,14 @@ func TestServiceClaimsReviewGroupOnceAcrossConcurrentItems(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	service, err := NewService(db, registry, ServiceOptions{Schema: schema, Now: func() time.Time { return now.Add(time.Hour) }})
+	earlyService, err := NewService(db, registry, ServiceOptions{Schema: schema, Now: func() time.Time { return now.Add(time.Hour) }})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := earlyService.Claim(ctx, learnerID, itemIDs[0]); !errors.Is(err, ErrUnavailable) {
+		t.Fatalf("early Claim() error = %v", err)
+	}
+	service, err := NewService(db, registry, ServiceOptions{Schema: schema, Now: func() time.Time { return now.Add(73 * time.Hour) }})
 	if err != nil {
 		t.Fatal(err)
 	}

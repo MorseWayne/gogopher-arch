@@ -26,6 +26,10 @@ type WorkerObserver interface {
 	OutboxRetried(string, bool)
 }
 
+type workerCompletionObserver interface {
+	OutboxCompleted(string, time.Duration)
+}
+
 type WorkerOptions struct {
 	Owner           string
 	Lease           time.Duration
@@ -99,11 +103,19 @@ func (w *Worker) RunOnce(ctx context.Context) (bool, error) {
 			"consumer", w.options.Consumer, "retry_exhausted", result.Exhausted)
 		return true, nil
 	}
+	completedAt := w.options.Now().UTC()
 	if err := w.repository.CompleteRequest(
 		ctx, request.ID, w.options.Owner, w.options.Consumer,
-		w.options.ConsumerVersion, w.options.Now().UTC(),
+		w.options.ConsumerVersion, completedAt,
 	); err != nil {
 		return true, err
+	}
+	if observer, ok := w.options.Observer.(workerCompletionObserver); ok && !request.CreatedAt.IsZero() {
+		lag := completedAt.Sub(request.CreatedAt)
+		if lag < 0 {
+			lag = 0
+		}
+		observer.OutboxCompleted(w.options.Consumer, lag)
 	}
 	return true, nil
 }

@@ -53,13 +53,23 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 	db.SetMaxOpenConns(cfg.DBMaxOpenConnections)
 	db.SetMaxIdleConns(cfg.DBMaxIdleConnections)
 	db.SetConnMaxLifetime(cfg.DBConnectionLifetime)
-	metrics := observability.NewCollector()
 	fail := func(err error) (*App, error) { db.Close(); return nil, err }
 	history, err := definition.NewReleaseStore(db, definition.ReleaseStoreOptions{})
 	if err != nil {
 		return fail(err)
 	}
 	registry, err := definition.BootstrapRegistry(ctx, cfg.LearningContentDir, history)
+	if err != nil {
+		return fail(err)
+	}
+	learningReader, err := projection.NewReader(db, registry, projection.ReaderOptions{})
+	if err != nil {
+		return fail(err)
+	}
+	metrics := observability.NewCollector(learningReader)
+	definitionHandler, err := httpapi.NewDefinitionHandler(registry, learningReader, httpapi.DefinitionHandlerOptions{
+		AllowTestAsOf: cfg.AppEnv == "test",
+	})
 	if err != nil {
 		return fail(err)
 	}
@@ -99,7 +109,7 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 	if err != nil {
 		return fail(err)
 	}
-	reviewService, err := review.NewService(db, registry, review.ServiceOptions{})
+	reviewService, err := review.NewService(db, registry, review.ServiceOptions{Observer: metrics})
 	if err != nil {
 		return fail(err)
 	}
@@ -160,16 +170,6 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 	if err != nil {
 		return fail(err)
 	}
-	learningReader, err := projection.NewReader(db, registry, projection.ReaderOptions{})
-	if err != nil {
-		return fail(err)
-	}
-	definitionHandler, err := httpapi.NewDefinitionHandler(registry, learningReader, httpapi.DefinitionHandlerOptions{
-		AllowTestAsOf: cfg.AppEnv == "test",
-	})
-	if err != nil {
-		return fail(err)
-	}
 	projectionRepository, err := projection.NewPostgresRequestRepository(db, projection.RepositoryOptions{})
 	if err != nil {
 		return fail(err)
@@ -184,7 +184,7 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 	if err != nil {
 		return fail(err)
 	}
-	reviewScheduler, err := projection.NewReviewScheduler(db, registry, projection.SchedulerOptions{})
+	reviewScheduler, err := projection.NewReviewScheduler(db, registry, projection.SchedulerOptions{Observer: metrics})
 	if err != nil {
 		return fail(err)
 	}

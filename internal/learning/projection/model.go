@@ -99,17 +99,18 @@ type Snapshot struct {
 }
 
 type RebuildInput struct {
-	LearnerID         string
-	ReleaseID         string
-	CapabilityID      string
-	CapabilityVersion int
-	AsOf              time.Time
+	LearnerID         string    `json:"learner_id"`
+	ReleaseID         string    `json:"release_id"`
+	CapabilityID      string    `json:"capability_id"`
+	CapabilityVersion int       `json:"capability_version"`
+	AsOf              time.Time `json:"as_of"`
 }
 
 type Request struct {
 	ID           string
 	Payload      json.RawMessage
 	AttemptCount int
+	CreatedAt    time.Time
 }
 
 type ProjectionRequestPayload struct {
