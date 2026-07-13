@@ -80,6 +80,9 @@ func BuildRelease(options ReleaseOptions) (string, error) {
 	if err := os.WriteFile(filepath.Join(stagingDir, "manifest.json"), manifestJSON, 0o644); err != nil {
 		return "", fmt.Errorf("write release manifest: %w", err)
 	}
+	if err := os.Chmod(stagingDir, 0o755); err != nil {
+		return "", fmt.Errorf("make release directory readable: %w", err)
+	}
 	if err := VerifyRelease(stagingDir, filepath.Join(options.ContentDir, "schemas")); err != nil {
 		return "", fmt.Errorf("verify generated release: %w", err)
 	}

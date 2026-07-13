@@ -153,13 +153,13 @@ Plan B/C 的表由各自 migration 新增，不在本计划提前创建空壳表
 
 ### A7 — 路由、配置和本地启用边界
 
-- [ ] 扩展 config：`APP_ENV`、`LEARNING_SLICE_ENABLED`、`LEARNING_CONTENT_DIR`、session TTL 和 DB pool 参数。
-- [ ] 仅在 `LEARNING_SLICE_ENABLED=true && APP_ENV=local` 注册 Learning API；关闭时返回明确的 unavailable 状态，不回退旧 API。
-- [ ] 注册 Plan A 路由：`POST /session`、`GET /capabilities/{id}`、`GET /activities/{id}`、`POST /attempts`、`GET /attempts/{id}`、`PUT /attempts/{id}/workspace`；Capability 在 Plan C 前返回空 Snapshot。
-- [ ] Gateway 原生本地模式默认监听 `127.0.0.1`；Compose 下使用显式容器监听配置。
-- [ ] Docker Gateway 镜像复制所有受支持 release；启动时使用只读内容目录。
-- [ ] 调整 Compose 基础发布面：Web 宿主端口绑定 `127.0.0.1`，Gateway/Sandbox 默认不发布宿主端口。
-- [ ] 删除旧 Gateway `/api/v1/execute`、`src/services/gateway` 和不再使用的 shared request model；不提供兼容 adapter。
+- [x] 扩展 config：`APP_ENV`、`LEARNING_SLICE_ENABLED`、`LEARNING_CONTENT_DIR`、session TTL 和 DB pool 参数。
+- [x] 仅在 `LEARNING_SLICE_ENABLED=true && APP_ENV=local` 注册 Learning API；关闭时返回明确的 unavailable 状态，不回退旧 API。
+- [x] 注册 Plan A 路由：`POST /session`、`GET /capabilities/{id}`、`GET /activities/{id}`、`POST /attempts`、`GET /attempts/{id}`、`PUT /attempts/{id}/workspace`；Capability 在 Plan C 前返回空 Snapshot。
+- [x] Gateway 原生本地模式默认监听 `127.0.0.1`；Compose 下使用显式容器监听配置。
+- [x] Docker Gateway 镜像复制所有受支持 release；启动时使用只读内容目录。
+- [x] 调整 Compose 基础发布面：Web 宿主端口绑定 `127.0.0.1`，Gateway/Sandbox 默认不发布宿主端口。
+- [x] 删除旧 Gateway `/api/v1/execute` 和 `src/services/gateway`，不提供兼容 adapter；仍被旧 Sandbox 独占的 shared request model 随 Plan B 的 ExecutionSpec replacement 删除。
 
 完成条件：feature gate 关闭时返回明确 unavailable 状态；错误环境组合会在启动阶段失败而不是降级运行。
 

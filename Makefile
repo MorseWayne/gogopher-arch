@@ -2,10 +2,10 @@
 
 dev:
 	docker compose up postgres redis -d
-	# 本地混合开发：后台启动 Go 服务，前台启动前端 dev server
+	# 本地混合开发：后台启动 Gateway，前台启动前端 dev server
 	# 停止时运行 `make clean`
-	go run ./src/services/sandbox-engine/main.go &
-	go run ./src/services/gateway/main.go &
+	DATABASE_URL=$${DATABASE_URL:-postgres://user:pass@localhost:5432/gogopher?sslmode=disable} go run ./cmd/migrate up
+	DATABASE_URL=$${DATABASE_URL:-postgres://user:pass@localhost:5432/gogopher?sslmode=disable} LEARNING_SLICE_ENABLED=true APP_ENV=local go run ./cmd/gateway &
 	cd web && npm run dev
 
 test:
@@ -31,4 +31,4 @@ learning-content-verify:
 
 clean:
 	docker compose down -v
-	pkill -f "go run ./src/services" || true
+	pkill -f "go run ./cmd/gateway" || true

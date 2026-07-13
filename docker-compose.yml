@@ -3,7 +3,7 @@ services:
     build:
       context: ./web
     ports:
-      - "${WEB_PORT:-3000}:80"
+      - "127.0.0.1:${WEB_PORT:-3000}:80"
     depends_on:
       gateway:
         condition: service_healthy
@@ -12,22 +12,24 @@ services:
   gateway:
     build:
       context: .
-      dockerfile: src/services/gateway/Dockerfile
-    ports:
-      - "${GATEWAY_PORT:-8080}:8080"
+      dockerfile: cmd/gateway/Dockerfile
+    expose:
+      - "8080"
     depends_on:
       migrate:
         condition: service_completed_successfully
-      sandbox-engine:
-        condition: service_healthy
       postgres:
         condition: service_healthy
-      redis:
-        condition: service_healthy
     environment:
-      - SANDBOX_URL=${SANDBOX_URL:-http://sandbox-engine:8081/execute}
-      - DB_URL=${DB_URL:-postgres://user:pass@postgres:5432/gogopher?sslmode=disable}
-      - REDIS_URL=${REDIS_URL:-redis:6379}
+      - APP_ENV=local
+      - LISTEN_ADDRESS=0.0.0.0:8080
+      - LEARNING_SLICE_ENABLED=true
+      - LEARNING_CONTENT_DIR=/app/content/learning
+      - LEARNING_SESSION_TTL=${LEARNING_SESSION_TTL:-720h}
+      - DATABASE_URL=${DATABASE_URL:-postgres://user:pass@postgres:5432/gogopher?sslmode=disable}
+      - DB_MAX_OPEN_CONNECTIONS=${DB_MAX_OPEN_CONNECTIONS:-10}
+      - DB_MAX_IDLE_CONNECTIONS=${DB_MAX_IDLE_CONNECTIONS:-5}
+      - DB_CONNECTION_LIFETIME=${DB_CONNECTION_LIFETIME:-30m}
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
       interval: 10s
@@ -51,8 +53,8 @@ services:
     build:
       context: .
       dockerfile: src/services/sandbox-engine/Dockerfile
-    ports:
-      - "${SANDBOX_PORT:-8081}:8081"
+    expose:
+      - "8081"
     environment:
       - REDIS_URL=${REDIS_URL:-redis:6379}
       - DB_URL=${DB_URL:-postgres://user:pass@postgres:5432/gogopher?sslmode=disable}

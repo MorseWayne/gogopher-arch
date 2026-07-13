@@ -44,6 +44,20 @@ func TestAttemptHandlerMapsOwnershipAndRevisionConflict(t *testing.T) {
 	}
 }
 
+func TestDisabledRouterReturnsExplicitUnavailableAndRemovesExecuteAPI(t *testing.T) {
+	router := NewRouter(false, nil, nil, nil)
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, httptest.NewRequest(http.MethodPost, "/api/v1/learning/session", nil))
+	if response.Code != http.StatusServiceUnavailable || !strings.Contains(response.Body.String(), "learning_disabled") {
+		t.Fatalf("disabled = %d %s", response.Code, response.Body.String())
+	}
+	response = httptest.NewRecorder()
+	router.ServeHTTP(response, httptest.NewRequest(http.MethodPost, "/api/v1/execute", nil))
+	if response.Code != http.StatusNotFound {
+		t.Fatalf("legacy execute status = %d", response.Code)
+	}
+}
+
 type attemptServiceStub struct {
 	created     attempt.Attempt
 	createInput attempt.CreateInput

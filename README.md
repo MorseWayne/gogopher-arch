@@ -243,9 +243,9 @@ API 网关默认监听 `http://localhost:8080`，健康检查地址为 `http://l
 
 | 变量 | 值（本地混合模式） | 说明 |
 | :--- | :--- | :--- |
-| `DB_URL` | `postgres://user:pass@localhost:5432/gogopher?sslmode=disable` | 连接本地 Docker PostgreSQL |
-| `REDIS_URL` | `localhost:6379` | 连接本地 Docker Redis |
-| `SANDBOX_URL` | `http://localhost:8081/execute` | Gateway 连接本地沙盒引擎 |
+| `DATABASE_URL` | `postgres://user:pass@localhost:5432/gogopher?sslmode=disable` | Learning Gateway 连接本地 PostgreSQL |
+| `LEARNING_SLICE_ENABLED` | `true` | 仅在 `APP_ENV=local` 时启用 Learning API |
+| `LEARNING_CONTENT_DIR` | `content/learning` | release、schema 与 current pointer 根目录 |
 | `VITE_API_BASE_URL` | `/api/v1` | 前端 API 基址；默认走相对路径和代理 |
 
 ### 环境变量
@@ -255,13 +255,10 @@ API 网关默认监听 `http://localhost:8080`，健康检查地址为 `http://l
 | 变量 | 所在服务 | 默认值 | 说明 |
 | :--- | :--- | :--- | :--- |
 | `WEB_PORT` | host | `3000` | Web 容器映射到宿主机的端口 |
-| `GATEWAY_PORT` | host | `8080` | Gateway 映射到宿主机的端口 |
-| `SANDBOX_PORT` | host | `8081` | Sandbox Engine 映射到宿主机的端口 |
 | `POSTGRES_PORT` | host | `5432` | PostgreSQL 映射到宿主机的端口 |
 | `REDIS_PORT` | host | `6379` | Redis 映射到宿主机的端口 |
-| `SANDBOX_URL` | `gateway` | `http://sandbox-engine:8081/execute` | Gateway 调用沙盒引擎的内部地址 |
-| `DB_URL` | `gateway`, `sandbox-engine` | `postgres://user:pass@postgres:5432/gogopher?sslmode=disable` | PostgreSQL 连接串 |
-| `REDIS_URL` | `gateway`, `sandbox-engine` | `redis:6379` | Redis 地址 |
+| `DATABASE_URL` | `gateway`, `migrate` | `postgres://user:pass@postgres:5432/gogopher?sslmode=disable` | PostgreSQL 连接串 |
+| `LEARNING_SESSION_TTL` | `gateway` | `720h` | 匿名 Learner session 有效期 |
 | `POSTGRES_USER` | `postgres` | `user` | 数据库用户名 |
 | `POSTGRES_PASSWORD` | `postgres` | `pass` | 数据库密码 |
 | `POSTGRES_DB` | `postgres` | `gogopher` | 数据库名 |
@@ -271,10 +268,7 @@ API 网关默认监听 `http://localhost:8080`，健康检查地址为 `http://l
 服务启动后，可通过以下地址访问：
 
 - **前端界面**：[http://localhost:3000](http://localhost:3000)
-- **API 网关**：[http://localhost:8080](http://localhost:8080)
-- **Gateway 健康检查**：[http://localhost:8080/health](http://localhost:8080/health)
-- **Sandbox 健康检查**：[http://localhost:8081/health](http://localhost:8081/health)
-- **沙盒引擎**（Gateway 内部调用 `/execute`）：`http://sandbox-engine:8081/execute`
+- **Learning API**：通过 Web 的 [http://localhost:3000/api/v1/learning](http://localhost:3000/api/v1/learning) 反向代理访问
 - **PostgreSQL**：`localhost:5432`
 - **Redis**：`localhost:6379`
 
