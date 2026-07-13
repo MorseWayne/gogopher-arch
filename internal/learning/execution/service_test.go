@@ -12,7 +12,7 @@ import (
 
 func TestServiceCreatesIdempotentNormalExecution(t *testing.T) {
 	registry := releaseRegistry(t)
-	current := frozenAttempt(t, registry, "guided-run-model-v1")
+	current := frozenAttempt(t, registry, "guided-run-model-v2", 2)
 	current.ID = "00000000-0000-4000-8000-000000000101"
 	current.LearnerID = "00000000-0000-4000-8000-000000000102"
 	current.Status = "active"
@@ -63,7 +63,7 @@ func TestServiceCreatesIdempotentNormalExecution(t *testing.T) {
 
 func TestServiceRejectsStaleWorkspaceBeforeQueueing(t *testing.T) {
 	registry := releaseRegistry(t)
-	current := frozenAttempt(t, registry, "guided-run-model-v1")
+	current := frozenAttempt(t, registry, "guided-run-model-v2", 2)
 	current.ID, current.LearnerID, current.Status = "attempt-1", "learner-1", "active"
 	current.WorkspaceRevision = 3
 	builder, _ := NewSpecBuilder(registry)

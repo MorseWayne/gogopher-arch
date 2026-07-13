@@ -1,0 +1,31 @@
+{
+  "id":"assessment-check-config-v2","version":2,"language":"go1.25","workspace_root":"workspace",
+  "files":[
+    {"source":"README.md","path":"README.md","role":"readme","editable":false,"sha256":"6cdee8a2b95bf271ac7381f9e040d4a57f700e99ff7f8b0a42b6419a4ae8bf2a"},
+    {"source":"starter/go.mod","path":"go.mod","role":"starter","editable":false,"sha256":"456b0a3cb8249977843635cfe811ff0ad8979c9cc0c94da14d97bc3906f26184"},
+    {"source":"starter/cmd/checkcfg/main.go","path":"cmd/checkcfg/main.go","role":"starter","editable":true,"sha256":"2b032a1e71b699e8a1be3141ebed37e5ee7d10f1f3894345f0d7fd3df5247fec"},
+    {"source":"starter/internal/config/config.go","path":"internal/config/config.go","role":"starter","editable":true,"sha256":"06bb59c03d414791e89cc30cd2a3e66962f74a03fe6c2798d26ead3262f2417e"},
+    {"source":"starter/internal/config/config_test.go","path":"internal/config/config_test.go","role":"starter","editable":true,"sha256":"64903b00a1e87f78d3ab2063c0853aad94ad0706f4741ba1c1d386231e82609c"},
+    {"source":"visible/internal/config/visible_test.go","path":"internal/config/visible_test.go","role":"visible_test","editable":false,"sha256":"a47e37f674bc096261f2cfbe337dbfd58c321eeee113fa5adac69f900a9bce9f"},
+    {"source":"heldout/internal/config/heldout_test.go","path":"internal/config/heldout_test.go","role":"held_out_test","editable":false,"sha256":"599728de44f52baf256fdf940b0b59c0986ca795fb943eabe63757b6213c6bd5"},
+    {"source":"fixtures/valid-targets.json","path":"testdata/valid-targets.json","role":"fixture","editable":false,"sha256":"cfb754d0a158c51f9abc1bf5b840f6f7404f5f1b88d0d33b3e65b66a9adf196e"}
+  ],
+  "editable_paths":["cmd/checkcfg/main.go","internal/config/config.go","internal/config/config_test.go"],
+  "readonly_paths":["README.md","go.mod","internal/config/visible_test.go","testdata/valid-targets.json"],
+  "limits":{"max_files":16,"max_file_bytes":131072,"max_total_bytes":524288},
+  "actions":{"build":{"timeout_ms":8000,"max_output_bytes":131072,"network":"none"},"test":{"timeout_ms":8000,"max_output_bytes":131072,"network":"none"},"vet":{"timeout_ms":8000,"max_output_bytes":131072,"network":"none"},"submit":{"timeout_ms":15000,"max_output_bytes":262144,"network":"none"}},
+  "visible_tests":["internal/config/visible_test.go"],"held_out_tests":["internal/config/heldout_test.go"],
+  "assessment_rules":[
+    {"rule_id":"module-builds","stage":"build","selector":{"package":"./..."},"capability_refs":[{"id":"M1-01","version":2}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"toolchain-checks-pass","stage":"vet","selector":{"package":"./..."},"capability_refs":[{"id":"M1-01","version":2}],"evidence_type":"diagnose","condition":"passed"},
+    {"rule_id":"error-chain-preserved","stage":"held_out_test","selector":{"test":"TestLoadRejectsInvalidSchemeAndPreservesPathErrors"},"capability_refs":[{"id":"M1-03","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"resource-closed","stage":"ast","selector":{"file":"internal/config/config.go","deferred_call":"Close"},"capability_refs":[{"id":"M1-03","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"invalid-input-rejected","stage":"held_out_test","selector":{"test":"TestLoadRejectsInvalidSchemeAndPreservesPathErrors"},"capability_refs":[{"id":"M1-07","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"stable-output","stage":"visible_test","selector":{"test":"TestNormalizeSortsTargets"},"capability_refs":[{"id":"M1-07","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"cli-failure-contract","stage":"held_out_test","selector":{"package":"cmd/checkcfg"},"capability_refs":[{"id":"M1-07","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"learner-tests-present","stage":"ast","selector":{"glob":"**/*_test.go","minimum_cases":3},"capability_refs":[{"id":"M1-09","version":1}],"evidence_type":"test","condition":"passed"},
+    {"rule_id":"visible-tests-pass","stage":"visible_test","selector":{"package":"./..."},"capability_refs":[{"id":"M1-09","version":1}],"evidence_type":"test","condition":"passed"},
+    {"rule_id":"held-out-tests-pass","stage":"held_out_test","selector":{"package":"./..."},"capability_refs":[{"id":"M1-09","version":1}],"evidence_type":"test","condition":"passed"}
+  ],
+  "artifact_rules":{"workspace":"full","logs":["build","test","vet","submit"]}
+}

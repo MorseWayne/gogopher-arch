@@ -62,8 +62,8 @@ func TestReleaseStoreRegistersIdempotentlyAndRejectsVersionDrift(t *testing.T) {
 	if err := db.QueryRowContext(ctx, fmt.Sprintf(`SELECT count(*) FROM %s.definition_versions`, quotePostgresIdentifier(schema))).Scan(&definitionCount); err != nil {
 		t.Fatal(err)
 	}
-	if definitionCount != 16 {
-		t.Fatalf("definition_versions count = %d, want 16", definitionCount)
+	if definitionCount != 23 {
+		t.Fatalf("definition_versions count = %d, want 23", definitionCount)
 	}
 
 	ref := DefinitionRef{ReleaseID: testReleaseID, Kind: KindCapability, ID: "M1-01", Version: 1}

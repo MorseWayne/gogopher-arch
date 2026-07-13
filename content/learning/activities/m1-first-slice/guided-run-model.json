@@ -1,14 +1,14 @@
 {
   "id": "guided-run-model",
-  "version": 1,
+  "version": 2,
   "title": "读懂 Go 工具链反馈",
   "kind": "learning_task",
   "mode": "guided",
-  "capability_refs": [{"id": "M1-01", "version": 1}],
-  "task_ref": {"id": "guided-run-model-v1", "version": 1},
+  "capability_refs": [{"id": "M1-01", "version": 2}],
+  "task_ref": {"id": "guided-run-model-v2", "version": 2},
   "content_ref": "web/src/content/go-basics/ch10-packages-tools.mdx",
   "assistance_policy": {"hints": true, "references": true, "solution": true, "ai_declaration": true},
   "evidence_rules": [
-    {"rule_id": "tool-feedback-explained", "capability_id": "M1-01", "capability_version": 1, "evidence_type": "diagnose", "result": "passed"}
+    {"rule_id": "tool-feedback-explained", "capability_id": "M1-01", "capability_version": 2, "evidence_type": "diagnose", "result": "passed"}
   ]
 }

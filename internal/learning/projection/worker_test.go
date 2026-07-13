@@ -20,7 +20,7 @@ func TestWorkerCompletesVersionedProjectionRequest(t *testing.T) {
 	if err != nil || !processed {
 		t.Fatalf("RunOnce() = %v, %v", processed, err)
 	}
-	if projector.calls != 1 || repository.completedConsumer != projectionConsumer ||
+	if projector.calls != 1 || repository.completedConsumer != ProjectionConsumer ||
 		repository.completedVersion != ProjectionConsumerVersion {
 		t.Fatalf("projector calls=%d consumer=%q version=%d",
 			projector.calls, repository.completedConsumer, repository.completedVersion)
@@ -99,7 +99,7 @@ type requestProjectorStub struct {
 	err   error
 }
 
-func (s *requestProjectorStub) RebuildRequest(context.Context, Request, time.Time) error {
+func (s *requestProjectorStub) ProcessRequest(context.Context, Request, time.Time) error {
 	s.calls++
 	return s.err
 }
@@ -109,7 +109,7 @@ type projectionObserverStub struct {
 	exhausted bool
 }
 
-func (s *projectionObserverStub) ProjectionRetried(exhausted bool) {
+func (s *projectionObserverStub) OutboxRetried(_ string, exhausted bool) {
 	s.calls++
 	s.exhausted = exhausted
 }
@@ -118,6 +118,7 @@ func projectionWorkerTestOptions(now time.Time) WorkerOptions {
 	return WorkerOptions{
 		Owner: "projection-worker", Lease: 10 * time.Second, PollInterval: time.Millisecond,
 		MaxAttempts: 3, BaseBackoff: time.Second, MaxBackoff: time.Minute,
+		Consumer: ProjectionConsumer, ConsumerVersion: ProjectionConsumerVersion,
 		Now: func() time.Time { return now },
 	}
 }

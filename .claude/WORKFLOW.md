@@ -10,7 +10,7 @@ Level: 3
 Started: 2026-07-12
 Updated: 2026-07-13
 Priority: Product redesign specification; independent from the active DeepTutor spike.
-Current phase: Plan C C3 已完成，开始首次 review 调度。
+Current phase: Plan C C4 已完成，开始 ReviewItem 领取与 Attempt 绑定。
 
 Intent: 为 M1-01、M1-03、M1-07、M1-09 建立第一条端到端能力训练切片，验证版本化能力定义、服务端 Attempt/Evidence、派生能力状态、多文件 Go 任务和维护调度闭环。
 
@@ -31,7 +31,7 @@ Plan:
 - [done] A7 — 实现 Gateway wiring、Learning feature gate、路由和旧 API 删除。
 
 Current todo:
-- [ ] Plan C C4 — assessment 独立通过后幂等创建首次 variant ReviewItem。
+- [ ] Plan C C5 — owner-safe 领取同组 ReviewItem 并幂等创建 review Attempt。
 
 Changes:
 - 用户确认 M1 14 节点、M2 16 节点、`gocheck`/`gocheck-hub` 内容原型和 Miniflux v2.3.2 训练项目方向。
@@ -47,7 +47,8 @@ Changes:
 - A2 已完成 Draft 2020-12 Capability/Activity/Task schema、Go validator、四个 Capability 和六个 Activity；仓库定义全目录校验通过。
 - 六个 TaskDefinition 已声明全部真实资产和 SHA-256；assessment 与 review 使用不同 module、字段和错误场景，starter/测试均通过编译基线检查。
 - A3 已完成 RFC 8785 canonical JSON、task/rule-set/full bundle 分层 hash、ReleaseManifest schema，以及确定性 `validate`/`release`/`verify` command。
-- `m1-first-slice-v1` 已归档 4 个 Capability、6 个 Activity、6 个 Task 和 32 个声明资产；完整 bundle hash 为 `ed9ae605b819bfc3d75cf3142a00021c3ac3bfd32c50070cbb2fc4f6e3d985cf`。
+- `m1-first-slice-v1` 保持 immutable，完整 bundle hash 为 `ed9ae605b819bfc3d75cf3142a00021c3ac3bfd32c50070cbb2fc4f6e3d985cf`。
+- C4 修正 M1-01 assessment Evidence 契约后发布 `m1-first-slice-v2`；保留 M1-01 v1 历史定义，current bundle hash 为 `4ba0e8a8e1e9e820a0699af9b3b1755596fd93fe7082e6e1817774cb7fd07728`。
 - release verifier 会拒绝路径逃逸、symlink、引用缺失、hard prerequisite 环、规则错配、遗漏或多余文件及任意 hash 漂移；前端断言会扫描 held-out 文件名和内容指纹。
 - A4 已实现 `current-release.json`、多 release 只读 Registry、历史 release 启动门、公开 Activity/Task DTO 和不含 held-out 的 public workspace。
 - `ReleaseStore` 使用 serializable transaction 与 advisory lock 登记 release/definition history；真实 PostgreSQL 已验证幂等登记、current 指针、Attempt 引用查询和 version hash 冲突回滚。
@@ -93,12 +94,16 @@ Changes:
 - projection request 使用 `FOR UPDATE SKIP LOCKED` claim、owner lease 和 expired recovery；成功记录 `capability_projector@1`。
 - 失败按有上限指数 backoff 重试并记录 bounded `last_error`、retry metric；达到上限进入带 `failed_at` 的终态。
 - 真实 PostgreSQL 已验证 EvaluationBatch 提交后 projection owner 崩溃、replacement owner 重领、幂等 Snapshot 重建和 poison event exhaustion。
+- C4 review scheduler 只接受满足 versioned Capability policy 的 independent assessment Evidence，并按 Evidence 时间创建 3 天后 first review。
+- 同一 assessment 的 4 个 Capability 生成逐节点 ReviewItem，但共享 deterministic `review_group_key` 与 frozen review Activity。
+- 相同 source/policy replay 明确 no-op；不同 source 的 open item 先转为 `replaced`，claimed item 保持不变。
+- scheduler 通过 targeted projection event 重建 `next_review_at`，不直接修改 Snapshot；真实 PostgreSQL 已验证 4 item grouping、replace/replay 和最早 due。
 
 Prerequisites:
 - 当前 Sandbox 仅支持单个 `main.go` 且缺少生产级隔离；规格必须限制为本地可信环境，并明确公开运行前的安全门槛。
 - 现有 DeepTutor Spike 和用户对其 ledger/spec 的修改必须保持不变。
 
-Resume next: 实施 C4 review scheduler consumer、首次 3 天 variant ReviewItem 和多 Capability grouping/去重。
+Resume next: 实施 C5 `POST /review-items/{id}/attempts`、同组 claim、Attempt links 和 owner/concurrency 语义。
 
 ### WF-2026-06-02-002 — DeepTutor 离线课程内容工作流 Spike
 Status: Active

@@ -12,7 +12,7 @@ import (
 
 func TestSpecBuilderUsesWorkspaceOnlyForEditableAssets(t *testing.T) {
 	registry := releaseRegistry(t)
-	current := frozenAttempt(t, registry, "assessment-check-config-v1")
+	current := frozenAttempt(t, registry, "assessment-check-config-v2", 2)
 	current.Workspace["internal/config/config.go"] += "\n// learner change\n"
 	current.WorkspaceHash = attempt.WorkspaceHash(current.Workspace)
 	builder, err := NewSpecBuilder(registry)
@@ -52,7 +52,7 @@ func TestRegistryReportsMaximumActionTimeoutForWorkerValidation(t *testing.T) {
 
 func TestSpecBuilderEnforcesFrozenActionAndWorkspace(t *testing.T) {
 	registry := releaseRegistry(t)
-	current := frozenAttempt(t, registry, "practice-error-contract-v1")
+	current := frozenAttempt(t, registry, "practice-error-contract-v1", 1)
 	builder, err := NewSpecBuilder(registry)
 	if err != nil {
 		t.Fatal(err)
@@ -76,13 +76,13 @@ func releaseRegistry(t *testing.T) *definition.Registry {
 	return registry
 }
 
-func frozenAttempt(t *testing.T, registry *definition.Registry, taskID string) attempt.Attempt {
+func frozenAttempt(t *testing.T, registry *definition.Registry, taskID string, taskVersion int) attempt.Attempt {
 	t.Helper()
-	task, err := registry.TaskView(registry.CurrentReleaseID(), taskID, 1)
+	task, err := registry.TaskView(registry.CurrentReleaseID(), taskID, taskVersion)
 	if err != nil {
 		t.Fatal(err)
 	}
-	workspace, err := registry.PublicWorkspace(registry.CurrentReleaseID(), taskID, 1)
+	workspace, err := registry.PublicWorkspace(registry.CurrentReleaseID(), taskID, taskVersion)
 	if err != nil {
 		t.Fatal(err)
 	}

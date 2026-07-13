@@ -23,10 +23,10 @@ func TestLoadRegistryIndexesCurrentAndHistoricalDefinitions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, want := len(definitions), 16; got != want {
+	if got, want := len(definitions), 17; got != want {
 		t.Fatalf("len(Definitions()) = %d, want %d", got, want)
 	}
-	ref := DefinitionRef{ReleaseID: testReleaseID, Kind: KindActivity, ID: "assessment-check-config", Version: 1}
+	ref := DefinitionRef{ReleaseID: testReleaseID, Kind: KindActivity, ID: "assessment-check-config", Version: 2}
 	definition, err := registry.Get(ref)
 	if err != nil {
 		t.Fatal(err)
@@ -52,9 +52,13 @@ func TestRegistryViewsExcludePrivateEvaluationContract(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	activity, err := registry.ActivityView(testReleaseID, "assessment-check-config", 1)
+	activity, err := registry.ActivityView(testReleaseID, "assessment-check-config", 2)
 	if err != nil {
 		t.Fatal(err)
+	}
+	review, err := registry.ReviewActivity(testReleaseID, activity.CapabilityRefs)
+	if err != nil || review.ID != "review-check-config-variant" || review.Mode != "review" {
+		t.Fatalf("ReviewActivity() = %#v, %v", review, err)
 	}
 	task, err := registry.TaskView(testReleaseID, activity.TaskRef.ID, activity.TaskRef.Version)
 	if err != nil {
@@ -87,7 +91,7 @@ func TestRegistryViewsExcludePrivateEvaluationContract(t *testing.T) {
 
 func TestLoadRegistryRejectsDamagedAndMissingRequiredRelease(t *testing.T) {
 	contentDir := copyRegistryContent(t)
-	assetPath := filepath.Join(contentDir, "releases", testReleaseID, "bundle", "tasks", "assessment-check-config-v1", "heldout", "internal", "config", "heldout_test.go")
+	assetPath := filepath.Join(contentDir, "releases", testReleaseID, "bundle", "tasks", "assessment-check-config-v2", "heldout", "internal", "config", "heldout_test.go")
 	if err := os.WriteFile(assetPath, []byte("package config\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}

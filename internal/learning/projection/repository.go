@@ -57,15 +57,31 @@ func (p *PostgresProjector) RebuildRequest(ctx context.Context, request Request,
 	if err := json.Unmarshal(request.Payload, &payload); err != nil {
 		return fmt.Errorf("decode projection request payload: %w", err)
 	}
-	if payload.EventVersion != ProjectionRequestEventVersion {
+	if asOf.IsZero() || payload.LearnerID == "" {
+		return fmt.Errorf("projection request learner and as_of are required")
+	}
+	var targets []RebuildInput
+	switch payload.EventVersion {
+	case ProjectionRequestEventVersion:
+		if payload.EvaluationBatchID == "" {
+			return fmt.Errorf("projection request evaluation batch is required")
+		}
+		var err error
+		targets, err = p.requestTargets(ctx, payload, asOf.UTC())
+		if err != nil {
+			return err
+		}
+	case ProjectionTargetEventVersion:
+		if payload.ReleaseID == "" || payload.CapabilityID == "" || payload.CapabilityVersion < 1 {
+			return fmt.Errorf("targeted projection request release and capability are required")
+		}
+		targets = []RebuildInput{{
+			LearnerID: payload.LearnerID, ReleaseID: payload.ReleaseID,
+			CapabilityID: payload.CapabilityID, CapabilityVersion: payload.CapabilityVersion,
+			AsOf: asOf.UTC(),
+		}}
+	default:
 		return fmt.Errorf("unsupported projection request event version %d", payload.EventVersion)
-	}
-	if payload.EvaluationBatchID == "" || payload.LearnerID == "" || asOf.IsZero() {
-		return fmt.Errorf("projection request batch, learner, and as_of are required")
-	}
-	targets, err := p.requestTargets(ctx, payload, asOf.UTC())
-	if err != nil {
-		return err
 	}
 	for _, target := range targets {
 		if _, _, err := p.Rebuild(ctx, target); err != nil {
@@ -73,6 +89,10 @@ func (p *PostgresProjector) RebuildRequest(ctx context.Context, request Request,
 		}
 	}
 	return nil
+}
+
+func (p *PostgresProjector) ProcessRequest(ctx context.Context, request Request, asOf time.Time) error {
+	return p.RebuildRequest(ctx, request, asOf)
 }
 
 func (p *PostgresProjector) requestTargets(ctx context.Context, payload ProjectionRequestPayload, asOf time.Time) ([]RebuildInput, error) {
@@ -182,7 +202,7 @@ func (p *PostgresProjector) Rebuild(ctx context.Context, input RebuildInput) (Sn
 		if err := p.upsert(ctx, tx, snapshot); err != nil {
 			return Snapshot{}, false, err
 		}
-		if err := p.enqueueScheduler(ctx, tx, snapshot); err != nil {
+		if err := p.enqueueScheduler(ctx, tx, input.ReleaseID, snapshot); err != nil {
 			return Snapshot{}, false, err
 		}
 	} else {
@@ -318,12 +338,14 @@ func (p *PostgresProjector) upsert(ctx context.Context, tx *sql.Tx, value Snapsh
 	return nil
 }
 
-func (p *PostgresProjector) enqueueScheduler(ctx context.Context, tx *sql.Tx, value Snapshot) error {
+func (p *PostgresProjector) enqueueScheduler(ctx context.Context, tx *sql.Tx, releaseID string, value Snapshot) error {
 	payload, err := json.Marshal(map[string]any{
 		"event_version": ReviewSchedulerEventVersion, "projection_version": value.ProjectionVersion,
-		"learner_id":    value.LearnerID,
+		"learner_id": value.LearnerID, "release_id": releaseID,
 		"capability_id": value.CapabilityID, "capability_version": value.CapabilityVersion,
-		"acquisition_state": value.AcquisitionState, "retention_base_state": value.RetentionBase,
+		"capability_hash": value.CapabilityHash, "acquisition_state": value.AcquisitionState,
+		"independence_state": value.IndependenceState, "transfer_state": value.TransferState,
+		"retention_base_state": value.RetentionBase,
 	})
 	if err != nil {
 		return err

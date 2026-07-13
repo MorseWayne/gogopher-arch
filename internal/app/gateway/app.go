@@ -36,6 +36,7 @@ type App struct {
 	workerDone        chan error
 	evaluationDone    chan error
 	projectionDone    chan error
+	schedulerDone     chan error
 	closeOnce         sync.Once
 	closeError        error
 }
@@ -158,6 +159,25 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 		Owner: cfg.ExecutionWorkerID + ":projection", Lease: cfg.ProjectionLease,
 		PollInterval: cfg.ProjectionPoll, MaxAttempts: cfg.ProjectionMaxAttempts,
 		BaseBackoff: cfg.ProjectionBaseBackoff, MaxBackoff: cfg.ProjectionMaxBackoff,
+		Consumer: projection.ProjectionConsumer, ConsumerVersion: projection.ProjectionConsumerVersion,
+		Observer: metrics,
+	})
+	if err != nil {
+		return fail(err)
+	}
+	reviewScheduler, err := projection.NewReviewScheduler(db, registry, projection.SchedulerOptions{})
+	if err != nil {
+		return fail(err)
+	}
+	schedulerRepository, err := projection.NewPostgresReviewSchedulerRequestRepository(db, projection.RepositoryOptions{})
+	if err != nil {
+		return fail(err)
+	}
+	schedulerWorker, err := projection.NewWorker(schedulerRepository, reviewScheduler, projection.WorkerOptions{
+		Owner: cfg.ExecutionWorkerID + ":review-scheduler", Lease: cfg.ProjectionLease,
+		PollInterval: cfg.ProjectionPoll, MaxAttempts: cfg.ProjectionMaxAttempts,
+		BaseBackoff: cfg.ProjectionBaseBackoff, MaxBackoff: cfg.ProjectionMaxBackoff,
+		Consumer: projection.ReviewSchedulerConsumer, ConsumerVersion: projection.ReviewSchedulerConsumerVersion,
 		Observer: metrics,
 	})
 	if err != nil {
@@ -185,6 +205,7 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 	workerDone := make(chan error, 1)
 	evaluationDone := make(chan error, 1)
 	projectionDone := make(chan error, 1)
+	schedulerDone := make(chan error, 1)
 	go func() {
 		for {
 			err := worker.Run(workerContext)
@@ -198,6 +219,24 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 			case <-workerContext.Done():
 				timer.Stop()
 				workerDone <- workerContext.Err()
+				return
+			case <-timer.C:
+			}
+		}
+	}()
+	go func() {
+		for {
+			err := schedulerWorker.Run(workerContext)
+			if errors.Is(err, context.Canceled) || workerContext.Err() != nil {
+				schedulerDone <- workerContext.Err()
+				return
+			}
+			slog.Error("review scheduler worker restarting", "error", err)
+			timer := time.NewTimer(time.Second)
+			select {
+			case <-workerContext.Done():
+				timer.Stop()
+				schedulerDone <- workerContext.Err()
 				return
 			case <-timer.C:
 			}
@@ -245,6 +284,7 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 		ruleGenerator: ruleGenerator, submissionService: submissionService,
 		workerCancel: workerCancel, workerDone: workerDone, evaluationDone: evaluationDone,
 		projectionDone: projectionDone,
+		schedulerDone:  schedulerDone,
 	}, nil
 }
 
@@ -259,6 +299,9 @@ func (a *App) Close() error {
 				a.closeError = errors.Join(a.closeError, err)
 			}
 			if err := <-a.projectionDone; err != nil && !errors.Is(err, context.Canceled) {
+				a.closeError = errors.Join(a.closeError, err)
+			}
+			if err := <-a.schedulerDone; err != nil && !errors.Is(err, context.Canceled) {
 				a.closeError = errors.Join(a.closeError, err)
 			}
 		}

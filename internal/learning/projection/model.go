@@ -6,9 +6,11 @@ import (
 )
 
 const (
-	ProjectionRequestEventVersion = 1
-	ReviewSchedulerEventVersion   = 1
-	ProjectionConsumerVersion     = 1
+	ProjectionRequestEventVersion  = 1
+	ProjectionTargetEventVersion   = 2
+	ReviewSchedulerEventVersion    = 1
+	ProjectionConsumerVersion      = 1
+	ReviewSchedulerConsumerVersion = 1
 )
 
 type AcquisitionState string
@@ -112,6 +114,23 @@ type ProjectionRequestPayload struct {
 	EventVersion      int    `json:"event_version"`
 	EvaluationBatchID string `json:"evaluation_batch_id"`
 	LearnerID         string `json:"learner_id"`
+	ReleaseID         string `json:"release_id,omitempty"`
+	CapabilityID      string `json:"capability_id,omitempty"`
+	CapabilityVersion int    `json:"capability_version,omitempty"`
+}
+
+type ReviewSchedulerRequestPayload struct {
+	EventVersion      int                `json:"event_version"`
+	ProjectionVersion int                `json:"projection_version"`
+	LearnerID         string             `json:"learner_id"`
+	ReleaseID         string             `json:"release_id"`
+	CapabilityID      string             `json:"capability_id"`
+	CapabilityVersion int                `json:"capability_version"`
+	CapabilityHash    string             `json:"capability_hash"`
+	AcquisitionState  AcquisitionState   `json:"acquisition_state"`
+	IndependenceState IndependenceState  `json:"independence_state"`
+	TransferState     TransferState      `json:"transfer_state"`
+	RetentionBase     RetentionBaseState `json:"retention_base_state"`
 }
 
 type RetryResult struct {

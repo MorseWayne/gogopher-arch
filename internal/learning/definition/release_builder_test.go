@@ -11,10 +11,10 @@ import (
 
 const (
 	testActivitySet = "m1-first-slice"
-	testReleaseID   = "m1-first-slice-v1"
+	testReleaseID   = "m1-first-slice-v2"
 )
 
-var testCreatedAt = time.Date(2026, time.July, 13, 0, 0, 0, 0, time.UTC)
+var testCreatedAt = time.Date(2026, time.July, 13, 9, 30, 0, 0, time.UTC)
 
 func TestBuildReleaseIsDeterministicAndVerifiable(t *testing.T) {
 	contentDir := repositoryContentDir(t)
@@ -64,7 +64,7 @@ func TestVerifyReleaseRejectsChangedAsset(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	assetPath := filepath.Join(releaseDir, "bundle", "tasks", "assessment-check-config-v1", "heldout", "internal", "config", "heldout_test.go")
+	assetPath := filepath.Join(releaseDir, "bundle", "tasks", "assessment-check-config-v2", "heldout", "internal", "config", "heldout_test.go")
 	if err := os.WriteFile(assetPath, []byte("package config\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -105,7 +105,7 @@ func TestVerifyFrontendBundleRejectsHeldOutContent(t *testing.T) {
 	if err := VerifyFrontendBundle(releaseDir, webDist); err != nil {
 		t.Fatalf("clean frontend bundle rejected: %v", err)
 	}
-	heldOut, err := os.ReadFile(filepath.Join(releaseDir, "bundle", "tasks", "assessment-check-config-v1", "heldout", "internal", "config", "heldout_test.go"))
+	heldOut, err := os.ReadFile(filepath.Join(releaseDir, "bundle", "tasks", "assessment-check-config-v2", "heldout", "internal", "config", "heldout_test.go"))
 	if err != nil {
 		t.Fatal(err)
 	}

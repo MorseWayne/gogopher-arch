@@ -1,6 +1,6 @@
 # 能力证据纵向切片 Plan C：投影与复习调度
 
-> 状态：In progress — C1–C3 accepted
+> 状态：In progress — C1–C4 accepted
 > 日期：2026-07-13
 > 上游：Plan B 已验收的 Evidence、EvaluationBatch、RuleResult 和 outbox 契约
 
@@ -57,13 +57,15 @@
 
 ### C4 — 首次 review 调度
 
-- [ ] assessment 首次独立通过 required evidence 后，为每个相关 Capability 生成 3 天后 variant ReviewItem。
-- [ ] 相同 assessment 中多个 Capability 共享一个 `review_group_key` 和 review Activity，但保留逐 Capability ReviewItem。
-- [ ] 使用 learner/capability version/source evidence/policy version 唯一约束去重。
-- [ ] 已存在未完成同 policy ReviewItem 时执行明确 replace/no-op 规则，不能静默重复。
-- [ ] `next_review_at` 取最早 active ReviewItem due time。
+- [x] assessment 首次独立通过 required evidence 后，为每个相关 Capability 生成 3 天后 variant ReviewItem。
+- [x] 相同 assessment 中多个 Capability 共享一个 `review_group_key` 和 review Activity，但保留逐 Capability ReviewItem。
+- [x] 使用 learner/capability version/source evidence/policy version 唯一约束去重。
+- [x] 已存在未完成同 policy ReviewItem 时执行明确 replace/no-op 规则，不能静默重复。
+- [x] `next_review_at` 取最早 active ReviewItem due time。
 
 完成条件：一次多能力 assessment 产生四个可审计 ReviewItem，并能作为一组领取。
+
+验收记录：真实 PostgreSQL 中同一 assessment 的 10 条 independent Evidence 先重建 4 个 verified Snapshot，再由 4 个 versioned scheduler event 创建 4 条逐 Capability ReviewItem；它们共享 assessment-derived `review_group_key`、同一 review Activity 和 Evidence 时间后 3 天的 `due_at`。相同 source replay 为 no-op，未领取但 source 已变化的 open item 明确转为 `replaced` 后创建新 item；targeted projection event 将 4 个 Snapshot 的 `next_review_at` 重建为同一最早 due time。
 
 ### C5 — ReviewItem 领取和 Attempt 绑定
 

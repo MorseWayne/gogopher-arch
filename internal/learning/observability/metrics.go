@@ -30,6 +30,11 @@ type evidenceKey struct {
 	Result       execution.RuleStatus
 }
 
+type outboxKey struct {
+	Consumer string
+	Outcome  string
+}
+
 type executionMetrics struct {
 	Count      uint64
 	DurationMS uint64
@@ -42,24 +47,24 @@ type Collector struct {
 	failures    map[string]uint64
 	truncations map[truncationKey]uint64
 	evidence    map[evidenceKey]uint64
-	projection  map[string]uint64
+	outbox      map[outboxKey]uint64
 }
 
 func NewCollector() *Collector {
 	return &Collector{
 		attempts: make(map[string]uint64), executions: make(map[executionKey]executionMetrics),
 		failures: make(map[string]uint64), truncations: make(map[truncationKey]uint64),
-		evidence: make(map[evidenceKey]uint64), projection: make(map[string]uint64),
+		evidence: make(map[evidenceKey]uint64), outbox: make(map[outboxKey]uint64),
 	}
 }
 
-func (c *Collector) ProjectionRetried(exhausted bool) {
+func (c *Collector) OutboxRetried(consumer string, exhausted bool) {
 	outcome := "scheduled"
 	if exhausted {
 		outcome = "exhausted"
 	}
 	c.mu.Lock()
-	c.projection[outcome]++
+	c.outbox[outboxKey{Consumer: consumer, Outcome: outcome}]++
 	c.mu.Unlock()
 }
 
@@ -153,7 +158,7 @@ func (c *Collector) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (c *Collector) metricLines() []string {
-	lines := make([]string, 0, len(c.attempts)+len(c.executions)*3+len(c.failures)+len(c.truncations)+len(c.evidence)+len(c.projection))
+	lines := make([]string, 0, len(c.attempts)+len(c.executions)*3+len(c.failures)+len(c.truncations)+len(c.evidence)+len(c.outbox))
 	for status, count := range c.attempts {
 		lines = append(lines, fmt.Sprintf(`gogopher_learning_attempt_total{outcome=%q} %d`, status, count))
 	}
@@ -174,8 +179,8 @@ func (c *Collector) metricLines() []string {
 	for key, count := range c.evidence {
 		lines = append(lines, fmt.Sprintf(`gogopher_learning_evidence_total{type=%q,independence=%q,result=%q} %d`, key.Type, key.Independence, key.Result, count))
 	}
-	for outcome, count := range c.projection {
-		lines = append(lines, fmt.Sprintf(`gogopher_learning_projection_retry_total{outcome=%q} %d`, outcome, count))
+	for key, count := range c.outbox {
+		lines = append(lines, fmt.Sprintf(`gogopher_learning_outbox_retry_total{consumer=%q,outcome=%q} %d`, key.Consumer, key.Outcome, count))
 	}
 	return lines
 }

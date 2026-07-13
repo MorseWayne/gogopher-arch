@@ -54,8 +54,8 @@ func TestCollectorExportsBoundedMetricsWithoutSensitivePayloads(t *testing.T) {
 			Reason: "SECRET_EVIDENCE_REASON",
 		}},
 	})
-	collector.ProjectionRetried(false)
-	collector.ProjectionRetried(true)
+	collector.OutboxRetried("capability_projector", false)
+	collector.OutboxRetried("review_scheduler", true)
 
 	response := httptest.NewRecorder()
 	collector.ServeHTTP(response, httptest.NewRequest("GET", "/metrics", nil))
@@ -70,8 +70,8 @@ func TestCollectorExportsBoundedMetricsWithoutSensitivePayloads(t *testing.T) {
 		`gogopher_learning_execution_failure_total{code="sandbox_rpc_deadline"} 1`,
 		`gogopher_learning_execution_output_truncated_total{action="test",stage="visible_test"} 1`,
 		`gogopher_learning_evidence_total{type="test",independence="hinted",result="passed"} 1`,
-		`gogopher_learning_projection_retry_total{outcome="scheduled"} 1`,
-		`gogopher_learning_projection_retry_total{outcome="exhausted"} 1`,
+		`gogopher_learning_outbox_retry_total{consumer="capability_projector",outcome="scheduled"} 1`,
+		`gogopher_learning_outbox_retry_total{consumer="review_scheduler",outcome="exhausted"} 1`,
 	} {
 		if !strings.Contains(body, metric) {
 			t.Fatalf("metrics missing %q:\n%s", metric, body)

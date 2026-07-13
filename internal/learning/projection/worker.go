@@ -7,7 +7,10 @@ import (
 	"time"
 )
 
-const projectionConsumer = "capability_projector"
+const (
+	ProjectionConsumer      = "capability_projector"
+	ReviewSchedulerConsumer = "review_scheduler"
+)
 
 type RequestRepository interface {
 	ClaimRequest(context.Context, string, time.Time, time.Duration) (Request, bool, error)
@@ -15,41 +18,43 @@ type RequestRepository interface {
 	RetryRequest(context.Context, string, string, time.Time, time.Duration, int, string) (RetryResult, error)
 }
 
-type RequestProjector interface {
-	RebuildRequest(context.Context, Request, time.Time) error
+type RequestProcessor interface {
+	ProcessRequest(context.Context, Request, time.Time) error
 }
 
 type WorkerObserver interface {
-	ProjectionRetried(bool)
+	OutboxRetried(string, bool)
 }
 
 type WorkerOptions struct {
-	Owner        string
-	Lease        time.Duration
-	PollInterval time.Duration
-	MaxAttempts  int
-	BaseBackoff  time.Duration
-	MaxBackoff   time.Duration
-	Now          func() time.Time
-	Observer     WorkerObserver
+	Owner           string
+	Lease           time.Duration
+	PollInterval    time.Duration
+	MaxAttempts     int
+	BaseBackoff     time.Duration
+	MaxBackoff      time.Duration
+	Consumer        string
+	ConsumerVersion int
+	Now             func() time.Time
+	Observer        WorkerObserver
 }
 
 type Worker struct {
 	repository RequestRepository
-	projector  RequestProjector
+	processor  RequestProcessor
 	options    WorkerOptions
 }
 
-func NewWorker(repository RequestRepository, projector RequestProjector, options WorkerOptions) (*Worker, error) {
-	if repository == nil || projector == nil || options.Owner == "" || options.Lease <= 0 ||
+func NewWorker(repository RequestRepository, processor RequestProcessor, options WorkerOptions) (*Worker, error) {
+	if repository == nil || processor == nil || options.Owner == "" || options.Lease <= 0 ||
 		options.PollInterval <= 0 || options.MaxAttempts < 1 || options.BaseBackoff <= 0 ||
-		options.MaxBackoff < options.BaseBackoff {
-		return nil, fmt.Errorf("projection worker dependencies, identity, lease, poll, attempts, and backoff are required")
+		options.MaxBackoff < options.BaseBackoff || options.Consumer == "" || options.ConsumerVersion < 1 {
+		return nil, fmt.Errorf("outbox worker dependencies, identity, lease, poll, attempts, consumer, and backoff are required")
 	}
 	if options.Now == nil {
 		options.Now = time.Now
 	}
-	return &Worker{repository: repository, projector: projector, options: options}, nil
+	return &Worker{repository: repository, processor: processor, options: options}, nil
 }
 
 func (w *Worker) Run(ctx context.Context) error {
@@ -77,26 +82,26 @@ func (w *Worker) RunOnce(ctx context.Context) (bool, error) {
 	if err != nil || !ok {
 		return false, err
 	}
-	if err := w.projector.RebuildRequest(ctx, request, now); err != nil {
+	if err := w.processor.ProcessRequest(ctx, request, now); err != nil {
 		delay := retryDelay(request.AttemptCount, w.options.BaseBackoff, w.options.MaxBackoff)
 		result, retryErr := w.repository.RetryRequest(
 			ctx, request.ID, w.options.Owner, w.options.Now().UTC(), delay,
 			w.options.MaxAttempts, err.Error(),
 		)
 		if retryErr != nil {
-			return true, fmt.Errorf("persist projection retry after %v: %w", err, retryErr)
+			return true, fmt.Errorf("persist outbox retry after %v: %w", err, retryErr)
 		}
 		if w.options.Observer != nil {
-			w.options.Observer.ProjectionRetried(result.Exhausted)
+			w.options.Observer.OutboxRetried(w.options.Consumer, result.Exhausted)
 		}
-		slog.Warn("capability projection request failed",
+		slog.Warn("learning outbox request failed",
 			"request_id", request.ID, "attempt_count", result.AttemptCount,
-			"retry_exhausted", result.Exhausted)
+			"consumer", w.options.Consumer, "retry_exhausted", result.Exhausted)
 		return true, nil
 	}
 	if err := w.repository.CompleteRequest(
-		ctx, request.ID, w.options.Owner, projectionConsumer,
-		ProjectionConsumerVersion, w.options.Now().UTC(),
+		ctx, request.ID, w.options.Owner, w.options.Consumer,
+		w.options.ConsumerVersion, w.options.Now().UTC(),
 	); err != nil {
 		return true, err
 	}

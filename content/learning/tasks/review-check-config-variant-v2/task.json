@@ -1,0 +1,26 @@
+{
+  "id":"review-check-config-variant-v2","version":2,"language":"go1.25","workspace_root":"workspace",
+  "files":[
+    {"source":"README.md","path":"README.md","role":"readme","editable":false,"sha256":"f3af9562d30baab5a660e3778e022dfc6c521cb344197c7575d29d5306562cc9"},
+    {"source":"starter/go.mod","path":"go.mod","role":"starter","editable":false,"sha256":"e5543287db705509d5184e0bdd53141f908d1fd8ec16bf396ee3c08c9027b777"},
+    {"source":"starter/internal/merge/merge.go","path":"internal/merge/merge.go","role":"starter","editable":true,"sha256":"7cad3cfa2716fe8fffc1d75ee3ae0a769df0be82f7b814bc64c6ef53f3719053"},
+    {"source":"starter/internal/merge/merge_test.go","path":"internal/merge/merge_test.go","role":"starter","editable":true,"sha256":"1897eb00a19f247a06da5b33375589a34fbab0bf0fc86e1bdf7cd7df8d8a94cf"},
+    {"source":"heldout/internal/merge/heldout_test.go","path":"internal/merge/heldout_test.go","role":"held_out_test","editable":false,"sha256":"66f3f6b5dc98a1b54d6fdd551e4cae48abc64f64730abb2f0d5b40a2df07c53f"},
+    {"source":"fixtures/base.json","path":"testdata/base.json","role":"fixture","editable":false,"sha256":"095c623bbbabaeb43be18603ab781f840010a9b3341af5553f3205d6c4704c6e"},
+    {"source":"fixtures/override.json","path":"testdata/override.json","role":"fixture","editable":false,"sha256":"182f75fa88af0df07892970281a2de85aad0cecaaa19c4cffc054b6235eac30b"}
+  ],
+  "editable_paths":["internal/merge/merge.go","internal/merge/merge_test.go"],
+  "readonly_paths":["README.md","go.mod","testdata/base.json","testdata/override.json"],
+  "limits":{"max_files":16,"max_file_bytes":131072,"max_total_bytes":524288},
+  "actions":{"build":{"timeout_ms":8000,"max_output_bytes":131072,"network":"none"},"test":{"timeout_ms":8000,"max_output_bytes":131072,"network":"none"},"vet":{"timeout_ms":8000,"max_output_bytes":131072,"network":"none"},"submit":{"timeout_ms":15000,"max_output_bytes":262144,"network":"none"}},
+  "visible_tests":[],"held_out_tests":["internal/merge/heldout_test.go"],
+  "assessment_rules":[
+    {"rule_id":"module-builds","stage":"build","selector":{"package":"./..."},"capability_refs":[{"id":"M1-01","version":2}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"error-chain-preserved","stage":"held_out_test","selector":{"package":"internal/merge"},"capability_refs":[{"id":"M1-03","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"invalid-input-rejected","stage":"held_out_test","selector":{"test":"TestMergeRejectsDuplicateAndInvalidRetry"},"capability_refs":[{"id":"M1-07","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"stable-output","stage":"held_out_test","selector":{"package":"internal/merge"},"capability_refs":[{"id":"M1-07","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"learner-tests-present","stage":"ast","selector":{"glob":"**/*_test.go","minimum_cases":3},"capability_refs":[{"id":"M1-09","version":1}],"evidence_type":"test","condition":"passed"},
+    {"rule_id":"held-out-tests-pass","stage":"held_out_test","selector":{"package":"./..."},"capability_refs":[{"id":"M1-09","version":1}],"evidence_type":"test","condition":"passed"}
+  ],
+  "artifact_rules":{"workspace":"full","logs":["build","test","vet","submit"]}
+}

@@ -11,7 +11,7 @@ func TestRegistryReturnsVersionedCapabilityPolicies(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	tooling, err := registry.CapabilityPolicy(registry.CurrentReleaseID(), "M1-01", 1)
+	tooling, err := registry.CapabilityPolicy(registry.CurrentReleaseID(), "M1-01", 2)
 	if err != nil {
 		t.Fatal(err)
 	}

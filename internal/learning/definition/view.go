@@ -150,6 +150,51 @@ func (r *Registry) ActivityView(releaseID, id string, version int) (ActivityView
 	}, nil
 }
 
+func (r *Registry) ReviewActivity(releaseID string, capabilityRefs []VersionedDefinitionRef) (ActivityView, error) {
+	definitions, err := r.Definitions(releaseID)
+	if err != nil {
+		return ActivityView{}, err
+	}
+	wanted := make(map[string]struct{}, len(capabilityRefs))
+	for _, ref := range capabilityRefs {
+		wanted[fmt.Sprintf("%s@%d", ref.ID, ref.Version)] = struct{}{}
+	}
+	var matched *ActivityView
+	for _, stored := range definitions {
+		if stored.Kind != KindActivity {
+			continue
+		}
+		activity, err := r.ActivityView(releaseID, stored.ID, stored.Version)
+		if err != nil {
+			return ActivityView{}, err
+		}
+		if activity.Mode != "review" || !sameDefinitionRefs(wanted, activity.CapabilityRefs) {
+			continue
+		}
+		if matched != nil {
+			return ActivityView{}, fmt.Errorf("release %q has ambiguous review Activity for capability set", releaseID)
+		}
+		value := activity
+		matched = &value
+	}
+	if matched == nil {
+		return ActivityView{}, fmt.Errorf("release %q review Activity for capability set: %w", releaseID, ErrDefinitionNotFound)
+	}
+	return *matched, nil
+}
+
+func sameDefinitionRefs(wanted map[string]struct{}, refs []VersionedDefinitionRef) bool {
+	if len(wanted) != len(refs) {
+		return false
+	}
+	for _, ref := range refs {
+		if _, exists := wanted[fmt.Sprintf("%s@%d", ref.ID, ref.Version)]; !exists {
+			return false
+		}
+	}
+	return true
+}
+
 func (r *Registry) TaskView(releaseID, id string, version int) (TaskView, error) {
 	definition, err := r.Get(DefinitionRef{ReleaseID: releaseID, Kind: KindTask, ID: id, Version: version})
 	if err != nil {

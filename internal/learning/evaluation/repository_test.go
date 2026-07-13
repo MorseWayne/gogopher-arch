@@ -59,7 +59,7 @@ func TestPostgresEvaluationWorkerCommitsAtomicEvidenceBatch(t *testing.T) {
 	attemptRepository, _ := attempt.NewPostgresRepository(db, attempt.RepositoryOptions{Schema: schema})
 	attemptService, _ := attempt.NewService(attemptRepository, registry, attempt.ServiceOptions{})
 	current, err := attemptService.Create(ctx, attempt.CreateInput{
-		LearnerID: learnerID, ActivityID: "assessment-check-config", ActivityVersion: 1,
+		LearnerID: learnerID, ActivityID: "assessment-check-config", ActivityVersion: 2,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -164,7 +164,7 @@ func TestPostgresEvaluationWorkerCommitsAtomicEvidenceBatch(t *testing.T) {
 	}
 
 	rollbackAttempt, err := attemptService.Create(ctx, attempt.CreateInput{
-		LearnerID: learnerID, ActivityID: "assessment-check-config", ActivityVersion: 1,
+		LearnerID: learnerID, ActivityID: "assessment-check-config", ActivityVersion: 2,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -184,7 +184,7 @@ func TestPostgresEvaluationWorkerCommitsAtomicEvidenceBatch(t *testing.T) {
 		t.Fatal(err)
 	}
 	capability, err := registry.Get(definition.DefinitionRef{
-		ReleaseID: registry.CurrentReleaseID(), Kind: definition.KindCapability, ID: "M1-01", Version: 1,
+		ReleaseID: registry.CurrentReleaseID(), Kind: definition.KindCapability, ID: "M1-01", Version: 2,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -198,7 +198,7 @@ func TestPostgresEvaluationWorkerCommitsAtomicEvidenceBatch(t *testing.T) {
 			RuleResults: []execution.RuleResult{}, Artifacts: rollbackArtifacts, CreatedAt: now.Add(5 * time.Second),
 			Evidence: []Evidence{{
 				ID: "00000000-0000-4000-8500-000000000902", EvaluationBatchID: badBatchID,
-				LearnerID: learnerID, CapabilityID: "M1-01", CapabilityVersion: 1,
+				LearnerID: learnerID, CapabilityID: "M1-01", CapabilityVersion: 2,
 				CapabilityHash: capability.ContentHash, AttemptID: rollbackAttempt.ID,
 				ActivityID: "assessment-check-config", ArtifactID: rollbackArtifacts[1].ID,
 				EvidenceRuleID: "module-builds",
@@ -225,7 +225,7 @@ func TestPostgresEvaluationWorkerCommitsAtomicEvidenceBatch(t *testing.T) {
 	}
 
 	infraAttempt, err := attemptService.Create(ctx, attempt.CreateInput{
-		LearnerID: learnerID, ActivityID: "assessment-check-config", ActivityVersion: 1,
+		LearnerID: learnerID, ActivityID: "assessment-check-config", ActivityVersion: 2,
 	})
 	if err != nil {
 		t.Fatal(err)
