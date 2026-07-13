@@ -122,7 +122,7 @@ web/e2e/learning-slice.spec.ts
 
 ### D9 — E2E 场景
 
-- [ ] 建立本地专用 Compose/profile：Web、Gateway、Sandbox、PostgreSQL，只有 Web 绑定宿主 `127.0.0.1`。
+- [x] 建立本地专用 Compose/profile：Web、Gateway、Sandbox、PostgreSQL，只有 Web 绑定宿主 `127.0.0.1`。
 - [ ] 测试匿名 session → guided activity → 保存/刷新恢复。
 - [ ] 测试提示 reveal → assessment submit → Evidence independence 降级。
 - [ ] 测试独立 assessment + held-out pass → verified Snapshot。

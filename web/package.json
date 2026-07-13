@@ -9,7 +9,8 @@
     "test": "vitest",
     "test:unit": "vitest run src/api",
     "test:component": "vitest run --passWithNoTests src/app",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "e2e:compose": "../scripts/run-learning-e2e.sh"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.20.2",

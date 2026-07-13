@@ -1,0 +1,8 @@
+services:
+  gateway:
+    environment:
+      - APP_ENV=test
+
+  postgres:
+    tmpfs:
+      - /var/lib/postgresql/data
