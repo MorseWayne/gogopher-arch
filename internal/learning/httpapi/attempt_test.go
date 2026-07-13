@@ -7,7 +7,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/MorseWayne/gogopher-arch/internal/learning/assistance"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/attempt"
+	"github.com/MorseWayne/gogopher-arch/internal/learning/attemptview"
+	"github.com/MorseWayne/gogopher-arch/internal/learning/evaluation"
+	"github.com/MorseWayne/gogopher-arch/internal/learning/execution"
 	learningsession "github.com/MorseWayne/gogopher-arch/internal/learning/session"
 )
 
@@ -23,6 +27,40 @@ func TestAttemptHandlerCreatesForAuthenticatedOwner(t *testing.T) {
 	}
 	if !strings.Contains(response.Body.String(), `"executions":[]`) || !strings.Contains(response.Body.String(), `"evidence":[]`) {
 		t.Fatalf("body = %s", response.Body.String())
+	}
+}
+
+func TestAttemptHandlerReturnsPublicRelatedState(t *testing.T) {
+	service := &attemptServiceStub{got: attempt.Attempt{ID: "attempt-id", LearnerID: "owner", Workspace: map[string]string{}}}
+	details := &attemptDetailsStub{related: attemptview.Related{
+		Submission: &attemptview.Submission{ID: "submission-id", Status: "evaluated"},
+		Executions: []execution.Execution{{
+			ID: "execution-id", AttemptID: "attempt-id", Status: execution.ExecutionSucceeded,
+			Response: &execution.ExecutionResponse{Stages: []execution.StageResult{{
+				Stage: execution.StageHeldOutTest, Status: execution.StagePassed,
+				Stdout: "hidden output", TestEvents: []execution.TestEvent{{Action: "pass", Test: "HiddenCase"}},
+				PublicSummary: "private checks passed",
+			}}},
+		}},
+		RuleResults: []execution.RuleResult{{
+			RuleID: "held-out-tests-pass", Status: execution.RulePassed, Stage: execution.StageHeldOutTest,
+			Package: "private/package", Test: "HiddenCase", Summary: "passed", ExecutionID: "execution-id",
+		}},
+		Evidence: []evaluation.Evidence{{
+			ID: "evidence-id", CapabilityID: "M1-09", CapabilityVersion: 1,
+			Result: execution.RulePassed, Independence: assistance.IndependenceHinted,
+		}},
+	}}
+	handler, _ := NewAttemptHandler(service, details)
+	ctx := context.WithValue(context.Background(), sessionContextKey{}, learningsession.Session{LearnerID: "owner"})
+	response := httptest.NewRecorder()
+	handler.Get(response, httptest.NewRequest(http.MethodGet, "/attempts/attempt-id", nil).WithContext(ctx), "attempt-id")
+
+	body := response.Body.String()
+	if response.Code != http.StatusOK || !strings.Contains(body, `"submission":{"id":"submission-id"`) ||
+		!strings.Contains(body, `"capability_id":"M1-09"`) || !strings.Contains(body, "private checks passed") ||
+		strings.Contains(body, "hidden output") || strings.Contains(body, "HiddenCase") || strings.Contains(body, "private/package") {
+		t.Fatalf("detail response = %d %s", response.Code, body)
 	}
 }
 
@@ -66,6 +104,15 @@ type attemptServiceStub struct {
 	getErr      error
 	saved       attempt.Attempt
 	saveErr     error
+}
+
+type attemptDetailsStub struct {
+	related attemptview.Related
+	err     error
+}
+
+func (s *attemptDetailsStub) Load(context.Context, string, string) (attemptview.Related, error) {
+	return s.related, s.err
 }
 
 func (s *attemptServiceStub) Create(_ context.Context, input attempt.CreateInput) (attempt.Attempt, error) {

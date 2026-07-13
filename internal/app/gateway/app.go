@@ -12,6 +12,7 @@ import (
 
 	"github.com/MorseWayne/gogopher-arch/internal/learning/assistance"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/attempt"
+	"github.com/MorseWayne/gogopher-arch/internal/learning/attemptview"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/definition"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/evaluation"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/execution"
@@ -84,7 +85,11 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 	if err != nil {
 		return fail(err)
 	}
-	attemptHandler, err := httpapi.NewAttemptHandler(attemptService)
+	attemptViewRepository, err := attemptview.NewPostgresRepository(db, attemptview.RepositoryOptions{})
+	if err != nil {
+		return fail(err)
+	}
+	attemptHandler, err := httpapi.NewAttemptHandler(attemptService, attemptViewRepository)
 	if err != nil {
 		return fail(err)
 	}

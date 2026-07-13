@@ -123,9 +123,9 @@
 
 ### B9 — Learning API 与可观测性
 
-- [ ] 实现 execute、submit、submission retry、hints reveal 和 assistance event endpoints。
-- [ ] GET Attempt 返回公开 Execution、RuleResult、Evidence 摘要，但不泄露内部命令/held-out 内容。
-- [ ] 统一映射 `401/404/409/422` 和结构化 domain error code。
+- [x] 实现 execute、submit、submission retry、hints reveal 和 assistance event endpoints。
+- [x] GET Attempt 返回公开 Execution、RuleResult、Evidence 摘要，但不泄露内部命令/held-out 内容。
+- [x] 统一映射 `401/404/409/422` 和结构化 domain error code。
 - [ ] 增加 Attempt/Execution/Submission/Evidence 计数、耗时、timeout 和 truncation metrics/log fields。
 - [ ] 日志禁止完整用户代码、held-out tests、session token 和 cookie。
 

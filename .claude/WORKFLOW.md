@@ -31,7 +31,7 @@ Plan:
 - [done] A7 — 实现 Gateway wiring、Learning feature gate、路由和旧 API 删除。
 
 Current todo:
-- [ ] B9 — 实现 execute、submit、retry、hint reveal 和 assistance event HTTP endpoints。
+- [ ] B9 — 补齐 Learning workflow metrics 和敏感日志约束。
 
 Changes:
 - 用户确认 M1 14 节点、M2 16 节点、`gocheck`/`gocheck-hub` 内容原型和 Miniflux v2.3.2 训练项目方向。
@@ -77,12 +77,14 @@ Changes:
 - EvaluationBatch 原子保存 workspace、diff、explanation、test_report Artifact 和关联 Evidence；每个 Artifact 的 canonical JSON 上限为 4 MiB。
 - `infra_failed` 不创建 evaluation request、EvaluationBatch、Artifact 或 Evidence，Submission/Attempt 保持明确的失败状态。
 - 真实 PostgreSQL 已验证 EvaluationBatch、Evidence、Submission/Attempt completed 与 projection outbox 原子提交、非法 Evidence 全量回滚和 replay 不重复。
+- B9 已暴露 execute、submit、retry、hint reveal 和 assistance event endpoint，并统一映射 owner、validation、state 与 idempotency error。
+- GET Attempt 通过 owner-scoped read model 恢复 Submission、Execution、RuleResult 和 Evidence；held-out output、test name 与 package 不进入公开 DTO。
 
 Prerequisites:
 - 当前 Sandbox 仅支持单个 `main.go` 且缺少生产级隔离；规格必须限制为本地可信环境，并明确公开运行前的安全门槛。
 - 现有 DeepTutor Spike 和用户对其 ledger/spec 的修改必须保持不变。
 
-Resume next: 实施 B9；先统一 domain error → HTTP status/code，再暴露 execute、submit、retry、hint 和 assistance endpoints。
+Resume next: 完成 B9 observability；记录 Attempt/Execution/Evidence metrics 与安全的 structured log fields。
 
 ### WF-2026-06-02-002 — DeepTutor 离线课程内容工作流 Spike
 Status: Active
