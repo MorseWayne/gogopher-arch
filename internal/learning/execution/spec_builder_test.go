@@ -4,6 +4,7 @@ import (
 	"errors"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/MorseWayne/gogopher-arch/internal/learning/attempt"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/definition"
@@ -36,6 +37,16 @@ func TestSpecBuilderUsesWorkspaceOnlyForEditableAssets(t *testing.T) {
 	}
 	if heldOut.Content == "" || heldOut.SHA256 != SHA256Hex(heldOut.Content) {
 		t.Fatal("held-out asset was not restored from the verified release")
+	}
+}
+
+func TestRegistryReportsMaximumActionTimeoutForWorkerValidation(t *testing.T) {
+	maximum, err := releaseRegistry(t).MaximumActionTimeout()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if maximum != 15*time.Second {
+		t.Fatalf("MaximumActionTimeout() = %s", maximum)
 	}
 }
 

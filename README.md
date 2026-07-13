@@ -259,6 +259,10 @@ API 网关默认监听 `http://localhost:8080`，健康检查地址为 `http://l
 | `POSTGRES_PORT` | host | `5432` | PostgreSQL 映射到宿主机的端口 |
 | `DATABASE_URL` | `gateway`, `migrate` | `postgres://user:pass@postgres:5432/gogopher?sslmode=disable` | PostgreSQL 连接串 |
 | `LEARNING_SESSION_TTL` | `gateway` | `720h` | 匿名 Learner session 有效期 |
+| `SANDBOX_ENDPOINT` | `gateway` | `http://127.0.0.1:8081/v1/executions` | versioned Sandbox 内部 endpoint；Compose 会覆盖为 service 地址 |
+| `SANDBOX_RPC_DEADLINE` | `gateway` | `35s` | Gateway 等待 Sandbox 完整响应的上限 |
+| `EXECUTION_WORKER_LEASE` | `gateway` | `45s` | PostgreSQL execution worker lease 时长 |
+| `EXECUTION_MAX_CLAIMS` | `gateway` | `3` | worker crash/lease expiry 后允许的最大 claim 次数 |
 | `POSTGRES_USER` | `postgres` | `user` | 数据库用户名 |
 | `POSTGRES_PASSWORD` | `postgres` | `pass` | 数据库密码 |
 | `POSTGRES_DB` | `postgres` | `gogopher` | 数据库名 |

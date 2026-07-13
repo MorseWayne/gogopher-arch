@@ -20,6 +20,8 @@ services:
         condition: service_completed_successfully
       postgres:
         condition: service_healthy
+      sandbox-engine:
+        condition: service_healthy
     environment:
       - APP_ENV=local
       - LISTEN_ADDRESS=0.0.0.0:8080
@@ -30,6 +32,14 @@ services:
       - DB_MAX_OPEN_CONNECTIONS=${DB_MAX_OPEN_CONNECTIONS:-10}
       - DB_MAX_IDLE_CONNECTIONS=${DB_MAX_IDLE_CONNECTIONS:-5}
       - DB_CONNECTION_LIFETIME=${DB_CONNECTION_LIFETIME:-30m}
+      - SANDBOX_ENDPOINT=http://sandbox-engine:8081/v1/executions
+      - SANDBOX_RESPONSE_GRACE=${SANDBOX_RESPONSE_GRACE:-2s}
+      - SANDBOX_RPC_DEADLINE=${SANDBOX_RPC_DEADLINE:-35s}
+      - EXECUTION_PERSIST_GRACE=${EXECUTION_PERSIST_GRACE:-5s}
+      - EXECUTION_WORKER_LEASE=${EXECUTION_WORKER_LEASE:-45s}
+      - EXECUTION_WORKER_HEARTBEAT=${EXECUTION_WORKER_HEARTBEAT:-10s}
+      - EXECUTION_WORKER_POLL=${EXECUTION_WORKER_POLL:-250ms}
+      - EXECUTION_MAX_CLAIMS=${EXECUTION_MAX_CLAIMS:-3}
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
       interval: 10s

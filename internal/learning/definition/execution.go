@@ -4,12 +4,38 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"time"
 )
 
 type ExecutionAction struct {
 	TimeoutMS      int    `json:"timeout_ms"`
 	MaxOutputBytes int    `json:"max_output_bytes"`
 	Network        string `json:"network"`
+}
+
+func (r *Registry) MaximumActionTimeout() (time.Duration, error) {
+	var maximum time.Duration
+	for ref, stored := range r.definitions {
+		if ref.Kind != KindTask {
+			continue
+		}
+		var document struct {
+			Actions map[string]ExecutionAction `json:"actions"`
+		}
+		if err := json.Unmarshal(stored.Document, &document); err != nil {
+			return 0, fmt.Errorf("decode task %s version %d action timeouts: %w", ref.ID, ref.Version, err)
+		}
+		for _, action := range document.Actions {
+			timeout := time.Duration(action.TimeoutMS) * time.Millisecond
+			if timeout > maximum {
+				maximum = timeout
+			}
+		}
+	}
+	if maximum == 0 {
+		return 0, fmt.Errorf("at least one task action timeout is required")
+	}
+	return maximum, nil
 }
 
 type ExecutionAsset struct {

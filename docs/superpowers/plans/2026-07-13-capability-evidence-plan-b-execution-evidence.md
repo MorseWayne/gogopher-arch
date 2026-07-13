@@ -68,13 +68,13 @@
 
 ### B4 — Execution queue、lease 与失败分类
 
-- [ ] 实现普通 execution 创建的 `attempt_id + request_key` 幂等和 fingerprint 冲突检测。
-- [ ] 在事务中创建 queued Execution；HTTP 请求不持有执行期间的数据库事务。
-- [ ] worker 以 lease 领取 queued item，持续续租，只有有效 lease owner 可以写终态。
-- [ ] 实现 `queued → running → succeeded|user_failed|infra_failed`，终态不可重开。
-- [ ] lease 过期恢复为可领取语义，不伪造终态；限制最大基础设施重试次数。
-- [ ] 启动时校验 `task timeout < sandbox response bound < RPC deadline < worker lease` 并预留落库余量。
-- [ ] 为 action timeout、RPC deadline、Sandbox 不可达、worker 中断和输出截断写分类测试。
+- [x] 实现普通 execution 创建的 `attempt_id + request_key` 幂等和 fingerprint 冲突检测。
+- [x] 在事务中创建 queued Execution；HTTP 请求不持有执行期间的数据库事务。
+- [x] worker 以 lease 领取 queued item，持续续租，只有有效 lease owner 可以写终态。
+- [x] 实现 `queued → running → succeeded|user_failed|infra_failed`，终态不可重开。
+- [x] lease 过期恢复为可领取语义，不伪造终态；限制最大基础设施重试次数。
+- [x] 启动时校验 `task timeout < sandbox response bound < RPC deadline < worker lease` 并预留落库余量。
+- [x] 为 action timeout、RPC deadline、Sandbox 不可达、worker 中断和输出截断写分类测试。
 
 完成条件：用户死循环稳定得到 `user_failed` timeout；Sandbox/RPC/worker 故障稳定得到 `infra_failed`。
 

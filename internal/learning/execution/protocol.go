@@ -159,6 +159,8 @@ type RuleResult struct {
 type ExecutionStatus string
 
 const (
+	ExecutionQueued      ExecutionStatus = "queued"
+	ExecutionRunning     ExecutionStatus = "running"
 	ExecutionSucceeded   ExecutionStatus = "succeeded"
 	ExecutionUserFailed  ExecutionStatus = "user_failed"
 	ExecutionInfraFailed ExecutionStatus = "infra_failed"
