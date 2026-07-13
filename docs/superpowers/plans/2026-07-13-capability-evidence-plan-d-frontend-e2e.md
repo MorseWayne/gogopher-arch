@@ -1,6 +1,6 @@
 # 能力证据纵向切片 Plan D：前端闭环与端到端验证
 
-> 状态：In progress — D1–D8 accepted
+> 状态：In progress — D1–D9 accepted
 > 日期：2026-07-13
 > 上游：Plan A–C 已验收的 Learning API 和状态语义
 
@@ -123,15 +123,15 @@ web/e2e/learning-slice.spec.ts
 ### D9 — E2E 场景
 
 - [x] 建立本地专用 Compose/profile：Web、Gateway、Sandbox、PostgreSQL，只有 Web 绑定宿主 `127.0.0.1`。
-- [ ] 测试匿名 session → guided activity → 保存/刷新恢复。
-- [ ] 测试提示 reveal → assessment submit → Evidence independence 降级。
-- [ ] 测试独立 assessment + held-out pass → verified Snapshot。
-- [ ] 测试重复 submit 不重复执行/Evidence。
-- [ ] 使用测试 clock 推进到 review due，失败后变 rusty 并安排 remediation。
-- [ ] 注入 Sandbox infra failure，显式 retry 后只产生一个 EvaluationBatch。
-- [ ] 扫描 Web 构建和网络响应，断言不存在 held-out source/content fingerprint。
+- [x] 测试匿名 session → guided activity → 保存/刷新恢复。
+- [x] 测试提示 reveal → assessment submit → Evidence independence 降级。
+- [x] 测试独立 assessment + held-out pass → verified Snapshot。
+- [x] 测试重复 submit 不重复执行/Evidence。
+- [x] 使用测试 clock 推进到 review due，失败后变 rusty 并安排 remediation。
+- [x] 注入 Sandbox infra failure，显式 retry 后只产生一个 EvaluationBatch。
+- [x] 扫描 Web 构建和网络响应，断言不存在 held-out source/content fingerprint。
 
-完成条件：六个总规格 E2E 场景均在全新数据库上可重复通过。
+完成条件：上述纵向 E2E 规格均在全新数据库上可重复通过。
 
 ### D10 — 发布、回滚与文档
 

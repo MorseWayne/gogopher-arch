@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/MorseWayne/gogopher-arch/internal/learning/attempt"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/review"
@@ -32,6 +33,32 @@ func TestReviewHandlerClaimsForOwnerAndReplays(t *testing.T) {
 	}
 }
 
+func TestReviewHandlerUsesAsOfOnlyWhenEnabled(t *testing.T) {
+	override := time.Date(2026, time.July, 20, 12, 0, 0, 0, time.UTC)
+	claimer := &reviewClaimerStub{result: review.ClaimResult{Attempt: attempt.Attempt{Workspace: map[string]string{}}}}
+	handler, _ := NewReviewHandlerWithOptions(claimer, ReviewHandlerOptions{AllowTestAsOf: true})
+	ctx := context.WithValue(context.Background(), sessionContextKey{}, learningsession.Session{LearnerID: "owner"})
+	response := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPost, "/review-items/item-id/attempts?as_of="+override.Format(time.RFC3339Nano), nil).WithContext(ctx)
+	handler.Claim(response, request, "item-id")
+	if response.Code != http.StatusOK || claimer.timedClaims != 1 || !claimer.claimedAt.Equal(override) || claimer.claims != 0 {
+		t.Fatalf("timed claim = status %d regular=%d timed=%d at=%s", response.Code, claimer.claims, claimer.timedClaims, claimer.claimedAt)
+	}
+
+	invalidResponse := httptest.NewRecorder()
+	handler.Claim(invalidResponse, httptest.NewRequest(http.MethodPost, "/review-items/item-id/attempts?as_of=invalid", nil).WithContext(ctx), "item-id")
+	if invalidResponse.Code != http.StatusBadRequest || claimer.timedClaims != 1 {
+		t.Fatalf("invalid override = status %d timed=%d", invalidResponse.Code, claimer.timedClaims)
+	}
+
+	localHandler, _ := NewReviewHandler(claimer)
+	localResponse := httptest.NewRecorder()
+	localHandler.Claim(localResponse, httptest.NewRequest(http.MethodPost, "/review-items/item-id/attempts?as_of=invalid", nil).WithContext(ctx), "item-id")
+	if localResponse.Code != http.StatusOK || claimer.claims != 1 {
+		t.Fatalf("local override = status %d regular=%d", localResponse.Code, claimer.claims)
+	}
+}
+
 func TestReviewHandlerHidesOtherOwnersAndRejectsInactiveItems(t *testing.T) {
 	claimer := &reviewClaimerStub{err: review.ErrNotFound}
 	handler, _ := NewReviewHandler(claimer)
@@ -50,13 +77,23 @@ func TestReviewHandlerHidesOtherOwnersAndRejectsInactiveItems(t *testing.T) {
 }
 
 type reviewClaimerStub struct {
-	result    review.ClaimResult
-	err       error
-	learnerID string
-	itemID    string
+	result      review.ClaimResult
+	err         error
+	learnerID   string
+	itemID      string
+	claimedAt   time.Time
+	claims      int
+	timedClaims int
 }
 
 func (s *reviewClaimerStub) Claim(_ context.Context, learnerID, itemID string) (review.ClaimResult, error) {
 	s.learnerID, s.itemID = learnerID, itemID
+	s.claims++
+	return s.result, s.err
+}
+
+func (s *reviewClaimerStub) ClaimAt(_ context.Context, learnerID, itemID string, claimedAt time.Time) (review.ClaimResult, error) {
+	s.learnerID, s.itemID, s.claimedAt = learnerID, itemID, claimedAt
+	s.timedClaims++
 	return s.result, s.err
 }

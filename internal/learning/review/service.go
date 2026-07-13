@@ -85,8 +85,20 @@ func NewService(db *sql.DB, registry *definition.Registry, options ServiceOption
 }
 
 func (s *Service) Claim(ctx context.Context, learnerID, reviewItemID string) (ClaimResult, error) {
+	return s.ClaimAt(ctx, learnerID, reviewItemID, s.now().UTC())
+}
+
+func (s *Service) ClaimAt(ctx context.Context, learnerID, reviewItemID string, asOf time.Time) (ClaimResult, error) {
 	if learnerID == "" || reviewItemID == "" {
 		return ClaimResult{}, ErrNotFound
+	}
+	if asOf.IsZero() {
+		return ClaimResult{}, fmt.Errorf("review claim time is required")
+	}
+	asOf = asOf.UTC()
+	lifecycleAt := s.now().UTC()
+	if lifecycleAt.IsZero() {
+		return ClaimResult{}, fmt.Errorf("review lifecycle time is required")
 	}
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -96,7 +108,6 @@ func (s *Service) Claim(ctx context.Context, learnerID, reviewItemID string) (Cl
 	if _, err := tx.ExecContext(ctx, `SET LOCAL search_path TO "`+s.schema+`"`); err != nil {
 		return ClaimResult{}, fmt.Errorf("set review claim search path: %w", err)
 	}
-	claimedAt := s.now().UTC()
 	requested, err := loadRequestedItem(ctx, tx, learnerID, reviewItemID)
 	if err != nil {
 		return ClaimResult{}, err
@@ -104,7 +115,7 @@ func (s *Service) Claim(ctx context.Context, learnerID, reviewItemID string) (Cl
 	if requested.Status == "completed" || requested.Status == "replaced" {
 		return ClaimResult{}, ErrUnavailable
 	}
-	items, err := lockActiveGroup(ctx, tx, learnerID, requested, claimedAt)
+	items, err := lockActiveGroup(ctx, tx, learnerID, requested, asOf)
 	if err != nil {
 		return ClaimResult{}, err
 	}
@@ -141,7 +152,7 @@ func (s *Service) Claim(ctx context.Context, learnerID, reviewItemID string) (Cl
 	created := attemptID == ""
 	var value attempt.Attempt
 	if created {
-		value, err = s.buildAttempt(requested.ReleaseID, learnerID, activity)
+		value, err = s.buildAttempt(requested.ReleaseID, learnerID, activity, lifecycleAt)
 		if err != nil {
 			return ClaimResult{}, err
 		}
@@ -161,7 +172,7 @@ func (s *Service) Claim(ctx context.Context, learnerID, reviewItemID string) (Cl
 			result, err := tx.ExecContext(ctx, `
 				UPDATE review_items
 				SET status='claimed',claimed_attempt_id=$2,updated_at=$3
-				WHERE id=$1 AND status='open'`, item.ID, attemptID, claimedAt)
+				WHERE id=$1 AND status='open'`, item.ID, attemptID, lifecycleAt)
 			if err != nil {
 				return ClaimResult{}, fmt.Errorf("claim review item %s: %w", item.ID, err)
 			}
@@ -170,7 +181,7 @@ func (s *Service) Claim(ctx context.Context, learnerID, reviewItemID string) (Cl
 			}
 			if _, err := tx.ExecContext(ctx, `
 			INSERT INTO attempt_review_items (attempt_id,review_item_id,created_at)
-			VALUES ($1,$2,$3)`, attemptID, item.ID, claimedAt); err != nil {
+			VALUES ($1,$2,$3)`, attemptID, item.ID, lifecycleAt); err != nil {
 				return ClaimResult{}, fmt.Errorf("link review item %s: %w", item.ID, err)
 			}
 			claimedCount++
@@ -272,7 +283,7 @@ func claimedAttemptID(items []reviewItem) (string, error) {
 	return result, nil
 }
 
-func (s *Service) buildAttempt(releaseID, learnerID string, activity definition.ActivityView) (attempt.Attempt, error) {
+func (s *Service) buildAttempt(releaseID, learnerID string, activity definition.ActivityView, claimedAt time.Time) (attempt.Attempt, error) {
 	task, err := s.registry.TaskView(releaseID, activity.TaskRef.ID, activity.TaskRef.Version)
 	if err != nil {
 		return attempt.Attempt{}, fmt.Errorf("resolve frozen review task: %w", err)
@@ -285,7 +296,7 @@ func (s *Service) buildAttempt(releaseID, learnerID string, activity definition.
 	if err != nil {
 		return attempt.Attempt{}, err
 	}
-	now := s.now().UTC()
+	now := claimedAt.UTC()
 	return attempt.Attempt{
 		ID: id, LearnerID: learnerID, ReleaseID: releaseID,
 		ActivityID: activity.ID, ActivityVersion: activity.Version, ActivityHash: activity.ContentHash,

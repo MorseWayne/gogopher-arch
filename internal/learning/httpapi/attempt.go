@@ -217,7 +217,7 @@ type evidenceDTO struct {
 }
 
 func attemptDetailResponse(response attemptDTO, related attemptview.Related) attemptDTO {
-	response.Assistance.Events = append([]assistance.Event(nil), related.Assistance...)
+	response.Assistance.Events = append([]assistance.Event{}, related.Assistance...)
 	var assistanceCutoff int64
 	for _, event := range related.Assistance {
 		if event.Sequence > assistanceCutoff {

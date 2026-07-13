@@ -154,7 +154,8 @@ func TestServiceClaimsReviewGroupOnceAcrossConcurrentItems(t *testing.T) {
 	if _, err := earlyService.Claim(ctx, learnerID, itemIDs[0]); !errors.Is(err, ErrUnavailable) {
 		t.Fatalf("early Claim() error = %v", err)
 	}
-	service, err := NewService(db, registry, ServiceOptions{Schema: schema, Now: func() time.Time { return now.Add(73 * time.Hour) }})
+	lifecycleAt := now.Add(2 * time.Hour)
+	service, err := NewService(db, registry, ServiceOptions{Schema: schema, Now: func() time.Time { return lifecycleAt }})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -165,7 +166,7 @@ func TestServiceClaimsReviewGroupOnceAcrossConcurrentItems(t *testing.T) {
 		wait.Add(1)
 		go func() {
 			defer wait.Done()
-			result, err := service.Claim(ctx, learnerID, itemID)
+			result, err := service.ClaimAt(ctx, learnerID, itemID, now.Add(73*time.Hour))
 			results <- result
 			errorsFound <- err
 		}()
@@ -186,6 +187,9 @@ func TestServiceClaimsReviewGroupOnceAcrossConcurrentItems(t *testing.T) {
 		}
 		if result.Attempt.ID != attemptID || result.Attempt.Mode != "review" {
 			t.Fatalf("concurrent Claim() = %#v, attempt = %s", result, attemptID)
+		}
+		if !result.Attempt.StartedAt.Equal(lifecycleAt) {
+			t.Fatalf("attempt started_at = %s, want lifecycle clock %s", result.Attempt.StartedAt, lifecycleAt)
 		}
 		if result.Created {
 			created++

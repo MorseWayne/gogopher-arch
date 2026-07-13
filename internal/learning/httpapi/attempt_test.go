@@ -82,6 +82,21 @@ func TestAttemptHandlerReturnsPublicRelatedState(t *testing.T) {
 	}
 }
 
+func TestAttemptHandlerReturnsEmptyRelatedCollectionsAsArrays(t *testing.T) {
+	service := &attemptServiceStub{got: attempt.Attempt{ID: "attempt-id", LearnerID: "owner", Mode: "guided", Workspace: map[string]string{}}}
+	handler, _ := NewAttemptHandler(service, &attemptDetailsStub{})
+	ctx := context.WithValue(context.Background(), sessionContextKey{}, learningsession.Session{LearnerID: "owner"})
+	response := httptest.NewRecorder()
+	handler.Get(response, httptest.NewRequest(http.MethodGet, "/attempts/attempt-id", nil).WithContext(ctx), "attempt-id")
+
+	body := response.Body.String()
+	for _, collection := range []string{`"events":[]`, `"executions":[]`, `"rule_results":[]`, `"evidence":[]`} {
+		if !strings.Contains(body, collection) {
+			t.Fatalf("detail response collection %s = %d %s", collection, response.Code, body)
+		}
+	}
+}
+
 func TestAttemptHandlerMapsOwnershipAndRevisionConflict(t *testing.T) {
 	service := &attemptServiceStub{getErr: attempt.ErrNotFound, saveErr: &attempt.RevisionConflict{Revision: 3, Hash: "current-hash"}}
 	handler, _ := NewAttemptHandler(service, nil)

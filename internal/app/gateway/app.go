@@ -113,7 +113,9 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 	if err != nil {
 		return fail(err)
 	}
-	reviewHandler, err := httpapi.NewReviewHandler(reviewService, metrics)
+	reviewHandler, err := httpapi.NewReviewHandlerWithOptions(
+		reviewService, httpapi.ReviewHandlerOptions{AllowTestAsOf: cfg.AppEnv == "test"}, metrics,
+	)
 	if err != nil {
 		return fail(err)
 	}

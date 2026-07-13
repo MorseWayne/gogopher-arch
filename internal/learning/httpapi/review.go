@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/MorseWayne/gogopher-arch/internal/learning/review"
 )
@@ -13,16 +14,34 @@ type ReviewClaimer interface {
 	Claim(context.Context, string, string) (review.ClaimResult, error)
 }
 
+type ReviewClaimerAt interface {
+	ClaimAt(context.Context, string, string, time.Time) (review.ClaimResult, error)
+}
+
+type ReviewHandlerOptions struct {
+	AllowTestAsOf bool
+}
+
 type ReviewHandler struct {
-	claimer  ReviewClaimer
-	observer AttemptObserver
+	claimer       ReviewClaimer
+	observer      AttemptObserver
+	allowTestAsOf bool
 }
 
 func NewReviewHandler(claimer ReviewClaimer, observers ...AttemptObserver) (*ReviewHandler, error) {
+	return NewReviewHandlerWithOptions(claimer, ReviewHandlerOptions{}, observers...)
+}
+
+func NewReviewHandlerWithOptions(claimer ReviewClaimer, options ReviewHandlerOptions, observers ...AttemptObserver) (*ReviewHandler, error) {
 	if claimer == nil {
 		return nil, fmt.Errorf("review claimer is required")
 	}
-	handler := &ReviewHandler{claimer: claimer}
+	if options.AllowTestAsOf {
+		if _, ok := claimer.(ReviewClaimerAt); !ok {
+			return nil, fmt.Errorf("test as_of requires a timed review claimer")
+		}
+	}
+	handler := &ReviewHandler{claimer: claimer, allowTestAsOf: options.AllowTestAsOf}
 	if len(observers) > 0 {
 		handler.observer = observers[0]
 	}
@@ -35,7 +54,10 @@ func (h *ReviewHandler) Claim(w http.ResponseWriter, request *http.Request, revi
 		writeError(w, http.StatusUnauthorized, "unauthenticated", "learning session is required")
 		return
 	}
-	result, err := h.claimer.Claim(request.Context(), owner.LearnerID, reviewItemID)
+	result, err, ok := h.claim(w, request, owner.LearnerID, reviewItemID)
+	if !ok {
+		return
+	}
 	if err != nil {
 		switch {
 		case errors.Is(err, review.ErrNotFound):
@@ -55,4 +77,20 @@ func (h *ReviewHandler) Claim(w http.ResponseWriter, request *http.Request, revi
 		status = http.StatusCreated
 	}
 	writeJSON(w, status, attemptResponse(result.Attempt))
+}
+
+func (h *ReviewHandler) claim(w http.ResponseWriter, request *http.Request, learnerID, reviewItemID string) (review.ClaimResult, error, bool) {
+	raw := request.URL.Query().Get("as_of")
+	if !h.allowTestAsOf || raw == "" {
+		result, err := h.claimer.Claim(request.Context(), learnerID, reviewItemID)
+		return result, err, true
+	}
+	asOf, err := time.Parse(time.RFC3339Nano, raw)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_as_of", "as_of must be an RFC3339 timestamp")
+		return review.ClaimResult{}, nil, false
+	}
+	claimer := h.claimer.(ReviewClaimerAt)
+	result, err := claimer.ClaimAt(request.Context(), learnerID, reviewItemID, asOf.UTC())
+	return result, err, true
 }

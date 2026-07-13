@@ -3,6 +3,7 @@ import CodeMirror from "@uiw/react-codemirror";
 import { autocompletion, snippetCompletion, type Completion, type CompletionContext, type CompletionResult } from "@codemirror/autocomplete";
 import { go } from "@codemirror/lang-go";
 import { oneDark } from "@codemirror/theme-one-dark";
+import { EditorView } from "@codemirror/view";
 
 export function GoCodeEditor({
   value,
@@ -23,8 +24,11 @@ export function GoCodeEditor({
 }) {
   const conceptKey = concepts.join("|");
   const extensions = useMemo(
-    () => syntax === "go" ? [go(), autocompletion({ override: [createGoCompletionSource(concepts)] })] : [],
-    [conceptKey, syntax],
+    () => [
+      ...(syntax === "go" ? [go(), autocompletion({ override: [createGoCompletionSource(concepts)] })] : []),
+      EditorView.contentAttributes.of({ "aria-label": ariaLabel }),
+    ],
+    [ariaLabel, conceptKey, syntax],
   );
 
   return (
