@@ -1,6 +1,6 @@
 # 能力证据纵向切片 Plan C：投影与复习调度
 
-> 状态：In progress — C1–C4 accepted
+> 状态：Completed — C1–C8 accepted
 > 日期：2026-07-13
 > 上游：Plan B 已验收的 Evidence、EvaluationBatch、RuleResult 和 outbox 契约
 

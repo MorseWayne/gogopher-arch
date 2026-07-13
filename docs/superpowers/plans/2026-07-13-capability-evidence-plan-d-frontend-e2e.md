@@ -1,6 +1,6 @@
 # 能力证据纵向切片 Plan D：前端闭环与端到端验证
 
-> 状态：Blocked until Plan C is accepted
+> 状态：In progress — D1 accepted
 > 日期：2026-07-13
 > 上游：Plan A–C 已验收的 Learning API 和状态语义
 
@@ -39,11 +39,11 @@ web/e2e/learning-slice.spec.ts
 
 ### D1 — 前端测试基础与 Learning client
 
-- [ ] 增加 Vitest、Testing Library、MSW 和 Playwright；配置 unit/component/e2e scripts。
-- [ ] 定义与服务端 JSON DTO 一致的 TypeScript 类型，不复制服务端内部 model。
-- [ ] 建立 `/api/v1/learning` client，所有请求使用 `credentials: "same-origin"`。
-- [ ] 保留 HTTP status、domain error code 和 conflict payload，不把所有错误压成 message string。
-- [ ] 为 401 session bootstrap、404 owner isolation、409 revision/idempotency conflict 和 422 validation 写 client tests。
+- [x] 增加 Vitest、Testing Library、MSW 和 Playwright；配置 unit/component/e2e scripts。
+- [x] 定义与服务端 JSON DTO 一致的 TypeScript 类型，不复制服务端内部 model。
+- [x] 建立 `/api/v1/learning` client，所有请求使用 `credentials: "same-origin"`。
+- [x] 保留 HTTP status、domain error code 和 conflict payload，不把所有错误压成 message string。
+- [x] 为 401 session bootstrap、404 owner isolation、409 revision/idempotency conflict 和 422 validation 写 client tests。
 
 完成条件：UI 可以根据 domain error 做恢复选择，而不是解析错误文案。
 
