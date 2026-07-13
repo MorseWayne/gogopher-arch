@@ -38,7 +38,7 @@ type App struct {
 
 func Build(ctx context.Context, cfg config.Config) (*App, error) {
 	if !cfg.LearningSliceEnabled {
-		return &App{Handler: httpapi.NewRouter(false, nil, nil, nil)}, nil
+		return &App{Handler: httpapi.NewRouter(false, nil, nil, nil, nil)}, nil
 	}
 	db, err := database.Open(ctx, cfg.DatabaseURL)
 	if err != nil {
@@ -108,6 +108,10 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 		return fail(err)
 	}
 	submissionService, err := submission.NewService(submissionRepository, attemptService, registry, specBuilder, submission.ServiceOptions{})
+	if err != nil {
+		return fail(err)
+	}
+	workflowHandler, err := httpapi.NewWorkflowHandler(executionService, submissionService, assistanceService, attemptService, registry)
 	if err != nil {
 		return fail(err)
 	}
@@ -190,7 +194,7 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 		}
 	}()
 	return &App{
-		Handler:  httpapi.NewRouter(true, sessionHandler, attemptHandler, httpapi.NewDefinitionHandler(registry)),
+		Handler:  httpapi.NewRouter(true, sessionHandler, attemptHandler, httpapi.NewDefinitionHandler(registry), workflowHandler),
 		database: db, assistanceService: assistanceService, executionService: executionService,
 		ruleGenerator: ruleGenerator, submissionService: submissionService,
 		workerCancel: workerCancel, workerDone: workerDone, evaluationDone: evaluationDone,

@@ -8,6 +8,7 @@ import (
 var (
 	ErrExecutionNotFound  = errors.New("learning execution not found")
 	ErrAttemptUnavailable = errors.New("learning attempt is unavailable for execution")
+	ErrInvalidRequest     = errors.New("invalid execution request")
 	ErrLeaseLost          = errors.New("execution worker lease is no longer valid")
 )
 

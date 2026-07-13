@@ -19,6 +19,7 @@ var (
 	ErrAttemptNotFound = errors.New("assistance attempt not found")
 	ErrAttemptInactive = errors.New("assistance attempt is no longer active")
 	ErrEventNotAllowed = errors.New("assistance event is not allowed by the frozen activity")
+	ErrInvalidRequest  = errors.New("invalid assistance request")
 )
 
 type IdempotencyConflict struct{ EventID string }

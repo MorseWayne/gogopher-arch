@@ -67,10 +67,10 @@ func NewService(repository Repository, attempts AttemptReader, registry *definit
 
 func (s *Service) Record(ctx context.Context, input RecordInput) (RecordResult, error) {
 	if !eventKeyPattern.MatchString(input.EventKey) {
-		return RecordResult{}, fmt.Errorf("event key must be a safe identifier of at most 200 characters")
+		return RecordResult{}, fmt.Errorf("%w: event key must be a safe identifier of at most 200 characters", ErrInvalidRequest)
 	}
 	if !input.Type.valid() {
-		return RecordResult{}, fmt.Errorf("unsupported assistance event type %q", input.Type)
+		return RecordResult{}, fmt.Errorf("%w: unsupported assistance event type %q", ErrInvalidRequest, input.Type)
 	}
 	current, err := s.attempts.Get(ctx, input.LearnerID, input.AttemptID)
 	if err != nil {
@@ -89,7 +89,7 @@ func (s *Service) Record(ctx context.Context, input RecordInput) (RecordResult, 
 	}
 	payload, err := json.Marshal(payloadObject)
 	if err != nil || len(payload) > maxPayloadBytes {
-		return RecordResult{}, fmt.Errorf("assistance payload must be a JSON object of at most %d bytes", maxPayloadBytes)
+		return RecordResult{}, fmt.Errorf("%w: payload must be a JSON object of at most %d bytes", ErrInvalidRequest, maxPayloadBytes)
 	}
 	payload, err = definition.CanonicalJSON(payload)
 	if err != nil {
@@ -107,7 +107,7 @@ func (s *Service) Record(ctx context.Context, input RecordInput) (RecordResult, 
 
 func (s *Service) RevealHint(ctx context.Context, input RevealHintInput) (Hint, RecordResult, error) {
 	if input.Hint.ID == "" || input.Hint.Body == "" {
-		return Hint{}, RecordResult{}, fmt.Errorf("hint ID and body are required")
+		return Hint{}, RecordResult{}, fmt.Errorf("%w: hint ID and body are required", ErrInvalidRequest)
 	}
 	result, err := s.Record(ctx, RecordInput{
 		LearnerID: input.LearnerID, AttemptID: input.AttemptID, EventKey: input.EventKey,

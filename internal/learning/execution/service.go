@@ -62,10 +62,10 @@ func NewService(repository ServiceRepository, attempts AttemptReader, builder *S
 
 func (s *Service) Create(ctx context.Context, input CreateInput) (Execution, error) {
 	if input.Action != ActionBuild && input.Action != ActionTest && input.Action != ActionVet {
-		return Execution{}, ErrActionNotAllowed
+		return Execution{}, fmt.Errorf("%w: %v", ErrInvalidRequest, ErrActionNotAllowed)
 	}
 	if !requestKeyPattern.MatchString(input.RequestKey) {
-		return Execution{}, fmt.Errorf("request key must be a safe identifier of at most 200 characters")
+		return Execution{}, fmt.Errorf("%w: request key must be a safe identifier of at most 200 characters", ErrInvalidRequest)
 	}
 	existing, err := s.repository.FindNormal(ctx, input.LearnerID, input.AttemptID, input.RequestKey)
 	if err == nil {

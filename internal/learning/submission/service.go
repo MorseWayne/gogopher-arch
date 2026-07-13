@@ -70,7 +70,7 @@ func NewService(repository Repository, attempts AttemptReader, registry *definit
 
 func (s *Service) Submit(ctx context.Context, input SubmitInput) (Result, error) {
 	if !submissionKeyPattern.MatchString(input.SubmissionKey) {
-		return Result{}, fmt.Errorf("submission key must be a safe identifier of at most 200 characters")
+		return Result{}, fmt.Errorf("%w: submission key must be a safe identifier of at most 200 characters", ErrInvalidRequest)
 	}
 	current, err := s.attempts.Get(ctx, input.LearnerID, input.AttemptID)
 	if errors.Is(err, attempt.ErrNotFound) {
@@ -116,7 +116,7 @@ func (s *Service) Get(ctx context.Context, learnerID, submissionID string) (Subm
 
 func (s *Service) Retry(ctx context.Context, input RetryInput) (Result, error) {
 	if !retryKeyPattern.MatchString(input.RequestKey) {
-		return Result{}, fmt.Errorf("retry request key must be a safe identifier of at most 190 characters")
+		return Result{}, fmt.Errorf("%w: retry request key must be a safe identifier of at most 190 characters", ErrInvalidRequest)
 	}
 	frozen, err := s.repository.Get(ctx, input.LearnerID, input.SubmissionID)
 	if err != nil {

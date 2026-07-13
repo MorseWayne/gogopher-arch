@@ -10,6 +10,7 @@ import (
 var (
 	ErrNotFound         = errors.New("learning submission not found")
 	ErrAttemptInactive  = errors.New("learning attempt cannot be submitted")
+	ErrInvalidRequest   = errors.New("invalid submission request")
 	ErrRetryUnavailable = errors.New("learning submission is not awaiting an infrastructure retry")
 )
 

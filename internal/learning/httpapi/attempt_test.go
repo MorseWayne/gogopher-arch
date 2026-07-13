@@ -45,7 +45,7 @@ func TestAttemptHandlerMapsOwnershipAndRevisionConflict(t *testing.T) {
 }
 
 func TestDisabledRouterReturnsExplicitUnavailableAndRemovesExecuteAPI(t *testing.T) {
-	router := NewRouter(false, nil, nil, nil)
+	router := NewRouter(false, nil, nil, nil, nil)
 	response := httptest.NewRecorder()
 	router.ServeHTTP(response, httptest.NewRequest(http.MethodPost, "/api/v1/learning/session", nil))
 	if response.Code != http.StatusServiceUnavailable || !strings.Contains(response.Body.String(), "learning_disabled") {

@@ -2,9 +2,12 @@ package definition
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"path/filepath"
 )
+
+var ErrHintNotFound = errors.New("task hint not found")
 
 type VersionedDefinitionRef struct {
 	ID      string `json:"id"`
@@ -49,6 +52,31 @@ type TaskView struct {
 	ReadonlyPaths   []string            `json:"readonly_paths"`
 	VisibleTests    []string            `json:"visible_tests"`
 	WorkspaceLimits WorkspaceLimitsView `json:"limits"`
+}
+
+type HintView struct {
+	ID    string `json:"id"`
+	Title string `json:"title"`
+	Body  string `json:"body"`
+}
+
+func (r *Registry) Hint(releaseID, taskID string, taskVersion int, hintID string) (HintView, error) {
+	definition, err := r.Get(DefinitionRef{ReleaseID: releaseID, Kind: KindTask, ID: taskID, Version: taskVersion})
+	if err != nil {
+		return HintView{}, err
+	}
+	var document struct {
+		Hints []HintView `json:"hints"`
+	}
+	if err := json.Unmarshal(definition.Document, &document); err != nil {
+		return HintView{}, fmt.Errorf("decode task hints: %w", err)
+	}
+	for _, hint := range document.Hints {
+		if hint.ID == hintID {
+			return hint, nil
+		}
+	}
+	return HintView{}, fmt.Errorf("task %s version %d hint %q: %w", taskID, taskVersion, hintID, ErrHintNotFound)
 }
 
 func (r *Registry) ActivityView(releaseID, id string, version int) (ActivityView, error) {

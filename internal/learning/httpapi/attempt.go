@@ -39,13 +39,13 @@ func (h *AttemptHandler) Create(w http.ResponseWriter, request *http.Request) {
 		ActivityVersion int    `json:"activity_version"`
 	}
 	if err := decodeJSON(request, &body); err != nil || body.ActivityID == "" || body.ActivityVersion < 1 {
-		writeError(w, http.StatusBadRequest, "invalid_request", "activity_id and activity_version are required")
+		writeError(w, http.StatusUnprocessableEntity, "validation_failed", "activity_id and activity_version are required")
 		return
 	}
 	created, err := h.service.Create(request.Context(), attempt.CreateInput{LearnerID: owner.LearnerID, ActivityID: body.ActivityID, ActivityVersion: body.ActivityVersion})
 	if err != nil {
 		if errors.Is(err, definition.ErrDefinitionNotFound) {
-			writeError(w, http.StatusBadRequest, "unknown_activity", "activity does not exist")
+			writeError(w, http.StatusUnprocessableEntity, "unknown_activity", "activity does not exist")
 			return
 		}
 		writeError(w, http.StatusInternalServerError, "attempt_unavailable", "learning attempt is unavailable")
@@ -79,7 +79,7 @@ func (h *AttemptHandler) SaveWorkspace(w http.ResponseWriter, request *http.Requ
 		Files        map[string]string `json:"files"`
 	}
 	if err := decodeJSON(request, &body); err != nil || body.BaseRevision < 0 || body.Files == nil {
-		writeError(w, http.StatusBadRequest, "invalid_request", "base_revision and complete files map are required")
+		writeError(w, http.StatusUnprocessableEntity, "validation_failed", "base_revision and complete files map are required")
 		return
 	}
 	value, err := h.service.Save(request.Context(), attempt.SaveInput{
@@ -93,28 +93,7 @@ func (h *AttemptHandler) SaveWorkspace(w http.ResponseWriter, request *http.Requ
 }
 
 func (h *AttemptHandler) writeAttemptError(w http.ResponseWriter, err error) {
-	if errors.Is(err, attempt.ErrNotFound) {
-		writeError(w, http.StatusNotFound, "attempt_not_found", "learning attempt not found")
-		return
-	}
-	if errors.Is(err, attempt.ErrInvalidWorkspace) {
-		writeError(w, http.StatusBadRequest, "invalid_workspace", err.Error())
-		return
-	}
-	var conflict *attempt.RevisionConflict
-	if errors.As(err, &conflict) {
-		writeJSON(w, http.StatusConflict, struct {
-			Error           conflictError `json:"error"`
-			CurrentRevision int64         `json:"current_revision"`
-			CurrentHash     string        `json:"current_hash"`
-		}{Error: conflictError{Code: "revision_conflict", Message: "workspace revision is stale"}, CurrentRevision: conflict.Revision, CurrentHash: conflict.Hash})
-		return
-	}
-	if errors.Is(err, attempt.ErrInactive) {
-		writeError(w, http.StatusConflict, "attempt_inactive", "learning attempt is not active")
-		return
-	}
-	writeError(w, http.StatusInternalServerError, "attempt_unavailable", "learning attempt is unavailable")
+	writeLearningError(w, err)
 }
 
 type attemptDTO struct {
@@ -135,11 +114,6 @@ type attemptDTO struct {
 	WorkspaceHash     string                              `json:"workspace_hash"`
 	Executions        []any                               `json:"executions"`
 	Evidence          []any                               `json:"evidence"`
-}
-
-type conflictError struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
 }
 
 func attemptResponse(value attempt.Attempt) attemptDTO {
