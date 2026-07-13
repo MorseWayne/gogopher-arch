@@ -119,12 +119,12 @@ Plan B/C 的表由各自 migration 新增，不在本计划提前创建空壳表
 
 ### A4 — 实现 DefinitionRegistry
 
-- [ ] 先写加载有效 release 和拒绝损坏 release 的测试。
-- [ ] 实现按 `release_id + kind + id + version` 的只读查询。
-- [ ] 启动时校验 manifest、引用、schema、资产、旧 release 存在性和运行配置。
-- [ ] 在事务中登记 `definition_releases/definition_versions`；相同 `kind + id + version` 的 hash 冲突必须失败。
-- [ ] 读取当前 release 指针，但保留按旧 release 回放定义和 starter 的能力。
-- [ ] 生成面向客户端的 Activity/Task view，明确剔除 held-out tests、内部命令和资产路径。
+- [x] 先写加载有效 release 和拒绝损坏 release 的测试。
+- [x] 实现按 `release_id + kind + id + version` 的只读查询。
+- [x] 启动时校验 manifest、引用、schema、资产、旧 release 存在性和运行配置。
+- [x] 在事务中登记 `definition_releases/definition_versions`；相同 `kind + id + version` 的 hash 冲突必须失败。
+- [x] 读取当前 release 指针，但保留按旧 release 回放定义和 starter 的能力。
+- [x] 生成面向客户端的 Activity/Task view，明确剔除 held-out tests、内部命令和资产路径。
 
 完成条件：Gateway 不能在定义不完整、hash 冲突或被 Attempt 引用的旧 release 缺失时启用 Learning API。
 

@@ -10,7 +10,7 @@ Level: 3
 Started: 2026-07-12
 Updated: 2026-07-13
 Priority: Product redesign specification; independent from the active DeepTutor spike.
-Current phase: A4 — 不可变 release 已完成，开始实现 DefinitionRegistry。
+Current phase: A5 — DefinitionRegistry 已完成，开始实现匿名 session。
 
 Intent: 为 M1-01、M1-03、M1-07、M1-09 建立第一条端到端能力训练切片，验证版本化能力定义、服务端 Attempt/Evidence、派生能力状态、多文件 Go 任务和维护调度闭环。
 
@@ -25,10 +25,11 @@ Plan:
 - [done] A1 — 建立 migration runner、schema history、Plan A 初始 migration 和 Compose 启动门。
 - [done] A2 — 建立 JSON Schema、四个 Capability、六个 Activity/Task 及完整资产。
 - [done] A3 — 实现 canonical hash、release manifest、bundle 构建和 verify command。
-- [doing] A4 — 实现只读 DefinitionRegistry、启动校验和数据库不可变版本登记。
+- [done] A4 — 实现只读 DefinitionRegistry、启动校验和数据库不可变版本登记。
+- [doing] A5 — 实现匿名 Learner session、token hash 和 cookie 所有权边界。
 
 Current todo:
-- [ ] A4 — 先实现 release 加载与损坏拒绝测试，再实现只读索引和数据库版本登记。
+- [ ] A5 — 先实现 session service/repository 测试，再接入 cookie middleware。
 
 Changes:
 - 用户确认 M1 14 节点、M2 16 节点、`gocheck`/`gocheck-hub` 内容原型和 Miniflux v2.3.2 训练项目方向。
@@ -46,12 +47,14 @@ Changes:
 - A3 已完成 RFC 8785 canonical JSON、task/rule-set/full bundle 分层 hash、ReleaseManifest schema，以及确定性 `validate`/`release`/`verify` command。
 - `m1-first-slice-v1` 已归档 4 个 Capability、6 个 Activity、6 个 Task 和 32 个声明资产；完整 bundle hash 为 `ed9ae605b819bfc3d75cf3142a00021c3ac3bfd32c50070cbb2fc4f6e3d985cf`。
 - release verifier 会拒绝路径逃逸、symlink、引用缺失、hard prerequisite 环、规则错配、遗漏或多余文件及任意 hash 漂移；前端断言会扫描 held-out 文件名和内容指纹。
+- A4 已实现 `current-release.json`、多 release 只读 Registry、历史 release 启动门、公开 Activity/Task DTO 和不含 held-out 的 public workspace。
+- `ReleaseStore` 使用 serializable transaction 与 advisory lock 登记 release/definition history；真实 PostgreSQL 已验证幂等登记、current 指针、Attempt 引用查询和 version hash 冲突回滚。
 
 Prerequisites:
 - 当前 Sandbox 仅支持单个 `main.go` 且缺少生产级隔离；规格必须限制为本地可信环境，并明确公开运行前的安全门槛。
 - 现有 DeepTutor Spike 和用户对其 ledger/spec 的修改必须保持不变。
 
-Resume next: 实施 A4；先完成有效 release 加载和损坏 release 拒绝测试，再建立 `release_id + kind + id + version` 只读索引。
+Resume next: 实施 A5；先完成新建、复用、过期、伪造和 cookie 丢失的 session service/repository 测试。
 
 ### WF-2026-06-02-002 — DeepTutor 离线课程内容工作流 Spike
 Status: Active
