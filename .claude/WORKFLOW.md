@@ -10,7 +10,7 @@ Level: 3
 Started: 2026-07-12
 Updated: 2026-07-13
 Priority: Product redesign specification; independent from the active DeepTutor spike.
-Current phase: Plan B 已验收，准备进入 Plan C capability projection 与 review scheduling。
+Current phase: Plan C C1 已完成，开始 CapabilityProjector 全量重建。
 
 Intent: 为 M1-01、M1-03、M1-07、M1-09 建立第一条端到端能力训练切片，验证版本化能力定义、服务端 Attempt/Evidence、派生能力状态、多文件 Go 任务和维护调度闭环。
 
@@ -31,7 +31,7 @@ Plan:
 - [done] A7 — 实现 Gateway wiring、Learning feature gate、路由和旧 API 删除。
 
 Current todo:
-- [ ] Plan C C1 — 固化 CapabilitySnapshot projection 输入、状态机和 as_of 语义。
+- [ ] Plan C C2 — 从 Evidence 和 active ReviewItem 全量重建 CapabilitySnapshot。
 
 Changes:
 - 用户确认 M1 14 节点、M2 16 节点、`gocheck`/`gocheck-hub` 内容原型和 Miniflux v2.3.2 训练项目方向。
@@ -84,12 +84,14 @@ Changes:
 - Plan B Compose acceptance 已通过真实 session → assessment Attempt → test → reference assistance → submit → Evaluation → GET Attempt 主链。
 - starter workspace 的 test/submit 均稳定落为 `user_failed`；Evaluation 保存 10 条 RuleResult 和 6 条 referenced Evidence，重复 submit 不增加 Execution/Evidence。
 - 第二个 Learner 读取该 Attempt 返回 `404 attempt_not_found`；metrics 与 Gateway logs 仅包含固定维度和内部 ID，Compose 服务均保持 healthy。
+- C1 已定义 acquisition、independence、transfer、retention base/due 状态与合法转换，并固定自治级别排序。
+- Registry 按 Capability version 返回各自 required_evidence 和 review_policy；projection 使用显式 as_of，输入 Evidence 顺序不改变 JSON result。
 
 Prerequisites:
 - 当前 Sandbox 仅支持单个 `main.go` 且缺少生产级隔离；规格必须限制为本地可信环境，并明确公开运行前的安全门槛。
 - 现有 DeepTutor Spike 和用户对其 ledger/spec 的修改必须保持不变。
 
-Resume next: 按 Plan C 从 C1 开始实现 CapabilityProjector 与 as_of replay contract。
+Resume next: 实施 C2 migration 与 projector repository，按 learner + Capability version 全量读取事实并幂等 upsert Snapshot。
 
 ### WF-2026-06-02-002 — DeepTutor 离线课程内容工作流 Spike
 Status: Active

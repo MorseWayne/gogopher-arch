@@ -1,6 +1,6 @@
 # 能力证据纵向切片 Plan C：投影与复习调度
 
-> 状态：Blocked until Plan B is accepted
+> 状态：In progress — C1 accepted
 > 日期：2026-07-13
 > 上游：Plan B 已验收的 Evidence、EvaluationBatch、RuleResult 和 outbox 契约
 
@@ -24,11 +24,11 @@
 
 ### C1 — 固化投影规则模型
 
-- [ ] 为 acquisition、independence、transfer、retention base state 写类型和合法转换表。
-- [ ] 从 CapabilityDefinition 读取 `required_evidence` 与 `review_policy`，禁止为所有节点硬编码同一规则。
-- [ ] 定义稳定 independence 排序：guided < ai_assisted < hinted < referenced < independent。
-- [ ] 固化 `as_of` 参数；所有时间相关测试使用注入 clock。
-- [ ] 为 guided/practice/assessment/review 与不同 evidence combination 写表格驱动测试。
+- [x] 为 acquisition、independence、transfer、retention base state 写类型和合法转换表。
+- [x] 从 CapabilityDefinition 读取 `required_evidence` 与 `review_policy`，禁止为所有节点硬编码同一规则。
+- [x] 定义稳定 independence 排序：guided < ai_assisted < hinted < referenced < independent。
+- [x] 固化 `as_of` 参数；所有时间相关测试使用注入 clock。
+- [x] 为 guided/practice/assessment/review 与不同 evidence combination 写表格驱动测试。
 
 完成条件：给定同一 Evidence/ReviewItem 集合和 `as_of`，总能得到字节等价的 projection result。
 

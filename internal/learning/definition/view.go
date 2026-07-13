@@ -60,6 +60,50 @@ type HintView struct {
 	Body  string `json:"body"`
 }
 
+type RequiredEvidenceView struct {
+	Type         string   `json:"type"`
+	Independence string   `json:"independence"`
+	Context      string   `json:"context"`
+	RuleIDs      []string `json:"rule_ids"`
+}
+
+type ReviewPolicyView struct {
+	FirstReviewAfterDays        int `json:"first_review_after_days"`
+	SuccessIntervalDays         int `json:"success_interval_days"`
+	FailureRemediationAfterDays int `json:"failure_remediation_after_days"`
+}
+
+type CapabilityPolicyView struct {
+	ID               string                 `json:"id"`
+	Version          int                    `json:"version"`
+	ContentHash      string                 `json:"content_hash"`
+	RequiredEvidence []RequiredEvidenceView `json:"required_evidence"`
+	ReviewPolicy     ReviewPolicyView       `json:"review_policy"`
+}
+
+func (r *Registry) CapabilityPolicy(releaseID, id string, version int) (CapabilityPolicyView, error) {
+	stored, err := r.Get(DefinitionRef{ReleaseID: releaseID, Kind: KindCapability, ID: id, Version: version})
+	if err != nil {
+		return CapabilityPolicyView{}, err
+	}
+	var document struct {
+		ID               string                 `json:"id"`
+		Version          int                    `json:"version"`
+		RequiredEvidence []RequiredEvidenceView `json:"required_evidence"`
+		ReviewPolicy     ReviewPolicyView       `json:"review_policy"`
+	}
+	if err := json.Unmarshal(stored.Document, &document); err != nil {
+		return CapabilityPolicyView{}, fmt.Errorf("decode capability policy: %w", err)
+	}
+	for index := range document.RequiredEvidence {
+		document.RequiredEvidence[index].RuleIDs = append([]string(nil), document.RequiredEvidence[index].RuleIDs...)
+	}
+	return CapabilityPolicyView{
+		ID: document.ID, Version: document.Version, ContentHash: stored.ContentHash,
+		RequiredEvidence: document.RequiredEvidence, ReviewPolicy: document.ReviewPolicy,
+	}, nil
+}
+
 func (r *Registry) Hint(releaseID, taskID string, taskVersion int, hintID string) (HintView, error) {
 	definition, err := r.Get(DefinitionRef{ReleaseID: releaseID, Kind: KindTask, ID: taskID, Version: taskVersion})
 	if err != nil {
