@@ -36,6 +36,16 @@ func TestServiceCreatesFrozenStarterAndEnforcesOwner(t *testing.T) {
 	}
 }
 
+func TestServiceRequiresReviewItemClaimForReviewActivity(t *testing.T) {
+	service, _ := newTestService(t)
+	_, err := service.Create(context.Background(), CreateInput{
+		LearnerID: "owner", ActivityID: "review-check-config-variant", ActivityVersion: 2,
+	})
+	if !errors.Is(err, ErrReviewClaimRequired) {
+		t.Fatalf("Create(review) error = %v", err)
+	}
+}
+
 func TestServiceSavesCompleteWorkspaceWithRevisionCAS(t *testing.T) {
 	service, _ := newTestService(t)
 	created, err := service.Create(context.Background(), CreateInput{LearnerID: "owner", ActivityID: "assessment-check-config", ActivityVersion: 2})

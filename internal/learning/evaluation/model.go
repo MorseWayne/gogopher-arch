@@ -53,10 +53,11 @@ type Batch struct {
 }
 
 type PersistRecord struct {
-	Batch      Batch
-	AttemptID  string
-	LearnerID  string
-	OccurredAt time.Time
+	Batch           Batch
+	AttemptID       string
+	LearnerID       string
+	ReviewRequestID string
+	OccurredAt      time.Time
 }
 
 type Request struct {

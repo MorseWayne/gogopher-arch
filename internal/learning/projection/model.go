@@ -9,8 +9,9 @@ const (
 	ProjectionRequestEventVersion  = 1
 	ProjectionTargetEventVersion   = 2
 	ReviewSchedulerEventVersion    = 1
+	ReviewOutcomeEventVersion      = 2
 	ProjectionConsumerVersion      = 1
-	ReviewSchedulerConsumerVersion = 1
+	ReviewSchedulerConsumerVersion = 2
 )
 
 type AcquisitionState string
@@ -59,13 +60,14 @@ const (
 )
 
 type EvidenceFact struct {
-	EvidenceType string
-	RuleID       string
-	Result       string
-	Independence IndependenceState
-	Context      TransferState
-	ActivityMode string
-	OccurredAt   time.Time
+	EvidenceType     string
+	RuleID           string
+	Result           string
+	Independence     IndependenceState
+	Context          TransferState
+	ActivityMode     string
+	QualifyingReview bool
+	OccurredAt       time.Time
 }
 
 type Input struct {
@@ -131,6 +133,12 @@ type ReviewSchedulerRequestPayload struct {
 	IndependenceState IndependenceState  `json:"independence_state"`
 	TransferState     TransferState      `json:"transfer_state"`
 	RetentionBase     RetentionBaseState `json:"retention_base_state"`
+}
+
+type ReviewOutcomeRequestPayload struct {
+	EventVersion      int    `json:"event_version"`
+	EvaluationBatchID string `json:"evaluation_batch_id"`
+	LearnerID         string `json:"learner_id"`
 }
 
 type RetryResult struct {

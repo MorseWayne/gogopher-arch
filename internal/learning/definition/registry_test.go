@@ -60,6 +60,18 @@ func TestRegistryViewsExcludePrivateEvaluationContract(t *testing.T) {
 	if err != nil || review.ID != "review-check-config-variant" || review.Mode != "review" {
 		t.Fatalf("ReviewActivity() = %#v, %v", review, err)
 	}
+	toolingRemediation, err := registry.RemediationActivity(testReleaseID, VersionedDefinitionRef{ID: "M1-01", Version: 2})
+	if err != nil || toolingRemediation.ID != "guided-run-model" || toolingRemediation.Mode != "guided" {
+		t.Fatalf("RemediationActivity(M1-01) = %#v, %v", toolingRemediation, err)
+	}
+	errorRemediation, err := registry.RemediationActivity(testReleaseID, VersionedDefinitionRef{ID: "M1-03", Version: 1})
+	if err != nil || errorRemediation.ID != "practice-error-contract" || errorRemediation.Mode != "practice" {
+		t.Fatalf("RemediationActivity(M1-03) = %#v, %v", errorRemediation, err)
+	}
+	variant, err := registry.VariantReviewActivity(testReleaseID, VersionedDefinitionRef{ID: "M1-03", Version: 1})
+	if err != nil || variant.ID != review.ID || variant.Version != review.Version {
+		t.Fatalf("VariantReviewActivity(M1-03) = %#v, %v", variant, err)
+	}
 	task, err := registry.TaskView(testReleaseID, activity.TaskRef.ID, activity.TaskRef.Version)
 	if err != nil {
 		t.Fatal(err)

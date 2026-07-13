@@ -231,6 +231,37 @@ func (r *PostgresRepository) Persist(ctx context.Context, record PersistRecord) 
 	if err != nil {
 		return Batch{}, false, fmt.Errorf("enqueue capability projection: %w", err)
 	}
+	var linkedReviewItems bool
+	if err := tx.QueryRowContext(ctx, `
+		SELECT EXISTS (
+			SELECT 1 FROM attempt_review_items WHERE attempt_id = $1
+		)`, record.AttemptID).Scan(&linkedReviewItems); err != nil {
+		return Batch{}, false, fmt.Errorf("query linked review items: %w", err)
+	}
+	if linkedReviewItems {
+		if record.ReviewRequestID == "" {
+			return Batch{}, false, fmt.Errorf("review outcome request ID is required")
+		}
+		reviewPayload, err := json.Marshal(map[string]any{
+			"event_version":       2,
+			"evaluation_batch_id": record.Batch.ID,
+			"learner_id":          record.LearnerID,
+		})
+		if err != nil {
+			return Batch{}, false, err
+		}
+		_, err = tx.ExecContext(ctx, `
+			INSERT INTO learning_outbox (
+				id, topic, aggregate_type, aggregate_id, idempotency_key, payload,
+				status, available_at, created_at
+			) VALUES ($1,'review_scheduler.requested','evaluation_batch',$2,$3,$4::jsonb,'pending',$5,$5)
+			ON CONFLICT (idempotency_key) DO NOTHING`,
+			record.ReviewRequestID, record.Batch.ID, "review-outcome:"+record.Batch.ID,
+			string(reviewPayload), record.Batch.CreatedAt)
+		if err != nil {
+			return Batch{}, false, fmt.Errorf("enqueue review outcome: %w", err)
+		}
+	}
 	if err := tx.Commit(); err != nil {
 		return Batch{}, false, fmt.Errorf("commit evaluation batch: %w", err)
 	}

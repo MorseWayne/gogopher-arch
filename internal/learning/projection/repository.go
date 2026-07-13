@@ -217,7 +217,18 @@ func (p *PostgresProjector) Rebuild(ctx context.Context, input RebuildInput) (Sn
 func (p *PostgresProjector) readEvidence(ctx context.Context, tx *sql.Tx, input RebuildInput, capabilityHash string) ([]EvidenceFact, error) {
 	rows, err := tx.QueryContext(ctx, `
 		SELECT e.evidence_type, e.evidence_rule_id, e.result, e.independence,
-			e.context_level, a.mode, e.occurred_at, e.capability_hash
+			e.context_level, a.mode,
+			COALESCE((
+				SELECT r.outcome = 'passed'
+				FROM attempt_review_items link
+				JOIN review_items r ON r.id = link.review_item_id
+				WHERE link.attempt_id = a.id
+					AND r.capability_id = e.capability_id
+					AND r.capability_version = e.capability_version
+					AND r.evaluation_batch_id = e.evaluation_batch_id
+				LIMIT 1
+			), false),
+			e.occurred_at, e.capability_hash
 		FROM evidence_records e
 		JOIN learning_attempts a ON a.id = e.attempt_id AND a.learner_id = e.learner_id
 		WHERE e.learner_id = $1 AND e.capability_id = $2 AND e.capability_version = $3
@@ -232,7 +243,7 @@ func (p *PostgresProjector) readEvidence(ctx context.Context, tx *sql.Tx, input 
 		var storedHash string
 		if err := rows.Scan(
 			&fact.EvidenceType, &fact.RuleID, &fact.Result, &fact.Independence,
-			&fact.Context, &fact.ActivityMode, &fact.OccurredAt, &storedHash,
+			&fact.Context, &fact.ActivityMode, &fact.QualifyingReview, &fact.OccurredAt, &storedHash,
 		); err != nil {
 			return nil, fmt.Errorf("scan capability evidence: %w", err)
 		}
@@ -245,24 +256,24 @@ func (p *PostgresProjector) readEvidence(ctx context.Context, tx *sql.Tx, input 
 }
 
 func (p *PostgresProjector) readRetentionBase(ctx context.Context, tx *sql.Tx, input RebuildInput) (RetentionBaseState, error) {
-	var failed bool
+	var outcome string
 	err := tx.QueryRowContext(ctx, `
-		SELECT bool_or(e.result = 'failed')
+		SELECT r.outcome
 		FROM review_items r
-		JOIN evidence_records e ON e.evaluation_batch_id = r.evaluation_batch_id
-			AND e.capability_id = r.capability_id AND e.capability_version = r.capability_version
+		JOIN learning_attempts a ON a.id = r.claimed_attempt_id AND a.learner_id = r.learner_id
+		JOIN attempt_review_items link ON link.review_item_id = r.id AND link.attempt_id = a.id
 		WHERE r.learner_id = $1 AND r.capability_id = $2 AND r.capability_version = $3
-			AND r.status = 'completed'
-		GROUP BY r.id, r.completed_at
+			AND r.status = 'completed' AND a.mode = 'review'
+			AND r.outcome IN ('passed','failed')
 		ORDER BY r.completed_at DESC, r.id DESC
-		LIMIT 1`, input.LearnerID, input.CapabilityID, input.CapabilityVersion).Scan(&failed)
+		LIMIT 1`, input.LearnerID, input.CapabilityID, input.CapabilityVersion).Scan(&outcome)
 	if errors.Is(err, sql.ErrNoRows) {
 		return RetentionFresh, nil
 	}
 	if err != nil {
 		return "", fmt.Errorf("derive capability retention base: %w", err)
 	}
-	if failed {
+	if outcome == "failed" {
 		return RetentionRusty, nil
 	}
 	return RetentionFresh, nil

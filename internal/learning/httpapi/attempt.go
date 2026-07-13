@@ -69,6 +69,10 @@ func (h *AttemptHandler) Create(w http.ResponseWriter, request *http.Request) {
 			writeError(w, http.StatusUnprocessableEntity, "unknown_activity", "activity does not exist")
 			return
 		}
+		if errors.Is(err, attempt.ErrReviewClaimRequired) {
+			writeError(w, http.StatusConflict, "review_claim_required", "review activity must be started from a ReviewItem")
+			return
+		}
 		writeError(w, http.StatusInternalServerError, "attempt_unavailable", "learning attempt is unavailable")
 		return
 	}

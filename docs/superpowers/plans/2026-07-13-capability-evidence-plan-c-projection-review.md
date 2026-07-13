@@ -81,13 +81,15 @@
 
 ### C6 — Review 成功、失败和未评估流转
 
-- [ ] variant review 独立通过：完成当前 item，transfer=variant、acquisition=stable、retention=fresh，并安排 14 天后维护。
-- [ ] review failed：完成当前 item，保留历史 verified/stable 事实，base retention=rusty，并在 1 天内创建针对性 practice。
-- [ ] 某 Capability 的规则 not_evaluated：不把它视为 failed，替换为 `review_incomplete` item，保留原 due 和 retry semantics。
-- [ ] 同一 review 对多 Capability 出现 passed/failed/not_evaluated 时逐节点处理，不以整个 Attempt 粗粒度完成。
-- [ ] remediation practice 完成后按 policy 决定重新安排 variant review，不直接伪造 stable。
+- [x] variant review 独立通过：完成当前 item，transfer=variant、acquisition=stable、retention=fresh，并安排 14 天后维护。
+- [x] review failed：完成当前 item，保留历史 verified/stable 事实，base retention=rusty，并在 1 天内创建针对性 practice。
+- [x] 某 Capability 的规则 not_evaluated：不把它视为 failed，替换为 `review_incomplete` item，保留原 due 和 retry semantics。
+- [x] 同一 review 对多 Capability 出现 passed/failed/not_evaluated 时逐节点处理，不以整个 Attempt 粗粒度完成。
+- [x] remediation practice 完成后按 policy 决定重新安排 variant review，不直接伪造 stable。
 
 完成条件：混合结果不会让未运行节点变 rusty，也不会因其他节点通过而错误完成。
+
+验收记录：EvaluationBatch 与 version 2 `review_scheduler.requested` 在同一 transaction 提交；scheduler 按冻结 Task rule mapping 在一个短 transaction 内逐 Capability 完成 claimed item、记录 `passed|failed|incomplete` outcome、创建唯一 successor 并发 targeted projection。真实 PostgreSQL 的四能力 review 同时得到两个 passed、一个 failed 和一个 not_evaluated：分别生成 14 天 maintenance、1 天 remediation、保留原 due 的 `review_incomplete`，未运行节点保持 verified/fresh。随后领取 remediation practice 并通过，Snapshot 仍为 rusty，且创建 3 天后的 `remediation_review`；重复 outcome 不增加 successor。普通 `POST /attempts` 已拒绝绕过 ReviewItem 直接创建 review Attempt。
 
 ### C7 — `/capabilities` 和 `/learning/next`
 

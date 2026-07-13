@@ -183,6 +183,56 @@ func (r *Registry) ReviewActivity(releaseID string, capabilityRefs []VersionedDe
 	return *matched, nil
 }
 
+func (r *Registry) RemediationActivity(releaseID string, capabilityRef VersionedDefinitionRef) (ActivityView, error) {
+	return r.uniqueActivity(releaseID, func(activity ActivityView) bool {
+		return (activity.Mode == "guided" || activity.Mode == "practice") &&
+			len(activity.CapabilityRefs) == 1 && activity.CapabilityRefs[0] == capabilityRef
+	}, fmt.Sprintf("remediation Activity for %s@%d", capabilityRef.ID, capabilityRef.Version))
+}
+
+func (r *Registry) VariantReviewActivity(releaseID string, capabilityRef VersionedDefinitionRef) (ActivityView, error) {
+	return r.uniqueActivity(releaseID, func(activity ActivityView) bool {
+		if activity.Mode != "review" {
+			return false
+		}
+		for _, ref := range activity.CapabilityRefs {
+			if ref == capabilityRef {
+				return true
+			}
+		}
+		return false
+	}, fmt.Sprintf("variant review Activity for %s@%d", capabilityRef.ID, capabilityRef.Version))
+}
+
+func (r *Registry) uniqueActivity(releaseID string, matches func(ActivityView) bool, purpose string) (ActivityView, error) {
+	definitions, err := r.Definitions(releaseID)
+	if err != nil {
+		return ActivityView{}, err
+	}
+	var matched *ActivityView
+	for _, stored := range definitions {
+		if stored.Kind != KindActivity {
+			continue
+		}
+		activity, err := r.ActivityView(releaseID, stored.ID, stored.Version)
+		if err != nil {
+			return ActivityView{}, err
+		}
+		if !matches(activity) {
+			continue
+		}
+		if matched != nil {
+			return ActivityView{}, fmt.Errorf("release %q has ambiguous %s", releaseID, purpose)
+		}
+		value := activity
+		matched = &value
+	}
+	if matched == nil {
+		return ActivityView{}, fmt.Errorf("release %q %s: %w", releaseID, purpose, ErrDefinitionNotFound)
+	}
+	return *matched, nil
+}
+
 func sameDefinitionRefs(wanted map[string]struct{}, refs []VersionedDefinitionRef) bool {
 	if len(wanted) != len(refs) {
 		return false

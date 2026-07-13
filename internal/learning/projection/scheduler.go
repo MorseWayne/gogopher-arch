@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/MorseWayne/gogopher-arch/internal/learning/definition"
+	"github.com/MorseWayne/gogopher-arch/internal/learning/execution"
 )
 
 const firstReviewPolicyVersion = 1
@@ -61,10 +62,31 @@ func NewReviewScheduler(db *sql.DB, registry *definition.Registry, options Sched
 }
 
 func (s *ReviewScheduler) ProcessRequest(ctx context.Context, request Request, _ time.Time) error {
-	var payload ReviewSchedulerRequestPayload
-	if err := json.Unmarshal(request.Payload, &payload); err != nil {
+	var header struct {
+		EventVersion int `json:"event_version"`
+	}
+	if err := json.Unmarshal(request.Payload, &header); err != nil {
 		return fmt.Errorf("decode review scheduler payload: %w", err)
 	}
+	switch header.EventVersion {
+	case ReviewSchedulerEventVersion:
+		var payload ReviewSchedulerRequestPayload
+		if err := json.Unmarshal(request.Payload, &payload); err != nil {
+			return fmt.Errorf("decode first review scheduler payload: %w", err)
+		}
+		return s.processFirstReview(ctx, payload)
+	case ReviewOutcomeEventVersion:
+		var payload ReviewOutcomeRequestPayload
+		if err := json.Unmarshal(request.Payload, &payload); err != nil {
+			return fmt.Errorf("decode review outcome payload: %w", err)
+		}
+		return s.processReviewOutcome(ctx, payload)
+	default:
+		return fmt.Errorf("unsupported review scheduler event %d", header.EventVersion)
+	}
+}
+
+func (s *ReviewScheduler) processFirstReview(ctx context.Context, payload ReviewSchedulerRequestPayload) error {
 	if payload.EventVersion != ReviewSchedulerEventVersion || payload.ProjectionVersion != ProjectionVersion {
 		return fmt.Errorf("unsupported review scheduler event %d projection %d", payload.EventVersion, payload.ProjectionVersion)
 	}
@@ -140,6 +162,327 @@ func (s *ReviewScheduler) ProcessRequest(ctx context.Context, request Request, _
 		return fmt.Errorf("commit first review scheduling: %w", err)
 	}
 	return nil
+}
+
+type reviewEvaluation struct {
+	BatchID         string
+	AttemptID       string
+	ReleaseID       string
+	ActivityID      string
+	ActivityVersion int
+	ActivityHash    string
+	TaskID          string
+	TaskVersion     int
+	TaskHash        string
+	RuleSetHash     string
+	Mode            string
+	AttemptStatus   string
+	FinishedAt      time.Time
+	RuleResults     []execution.RuleResult
+}
+
+type outcomeReviewItem struct {
+	ID                string
+	CapabilityID      string
+	CapabilityVersion int
+	ActivityID        string
+	ActivityVersion   int
+	ActivityHash      string
+	DueAt             time.Time
+	Priority          int
+	Status            string
+	PolicyVersion     int
+	ClaimedAttemptID  sql.NullString
+	EvaluationBatchID sql.NullString
+	Outcome           sql.NullString
+}
+
+func (s *ReviewScheduler) processReviewOutcome(ctx context.Context, payload ReviewOutcomeRequestPayload) error {
+	if payload.EventVersion != ReviewOutcomeEventVersion || payload.EvaluationBatchID == "" || payload.LearnerID == "" {
+		return fmt.Errorf("review outcome batch and learner are required")
+	}
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("begin review outcome: %w", err)
+	}
+	defer tx.Rollback()
+	if _, err := tx.ExecContext(ctx, `SET LOCAL search_path TO "`+s.schema+`"`); err != nil {
+		return fmt.Errorf("set review outcome search path: %w", err)
+	}
+	evaluation, err := s.loadReviewEvaluation(ctx, tx, payload)
+	if err != nil {
+		return err
+	}
+	activity, err := s.registry.ActivityView(evaluation.ReleaseID, evaluation.ActivityID, evaluation.ActivityVersion)
+	if err != nil {
+		return fmt.Errorf("resolve review outcome activity: %w", err)
+	}
+	if activity.ContentHash != evaluation.ActivityHash || activity.RuleSetHash != evaluation.RuleSetHash || activity.Mode != evaluation.Mode {
+		return fmt.Errorf("review outcome activity does not match frozen Attempt")
+	}
+	task, err := s.registry.ExecutionTask(evaluation.ReleaseID, evaluation.TaskID, evaluation.TaskVersion)
+	if err != nil {
+		return fmt.Errorf("resolve review outcome task: %w", err)
+	}
+	if task.BundleHash != evaluation.TaskHash || activity.TaskRef.ID != task.ID || activity.TaskRef.Version != task.Version {
+		return fmt.Errorf("review outcome task does not match frozen Attempt")
+	}
+	results, err := validatedRuleResults(task, evaluation.RuleResults)
+	if err != nil {
+		return err
+	}
+	items, err := s.lockOutcomeItems(ctx, tx, payload.LearnerID, evaluation)
+	if err != nil {
+		return err
+	}
+	if len(items) == 0 {
+		return fmt.Errorf("review outcome Attempt has no linked ReviewItem")
+	}
+	createdAt := s.now().UTC()
+	for _, item := range items {
+		if item.Status == "completed" {
+			if !item.EvaluationBatchID.Valid || item.EvaluationBatchID.String != evaluation.BatchID || !item.Outcome.Valid {
+				return fmt.Errorf("ReviewItem %s was completed by a different EvaluationBatch", item.ID)
+			}
+			var successorID string
+			if err := tx.QueryRowContext(ctx, `SELECT id FROM review_items WHERE predecessor_review_item_id=$1`, item.ID).Scan(&successorID); err != nil {
+				return fmt.Errorf("load replayed ReviewItem successor %s: %w", item.ID, err)
+			}
+			continue
+		}
+		if item.Status != "claimed" || !item.ClaimedAttemptID.Valid || item.ClaimedAttemptID.String != evaluation.AttemptID {
+			return fmt.Errorf("ReviewItem %s is not claimed by evaluated Attempt", item.ID)
+		}
+		if item.ActivityID != evaluation.ActivityID || item.ActivityVersion != evaluation.ActivityVersion || item.ActivityHash != evaluation.ActivityHash {
+			return fmt.Errorf("ReviewItem %s does not match evaluated Activity", item.ID)
+		}
+		if item.PolicyVersion != firstReviewPolicyVersion {
+			return fmt.Errorf("ReviewItem %s uses unsupported policy version %d", item.ID, item.PolicyVersion)
+		}
+		outcome, err := capabilityOutcome(task, results, item.CapabilityID, item.CapabilityVersion)
+		if err != nil {
+			return err
+		}
+		policy, err := s.registry.CapabilityPolicy(evaluation.ReleaseID, item.CapabilityID, item.CapabilityVersion)
+		if err != nil {
+			return err
+		}
+		sourceEvidenceID, err := outcomeSourceEvidence(ctx, tx, evaluation.BatchID, item, outcome)
+		if err != nil {
+			return err
+		}
+		successorActivity, reason, dueAt, err := s.reviewSuccessor(evaluation, activity, item, policy, outcome)
+		if err != nil {
+			return err
+		}
+		result, err := tx.ExecContext(ctx, `
+			UPDATE review_items
+			SET status='completed',evaluation_batch_id=$2,outcome=$3,
+				completed_at=$4,updated_at=GREATEST(updated_at,$4)
+			WHERE id=$1 AND status='claimed' AND claimed_attempt_id=$5`,
+			item.ID, evaluation.BatchID, outcome, evaluation.FinishedAt, evaluation.AttemptID)
+		if err != nil {
+			return fmt.Errorf("complete ReviewItem %s: %w", item.ID, err)
+		}
+		if affected, err := result.RowsAffected(); err != nil || affected != 1 {
+			return fmt.Errorf("complete ReviewItem %s changed %d rows", item.ID, affected)
+		}
+		successorID, err := projectionUUID(s.random)
+		if err != nil {
+			return err
+		}
+		groupKey := fmt.Sprintf("review-outcome:%s:%s:%s@%d", evaluation.BatchID, reason, successorActivity.ID, successorActivity.Version)
+		var sourceEvidence any
+		if sourceEvidenceID != "" {
+			sourceEvidence = sourceEvidenceID
+		}
+		_, err = tx.ExecContext(ctx, `
+			INSERT INTO review_items (
+				id,learner_id,capability_id,capability_version,source_evidence_id,
+				predecessor_review_item_id,release_id,activity_id,activity_version,activity_hash,
+				review_group_key,due_at,priority,reason,status,policy_version,created_at,updated_at
+			) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,'open',$15,$16,$16)`,
+			successorID, payload.LearnerID, item.CapabilityID, item.CapabilityVersion,
+			sourceEvidence, item.ID, evaluation.ReleaseID, successorActivity.ID,
+			successorActivity.Version, successorActivity.ContentHash, groupKey, dueAt.UTC(),
+			item.Priority, reason, item.PolicyVersion, createdAt)
+		if err != nil {
+			return fmt.Errorf("insert %s successor for ReviewItem %s: %w", reason, item.ID, err)
+		}
+		target := ReviewSchedulerRequestPayload{
+			LearnerID: payload.LearnerID, ReleaseID: evaluation.ReleaseID,
+			CapabilityID: item.CapabilityID, CapabilityVersion: item.CapabilityVersion,
+		}
+		if err := s.enqueueTargetProjection(ctx, tx, target, successorID, createdAt); err != nil {
+			return err
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit review outcome: %w", err)
+	}
+	return nil
+}
+
+func (s *ReviewScheduler) loadReviewEvaluation(ctx context.Context, tx *sql.Tx, payload ReviewOutcomeRequestPayload) (reviewEvaluation, error) {
+	var value reviewEvaluation
+	var ruleResults []byte
+	err := tx.QueryRowContext(ctx, `
+		SELECT b.id,a.id,a.release_id,a.activity_id,a.activity_version,a.activity_hash,
+			a.task_id,a.task_version,a.task_hash,b.rule_set_hash,a.mode,a.status,e.finished_at,b.rule_results
+		FROM evaluation_batches b
+		JOIN attempt_submissions sub ON sub.id=b.submission_id
+		JOIN learning_attempts a ON a.id=sub.attempt_id AND a.learner_id=sub.learner_id
+		JOIN attempt_executions e ON e.id=b.execution_id AND e.submission_id=b.submission_id
+		WHERE b.id=$1 AND a.learner_id=$2`, payload.EvaluationBatchID, payload.LearnerID).Scan(
+		&value.BatchID, &value.AttemptID, &value.ReleaseID, &value.ActivityID,
+		&value.ActivityVersion, &value.ActivityHash, &value.TaskID, &value.TaskVersion,
+		&value.TaskHash, &value.RuleSetHash, &value.Mode, &value.AttemptStatus, &value.FinishedAt, &ruleResults)
+	if errors.Is(err, sql.ErrNoRows) {
+		return reviewEvaluation{}, fmt.Errorf("review outcome EvaluationBatch was not found")
+	}
+	if err != nil {
+		return reviewEvaluation{}, fmt.Errorf("load review outcome EvaluationBatch: %w", err)
+	}
+	if value.AttemptStatus != "completed" || (value.Mode != "review" && value.Mode != "practice" && value.Mode != "guided") {
+		return reviewEvaluation{}, fmt.Errorf("review outcome Attempt is not a completed review or remediation")
+	}
+	if err := json.Unmarshal(ruleResults, &value.RuleResults); err != nil {
+		return reviewEvaluation{}, fmt.Errorf("decode review outcome RuleResult: %w", err)
+	}
+	return value, nil
+}
+
+func (s *ReviewScheduler) lockOutcomeItems(ctx context.Context, tx *sql.Tx, learnerID string, evaluation reviewEvaluation) ([]outcomeReviewItem, error) {
+	rows, err := tx.QueryContext(ctx, `
+		SELECT r.id,r.capability_id,r.capability_version,r.activity_id,r.activity_version,
+			r.activity_hash,r.due_at,r.priority,r.status,r.policy_version,
+			r.claimed_attempt_id,r.evaluation_batch_id,r.outcome
+		FROM attempt_review_items link
+		JOIN review_items r ON r.id=link.review_item_id
+		WHERE link.attempt_id=$1 AND r.learner_id=$2
+		ORDER BY r.id FOR UPDATE OF r`, evaluation.AttemptID, learnerID)
+	if err != nil {
+		return nil, fmt.Errorf("lock evaluated ReviewItems: %w", err)
+	}
+	defer rows.Close()
+	var items []outcomeReviewItem
+	for rows.Next() {
+		var item outcomeReviewItem
+		if err := rows.Scan(
+			&item.ID, &item.CapabilityID, &item.CapabilityVersion, &item.ActivityID,
+			&item.ActivityVersion, &item.ActivityHash, &item.DueAt, &item.Priority,
+			&item.Status, &item.PolicyVersion, &item.ClaimedAttemptID,
+			&item.EvaluationBatchID, &item.Outcome,
+		); err != nil {
+			return nil, fmt.Errorf("scan evaluated ReviewItem: %w", err)
+		}
+		items = append(items, item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate evaluated ReviewItems: %w", err)
+	}
+	return items, nil
+}
+
+func validatedRuleResults(task definition.ExecutionTask, values []execution.RuleResult) (map[string]execution.RuleStatus, error) {
+	expected := make(map[string]struct{}, len(task.AssessmentRules))
+	for _, rule := range task.AssessmentRules {
+		expected[rule.RuleID] = struct{}{}
+	}
+	results := make(map[string]execution.RuleStatus, len(values))
+	for _, result := range values {
+		if _, ok := expected[result.RuleID]; !ok {
+			return nil, fmt.Errorf("review outcome contains unknown RuleResult %q", result.RuleID)
+		}
+		if _, duplicate := results[result.RuleID]; duplicate {
+			return nil, fmt.Errorf("review outcome contains duplicate RuleResult %q", result.RuleID)
+		}
+		if result.Status != execution.RulePassed && result.Status != execution.RuleFailed && result.Status != execution.RuleNotEvaluated {
+			return nil, fmt.Errorf("review outcome contains invalid status %q", result.Status)
+		}
+		results[result.RuleID] = result.Status
+	}
+	if len(results) != len(expected) {
+		return nil, fmt.Errorf("review outcome RuleResult set is incomplete")
+	}
+	return results, nil
+}
+
+func capabilityOutcome(task definition.ExecutionTask, results map[string]execution.RuleStatus, capabilityID string, capabilityVersion int) (string, error) {
+	matched, passed := 0, 0
+	hasFailed := false
+	for _, rule := range task.AssessmentRules {
+		applies := false
+		for _, ref := range rule.CapabilityRefs {
+			if ref.ID == capabilityID && ref.Version == capabilityVersion {
+				applies = true
+				break
+			}
+		}
+		if !applies {
+			continue
+		}
+		matched++
+		switch results[rule.RuleID] {
+		case execution.RulePassed:
+			passed++
+		case execution.RuleFailed:
+			hasFailed = true
+		}
+	}
+	if matched == 0 {
+		return "", fmt.Errorf("review Activity has no rule for Capability %s@%d", capabilityID, capabilityVersion)
+	}
+	if hasFailed {
+		return "failed", nil
+	}
+	if passed == matched {
+		return "passed", nil
+	}
+	return "incomplete", nil
+}
+
+func outcomeSourceEvidence(ctx context.Context, tx *sql.Tx, batchID string, item outcomeReviewItem, outcome string) (string, error) {
+	if outcome == "incomplete" {
+		return "", nil
+	}
+	var evidenceID string
+	err := tx.QueryRowContext(ctx, `
+		SELECT id FROM evidence_records
+		WHERE evaluation_batch_id=$1 AND capability_id=$2 AND capability_version=$3 AND result=$4
+		ORDER BY id LIMIT 1`, batchID, item.CapabilityID, item.CapabilityVersion, outcome).Scan(&evidenceID)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", fmt.Errorf("%s review outcome for Capability %s@%d has no Evidence", outcome, item.CapabilityID, item.CapabilityVersion)
+	}
+	if err != nil {
+		return "", fmt.Errorf("load review outcome Evidence: %w", err)
+	}
+	return evidenceID, nil
+}
+
+func (s *ReviewScheduler) reviewSuccessor(evaluation reviewEvaluation, currentActivity definition.ActivityView, item outcomeReviewItem, policy definition.CapabilityPolicyView, outcome string) (definition.ActivityView, string, time.Time, error) {
+	ref := definition.VersionedDefinitionRef{ID: item.CapabilityID, Version: item.CapabilityVersion}
+	if outcome == "incomplete" {
+		return currentActivity, "review_incomplete", item.DueAt.UTC(), nil
+	}
+	if evaluation.Mode == "review" {
+		if outcome == "passed" {
+			return currentActivity, "maintenance", evaluation.FinishedAt.AddDate(0, 0, policy.ReviewPolicy.SuccessIntervalDays), nil
+		}
+		activity, err := s.registry.RemediationActivity(evaluation.ReleaseID, ref)
+		if err != nil {
+			return definition.ActivityView{}, "", time.Time{}, err
+		}
+		return activity, "remediation", evaluation.FinishedAt.AddDate(0, 0, policy.ReviewPolicy.FailureRemediationAfterDays), nil
+	}
+	if outcome == "failed" {
+		return currentActivity, "remediation", evaluation.FinishedAt.AddDate(0, 0, policy.ReviewPolicy.FailureRemediationAfterDays), nil
+	}
+	activity, err := s.registry.VariantReviewActivity(evaluation.ReleaseID, ref)
+	if err != nil {
+		return definition.ActivityView{}, "", time.Time{}, err
+	}
+	return activity, "remediation_review", evaluation.FinishedAt.AddDate(0, 0, policy.ReviewPolicy.FirstReviewAfterDays), nil
 }
 
 func (s *ReviewScheduler) firstQualifyingAssessment(ctx context.Context, tx *sql.Tx, payload ReviewSchedulerRequestPayload, policy definition.CapabilityPolicyView) (assessmentEvidenceBatch, bool, error) {

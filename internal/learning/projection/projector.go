@@ -99,7 +99,7 @@ func Project(policy definition.CapabilityPolicyView, input Input) (Result, error
 
 func hasIndependentVariantReview(facts []EvidenceFact) bool {
 	for _, fact := range facts {
-		if fact.ActivityMode == "review" && fact.Result == "passed" &&
+		if fact.ActivityMode == "review" && fact.QualifyingReview && fact.Result == "passed" &&
 			fact.Independence == IndependenceIndependent && transferRanks[fact.Context] >= transferRanks[TransferVariant] {
 			return true
 		}

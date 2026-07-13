@@ -47,6 +47,9 @@ func (s *Service) Create(ctx context.Context, input CreateInput) (Attempt, error
 	if err != nil {
 		return Attempt{}, fmt.Errorf("resolve activity: %w", err)
 	}
+	if activity.Mode == "review" {
+		return Attempt{}, ErrReviewClaimRequired
+	}
 	task, err := s.registry.TaskView(releaseID, activity.TaskRef.ID, activity.TaskRef.Version)
 	if err != nil {
 		return Attempt{}, fmt.Errorf("resolve task: %w", err)

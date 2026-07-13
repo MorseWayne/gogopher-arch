@@ -49,6 +49,7 @@ type reviewItem struct {
 	GroupKey          string
 	CapabilityID      string
 	CapabilityVersion int
+	Reason            string
 	Status            string
 	AttemptID         sql.NullString
 }
@@ -115,8 +116,8 @@ func (s *Service) Claim(ctx context.Context, learnerID, reviewItemID string) (Cl
 	if err != nil {
 		return ClaimResult{}, fmt.Errorf("resolve frozen review activity: %w", err)
 	}
-	if activity.Mode != "review" || activity.ContentHash != requested.ActivityHash {
-		return ClaimResult{}, fmt.Errorf("review item does not match frozen review activity")
+	if (activity.Mode != "review" && activity.Mode != "practice" && activity.Mode != "guided") || activity.ContentHash != requested.ActivityHash {
+		return ClaimResult{}, fmt.Errorf("review item does not match a frozen review or remediation activity")
 	}
 	if err := validateGroupCapabilities(items, activity.CapabilityRefs); err != nil {
 		return ClaimResult{}, err
@@ -182,10 +183,10 @@ func loadRequestedItem(ctx context.Context, tx *sql.Tx, learnerID, reviewItemID 
 	var item reviewItem
 	err := tx.QueryRowContext(ctx, `
 		SELECT id,release_id,activity_id,activity_version,activity_hash,review_group_key,
-			capability_id,capability_version,status,claimed_attempt_id
+			capability_id,capability_version,reason,status,claimed_attempt_id
 		FROM review_items WHERE id=$1 AND learner_id=$2`, reviewItemID, learnerID).Scan(
 		&item.ID, &item.ReleaseID, &item.ActivityID, &item.ActivityVersion, &item.ActivityHash,
-		&item.GroupKey, &item.CapabilityID, &item.CapabilityVersion, &item.Status, &item.AttemptID)
+		&item.GroupKey, &item.CapabilityID, &item.CapabilityVersion, &item.Reason, &item.Status, &item.AttemptID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return reviewItem{}, ErrNotFound
 	}
@@ -198,7 +199,7 @@ func loadRequestedItem(ctx context.Context, tx *sql.Tx, learnerID, reviewItemID 
 func lockActiveGroup(ctx context.Context, tx *sql.Tx, learnerID string, requested reviewItem) ([]reviewItem, error) {
 	rows, err := tx.QueryContext(ctx, `
 		SELECT id,release_id,activity_id,activity_version,activity_hash,review_group_key,
-			capability_id,capability_version,status,claimed_attempt_id
+			capability_id,capability_version,reason,status,claimed_attempt_id
 		FROM review_items
 		WHERE learner_id=$1 AND review_group_key=$2 AND release_id=$3
 			AND activity_id=$4 AND activity_version=$5 AND status IN ('open','claimed')
@@ -213,7 +214,7 @@ func lockActiveGroup(ctx context.Context, tx *sql.Tx, learnerID string, requeste
 		var item reviewItem
 		if err := rows.Scan(
 			&item.ID, &item.ReleaseID, &item.ActivityID, &item.ActivityVersion, &item.ActivityHash,
-			&item.GroupKey, &item.CapabilityID, &item.CapabilityVersion, &item.Status, &item.AttemptID,
+			&item.GroupKey, &item.CapabilityID, &item.CapabilityVersion, &item.Reason, &item.Status, &item.AttemptID,
 		); err != nil {
 			return nil, fmt.Errorf("scan active review group: %w", err)
 		}
@@ -274,7 +275,7 @@ func (s *Service) buildAttempt(releaseID, learnerID string, activity definition.
 		ActivityID: activity.ID, ActivityVersion: activity.Version, ActivityHash: activity.ContentHash,
 		TaskID: task.ID, TaskVersion: task.Version, TaskHash: task.BundleHash,
 		CapabilityRefs: append([]definition.VersionedDefinitionRef(nil), activity.CapabilityRefs...),
-		Mode:           "review", Status: "active", Workspace: workspace, WorkspaceHash: attempt.WorkspaceHash(workspace),
+		Mode:           activity.Mode, Status: "active", Workspace: workspace, WorkspaceHash: attempt.WorkspaceHash(workspace),
 		StartedAt: now, UpdatedAt: now,
 	}, nil
 }
@@ -293,9 +294,10 @@ func insertAttempt(ctx context.Context, tx *sql.Tx, value attempt.Attempt) error
 			id,learner_id,release_id,activity_id,activity_version,activity_hash,
 			task_id,task_version,task_hash,capability_refs,mode,status,
 			workspace,workspace_revision,workspace_hash,started_at,updated_at
-		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb,'review','active',$11::jsonb,0,$12,$13,$13)`,
+		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb,$11,'active',$12::jsonb,0,$13,$14,$14)`,
 		value.ID, value.LearnerID, value.ReleaseID, value.ActivityID, value.ActivityVersion, value.ActivityHash,
-		value.TaskID, value.TaskVersion, value.TaskHash, string(capabilities), string(workspace), value.WorkspaceHash, value.StartedAt)
+		value.TaskID, value.TaskVersion, value.TaskHash, string(capabilities), value.Mode,
+		string(workspace), value.WorkspaceHash, value.StartedAt)
 	if err != nil {
 		return fmt.Errorf("insert review attempt: %w", err)
 	}

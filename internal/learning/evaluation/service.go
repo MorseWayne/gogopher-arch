@@ -115,6 +115,10 @@ func (s *Service) Evaluate(ctx context.Context, learnerID, submissionID, executi
 		ID: batchID, SubmissionID: frozen.ID, ExecutionID: terminal.ID,
 		RuleSetHash: frozen.RuleSetHash, RuleResults: ruleResults, CreatedAt: now,
 	}
+	reviewRequestID, err := evaluationUUID(s.random)
+	if err != nil {
+		return Batch{}, false, err
+	}
 	artifacts, artifactIDs, err := s.buildArtifacts(frozen, task, terminal, now)
 	if err != nil {
 		return Batch{}, false, err
@@ -161,7 +165,8 @@ func (s *Service) Evaluate(ctx context.Context, learnerID, submissionID, executi
 		}
 	}
 	return s.repository.Persist(ctx, PersistRecord{
-		Batch: batch, AttemptID: frozen.AttemptID, LearnerID: frozen.LearnerID, OccurredAt: occurredAt,
+		Batch: batch, AttemptID: frozen.AttemptID, LearnerID: frozen.LearnerID,
+		ReviewRequestID: reviewRequestID, OccurredAt: occurredAt,
 	})
 }
 

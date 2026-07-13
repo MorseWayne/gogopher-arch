@@ -8,9 +8,10 @@ import (
 )
 
 var (
-	ErrNotFound         = errors.New("learning attempt not found")
-	ErrInactive         = errors.New("learning attempt is not active")
-	ErrInvalidWorkspace = errors.New("invalid workspace")
+	ErrNotFound            = errors.New("learning attempt not found")
+	ErrInactive            = errors.New("learning attempt is not active")
+	ErrInvalidWorkspace    = errors.New("invalid workspace")
+	ErrReviewClaimRequired = errors.New("review activity requires a ReviewItem claim")
 )
 
 type RevisionConflict struct {

@@ -37,7 +37,7 @@ func TestProjectEvidenceCombinationsAndAsOf(t *testing.T) {
 	fact := func(rule, mode string, independence IndependenceState, context TransferState, at time.Time) EvidenceFact {
 		return EvidenceFact{
 			EvidenceType: "implement", RuleID: rule, Result: "passed", Independence: independence,
-			Context: context, ActivityMode: mode, OccurredAt: at,
+			Context: context, ActivityMode: mode, QualifyingReview: mode == "review", OccurredAt: at,
 		}
 	}
 	fullAssessment := []EvidenceFact{
@@ -85,7 +85,7 @@ func TestProjectIsIndependentOfEvidenceOrder(t *testing.T) {
 	}}}
 	facts := []EvidenceFact{
 		{EvidenceType: "test", RuleID: "a", Result: "passed", Independence: IndependenceGuided, Context: TransferSameContext, ActivityMode: "guided", OccurredAt: now.Add(-time.Hour)},
-		{EvidenceType: "test", RuleID: "b", Result: "passed", Independence: IndependenceIndependent, Context: TransferVariant, ActivityMode: "review", OccurredAt: now},
+		{EvidenceType: "test", RuleID: "b", Result: "passed", Independence: IndependenceIndependent, Context: TransferVariant, ActivityMode: "review", QualifyingReview: true, OccurredAt: now},
 	}
 	first, _ := Project(policy, Input{Evidence: facts, RetentionBase: RetentionFresh, AsOf: now})
 	second, _ := Project(policy, Input{Evidence: []EvidenceFact{facts[1], facts[0]}, RetentionBase: RetentionFresh, AsOf: now})
