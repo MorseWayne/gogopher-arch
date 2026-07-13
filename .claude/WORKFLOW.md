@@ -10,7 +10,7 @@ Level: 3
 Started: 2026-07-12
 Updated: 2026-07-13
 Priority: Product redesign specification; independent from the active DeepTutor spike.
-Current phase: B9 已完成，执行 Plan B 端到端验收。
+Current phase: Plan B 已验收，准备进入 Plan C capability projection 与 review scheduling。
 
 Intent: 为 M1-01、M1-03、M1-07、M1-09 建立第一条端到端能力训练切片，验证版本化能力定义、服务端 Attempt/Evidence、派生能力状态、多文件 Go 任务和维护调度闭环。
 
@@ -31,7 +31,7 @@ Plan:
 - [done] A7 — 实现 Gateway wiring、Learning feature gate、路由和旧 API 删除。
 
 Current todo:
-- [ ] Plan B acceptance — 用真实 Gateway、Sandbox 和 PostgreSQL 验证完整 submit/Evidence 恢复链。
+- [ ] Plan C C1 — 固化 CapabilitySnapshot projection 输入、状态机和 as_of 语义。
 
 Changes:
 - 用户确认 M1 14 节点、M2 16 节点、`gocheck`/`gocheck-hub` 内容原型和 Miniflux v2.3.2 训练项目方向。
@@ -81,12 +81,15 @@ Changes:
 - GET Attempt 通过 owner-scoped read model 恢复 Submission、Execution、RuleResult 和 Evidence；held-out output、test name 与 package 不进入公开 DTO。
 - `/metrics` 暴露 bounded label 的 Attempt、Execution duration/status/failure/truncation 和 Evidence counters；worker 只记录 ID、enum、duration 与计数。
 - observability regression test 使用带 secret marker 的 workspace、output、failure message 和 Evidence reason，确认 structured logs 不包含这些 payload。
+- Plan B Compose acceptance 已通过真实 session → assessment Attempt → test → reference assistance → submit → Evaluation → GET Attempt 主链。
+- starter workspace 的 test/submit 均稳定落为 `user_failed`；Evaluation 保存 10 条 RuleResult 和 6 条 referenced Evidence，重复 submit 不增加 Execution/Evidence。
+- 第二个 Learner 读取该 Attempt 返回 `404 attempt_not_found`；metrics 与 Gateway logs 仅包含固定维度和内部 ID，Compose 服务均保持 healthy。
 
 Prerequisites:
 - 当前 Sandbox 仅支持单个 `main.go` 且缺少生产级隔离；规格必须限制为本地可信环境，并明确公开运行前的安全门槛。
 - 现有 DeepTutor Spike 和用户对其 ledger/spec 的修改必须保持不变。
 
-Resume next: 运行 Plan B acceptance demo，覆盖 session → Attempt → execute → hint → submit → Evaluation → GET Attempt。
+Resume next: 按 Plan C 从 C1 开始实现 CapabilityProjector 与 as_of replay contract。
 
 ### WF-2026-06-02-002 — DeepTutor 离线课程内容工作流 Spike
 Status: Active

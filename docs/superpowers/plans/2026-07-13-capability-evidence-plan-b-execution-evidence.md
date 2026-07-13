@@ -1,6 +1,6 @@
 # 能力证据纵向切片 Plan B：多文件执行、提交与证据
 
-> 状态：In progress — B1/B2/B3 accepted
+> 状态：Completed — B1–B9 accepted
 > 日期：2026-07-13
 > 上游：Plan A 已验收的 definition、session、Attempt 和 workspace 契约
 
