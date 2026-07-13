@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   CircleAlert,
   Clock3,
-  FileCode2,
   Lightbulb,
   LoaderCircle,
   Play,
@@ -26,6 +25,7 @@ import type { ActivityResponse, AttemptResponse, CapabilityResponse } from '../.
 import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
 import { ThemeToggle } from '../components/ThemeToggle'
+import { MultiFileEditor } from '../components/learning/MultiFileEditor'
 import { useLearningSession } from '../hooks/useLearningSession'
 
 type RemoteState<T> =
@@ -147,6 +147,7 @@ export function CapabilityActivity() {
           definition={definition.value}
           attempt={attempt}
           onStart={() => void startAttempt()}
+          onAttemptChange={(value) => setAttempt({ status: 'ready', value })}
         />
       )}
     </div>
@@ -157,10 +158,12 @@ function ActivityWorkspace({
   definition,
   attempt,
   onStart,
+  onAttemptChange,
 }: {
   definition: { activity: ActivityResponse; capabilities: CapabilityResponse[] }
   attempt: RemoteState<AttemptResponse>
   onStart: () => void
+  onAttemptChange: (attempt: AttemptResponse) => void
 }) {
   const { activity, task } = definition.activity
   const phase = attempt.status === 'ready' ? getAttemptPhase(attempt.value) : null
@@ -204,7 +207,15 @@ function ActivityWorkspace({
                 <strong>Attempt 读取失败：</strong> {errorMessage(attempt.error)}
               </div>
             )}
-            {attempt.status === 'ready' && phase && <AttemptOverview attempt={attempt.value} phase={phase} />}
+            {attempt.status === 'ready' && phase && (
+              <AttemptOverview
+                key={attempt.value.id}
+                attempt={attempt.value}
+                task={task}
+                phase={phase}
+                onAttemptChange={onAttemptChange}
+              />
+            )}
           </div>
         </div>
       </section>
@@ -248,7 +259,17 @@ function ActivityWorkspace({
   )
 }
 
-function AttemptOverview({ attempt, phase }: { attempt: AttemptResponse; phase: AttemptPhase }) {
+function AttemptOverview({
+  attempt,
+  task,
+  phase,
+  onAttemptChange,
+}: {
+  attempt: AttemptResponse
+  task: ActivityResponse['task']
+  phase: AttemptPhase
+  onAttemptChange: (attempt: AttemptResponse) => void
+}) {
   const labels: Record<AttemptPhase, string> = {
     active: '进行中',
     submitted: '已提交，等待评估',
@@ -271,17 +292,7 @@ function AttemptOverview({ attempt, phase }: { attempt: AttemptResponse; phase: 
         <Metric label="公开文件" value={String(Object.keys(attempt.workspace).length)} />
         <Metric label="Evidence" value={String(attempt.evidence.length)} />
       </div>
-      <div className="rounded-2xl border bg-background">
-        <div className="flex items-center gap-2 border-b px-4 py-3 text-sm font-medium"><FileCode2 className="size-4" />Workspace</div>
-        <div className="divide-y">
-          {Object.keys(attempt.workspace).sort().map((path) => (
-            <div key={path} className="flex items-center justify-between px-4 py-2.5 font-mono text-xs">
-              <span>{path}</span>
-              <span className="text-muted-foreground">{new TextEncoder().encode(attempt.workspace[path]).length} bytes</span>
-            </div>
-          ))}
-        </div>
-      </div>
+      <MultiFileEditor attempt={attempt} task={task} onAttemptChange={onAttemptChange} />
     </div>
   )
 }

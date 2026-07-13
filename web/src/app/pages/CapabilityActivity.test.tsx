@@ -65,7 +65,7 @@ describe('CapabilityActivity', () => {
     renderActivity('/learning/activities/guided-run-model?version=2&attempt=attempt-current')
 
     expect(await screen.findByRole('heading', { name: '进行中' })).toBeVisible()
-    expect(screen.getByText('main.go')).toBeVisible()
+    expect(screen.getByRole('button', { name: 'main.go' })).toBeVisible()
     expect(reads).toBe(1)
   })
 

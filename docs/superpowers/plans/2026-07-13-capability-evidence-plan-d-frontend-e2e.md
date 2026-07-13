@@ -1,6 +1,6 @@
 # 能力证据纵向切片 Plan D：前端闭环与端到端验证
 
-> 状态：In progress — D1–D3 accepted
+> 状态：In progress — D1–D4 accepted
 > 日期：2026-07-13
 > 上游：Plan A–C 已验收的 Learning API 和状态语义
 
@@ -69,12 +69,12 @@ web/e2e/learning-slice.spec.ts
 
 ### D4 — 多文件 workspace 与草稿恢复
 
-- [ ] 实现文件树和单文件 CodeMirror 编辑器，只允许选择 Task 暴露的 editable path。
-- [ ] readonly 文件可查看但不可编辑；held-out 文件完全不存在于客户端数据。
-- [ ] 保存完整 file map + base revision，并在成功后更新 revision/hash。
-- [ ] localStorage 以 Attempt/revision 为 key 保存未同步 backup；服务端保存成功后清理对应 backup。
-- [ ] 409 时同时展示服务端版本和本地未同步草稿，让用户显式选择重新载入或覆盖式再编辑，不自动 merge。
-- [ ] 为刷新恢复、保存失败、双标签 revision conflict 和超限文件写 component tests。
+- [x] 实现文件树和单文件 CodeMirror 编辑器，只允许选择 Task 暴露的 editable path。
+- [x] readonly 文件可查看但不可编辑；held-out 文件完全不存在于客户端数据。
+- [x] 保存完整 file map + base revision，并在成功后更新 revision/hash。
+- [x] localStorage 以 Attempt/revision 为 key 保存未同步 backup；服务端保存成功后清理对应 backup。
+- [x] 409 时同时展示服务端版本和本地未同步草稿，让用户显式选择重新载入或覆盖式再编辑，不自动 merge。
+- [x] 为刷新恢复、保存失败、双标签 revision conflict 和超限文件写 component tests。
 
 完成条件：任何“已保存”提示都对应服务端新 revision；刷新不会丢失已确认保存内容。
 

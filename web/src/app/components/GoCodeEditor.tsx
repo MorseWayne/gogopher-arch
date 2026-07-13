@@ -4,16 +4,38 @@ import { autocompletion, snippetCompletion, type Completion, type CompletionCont
 import { go } from "@codemirror/lang-go";
 import { oneDark } from "@codemirror/theme-one-dark";
 
-export function GoCodeEditor({ value, onChange, concepts = [], height = "28rem" }: { value: string; onChange: (value: string) => void; concepts?: string[]; height?: string }) {
+export function GoCodeEditor({
+  value,
+  onChange,
+  concepts = [],
+  height = "28rem",
+  readOnly = false,
+  ariaLabel = "Go code editor",
+  syntax = "go",
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  concepts?: string[];
+  height?: string;
+  readOnly?: boolean;
+  ariaLabel?: string;
+  syntax?: "go" | "plain";
+}) {
   const conceptKey = concepts.join("|");
-  const extensions = useMemo(() => [go(), autocompletion({ override: [createGoCompletionSource(concepts)] })], [conceptKey]);
+  const extensions = useMemo(
+    () => syntax === "go" ? [go(), autocompletion({ override: [createGoCompletionSource(concepts)] })] : [],
+    [conceptKey, syntax],
+  );
 
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-800 bg-black shadow-inner">
       <CodeMirror
+        aria-label={ariaLabel}
         value={value}
         height={height}
         theme={oneDark}
+        editable={!readOnly}
+        readOnly={readOnly}
         basicSetup={{
           lineNumbers: true,
           foldGutter: true,
@@ -24,7 +46,9 @@ export function GoCodeEditor({ value, onChange, concepts = [], height = "28rem" 
           autocompletion: true,
         }}
         extensions={extensions}
-        onChange={(nextValue) => onChange(nextValue)}
+        onChange={(nextValue) => {
+          if (!readOnly) onChange(nextValue)
+        }}
         className="text-sm leading-6"
       />
     </div>
