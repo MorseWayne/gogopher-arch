@@ -4,71 +4,131 @@ Claude Code 开发工作的轻量级可恢复台账。
 
 ## Active
 
-### WF-2026-05-31-001 — 全站 shadcn 视觉系统重构
+### WF-2026-07-12-001 — 能力节点与证据纵向切片设计
 Status: Active
 Level: 3
-Started: 2026-05-31
-Updated: 2026-05-31
-Current phase: P6 — 补充本地开发启动脚本。
+Started: 2026-07-12
+Updated: 2026-07-13
+Priority: Product redesign specification; independent from the active DeepTutor spike.
+Current phase: D5 — 用户审阅规格并决定是否进入分阶段实施计划。
 
-Intent: 将前端重构为 shadcn/ui 驱动的统一视觉系统，并优化首页、导航、课程阅读和任务工作台的信息架构。
+Intent: 为 M1-01、M1-03、M1-07、M1-09 建立第一条端到端能力训练切片，验证版本化能力定义、服务端 Attempt/Evidence、派生能力状态、多文件 Go 任务和维护调度闭环。
 
 Plan:
-- [done] P1 — 完成需求澄清、视觉方向和信息架构设计确认。
-- [done] P2 — 编写并评审设计规格文档。
-- [done] P3 — 制定实施计划。
-- [done] P4 — 分阶段实施全站 shadcn 重构并验证。
-- [done] P5 — 增加全站 light/dark/system 主题支持。
-- [done] P6 — 补充本地开发启动脚本，封装 Docker、混合开发和本地服务启动场景。
+- [done] D1 — 明确产品定位、能力图谱、能力维护和第一版范围。
+- [done] D2 — 核对当前课程、任务、Dashboard、Gateway 和 Sandbox 数据流。
+- [done] D3 — 比较数据方案并确认“版本化定义 + 服务端证据”方案。
+- [done] D4 — 写入设计规格并完成五轮独立规格评审。
+- [doing] D5 — 用户审阅规格后再进入分阶段实施计划。
 
 Current todo:
-- [x] P6 — 已新增 `scripts/dev.sh` 启动助手，README 已补充常用场景；脚本语法、help 输出和空白检查通过。
+- [ ] D5 — 用户审阅 `2026-07-12-capability-evidence-vertical-slice-design.md`；批准后拆分为定义/Attempt、执行/证据、投影/复习、前端/E2E 四份实施计划。
 
 Changes:
-- 用户选择方案 B：保持核心功能，但允许优化首页、导航、课程阅读布局和 Dashboard 信息层级。
-- 用户选择混合视觉方向：首页/Dashboard 保留平台感，课程页偏文档站，任务页偏工作台，并用 shadcn token 与 Go 蓝统一。
-- 用户确认导航骨架采用分区混合壳：首页为公开营销入口，学习区使用统一 App Shell/侧栏。
-- 用户确认视觉语言采用自适应混合：课程正文浅色阅读，沙盒/任务反馈局部深色终端。
-- 用户确认学习区 Sidebar 采用“工作区 + 学习路径 + 项目”分组，支持 Go 基础、后端实习、工程进阶和 AI 全栈路线。
-- 用户确认未实现路线在 UI 中保留入口并标记“即将开放”，不做假功能。
-- 用户确认核心页面采用职责重排：首页负责品牌和路径入口，Dashboard 负责下一步行动，课程页负责系统学习，任务页负责动手实战。
-- 用户确认采用方案 B：分区 App Shell + 页面职责重排，作为后续设计主方案。
-- 用户确认设计第 1 部分：架构与路由分区，公开区使用 PublicLayout，学习区使用 LearningLayout/App Shell。
-- 用户确认设计第 2 部分：shadcn 组件系统与 Design Token，采用 Go 蓝 primary、浅色阅读 surface 和局部深色终端 surface。
-- 用户确认设计第 3 部分：核心页面布局，包含 Landing、Dashboard、课程总览、章节详情和任务详情的页面职责。
-- 用户确认设计第 4 部分：数据流、状态与错误处理，课程/任务数据保持本地，沙盒运行沿用现有 API，状态用 shadcn 组件表达。
-- 用户确认设计第 5 部分：验证与实施切片策略。
-- 设计规格文档已写入 docs/superpowers/specs/2026-05-31-shadcn-visual-system-redesign.md，并在第三轮独立评审通过。
-- 已完成全站 shadcn 视觉系统重构：布局拆分、学习区 Sidebar、首页、Dashboard、课程页、章节页、任务页和练习面板均已迁移；`npm run build --prefix web` 与 `git diff --check` 通过。
-- 用户追加确认全站支持深色模式：默认跟随系统，并提供 light/dark/system 手动切换；采用 next-themes。
-- 已实现全站 light/dark/system 主题支持：App 接入 next-themes，公开区与学习区顶部加入 ThemeToggle，dark token 保持 Go 蓝 primary，并修正 Landing/课程页硬编码浅色样式；`npm run build --prefix web` 与 `git diff --check` 通过。
-- 修复 ThemeToggle 交互：为避免 Radix DropdownMenu trigger 与直接切换点击互相干扰，已改为本地受控主题菜单；按钮点击会打开 light/dark/system 选项，选择后调用 next-themes 并关闭菜单；构建和空白检查通过。
-- 用户反馈频繁 `docker compose up --build` 影响开发效率；已新增 `scripts/dev.sh` 封装 full Docker、Docker 后端 + 本地 Vite、本地 Go 服务 + Docker 依赖等启动场景，并更新 README。
-
-History so far:
-- Intent: 将前端重构为 shadcn/ui 视觉系统，并优化首页、学习区、课程阅读和任务工作台的信息架构。
-- Completed milestones:
-  - [done] P1-P3 — 需求澄清、设计规格和实施计划已完成。
-  - [done] P4-P5 — 全站 shadcn 重构和 light/dark/system 主题支持已完成。
-  - [done] P6 — 本地开发启动脚本与 README 使用场景补充已完成。
-- Key changes:
-  - 用户选择混合视觉方向、分区 App Shell 和未实现路线保留“即将开放”入口。
-  - 开发脚本支持 full Docker、Docker 后端 + 本地 Vite、本地 Go 服务 + Docker 依赖等场景。
-- Validation:
-  - 视觉/主题阶段 `npm run build --prefix web` 与 `git diff --check` 通过；P6 脚本语法、help 输出和空白检查通过。
-- Deferred / gaps:
-  - 仍需浏览器 smoke light/dark/system、首页、Dashboard、课程、章节、任务、沙盒锚点和移动端 Sidebar，并可按需实跑开发脚本。
+- 用户确认 M1 14 节点、M2 16 节点、`gocheck`/`gocheck-hub` 内容原型和 Miniflux v2.3.2 训练项目方向。
+- 用户确认能力与活动使用仓库内版本化定义，用户尝试、证据、能力状态和复习队列使用服务端持久化。
+- 第一条实现规格只覆盖 M1-01、M1-03、M1-07、M1-09 和一个多文件完整程序任务。
+- 正式规格已通过独立审查，关闭发布包回放、幂等提交、多能力 ReviewItem、复习补救、帮助事件 cutoff、timeout 分类和本地网络边界等问题。
 
 Prerequisites:
-- 规格已由用户批准，可开始实施；提交仍需用户明确要求。
+- 当前 Sandbox 仅支持单个 `main.go` 且缺少生产级隔离；规格必须限制为本地可信环境，并明确公开运行前的安全门槛。
+- 现有 DeepTutor Spike 和用户对其 ledger/spec 的修改必须保持不变。
 
-Resume next: 如需收尾，进行浏览器人工 smoke（light/dark/system、首页、Dashboard、课程、章节、任务、沙盒锚点和移动端 Sidebar），按需实跑 `./scripts/dev.sh backend`/`web` 检查开发启动体验，然后按用户要求提交。
+Resume next: 用户审阅正式规格；批准后按规格第 19 节分别编写四份独立实施计划，不合并成一个超大计划。
 
-## Backlog / Future
+### WF-2026-06-02-002 — DeepTutor 离线课程内容工作流 Spike
+Status: Active
+Level: 3
+Started: 2026-06-02
+Updated: 2026-06-03
+Priority: Current implementation planning; WF-2026-06-02-001 remains paused.
+Current phase: P3 — 安装/运行 DeepTutor 并生成章节正文草稿。
 
-- [ ] 若课程数据继续膨胀，后续可考虑将 13 章拆分为独立章节文件；当前计划明确首版保留单文件。
+Intent: 验证 DeepTutor 能否作为离线课程内容研究工具，利用开放网页检索与站内课程约束生成明显优于原章节的教程级 Go 课程正文草稿。
 
-## Completed
+Plan:
+- [done] D1-D5 — 需求澄清、方案选择、设计规格、规格评审和用户审阅已完成。
+- [done] P1 — 审查 13 章并选择目标章节。
+- [done] P2 — 准备 DeepTutor 输入包与课程风格契约。
+- [doing] P3 — 安装/运行 DeepTutor 并生成章节正文草稿。
+- [todo] P4 — 审计草稿并替换目标 MDX。
+- [todo] P5 — 验证内容质量、构建和回滚决策。
+- [todo] P6 — 记录结论、更新 ledger 并提交。
+
+Current todo:
+- [ ] P3 — 确认 DeepTutor 安装/运行方式，将 `input-package.md` 交给 DeepTutor 生成 ch10 正文草稿和来源记录。
+
+Changes:
+- 用户选择研究型集成 Spike，而不是立即产品化或直接深度集成。
+- 用户明确优先方向为离线内容工作流；AI 导师作为后续方向。
+- 用户选择开放网页检索、完整审计包、内容质量优先，以及“方案 A 起步，方案 B 作为加分验证”。
+- 设计规格已写入 `docs/superpowers/specs/2026-06-03-deeptutor-course-content-spike-design.md` 并通过规格评审；规格提交为 `78c31c7`。
+- 实施计划已写入 `docs/superpowers/plans/2026-06-03-deeptutor-course-content-spike-implementation.md`；规格状态更新为 Approved for implementation planning。
+- P1 已完成 13 章评分，选择 `ch10-packages-tools` 作为 DeepTutor Spike 目标章节；结果写入 `docs/superpowers/spikes/deeptutor-course-content/chapter-selection.md`。
+- P2 已完成 DeepTutor 输入包，包含 ch10 原文、metadata/练习摘要、课程风格契约、开放检索要求、输出格式和最终提示模板；文件为 `docs/superpowers/spikes/deeptutor-course-content/input-package.md`。
+
+Prerequisites:
+- DeepTutor 安装/运行可能需要外部依赖、账号或模型配置；若成本较重，按 Stop condition 暂停确认。
+- 课程正文仍需遵守站内正文优先、外部资料只作来源层和禁止拼贴的项目原则。
+
+Resume next: 执行 P3：确认 DeepTutor 安装/运行方式，并尝试用 `input-package.md` 生成 ch10 正文草稿和来源记录。
+
+### WF-2026-06-02-001 — Go 课程质量样板设计
+Completed: 2026-06-02
+Level: 3
+
+Close summary:
+- Outcome: 已完成 Go 课程质量升级样板：ch07 Interfaces 已完整升级为订单通知接口样板章，ch07 metadata/exercises 已同步，ch11 Testing 已补充与 ch07 的衔接说明和后续订单通知测试样板蓝图。
+- Validation: `npm run build --prefix web`、`git diff --check`、ch07 三个 starter 可运行、三份参考解法输出匹配；ch07 rubric 人工检查通过，ch11 保持蓝图范围。
+- Gaps: ch11 完整订单通知测试样板、更多章节推广已进入 Backlog / Future；本轮无阻塞 gap。
+
+Archived execution:
+- Intent: 建立 Go 课程质量升级样板：完整升级 ch07 Interfaces，并为 ch11 Testing 形成审计与改造蓝图。
+- Plan:
+  - [done] D1-D3 — 确认样板路线、写入并评审设计规格、制定实施计划。
+  - [done] P1 — 审计当前 ch07/ch11 与来源映射。
+  - [done] P2 — 改造 ch07 MDX 正文为接口样板章。
+  - [done] P3 — 更新 ch07 metadata 与 warmup/core/challenge 练习。
+  - [done] P4 — 落实 ch11 审计与改造蓝图。
+  - [done] P5-P6 — 完成最终验证、记录后续任务并关闭。
+- Key changes:
+  - ch07 从构建通知主线切换为订单通知主线，保留并重组接口方法集、隐式实现、接口值、nil 陷阱、any、类型断言/分支、error、小接口和工程 checklist。
+  - ch07 summary/goals/notes/practices/pitfalls/checklist/reviewQuestions/exercises 全部同步到订单通知、Notifier、SpyNotifier 和错误传播主线。
+  - ch11 保留当前 NormalizeName 主线，仅新增与 ch07 Interfaces 的衔接说明、测试替身桥接和下一轮订单通知测试样板蓝图。
+- Validation:
+  - 多轮 `npm run build --prefix web` 与 `git diff --check` 通过。
+  - ch07 warmup starter 输出匹配；core/challenge starter 可运行且参考解法输出匹配。
+  - P5 最终 rubric 检查确认 ch07 满足 Concept、Progression、Practice、Source、Backend relevance；ch11 未超出蓝图范围。
+- Deferred / gaps:
+  - ch11 完整订单通知测试样板后续单独实施。
+  - ch07 样板推广到其他章节后续按批次规划。
+
+### WF-2026-05-31-001 — 全站 shadcn 视觉系统重构
+Completed: 2026-06-02
+Level: 3
+
+Close summary:
+- Outcome: 已完成全站 shadcn/ui 视觉系统重构、分区 App Shell、核心页面信息架构优化、light/dark/system 主题支持，以及本地开发启动脚本补充。
+- Validation: 视觉/主题阶段 `npm run build --prefix web` 与 `git diff --check` 通过；P6 脚本语法、help 输出和空白检查通过；用户已手工验证 light/dark/system、首页、Dashboard、课程、章节、任务、沙盒锚点和移动端 Sidebar。
+- Gaps: None.
+
+Archived execution:
+- Intent: 将前端重构为 shadcn/ui 视觉系统，并优化首页、学习区、课程阅读和任务工作台的信息架构。
+- Plan:
+  - [done] P1-P3 — 需求澄清、设计规格和实施计划已完成。
+  - [done] P4 — 全站 shadcn 重构已完成。
+  - [done] P5 — light/dark/system 主题支持已完成。
+  - [done] P6 — 本地开发启动脚本与 README 使用场景补充已完成。
+- Key changes:
+  - 用户选择混合视觉方向、分区 App Shell、页面职责重排，并保留未实现路线的“即将开放”入口。
+  - 公开区、学习区、Dashboard、课程页、章节页、任务页和练习面板迁移到统一 shadcn token 与 Go 蓝视觉系统。
+  - 主题支持默认跟随系统并提供 light/dark/system 手动切换；开发脚本支持 full Docker、Docker 后端 + 本地 Vite、本地 Go 服务 + Docker 依赖等场景。
+- Validation:
+  - `npm run build --prefix web` 与 `git diff --check` 通过。
+  - P6 脚本语法、help 输出和空白检查通过。
+  - 用户手工验证 light/dark/system、首页、Dashboard、课程、章节、任务、沙盒锚点和移动端 Sidebar 通过。
+- Deferred / gaps:
+  - None.
 
 ### WF-2026-05-31-002 — Go 基础课程 React + MDX 内容系统
 Completed: 2026-06-01
@@ -134,4 +194,3 @@ Close summary:
 - Outcome: 已按计划将 Go 基础训练营改为 GoGopher Arch 完整内置课程；重写课程数据模型和 13 章内容，改造课程总览页、章节详情页、Landing 文案和 README 来源边界；课程页面不再依赖外部教程正文链接。
 - Validation: 运行文本检查，确认课程数据无旧 source 字段/旧概念模型，课程页面无外部原文入口文案；通过 esbuild bundle 调用 `validateGoBasicsCourse()`，结果 `[]`；本地 `go run` 验证 13 个 exercise starterCode 输出匹配；通过 `npm run build --prefix web`。
 - Gaps: 未启动浏览器逐页人工抽样；未验证 sandbox 服务实际运行按钮，因为本次未启动 Gateway/Sandbox Engine。
-

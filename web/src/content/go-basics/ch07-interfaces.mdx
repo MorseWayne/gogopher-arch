@@ -1,59 +1,91 @@
 # 接口：用行为边界替代实现细节
 
-接口是 Go 抽象能力的核心。具体类型告诉你“这个值是什么、内部怎么组织”；接口只告诉你“这个值能做什么”。在后端工程里，接口最实际的价值不是画复杂架构图，而是隔离变化：文件、网络、缓存、数据库、通知渠道和第三方 API 都可以被抽象成当前调用方真正需要的一小组行为。
+接口是 Go 中表达行为边界的工具。具体类型告诉你“这个值是什么、内部怎么组织”；接口只告诉你“这个值能做什么”。在后端工程里，接口最实际的价值不是画复杂架构图，而是让业务代码依赖稳定行为，隐藏可替换细节，并让测试更容易。
 
-这一章会围绕一个小场景展开：**构建结果需要发送通知，但业务逻辑不应该关心通知最终走邮件、日志还是测试 fake**。你会学习小接口、隐式实现、方法集、接口值、nil 陷阱、类型断言和错误分类。
+这一章会围绕一个小场景展开：**订单创建成功后需要发送通知，但订单业务逻辑不应该关心通知最终走邮件、短信、日志还是测试替身**。你会学习小接口、隐式实现、方法集、接口值、nil 陷阱、`any`、类型断言、类型分支和错误分类。
 
 <SourceNote
   source="gopl-zh"
   title="第 7 章：接口"
-  note="本章主干基于本地 gopl-zh 第 7 章重组：保留 io.Writer、fmt.Stringer、sort.Interface、http.Handler、error、接口值、nil 接口、类型断言和类型分支，并改写为通知、测试替身和后端依赖边界场景。"
+  note="本章主干基于本地 gopl-zh 第 7 章重组：保留 io.Writer、fmt.Stringer、http.Handler、error、接口值、nil 接口、类型断言、类型分支和接口设计建议，并改写为订单通知、依赖边界和测试替身场景。"
 />
 
 <CompareNote
   title="本章如何整合外部优秀资料"
   points={[
-    "gopl-zh 负责接口主线：接口是行为集合、隐式满足、标准库小接口、接口值模型和类型断言。",
-    "Effective Go 的小接口原则被放进工程实践：接口应该少、准、靠近使用方。",
-    "Go Code Review Comments 的抽象建议被转化成反模式：不要在只有一个实现时为了显得专业提前造大接口。",
-    "现代 Go 的 errors.Is / errors.As 被用来更新教材中的错误分类思路，避免靠字符串匹配错误。"
+    "gopl-zh 负责接口主线：接口是行为集合、隐式满足、标准库小接口、接口值模型、nil 陷阱和类型断言。",
+    "Effective Go 与 Go Code Review Comments 的小接口建议被转化为工程判断：接口应该少、准、靠近使用方。",
+    "Go 官方文档用于校准 any、io.Reader/io.Writer 和 errors.Is/errors.As 等现代写法。",
+    "Learn Go with Tests 的思想只作为教学方法参考：接口是测试接缝，让 ch11 Testing 可以自然承接本章。"
   ]}
 />
 
-## 你会解决什么问题
+## 场景引入：订单通知为什么会变难
 
-我们希望业务逻辑只表达“发送通知”这个能力：
+假设你正在写一个很小的订单服务。第一版需求很简单：用户下单后发送一条邮件。
 
 ```go
-type Notifier interface {
-    Notify(message string) string
+type EmailSender struct{}
+
+func (EmailSender) SendEmail(userID string, message string) error {
+    fmt.Printf("email user=%s message=%q\n", userID, message)
+    return nil
+}
+
+type OrderService struct {
+    email EmailSender
+}
+
+func (s OrderService) PlaceOrder(userID string, item string) error {
+    // 保存订单、扣减库存等逻辑先省略
+    return s.email.SendEmail(userID, "order placed: "+item)
 }
 ```
 
-具体实现可以是邮件：
+这段代码能跑，但很快会遇到几个后端项目里常见的问题：
 
-```text
-email:build passed
+- 产品希望部分用户走短信，部分用户走邮件。
+- 本地开发时不想真的发通知，只想打印日志。
+- 单元测试不应该依赖真实邮件服务。
+- 通知失败时，订单服务需要把错误向上传递。
+- 以后可能要把通知交给消息队列或 Webhook。
+
+问题不在于 `EmailSender` 写得差，而在于 `OrderService` 被具体实现绑住了。它真正需要的不是“邮件发送器”，而是“能发送订单通知的行为”。接口正是用来表达这种行为边界。
+
+## 你会解决什么问题
+
+这一章的目标是让订单服务只依赖一个最小能力：
+
+```go
+type Notifier interface {
+    Notify(userID string, message string) error
+}
 ```
 
-也可以是测试 fake、日志、Slack、Webhook。调用方不应该绑定某个具体实现。
+具体实现可以是邮件、短信、日志，也可以是测试里的 spy：
+
+```text
+notified user=u-1001 message="order placed: book"
+```
 
 | 任务 | 需要的接口能力 | 工程关注点 |
 |---|---|---|
-| 统一通知渠道 | 小接口 | 只包含调用方真正需要的方法 |
-| 替换外部依赖 | 隐式实现 | fake 不需要修改生产代码 |
-| 判断接口满足关系 | 方法集 | `T` 和 `*T` 可能不同 |
-| 处理可选输出 | 接口值模型 | nil 接口和 typed nil 不同 |
-| 分类错误 | `errors.Is/As` | 不靠字符串匹配线上逻辑 |
+| 替换邮件、短信、日志 | 小接口 | 只包含订单服务真正调用的方法 |
+| 隔离外部依赖 | 隐式实现 | 测试替身不需要改生产代码 |
+| 理解编译错误 | 方法集 | `T` 和 `*T` 是否满足同一接口 |
+| 避免 nil 判断误判 | 接口值模型 | 动态类型和动态值都为 nil 才是真的 nil |
+| 处理可选能力 | 类型断言 / 类型分支 | 不要把接口变成无边界的 `any` |
 
 <PracticeBridge
   exercise="ch7-notifier-interface"
-  text="先完成热身练习：运行一个最小 Notifier 接口，观察 EmailNotifier 不需要显式声明 implements 也能被传入。"
+  text="热身练习会让你定义最小 Notifier 接口，并观察具体类型不需要显式声明 implements 也能被传入。"
 />
 
-## 接口描述能力，而不是家族
+## 接口描述行为，而不是字段
 
-接口类型是一组方法的集合。实现了这些方法的具体类型，就满足这个接口。典型例子是 `io.Writer`：
+接口类型是一组方法的集合。实现了这些方法的具体类型，就满足这个接口。
+
+经典例子是 `io.Writer`：
 
 ```go
 type Writer interface {
@@ -61,7 +93,7 @@ type Writer interface {
 }
 ```
 
-`fmt.Fprintf` 不关心自己写向文件、网络连接、bytes.Buffer 还是计数器。它只需要第一个参数能 `Write`：
+`fmt.Fprintf` 不关心自己写向文件、网络连接、`bytes.Buffer` 还是计数器。它只需要第一个参数能 `Write`：
 
 ```go
 func Fprintf(w io.Writer, format string, args ...any) (int, error)
@@ -69,25 +101,103 @@ func Fprintf(w io.Writer, format string, args ...any) (int, error)
 
 这就是接口的力量：调用方和实现方通过很小的方法约定协作，而不是绑定具体类型。
 
+放回订单通知场景，`OrderService` 不需要知道通知器内部有没有 SMTP 配置、短信网关、模板渲染或重试策略。它只需要一个行为：
+
+```go
+type Notifier interface {
+    Notify(userID string, message string) error
+}
+```
+
 <ExamplePair
   title="依赖边界：具体类型 vs 行为接口"
-  leftTitle="绑定具体实现"
-  rightTitle="只依赖需要的能力"
-  left={`func Publish(email EmailService, msg string) error {
-    return email.SendEmail(msg)
-}`}
-  right={`type Notifier interface {
-    Notify(message string) error
+  leftTitle="绑定具体邮件实现"
+  rightTitle="只依赖通知能力"
+  left={`type OrderService struct {
+    email EmailSender
 }
 
-func Publish(n Notifier, msg string) error {
-    return n.Notify(msg)
+func (s OrderService) PlaceOrder(userID, item string) error {
+    return s.email.SendEmail(userID, "order placed: "+item)
+}`}
+  right={`type Notifier interface {
+    Notify(userID, message string) error
+}
+
+type OrderService struct {
+    notifier Notifier
+}
+
+func (s OrderService) PlaceOrder(userID, item string) error {
+    return s.notifier.Notify(userID, "order placed: "+item)
 }`}
 />
 
-## 小接口更容易复用和测试
+## 最小示例：从具体类型到接口
 
-Go 标准库有很多单方法接口：
+Go 的接口是隐式满足的。具体类型不需要声明自己实现了哪个接口；只要方法集匹配即可。
+
+```go
+type Notifier interface {
+    Notify(message string) error
+}
+
+type EmailSender struct{}
+
+func (EmailSender) Notify(message string) error {
+    fmt.Println("email:", message)
+    return nil
+}
+
+func SendWelcome(n Notifier) error {
+    return n.Notify("welcome")
+}
+```
+
+`EmailSender` 没有写 `implements Notifier`，但它拥有 `Notify(message string) error` 方法，所以可以传给 `SendWelcome`。
+
+这种隐式实现让接口可以由使用方定义。你不需要修改第三方库里的类型，也不需要让实现方提前知道所有调用方的接口名字。只要方法签名匹配，它就能满足你的接口。
+
+如果你希望在编译期确认某个类型满足接口，可以写断言：
+
+```go
+var _ Notifier = EmailSender{}
+```
+
+这不会分配实际对象，只是让编译器检查方法集。当接口或实现方法变动时，这类断言能更早暴露问题。
+
+## 方法集会影响接口满足关系
+
+接口满足关系看的是方法集，而不只是“这个变量能不能调用某个方法”。如果方法使用指针接收者，通常只有 `*T` 满足接口，`T` 不一定满足。
+
+```go
+type BufferNotifier struct {
+    messages []string
+}
+
+func (b *BufferNotifier) Notify(message string) error {
+    b.messages = append(b.messages, message)
+    return nil
+}
+
+var _ Notifier = &BufferNotifier{} // OK
+// var _ Notifier = BufferNotifier{} // 编译错误
+```
+
+为什么变量有时可以直接调用指针接收者方法？因为普通方法调用里，编译器可以在可寻址变量上自动取地址：
+
+```go
+var b BufferNotifier
+_ = b.Notify("hello") // 等价于 (&b).Notify("hello")
+```
+
+但接口赋值不是普通方法调用。接口满足关系看的是类型本身的方法集，所以 `BufferNotifier` 和 `*BufferNotifier` 可能满足不同的接口。
+
+遇到 “T does not implement interface, method has pointer receiver” 一类错误时，先检查接收者类型。
+
+## 小接口更容易替换和测试
+
+Go 标准库里有很多单方法接口：
 
 ```go
 type Reader interface {
@@ -102,11 +212,6 @@ type Closer interface {
 多个小接口可以组合成更大的接口：
 
 ```go
-type ReadWriter interface {
-    Reader
-    Writer
-}
-
 type ReadWriteCloser interface {
     Reader
     Writer
@@ -114,120 +219,154 @@ type ReadWriteCloser interface {
 }
 ```
 
-工程代码里也应优先定义小接口。发送构建通知只需要 `Notify`，就不要把邮件服务的配置、模板、批量发送、健康检查等方法都塞进一个接口。
-
-```go
-type Notifier interface {
-    Notify(message string) error
-}
-```
-
-接口越小，实现者越多，测试 fake 越轻。
+工程代码里也应优先定义小接口。订单服务只需要发送通知，就不要把邮件服务的配置、模板、批量发送、健康检查、统计指标都塞进一个接口。
 
 <PitfallCard
   title="接口过大"
-  symptom="测试 fake 必须实现一堆用不到的方法，业务函数只调用其中一个。"
+  symptom="调用方只需要一个 Notify，却被迫实现 SendEmail、SendSMS、RenderTemplate、HealthCheck 等一堆方法。"
   fix="让接口靠近消费方定义，只包含当前场景真正需要的行为。"
 />
 
+接口越小，实现者越多，测试替身越轻。这个原则可以概括为：**ask only for what you need**，只要求你真正需要的东西。
+
 <PracticeBridge
-  exercise="ch7-build-publisher"
-  text="核心练习会让你用小接口补全构建结果发布逻辑，并用 fake 记录发送过的消息。"
+  exercise="ch7-order-service-interface"
+  text="核心练习会让你把直接依赖 EmailSender 的订单服务重构为依赖 Notifier，并观察替换实现为什么更容易。"
 />
 
-## 隐式实现：不需要 implements
+## 对照示例：接口不是越早越好
 
-Go 的接口是隐式满足的。具体类型不需要声明自己实现了哪个接口；只要方法集匹配即可。
+新手常见反应是：既然接口好，那就先为每个结构体写一个接口。结果往往是每个接口只有一个实现，接口名又大又空泛。
+
+<ExamplePair
+  title="接口应该来自调用方需要"
+  leftTitle="实现方提前设计大接口"
+  rightTitle="使用方定义最小接口"
+  left={`type NotificationService interface {
+    SendEmail(userID, body string) error
+    SendSMS(userID, body string) error
+    RenderTemplate(name string, data any) (string, error)
+    HealthCheck() error
+    Metrics() map[string]int
+}`}
+  right={`type Notifier interface {
+    Notify(userID, message string) error
+}
+
+type OrderService struct {
+    notifier Notifier
+}`}
+/>
+
+左边的问题是：接口看起来“专业”，但订单服务只需要 `Notify`。测试替身为了满足大接口，必须实现一堆用不到的方法。右边把接口放在使用方附近，只描述当前业务真正依赖的行为。
+
+<PitfallCard
+  title="过早抽象"
+  symptom="只有一个实现、没有替换需求，也没有测试隔离问题，却先定义复杂接口层。"
+  fix="先写具体类型；当出现多个实现、外部依赖边界或测试替身需求时，再从调用方抽出小接口。"
+/>
+
+接口不是为了“看起来高级”，而是为了解耦、替换和验证。如果接口没有让代码更容易理解或测试，它可能就是多余的。
+
+## 工程示例：订单服务依赖行为边界
+
+把接口放进订单服务，代码会变成这样：
 
 ```go
-type ByteCounter int
+type Notifier interface {
+    Notify(userID string, message string) error
+}
 
-func (c *ByteCounter) Write(p []byte) (int, error) {
-    *c += ByteCounter(len(p))
-    return len(p), nil
+type OrderService struct {
+    notifier Notifier
+}
+
+func NewOrderService(notifier Notifier) *OrderService {
+    return &OrderService{notifier: notifier}
+}
+
+func (s *OrderService) PlaceOrder(userID string, item string) error {
+    message := "order placed: " + item
+    return s.notifier.Notify(userID, message)
 }
 ```
 
-`*ByteCounter` 有 `Write([]byte) (int, error)` 方法，所以它满足 `io.Writer`。你可以把它传给 `fmt.Fprintf`，统计格式化输出写了多少字节。
-
-隐式实现让你可以在消费方定义接口，而不需要修改实现方代码。第三方库里的类型，只要它已经拥有你需要的方法，就可以自然满足你的接口。
-
-如果你希望在编译期确认某个类型满足接口，可以写断言：
+邮件实现只需要满足同一个行为：
 
 ```go
-var _ io.Writer = (*ByteCounter)(nil)
+type EmailNotifier struct{}
+
+func (EmailNotifier) Notify(userID string, message string) error {
+    fmt.Printf("email user=%s message=%q\n", userID, message)
+    return nil
+}
 ```
 
-这不会分配实际对象，只是让编译器检查方法集。
-
-## 方法集会影响接口满足关系
-
-如果方法使用指针接收者，那么通常只有 `*T` 满足接口，`T` 不一定满足：
+短信、日志或测试替身也一样：
 
 ```go
-type IntSet struct{}
+type LogNotifier struct{}
 
-func (*IntSet) String() string { return "{}" }
-
-var s IntSet
-var _ fmt.Stringer = &s // OK
-// var _ fmt.Stringer = s // 编译错误
+func (LogNotifier) Notify(userID string, message string) error {
+    fmt.Printf("log user=%s message=%q\n", userID, message)
+    return nil
+}
 ```
 
-虽然变量 `s` 可以直接调用 `s.String()`，因为编译器能自动取地址，但接口赋值不是普通方法调用。接口满足关系看的是方法集本身。
-
-遇到 “T does not implement interface, method has pointer receiver” 一类错误时，先检查接收者类型。
+`OrderService` 不知道自己拿到的是邮件还是日志。它只依赖 `Notifier` 这条行为边界。这个边界也是测试接缝：到 ch11 Testing 时，我们可以注入 `SpyNotifier` 检查订单服务是否发送了正确消息，而不需要真的发邮件。
 
 ## 接口值：动态类型 + 动态值
 
 接口值概念上包含两部分：动态类型和动态值。
 
 ```go
-var w io.Writer
-w = os.Stdout
-w = new(bytes.Buffer)
-w = nil
+var n Notifier
+n = EmailNotifier{}
+n = LogNotifier{}
+n = nil
 ```
 
-`var w io.Writer` 的零值是 nil 接口，动态类型和动态值都为 nil。把 `os.Stdout` 赋给它后，动态类型是 `*os.File`，动态值是标准输出文件指针。把 `new(bytes.Buffer)` 赋给它后，动态类型是 `*bytes.Buffer`，动态值是缓冲区指针。
-
-调用接口方法时，会根据动态类型进行分派。编译期你只知道 `w` 是 `io.Writer`，运行期实际调用哪个 `Write`，取决于接口里装的具体类型。
+`var n Notifier` 的零值是 nil 接口，动态类型和动态值都为 nil。把 `EmailNotifier{}` 赋给它后，动态类型是 `EmailNotifier`，动态值是这个具体值。调用接口方法时，会根据动态类型进行动态分派。
 
 可以用 `%T` 打印接口值的动态类型：
 
 ```go
-fmt.Printf("%T\n", w)
+fmt.Printf("%T\n", n)
 ```
+
+这对调试很有用。但不要因为能看到动态类型，就在业务逻辑里到处按具体类型分支。接口的主要价值是隐藏具体类型，让调用方依赖行为。
 
 ## nil 接口陷阱：没有动态类型才是真的 nil
 
 nil 接口和“装着 nil 指针的接口”不是一回事。接口只有在动态类型和动态值都为 nil 时，才等于 nil。
 
 ```go
-func writeDone(out io.Writer) {
-    if out != nil {
-        out.Write([]byte("done\n"))
-    }
+type BufferNotifier struct{}
+
+func (*BufferNotifier) Notify(userID string, message string) error {
+    fmt.Println(userID, message)
+    return nil
 }
 
-var buf *bytes.Buffer
-writeDone(buf) // out 不是 nil 接口，而是装着 nil *bytes.Buffer 的接口
+var b *BufferNotifier
+var n Notifier = b
+fmt.Println(n == nil) // false
 ```
 
-这里 `out != nil` 为 true，因为接口有动态类型 `*bytes.Buffer`。但动态值是 nil 指针，调用方法可能 panic。
+这里 `n` 的动态类型是 `*BufferNotifier`，动态值是 nil 指针。所以它不是 nil 接口。调用方法时可能 panic，也可能因为方法实现而出现更隐蔽的问题。
 
-更安全的写法是让变量一开始就是接口类型，或者在没有实现时直接返回 nil 接口值：
+更安全的写法是在没有实现时直接返回 nil 接口值：
 
 ```go
-func optionalWriter(debug bool) io.Writer {
-    if !debug {
+func OptionalNotifier(enabled bool) Notifier {
+    if !enabled {
         return nil
     }
-    return new(bytes.Buffer)
+    return &BufferNotifier{}
 }
 ```
 
-返回 `error` 时也要注意这个问题。不要把带类型的 nil 指针作为 error 返回；成功时直接返回 nil。
+返回 `error` 时也要注意这个问题。不要把带类型的 nil 指针作为 `error` 返回；成功时直接 `return nil`。
 
 <PitfallCard
   title="返回 typed nil error"
@@ -235,12 +374,7 @@ func optionalWriter(debug bool) io.Writer {
   fix="成功路径直接 `return nil`；如果内部使用具体错误指针，返回前确认没有把 nil 指针装进 error 接口。"
 />
 
-<PracticeBridge
-  exercise="ch7-fix-nil-writer"
-  text="挑战练习会让你修复一个 typed nil 被装进 io.Writer 的问题，真正理解接口值为什么不等于 nil。"
-/>
-
-## 空接口 any：确实任意，别用来逃避类型设计
+## any：确实任意，别用来逃避类型设计
 
 `interface{}` 没有任何方法，因此任何类型都满足它。Go 1.18 后也可以写作 `any`。
 
@@ -253,103 +387,36 @@ v = "hello"
 
 空接口适合日志字段、JSON 任意值、格式化参数这类确实需要接收任意类型的场景。但不要用它逃避类型设计。
 
-简单判断：
-
 | 需求 | 更适合 |
 |---|---|
-| 只需要调用某些方法 | 接口 |
+| 只需要调用某些方法 | 明确接口 |
 | 保留元素具体类型并在编译期检查 | 泛型 |
 | 运行期确实不知道形状 | `any` + 类型断言/类型分支 |
 
-泛型没有淘汰接口。泛型适合表达同构算法，接口适合表达运行时行为能力。
+<PitfallCard
+  title="把 any 当万能设计"
+  symptom="函数接收 any，内部到处写类型断言，调用方也不知道应该传什么。"
+  fix="如果调用方需要的是行为，就定义包含这些行为的小接口；只有边界确实开放时才使用 any。"
+/>
 
-## 接口让测试替身更自然
-
-接口最实际的工程用途之一是隔离外部依赖。比如业务逻辑只需要发送消息：
-
-```go
-type Notifier interface {
-    Notify(message string) error
-}
-
-func PublishBuildResult(n Notifier, passed bool) error {
-    if passed {
-        return n.Notify("build passed")
-    }
-    return n.Notify("build failed")
-}
-```
-
-测试时不需要真实邮件服务，只要写一个 fake：
-
-```go
-type fakeNotifier struct {
-    messages []string
-}
-
-func (f *fakeNotifier) Notify(message string) error {
-    f.messages = append(f.messages, message)
-    return nil
-}
-```
-
-接口应该由消费方定义，而不是实现方预先定义一个庞大的 `EmailServiceInterface`。消费方最知道自己需要哪些方法。
-
-## 标准库接口：Stringer、flag.Value、Handler
-
-`fmt.Stringer` 让类型控制自己的打印形式：
-
-```go
-type Stringer interface {
-    String() string
-}
-```
-
-只要实现 `String() string`，`fmt` 打印时就会使用它。第 6 章的集合类型、温度类型都适合实现 `Stringer`。
-
-`flag.Value` 展示了接口如何扩展命令行解析：
-
-```go
-type Value interface {
-    String() string
-    Set(string) error
-}
-```
-
-实现 `String` 和 `Set` 后，你可以把自己的类型接入 `flag` 包。`String` 用于帮助信息和默认值展示，`Set` 用于从命令行字符串解析并更新值。
-
-`http.Handler` 是后端开发最常见的接口之一：
-
-```go
-type Handler interface {
-    ServeHTTP(ResponseWriter, *Request)
-}
-```
-
-只要类型实现 `ServeHTTP`，就能被 HTTP 服务调用。`http.HandlerFunc` 进一步展示了函数类型也可以有方法，从而满足接口。
-
-<DeepDive title="sort.Interface 为什么是三个方法">
-
-`sort.Interface` 包含 `Len`、`Less`、`Swap`。它没有要求你的集合是什么具体类型，只要求它能报告长度、比较两个位置、交换两个位置。这种接口把排序算法和数据表示分离开，是“小接口表达能力”的经典例子。现代 Go 也有 `slices.SortFunc` 等泛型工具，但理解这个接口仍然能帮助你读懂大量旧代码和标准库设计。
-
-</DeepDive>
+泛型没有淘汰接口。泛型适合表达同构算法，接口适合表达运行时行为能力。在后端依赖边界上，接口仍然是最常用的工具。
 
 ## 类型断言：从接口取回更具体的能力
 
 类型断言用于检查接口值的动态类型：
 
 ```go
-var w io.Writer = os.Stdout
-f, ok := w.(*os.File)
+var n Notifier = EmailNotifier{}
+email, ok := n.(EmailNotifier)
 if ok {
-    fmt.Println(f.Name())
+    _ = email
 }
 ```
 
 如果只写一个返回值，断言失败会 panic：
 
 ```go
-f := w.(*os.File)
+email := n.(EmailNotifier)
 ```
 
 工程代码里通常使用 `value, ok` 形式，避免动态类型不匹配导致崩溃。
@@ -357,16 +424,20 @@ f := w.(*os.File)
 类型断言也可以断言到另一个接口，表示“这个值除了当前能力，是否还具有更多能力”：
 
 ```go
-if rw, ok := w.(io.ReadWriter); ok {
-    _ = rw
+type Retryable interface {
+    RetryCount() int
+}
+
+if r, ok := n.(Retryable); ok {
+    fmt.Println("retry count:", r.RetryCount())
 }
 ```
 
-不要滥用类型断言。如果一个函数频繁断言很多具体类型，可能说明接口抽象不合适，或者你真正需要的是类型分支处理联合数据。
+这种写法适合可选能力。但如果一个函数频繁断言很多具体类型，可能说明接口抽象不合适，或者你真正需要的是更清晰的数据模型。
 
-## 错误分类不要靠字符串匹配
+## 错误也是接口
 
-错误也是接口：
+预定义的 `error` 类型本身就是接口：
 
 ```go
 type error interface {
@@ -374,7 +445,7 @@ type error interface {
 }
 ```
 
-有时你需要区分错误类型，例如文件不存在、权限不足、文件已存在。不要靠 `strings.Contains(err.Error(), "not exist")` 判断线上逻辑，因为错误文本可能随平台和实现变化。
+有时你需要区分错误类型，例如文件不存在、权限不足、通知服务不可用。不要靠 `strings.Contains(err.Error(), "not exist")` 判断线上逻辑，因为错误文本可能随平台和实现变化。
 
 更稳妥的方式是使用结构化错误和标准帮助函数：
 
@@ -391,9 +462,9 @@ if errors.As(err, &pathErr) {
 
 这延续了教材中用 `*os.PathError` 和类型断言区分错误的思路，同时适配了现代错误包装链。
 
-## 类型分支：当接口表示一组可能类型
+<DeepDive title="类型分支：当接口表示一组可能类型">
 
-接口有两种常见用法。第一种是行为抽象，例如 `io.Writer`、`fmt.Stringer`、`http.Handler`。第二种是让接口值承载多种具体类型，再用类型断言或类型分支区分。
+接口有两种常见用法。第一种是行为抽象，例如 `io.Writer`、`fmt.Stringer`、`http.Handler`、`error` 和本章的 `Notifier`。第二种是让接口值承载多种具体类型，再用类型分支区分。
 
 ```go
 func sqlQuote(x any) string {
@@ -417,38 +488,93 @@ func sqlQuote(x any) string {
 
 类型分支适合协议编码、日志字段格式化、JSON-like 结构处理等场景。但如果 case 越来越多，要警惕是不是缺少更清晰的数据模型。
 
+</DeepDive>
+
 <DeepDive title="接口值可比较，但动态值可能不可比较">
 
-接口值可以用 `==` 比较，但前提是动态类型本身可比较。如果接口里装的是 slice、map、函数等不可比较动态值，比较时可能 panic。日常代码里最常见的接口比较是和 nil 比较；更复杂的相等判断通常应该使用明确的类型逻辑或测试断言工具。
+接口值可以用 `==` 比较，但前提是动态类型本身可比较。如果接口里装的是 slice、map、函数等不可比较动态值，比较时可能 panic。
+
+```go
+var x any = []int{1, 2, 3}
+fmt.Println(x == x) // panic: comparing uncomparable type []int
+```
+
+日常代码里最常见的接口比较是和 nil 比较；更复杂的相等判断通常应该使用明确的类型逻辑或测试断言工具。
 
 </DeepDive>
 
-## 接口概念回看：小接口、隐式实现和 nil 模型
+## 标准库接口：从小约定到后端边界
+
+标准库里的接口能帮助你理解“小接口表达能力”的设计风格。
+
+`fmt.Stringer` 让类型控制自己的打印形式：
+
+```go
+type Stringer interface {
+    String() string
+}
+```
+
+`http.Handler` 是后端开发最常见的接口之一：
+
+```go
+type Handler interface {
+    ServeHTTP(ResponseWriter, *Request)
+}
+```
+
+只要类型实现 `ServeHTTP`，就能被 HTTP 服务调用。`http.HandlerFunc` 进一步展示了函数类型也可以有方法，从而满足接口。
+
+`sort.Interface` 包含 `Len`、`Less`、`Swap`。它没有要求你的集合是什么具体类型，只要求它能报告长度、比较两个位置、交换两个位置。这种接口把排序算法和数据表示分离开。
+
+这些接口共同展示了一件事：好的接口通常不是“某个类的完整画像”，而是一个调用方需要的最小约定。
+
+## PracticeBridge：从接口边界进入练习
+
+本章练习会沿着订单通知主线逐层推进：
+
+1. `warmup`：定义最小 `Notifier` 接口，实现一个控制台通知器，确认隐式实现能跑通。
+2. `core`：把直接依赖 `EmailSender` 的订单服务重构为依赖 `Notifier`，并增加可替换实现。
+3. `challenge`：实现 `SpyNotifier` 和失败通知器，观察订单服务是否调用了通知边界，以及错误是否向上传递。
+
+<PracticeBridge
+  exercise="ch7-spy-notifier"
+  text="挑战练习会让你实现 SpyNotifier / FailingNotifier。它会为 ch11 Testing 铺垫：接口不仅能替换生产实现，也能让测试观察行为。"
+/>
+
+## 接口概念回看：行为边界、隐式实现和 nil 模型
+
+前面已经看过订单通知、小接口、方法集、接口值、`any` 和类型断言。现在再回看这张表，它更像一张复盘索引，而不是开篇要背的术语清单。
 
 | 概念 | 最小定义 | 工程判断 |
 |---|---|---|
 | 接口 | 方法集合 | 是否只描述调用方需要的行为 |
-| 小接口 | 方法数量很少 | fake 是否容易写，复用是否自然 |
-| 隐式实现 | 方法集匹配即可满足 | 是否需要编译期断言说明意图 |
+| 具体类型 | 拥有字段、方法和内部表示的类型 | 是否应该被业务逻辑直接依赖 |
+| 隐式实现 | 方法集匹配即可满足接口 | 是否需要编译期断言说明意图 |
 | 方法集 | 类型拥有的方法集合 | `T` 和 `*T` 是否满足同一接口 |
+| 小接口 | 方法数量很少，通常靠近调用方 | fake 是否容易写，复用是否自然 |
 | 接口值 | 动态类型 + 动态值 | 是否真的等于 nil |
 | `any` | 空方法集接口 | 是否在逃避类型设计 |
-| 类型断言 | 检查动态类型或能力 | 是否使用 `value, ok` 避免 panic |
+| 类型断言 | 检查动态类型或额外能力 | 是否使用 `value, ok` 避免 panic |
 | 类型分支 | 按动态类型分支 | case 变多时是否该重新建模 |
-| error | 只有 `Error() string` 的接口 | 是否用 `errors.Is/As` 结构化判断 |
+| `error` | 只有 `Error() string` 的接口 | 是否用 `errors.Is/As` 结构化判断 |
+| test seam | 测试可以替换或观察的边界 | 是否让 ch11 的 fake/spy/stub 更简单 |
 
-## 本章工程视角
+## 工程 checklist：这个接口值得存在吗
 
 接口的设计原则很简单：少、准、靠近使用方。不要为了“看起来专业”提前为每个结构体配一个接口。只有当你需要替换实现、隔离外部依赖、隐藏复杂细节或表达通用行为时，接口才真正有价值。
 
 评审接口时可以用这组问题自查：
 
-- 这个接口是否只包含调用方实际使用的方法？
+- 这个接口有没有明确调用方？
+- 调用方真的需要接口里的每个方法吗？
+- 是否已经出现多个实现、测试替身或外部依赖边界？
 - 接口是否定义在消费方附近，而不是实现方提前导出？
-- 测试 fake 是否容易写？
+- 接口名是否表达行为，如 `Reader`、`Writer`、`Notifier`？
+- 测试 fake 或 spy 是否容易写？
 - 是否因为指针接收者导致 `T` 和 `*T` 的接口满足关系不同？
 - 是否可能把 nil 指针装进非 nil 接口？
 - 是否过度使用 `any`、类型断言或类型分支？
 - 错误分类是否依赖结构化错误，而不是字符串包含？
 
-能回答这些问题，接口就不再是抽象名词，而是 Go 代码里隔离变化、提高可测试性的实际工具。
+能回答这些问题，接口就不再是抽象名词，而是 Go 代码里隔离变化、提高可测试性的实际工具。下一章进入测试时，你会继续使用本章的 `Notifier` 思路：先设计可替换边界，再用测试保护边界行为。
