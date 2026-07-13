@@ -10,7 +10,7 @@ Level: 3
 Started: 2026-07-12
 Updated: 2026-07-13
 Priority: Product redesign specification; independent from the active DeepTutor spike.
-Current phase: A3 — 定义与 Task 资产已完成，开始构建不可变 release。
+Current phase: A4 — 不可变 release 已完成，开始实现 DefinitionRegistry。
 
 Intent: 为 M1-01、M1-03、M1-07、M1-09 建立第一条端到端能力训练切片，验证版本化能力定义、服务端 Attempt/Evidence、派生能力状态、多文件 Go 任务和维护调度闭环。
 
@@ -24,10 +24,11 @@ Plan:
 - [done] P0 — 审查 Plan A 的工程边界，确认 migration、release command、Gateway package 和 Compose 边界。
 - [done] A1 — 建立 migration runner、schema history、Plan A 初始 migration 和 Compose 启动门。
 - [done] A2 — 建立 JSON Schema、四个 Capability、六个 Activity/Task 及完整资产。
-- [doing] A3 — 实现 canonical hash、release manifest、bundle 构建和 verify command。
+- [done] A3 — 实现 canonical hash、release manifest、bundle 构建和 verify command。
+- [doing] A4 — 实现只读 DefinitionRegistry、启动校验和数据库不可变版本登记。
 
 Current todo:
-- [ ] A3 — 先写 canonical JSON、task bundle hash 和完整 bundle hash golden tests，再实现 `cmd/learning-content`。
+- [ ] A4 — 先实现 release 加载与损坏拒绝测试，再实现只读索引和数据库版本登记。
 
 Changes:
 - 用户确认 M1 14 节点、M2 16 节点、`gocheck`/`gocheck-hub` 内容原型和 Miniflux v2.3.2 训练项目方向。
@@ -42,13 +43,15 @@ Changes:
 - A1 已完成：使用 `pgx/v5`、Go 1.25、advisory lock、逐 migration transaction 和 SHA-256 drift 检测；真实 PostgreSQL 与 migrate Docker image 验证通过。
 - A2 已完成 Draft 2020-12 Capability/Activity/Task schema、Go validator、四个 Capability 和六个 Activity；仓库定义全目录校验通过。
 - 六个 TaskDefinition 已声明全部真实资产和 SHA-256；assessment 与 review 使用不同 module、字段和错误场景，starter/测试均通过编译基线检查。
-- A3 已固定 RFC 8785 canonical JSON 与 task bundle hash golden vectors；下一步补 rule set/full bundle hash 和 release command。
+- A3 已完成 RFC 8785 canonical JSON、task/rule-set/full bundle 分层 hash、ReleaseManifest schema，以及确定性 `validate`/`release`/`verify` command。
+- `m1-first-slice-v1` 已归档 4 个 Capability、6 个 Activity、6 个 Task 和 32 个声明资产；完整 bundle hash 为 `ed9ae605b819bfc3d75cf3142a00021c3ac3bfd32c50070cbb2fc4f6e3d985cf`。
+- release verifier 会拒绝路径逃逸、symlink、引用缺失、hard prerequisite 环、规则错配、遗漏或多余文件及任意 hash 漂移；前端断言会扫描 held-out 文件名和内容指纹。
 
 Prerequisites:
 - 当前 Sandbox 仅支持单个 `main.go` 且缺少生产级隔离；规格必须限制为本地可信环境，并明确公开运行前的安全门槛。
 - 现有 DeepTutor Spike 和用户对其 ledger/spec 的修改必须保持不变。
 
-Resume next: 实施 A3；先固定 RFC 8785 canonical JSON 与分层 hash golden vectors，再实现 release/verify command 和 `m1-first-slice-v1` bundle。
+Resume next: 实施 A4；先完成有效 release 加载和损坏 release 拒绝测试，再建立 `release_id + kind + id + version` 只读索引。
 
 ### WF-2026-06-02-002 — DeepTutor 离线课程内容工作流 Spike
 Status: Active

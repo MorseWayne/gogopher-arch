@@ -1,4 +1,4 @@
-.PHONY: dev test build lint migrate-up migrate-status clean
+.PHONY: dev test build lint migrate-up migrate-status learning-content-validate learning-content-verify clean
 
 dev:
 	docker compose up postgres redis -d
@@ -22,6 +22,12 @@ migrate-up:
 
 migrate-status:
 	go run ./cmd/migrate status
+
+learning-content-validate:
+	go run ./cmd/learning-content validate --activity-set m1-first-slice
+
+learning-content-verify:
+	go run ./cmd/learning-content verify --release-dir content/learning/releases/m1-first-slice-v1 --web-dist web/dist
 
 clean:
 	docker compose down -v

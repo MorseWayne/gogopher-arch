@@ -16,15 +16,17 @@ import (
 type Kind string
 
 const (
-	KindCapability Kind = "capability"
-	KindActivity   Kind = "activity"
-	KindTask       Kind = "task"
+	KindCapability      Kind = "capability"
+	KindActivity        Kind = "activity"
+	KindTask            Kind = "task"
+	KindReleaseManifest Kind = "release_manifest"
 )
 
 var schemaFiles = map[Kind]string{
-	KindCapability: "capability.schema.json",
-	KindActivity:   "activity.schema.json",
-	KindTask:       "task.schema.json",
+	KindCapability:      "capability.schema.json",
+	KindActivity:        "activity.schema.json",
+	KindTask:            "task.schema.json",
+	KindReleaseManifest: "release-manifest.schema.json",
 }
 
 type taskAssets struct {

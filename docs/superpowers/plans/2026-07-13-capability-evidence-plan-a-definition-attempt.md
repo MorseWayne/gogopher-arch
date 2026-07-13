@@ -108,12 +108,12 @@ Plan B/C 的表由各自 migration 新增，不在本计划提前创建空壳表
 
 ### A3 — 构建不可变 release
 
-- [ ] 为 canonical JSON、文件 hash、task bundle hash、rule set hash 和完整 bundle hash 写 golden tests（canonical/task bundle 已完成，rule set/full bundle 待完成）。
-- [ ] 实现 `cmd/learning-content` 的 `validate`、`release`、`verify`，输入草稿目录并输出新 release bundle；禁止覆盖已有 release。
-- [ ] 复制解析后的定义及全部资产，生成按路径排序的 manifest。
-- [ ] 验证 hard prerequisite 无环、所有引用存在、路径为相对 clean path、资产 hash 匹配。
-- [ ] 提交 `m1-first-slice-v1` release，并增加“重新生成无 diff”的确定性检查。
-- [ ] 增加前端构建断言，确认 `web/dist` 不包含 held-out test 文件名或内容指纹。
+- [x] 为 canonical JSON、文件 hash、task bundle hash、rule set hash 和完整 bundle hash 写 golden tests。
+- [x] 实现 `cmd/learning-content` 的 `validate`、`release`、`verify`，输入草稿目录并输出新 release bundle；禁止覆盖已有 release。
+- [x] 复制解析后的定义及全部资产，生成按路径排序的 manifest。
+- [x] 验证 hard prerequisite 无环、所有引用存在、路径为相对 clean path、资产 hash 匹配。
+- [x] 提交 `m1-first-slice-v1` release，并增加“重新生成无 diff”的确定性检查。
+- [x] 增加前端构建断言，确认 `web/dist` 不包含 held-out test 文件名或内容指纹。
 
 完成条件：相同输入跨两次构建产生相同 hash；任意资产改变都会改变 task/bundle hash 并要求新版本。
 

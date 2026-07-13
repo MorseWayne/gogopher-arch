@@ -1,0 +1,423 @@
+{
+  "release_id": "m1-first-slice-v1",
+  "created_at": "2026-07-13T00:00:00Z",
+  "schema_version": 1,
+  "activity_set": "m1-first-slice",
+  "definitions": [
+    {
+      "kind": "activity",
+      "id": "assessment-check-config",
+      "version": 1,
+      "path": "activities/m1-first-slice/assessment-check-config.json",
+      "content_hash": "19bfe269a59f03f2b71c4c7b709a778c772cabe794d800ea17cb19176f12c584",
+      "rule_set_hash": "52023141971bdf0863ecb73ad2b1f04d70359665b1d586be214e849d073d99ac"
+    },
+    {
+      "kind": "activity",
+      "id": "guided-run-model",
+      "version": 1,
+      "path": "activities/m1-first-slice/guided-run-model.json",
+      "content_hash": "23bfa510c5c1b9dbd0492d9da9257b6d360de2b8169411faf2d87a34b16cd663",
+      "rule_set_hash": "13a98bdc123620a9e8db868fadb68283d7fe824f8487a239a3c5c30159c174b1"
+    },
+    {
+      "kind": "activity",
+      "id": "practice-error-contract",
+      "version": 1,
+      "path": "activities/m1-first-slice/practice-error-contract.json",
+      "content_hash": "7428e3a4bec17a74b0fa59e243e55df475edbc7cb772ca9ad4c074a694b74fc8",
+      "rule_set_hash": "c0dbc578646c915fad682bd60cbfae9f4ca82db336ed5ba9cfd91a1abdd01aa6"
+    },
+    {
+      "kind": "activity",
+      "id": "practice-json-io",
+      "version": 1,
+      "path": "activities/m1-first-slice/practice-json-io.json",
+      "content_hash": "eec9827db9e4752c2b84dc8e906d3b9af5a2bda941f7c4080e41ab3b68cadd40",
+      "rule_set_hash": "ee916c7fd2b3ca875e16bd7c56cb0347de63810a87f627e1d88d36b6c0db65c2"
+    },
+    {
+      "kind": "activity",
+      "id": "practice-table-tests",
+      "version": 1,
+      "path": "activities/m1-first-slice/practice-table-tests.json",
+      "content_hash": "4dac94c58150a16839d98f68c68ba99e5750387e58260062a4dc47a8522338b5",
+      "rule_set_hash": "a8a8d53af67240eecf8e4fa4cf99093282a370d0ececa9163442c06fdef84b38"
+    },
+    {
+      "kind": "activity",
+      "id": "review-check-config-variant",
+      "version": 1,
+      "path": "activities/m1-first-slice/review-check-config-variant.json",
+      "content_hash": "bf880ba18622391857a2f27d471d3832df3afefc1cc161173ae8fe1492ec90cb",
+      "rule_set_hash": "48e632e93ecbf1e14786f017363a751a992b511ece0af7e3532d1ec1fff3a7c5"
+    },
+    {
+      "kind": "capability",
+      "id": "M1-01",
+      "version": 1,
+      "path": "capabilities/m1/m1-01.json",
+      "content_hash": "0c4cee3106ea32b96ed3e0085135606496f6e8be307bc830e266e652e17981bb"
+    },
+    {
+      "kind": "capability",
+      "id": "M1-03",
+      "version": 1,
+      "path": "capabilities/m1/m1-03.json",
+      "content_hash": "bcd4ee7079410b3aed0d7b836df3e3e645457a792d605c711a1f4ece1e156cc1"
+    },
+    {
+      "kind": "capability",
+      "id": "M1-07",
+      "version": 1,
+      "path": "capabilities/m1/m1-07.json",
+      "content_hash": "455ebd5df3b0c95683c662a9c04bd0cd6c03e7b411cec6ff3b1969c2f398e18e"
+    },
+    {
+      "kind": "capability",
+      "id": "M1-09",
+      "version": 1,
+      "path": "capabilities/m1/m1-09.json",
+      "content_hash": "b8a47cbb1be236bde96f83a2ed802531e8ab916e5474a9d3dc380a1498397c58"
+    },
+    {
+      "kind": "task",
+      "id": "assessment-check-config-v1",
+      "version": 1,
+      "path": "tasks/assessment-check-config-v1/task.json",
+      "content_hash": "47bb180d4d628f5fcc75b071edc1487cae9cc11dd91e2f2d356990ca8a388724",
+      "bundle_hash": "8d9ad4fb4e9c2b9a7b638412ece4d29450feea7128c9f5a2170a52dccbdadffa"
+    },
+    {
+      "kind": "task",
+      "id": "guided-run-model-v1",
+      "version": 1,
+      "path": "tasks/guided-run-model-v1/task.json",
+      "content_hash": "9288e62947da2cfb2308f0faf87599e826b264e5f2215b839faea5e1f13d8bf1",
+      "bundle_hash": "7e70af5aaca9b6ef95edde49074cad7506531e774034265832e6c7b0ff591722"
+    },
+    {
+      "kind": "task",
+      "id": "practice-error-contract-v1",
+      "version": 1,
+      "path": "tasks/practice-error-contract-v1/task.json",
+      "content_hash": "d68ad8a928550a45856f301edb6cd00fe2ac2318d7416b5c4ea5157ee0a16aa5",
+      "bundle_hash": "28ea05f47a0e4aa8459e50bb3e75eaa3c93a944509a5cb98ba2664eff20d9057"
+    },
+    {
+      "kind": "task",
+      "id": "practice-json-io-v1",
+      "version": 1,
+      "path": "tasks/practice-json-io-v1/task.json",
+      "content_hash": "d44dbe967d97f60fdbf92132f408a701ac88a6901875c59a2fde757723e3e6b5",
+      "bundle_hash": "188095b9de7891d5c99d98a22077ea8f748a68a9888dd9bc14633bdffce3f118"
+    },
+    {
+      "kind": "task",
+      "id": "practice-table-tests-v1",
+      "version": 1,
+      "path": "tasks/practice-table-tests-v1/task.json",
+      "content_hash": "a0802413b24c4e632fda81e444be835c6720f0992852fb60448751403978a608",
+      "bundle_hash": "d7d3f5da4d72734a629e6a365fad0c9b404f35527bde0d1e28326ce15475fc53"
+    },
+    {
+      "kind": "task",
+      "id": "review-check-config-variant-v1",
+      "version": 1,
+      "path": "tasks/review-check-config-variant-v1/task.json",
+      "content_hash": "9d5fd65d355ae715e508a93e4b269a51dd85abb71938a833369b7cf00960bfb6",
+      "bundle_hash": "de6deb86a5522a0347857daca0946b81b5afc47bc1444dd232ecba3a006f4566"
+    }
+  ],
+  "assets": [
+    {
+      "task_id": "assessment-check-config-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/assessment-check-config-v1/README.md",
+      "role": "readme",
+      "sha256": "6cdee8a2b95bf271ac7381f9e040d4a57f700e99ff7f8b0a42b6419a4ae8bf2a"
+    },
+    {
+      "task_id": "assessment-check-config-v1",
+      "task_version": 1,
+      "source": "fixtures/valid-targets.json",
+      "workspace_path": "testdata/valid-targets.json",
+      "bundle_path": "tasks/assessment-check-config-v1/fixtures/valid-targets.json",
+      "role": "fixture",
+      "sha256": "cfb754d0a158c51f9abc1bf5b840f6f7404f5f1b88d0d33b3e65b66a9adf196e"
+    },
+    {
+      "task_id": "assessment-check-config-v1",
+      "task_version": 1,
+      "source": "heldout/internal/config/heldout_test.go",
+      "workspace_path": "internal/config/heldout_test.go",
+      "bundle_path": "tasks/assessment-check-config-v1/heldout/internal/config/heldout_test.go",
+      "role": "held_out_test",
+      "sha256": "599728de44f52baf256fdf940b0b59c0986ca795fb943eabe63757b6213c6bd5"
+    },
+    {
+      "task_id": "assessment-check-config-v1",
+      "task_version": 1,
+      "source": "starter/cmd/checkcfg/main.go",
+      "workspace_path": "cmd/checkcfg/main.go",
+      "bundle_path": "tasks/assessment-check-config-v1/starter/cmd/checkcfg/main.go",
+      "role": "starter",
+      "sha256": "2b032a1e71b699e8a1be3141ebed37e5ee7d10f1f3894345f0d7fd3df5247fec"
+    },
+    {
+      "task_id": "assessment-check-config-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/assessment-check-config-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "456b0a3cb8249977843635cfe811ff0ad8979c9cc0c94da14d97bc3906f26184"
+    },
+    {
+      "task_id": "assessment-check-config-v1",
+      "task_version": 1,
+      "source": "starter/internal/config/config.go",
+      "workspace_path": "internal/config/config.go",
+      "bundle_path": "tasks/assessment-check-config-v1/starter/internal/config/config.go",
+      "role": "starter",
+      "sha256": "06bb59c03d414791e89cc30cd2a3e66962f74a03fe6c2798d26ead3262f2417e"
+    },
+    {
+      "task_id": "assessment-check-config-v1",
+      "task_version": 1,
+      "source": "starter/internal/config/config_test.go",
+      "workspace_path": "internal/config/config_test.go",
+      "bundle_path": "tasks/assessment-check-config-v1/starter/internal/config/config_test.go",
+      "role": "starter",
+      "sha256": "64903b00a1e87f78d3ab2063c0853aad94ad0706f4741ba1c1d386231e82609c"
+    },
+    {
+      "task_id": "assessment-check-config-v1",
+      "task_version": 1,
+      "source": "visible/internal/config/visible_test.go",
+      "workspace_path": "internal/config/visible_test.go",
+      "bundle_path": "tasks/assessment-check-config-v1/visible/internal/config/visible_test.go",
+      "role": "visible_test",
+      "sha256": "a47e37f674bc096261f2cfbe337dbfd58c321eeee113fa5adac69f900a9bce9f"
+    },
+    {
+      "task_id": "guided-run-model-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/guided-run-model-v1/README.md",
+      "role": "readme",
+      "sha256": "805b42efaa2573f82859bc075a981812a158df7906013255d1271454830dafdd"
+    },
+    {
+      "task_id": "guided-run-model-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/guided-run-model-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "456b0a3cb8249977843635cfe811ff0ad8979c9cc0c94da14d97bc3906f26184"
+    },
+    {
+      "task_id": "guided-run-model-v1",
+      "task_version": 1,
+      "source": "starter/main.go",
+      "workspace_path": "main.go",
+      "bundle_path": "tasks/guided-run-model-v1/starter/main.go",
+      "role": "starter",
+      "sha256": "06704daf528ce1ef8ac8d1458a1117aacac74d0fd6309975aecc797c3c3c8b7f"
+    },
+    {
+      "task_id": "guided-run-model-v1",
+      "task_version": 1,
+      "source": "visible/main_test.go",
+      "workspace_path": "main_test.go",
+      "bundle_path": "tasks/guided-run-model-v1/visible/main_test.go",
+      "role": "visible_test",
+      "sha256": "433fb5ec334c9c423c2515977581d06f62963ecbd94c5357d7e494d69f40a37a"
+    },
+    {
+      "task_id": "practice-error-contract-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/practice-error-contract-v1/README.md",
+      "role": "readme",
+      "sha256": "9744e7383edae627bfcdbc97d5d872aaed162997b212fbbaee1969cd6f4cffe6"
+    },
+    {
+      "task_id": "practice-error-contract-v1",
+      "task_version": 1,
+      "source": "starter/config.go",
+      "workspace_path": "config.go",
+      "bundle_path": "tasks/practice-error-contract-v1/starter/config.go",
+      "role": "starter",
+      "sha256": "dc2849d98c308eb0ef0ddc729c2ba6169d72abdc64821a0d892760917cb329f7"
+    },
+    {
+      "task_id": "practice-error-contract-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/practice-error-contract-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "456b0a3cb8249977843635cfe811ff0ad8979c9cc0c94da14d97bc3906f26184"
+    },
+    {
+      "task_id": "practice-error-contract-v1",
+      "task_version": 1,
+      "source": "visible/config_test.go",
+      "workspace_path": "config_test.go",
+      "bundle_path": "tasks/practice-error-contract-v1/visible/config_test.go",
+      "role": "visible_test",
+      "sha256": "fc24a25ffe9e0db5265cd192495349d88c42179e2bb1ffdb36a023a4bbc72e6f"
+    },
+    {
+      "task_id": "practice-json-io-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/practice-json-io-v1/README.md",
+      "role": "readme",
+      "sha256": "7c75933fcc11db535fd3234736ca533efccc43643fad6427912b2a97d4eb1d13"
+    },
+    {
+      "task_id": "practice-json-io-v1",
+      "task_version": 1,
+      "source": "starter/config.go",
+      "workspace_path": "config.go",
+      "bundle_path": "tasks/practice-json-io-v1/starter/config.go",
+      "role": "starter",
+      "sha256": "07d790ebdfd176d1c392574b4f11a530e6871a912782d34eb980e13d8b505bde"
+    },
+    {
+      "task_id": "practice-json-io-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/practice-json-io-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "456b0a3cb8249977843635cfe811ff0ad8979c9cc0c94da14d97bc3906f26184"
+    },
+    {
+      "task_id": "practice-json-io-v1",
+      "task_version": 1,
+      "source": "visible/config_test.go",
+      "workspace_path": "config_test.go",
+      "bundle_path": "tasks/practice-json-io-v1/visible/config_test.go",
+      "role": "visible_test",
+      "sha256": "f8644ed96bc5e94622949cc1c510b396d59462c5eacd94c4bf036e9779357a7a"
+    },
+    {
+      "task_id": "practice-table-tests-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/practice-table-tests-v1/README.md",
+      "role": "readme",
+      "sha256": "73d40e8dd4588294532ec3e1a611a5da836235b7fb9f9de3a74069eb5aae9e43"
+    },
+    {
+      "task_id": "practice-table-tests-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/practice-table-tests-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "456b0a3cb8249977843635cfe811ff0ad8979c9cc0c94da14d97bc3906f26184"
+    },
+    {
+      "task_id": "practice-table-tests-v1",
+      "task_version": 1,
+      "source": "starter/name.go",
+      "workspace_path": "name.go",
+      "bundle_path": "tasks/practice-table-tests-v1/starter/name.go",
+      "role": "starter",
+      "sha256": "fc7cfc713c591c9c20b803c2bce239891ad72165ef0ecf3c96b3532f63d3ffa0"
+    },
+    {
+      "task_id": "practice-table-tests-v1",
+      "task_version": 1,
+      "source": "starter/name_test.go",
+      "workspace_path": "name_test.go",
+      "bundle_path": "tasks/practice-table-tests-v1/starter/name_test.go",
+      "role": "starter",
+      "sha256": "17c7037c214aa8a396f3f0d9a7560404d0de81809ab56d448898e711f45e5116"
+    },
+    {
+      "task_id": "practice-table-tests-v1",
+      "task_version": 1,
+      "source": "visible/contract_test.go",
+      "workspace_path": "contract_test.go",
+      "bundle_path": "tasks/practice-table-tests-v1/visible/contract_test.go",
+      "role": "visible_test",
+      "sha256": "ca1f026529df6c90043fa0e21de19e44155c99137073185df138cebbd0dd088a"
+    },
+    {
+      "task_id": "review-check-config-variant-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/review-check-config-variant-v1/README.md",
+      "role": "readme",
+      "sha256": "f3af9562d30baab5a660e3778e022dfc6c521cb344197c7575d29d5306562cc9"
+    },
+    {
+      "task_id": "review-check-config-variant-v1",
+      "task_version": 1,
+      "source": "fixtures/base.json",
+      "workspace_path": "testdata/base.json",
+      "bundle_path": "tasks/review-check-config-variant-v1/fixtures/base.json",
+      "role": "fixture",
+      "sha256": "095c623bbbabaeb43be18603ab781f840010a9b3341af5553f3205d6c4704c6e"
+    },
+    {
+      "task_id": "review-check-config-variant-v1",
+      "task_version": 1,
+      "source": "fixtures/override.json",
+      "workspace_path": "testdata/override.json",
+      "bundle_path": "tasks/review-check-config-variant-v1/fixtures/override.json",
+      "role": "fixture",
+      "sha256": "182f75fa88af0df07892970281a2de85aad0cecaaa19c4cffc054b6235eac30b"
+    },
+    {
+      "task_id": "review-check-config-variant-v1",
+      "task_version": 1,
+      "source": "heldout/internal/merge/heldout_test.go",
+      "workspace_path": "internal/merge/heldout_test.go",
+      "bundle_path": "tasks/review-check-config-variant-v1/heldout/internal/merge/heldout_test.go",
+      "role": "held_out_test",
+      "sha256": "66f3f6b5dc98a1b54d6fdd551e4cae48abc64f64730abb2f0d5b40a2df07c53f"
+    },
+    {
+      "task_id": "review-check-config-variant-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/review-check-config-variant-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "e5543287db705509d5184e0bdd53141f908d1fd8ec16bf396ee3c08c9027b777"
+    },
+    {
+      "task_id": "review-check-config-variant-v1",
+      "task_version": 1,
+      "source": "starter/internal/merge/merge.go",
+      "workspace_path": "internal/merge/merge.go",
+      "bundle_path": "tasks/review-check-config-variant-v1/starter/internal/merge/merge.go",
+      "role": "starter",
+      "sha256": "7cad3cfa2716fe8fffc1d75ee3ae0a769df0be82f7b814bc64c6ef53f3719053"
+    },
+    {
+      "task_id": "review-check-config-variant-v1",
+      "task_version": 1,
+      "source": "starter/internal/merge/merge_test.go",
+      "workspace_path": "internal/merge/merge_test.go",
+      "bundle_path": "tasks/review-check-config-variant-v1/starter/internal/merge/merge_test.go",
+      "role": "starter",
+      "sha256": "1897eb00a19f247a06da5b33375589a34fbab0bf0fc86e1bdf7cd7df8d8a94cf"
+    }
+  ],
+  "bundle_hash": "ed9ae605b819bfc3d75cf3142a00021c3ac3bfd32c50070cbb2fc4f6e3d985cf"
+}
