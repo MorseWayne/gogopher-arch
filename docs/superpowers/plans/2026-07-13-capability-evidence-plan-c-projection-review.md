@@ -93,14 +93,16 @@
 
 ### C7 — `/capabilities` 和 `/learning/next`
 
-- [ ] GET Capability 合并当前 release 定义、当前版本 Snapshot、最近 Evidence 和派生 retention。
-- [ ] GET `/learning/next?as_of=` 在测试环境支持显式 as_of；生产忽略客户端时间并使用 server clock。
-- [ ] 优先返回已到期/claimed review，其次返回 acquisition path 中可开始的下一 Activity。
-- [ ] hard prerequisite 未满足时不推荐被阻塞 Activity；recommended prerequisite 只作为说明。
-- [ ] 返回真实 source metadata，避免把静态演示状态标为服务端进度。
-- [ ] 对无 Snapshot、新版本未继承旧 Evidence、无可用活动写 API 测试。
+- [x] GET Capability 合并当前 release 定义、当前版本 Snapshot、最近 Evidence 和派生 retention。
+- [x] GET `/learning/next?as_of=` 在测试环境支持显式 as_of；生产忽略客户端时间并使用 server clock。
+- [x] 优先返回已到期/claimed review，其次返回 acquisition path 中可开始的下一 Activity。
+- [x] hard prerequisite 未满足时不推荐被阻塞 Activity；recommended prerequisite 只作为说明。
+- [x] 返回真实 source metadata，避免把静态演示状态标为服务端进度。
+- [x] 对无 Snapshot、新版本未继承旧 Evidence、无可用活动写 API 测试。
 
 完成条件：同一 `as_of` 下 next query 稳定；新 Capability version 不自动继承旧 Snapshot。
+
+验收记录：Capability API 固定读取当前 release 中同 ID 的最新版本，只合并精确 version/hash 的 Snapshot 与最近 Evidence，并在读取时按 `as_of` 派生 due/rusty；source metadata 明确区分 release bundle、server projection、Evidence 和派生 retention。`/learning/next` 在 `APP_ENV=test` 接受 RFC3339 `as_of`，其他环境忽略客户端时钟；查询稳定地优先 claimed、再选到期 ReviewItem，随后按当前版本 Snapshot 与 hard prerequisite 选择 guided/practice/assessment，recommended prerequisite 仅返回满足状态。真实 PostgreSQL 已验证旧 M1-01 v1 stable Snapshot 不会跳过当前 v2 acquisition、到期 review 优先以及 claimed review 返回原 Attempt；无 Snapshot 与无可用 Activity 返回明确的 `null` 状态而不伪造进度。
 
 ### C8 — 重建 command 与可观测性
 

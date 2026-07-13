@@ -160,6 +160,16 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 	if err != nil {
 		return fail(err)
 	}
+	learningReader, err := projection.NewReader(db, registry, projection.ReaderOptions{})
+	if err != nil {
+		return fail(err)
+	}
+	definitionHandler, err := httpapi.NewDefinitionHandler(registry, learningReader, httpapi.DefinitionHandlerOptions{
+		AllowTestAsOf: cfg.AppEnv == "test",
+	})
+	if err != nil {
+		return fail(err)
+	}
 	projectionRepository, err := projection.NewPostgresRequestRepository(db, projection.RepositoryOptions{})
 	if err != nil {
 		return fail(err)
@@ -288,7 +298,7 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 		}
 	}()
 	return &App{
-		Handler:  httpapi.NewRouter(true, sessionHandler, attemptHandler, reviewHandler, httpapi.NewDefinitionHandler(registry), workflowHandler, metrics),
+		Handler:  httpapi.NewRouter(true, sessionHandler, attemptHandler, reviewHandler, definitionHandler, workflowHandler, metrics),
 		database: db, assistanceService: assistanceService, executionService: executionService,
 		ruleGenerator: ruleGenerator, submissionService: submissionService,
 		workerCancel: workerCancel, workerDone: workerDone, evaluationDone: evaluationDone,

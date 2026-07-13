@@ -73,12 +73,65 @@ type ReviewPolicyView struct {
 	FailureRemediationAfterDays int `json:"failure_remediation_after_days"`
 }
 
+type CapabilityPrerequisitesView struct {
+	Hard        []VersionedDefinitionRef `json:"hard"`
+	Recommended []VersionedDefinitionRef `json:"recommended"`
+}
+
+type CapabilityView struct {
+	ID               string                      `json:"id"`
+	Version          int                         `json:"version"`
+	ContentHash      string                      `json:"content_hash"`
+	Name             string                      `json:"name"`
+	Description      string                      `json:"description"`
+	Milestone        string                      `json:"milestone"`
+	Domain           string                      `json:"domain"`
+	Prerequisites    CapabilityPrerequisitesView `json:"prerequisites"`
+	RequiredEvidence []RequiredEvidenceView      `json:"required_evidence"`
+	ReviewPolicy     ReviewPolicyView            `json:"review_policy"`
+	ResourceRefs     []string                    `json:"resource_refs"`
+}
+
 type CapabilityPolicyView struct {
 	ID               string                 `json:"id"`
 	Version          int                    `json:"version"`
 	ContentHash      string                 `json:"content_hash"`
 	RequiredEvidence []RequiredEvidenceView `json:"required_evidence"`
 	ReviewPolicy     ReviewPolicyView       `json:"review_policy"`
+}
+
+func (r *Registry) CapabilityView(releaseID, id string, version int) (CapabilityView, error) {
+	stored, err := r.Get(DefinitionRef{ReleaseID: releaseID, Kind: KindCapability, ID: id, Version: version})
+	if err != nil {
+		return CapabilityView{}, err
+	}
+	var document struct {
+		ID               string                      `json:"id"`
+		Version          int                         `json:"version"`
+		Name             string                      `json:"name"`
+		Description      string                      `json:"description"`
+		Milestone        string                      `json:"milestone"`
+		Domain           string                      `json:"domain"`
+		Prerequisites    CapabilityPrerequisitesView `json:"prerequisites"`
+		RequiredEvidence []RequiredEvidenceView      `json:"required_evidence"`
+		ReviewPolicy     ReviewPolicyView            `json:"review_policy"`
+		ResourceRefs     []string                    `json:"resource_refs"`
+	}
+	if err := json.Unmarshal(stored.Document, &document); err != nil {
+		return CapabilityView{}, fmt.Errorf("decode capability view: %w", err)
+	}
+	document.Prerequisites.Hard = append([]VersionedDefinitionRef(nil), document.Prerequisites.Hard...)
+	document.Prerequisites.Recommended = append([]VersionedDefinitionRef(nil), document.Prerequisites.Recommended...)
+	document.ResourceRefs = append([]string(nil), document.ResourceRefs...)
+	for index := range document.RequiredEvidence {
+		document.RequiredEvidence[index].RuleIDs = append([]string(nil), document.RequiredEvidence[index].RuleIDs...)
+	}
+	return CapabilityView{
+		ID: document.ID, Version: document.Version, ContentHash: stored.ContentHash,
+		Name: document.Name, Description: document.Description, Milestone: document.Milestone, Domain: document.Domain,
+		Prerequisites: document.Prerequisites, RequiredEvidence: document.RequiredEvidence,
+		ReviewPolicy: document.ReviewPolicy, ResourceRefs: document.ResourceRefs,
+	}, nil
 }
 
 func (r *Registry) CapabilityPolicy(releaseID, id string, version int) (CapabilityPolicyView, error) {

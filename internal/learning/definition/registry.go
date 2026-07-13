@@ -159,6 +159,23 @@ func (r *Registry) Get(ref DefinitionRef) (Definition, error) {
 	return definition, nil
 }
 
+func (r *Registry) Latest(releaseID string, kind Kind, id string) (Definition, error) {
+	var latest Definition
+	found := false
+	for ref, value := range r.definitions {
+		if ref.ReleaseID != releaseID || ref.Kind != kind || ref.ID != id || (found && ref.Version <= latest.Version) {
+			continue
+		}
+		latest = value
+		found = true
+	}
+	if !found {
+		return Definition{}, fmt.Errorf("release %q %s %s: %w", releaseID, kind, id, ErrDefinitionNotFound)
+	}
+	latest.Document = append(json.RawMessage(nil), latest.Document...)
+	return latest, nil
+}
+
 func (r *Registry) Definitions(releaseID string) ([]Definition, error) {
 	if _, exists := r.releases[releaseID]; !exists {
 		return nil, fmt.Errorf("release %q: %w", releaseID, ErrDefinitionNotFound)

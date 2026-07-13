@@ -223,6 +223,15 @@ func TestPostgresProjectorRebuildsFactsIdempotently(t *testing.T) {
 	if err != nil || changed || dueSnapshot.RetentionState != RetentionStateDue || dueSnapshot.NextReviewAt == nil {
 		t.Fatalf("due Rebuild() = %#v, changed=%v, error=%v", dueSnapshot, changed, err)
 	}
+	reader, _ := NewReader(db, registry, ReaderOptions{Schema: schema})
+	capabilityRead, err := reader.Capability(ctx, learnerID, "M1-03", dueInput.AsOf)
+	if err != nil || capabilityRead.Snapshot == nil || capabilityRead.Snapshot.RetentionState != RetentionStateDue || len(capabilityRead.RecentEvidence) != 2 {
+		t.Fatalf("Capability(M1-03) = %#v, %v", capabilityRead, err)
+	}
+	dueRecommendation, err := reader.Next(ctx, learnerID, dueInput.AsOf)
+	if err != nil || dueRecommendation == nil || dueRecommendation.Kind != "review" || dueRecommendation.Reason != "due_review" || dueRecommendation.Activity.ID != reviewActivity.ID {
+		t.Fatalf("Next(due review) = %#v, %v", dueRecommendation, err)
+	}
 
 	reviewService, _ := reviewflow.NewService(db, registry, reviewflow.ServiceOptions{
 		Schema: schema, Now: func() time.Time { return now.AddDate(0, 0, 4).Add(-2 * time.Minute) },
@@ -232,6 +241,10 @@ func TestPostgresProjectorRebuildsFactsIdempotently(t *testing.T) {
 		t.Fatalf("Claim(review) = %#v, %v", claimedReview, err)
 	}
 	reviewAttemptID := claimedReview.Attempt.ID
+	claimedRecommendation, err := reader.Next(ctx, learnerID, dueInput.AsOf)
+	if err != nil || claimedRecommendation == nil || claimedRecommendation.Reason != "claimed_review" || claimedRecommendation.ReviewItem == nil || claimedRecommendation.ReviewItem.ClaimedAttemptID != reviewAttemptID {
+		t.Fatalf("Next(claimed review) = %#v, %v", claimedRecommendation, err)
+	}
 	reviewSubmissionID := "00000000-0000-4000-8000-000000000110"
 	reviewExecutionID := "00000000-0000-4000-8000-000000000111"
 	reviewBatchID := "00000000-0000-4000-8000-000000000112"

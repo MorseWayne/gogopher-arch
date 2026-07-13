@@ -39,3 +39,11 @@ func TestLoadRejectsEnabledSliceOutsideLocal(t *testing.T) {
 		t.Fatal("Load() error = nil")
 	}
 }
+
+func TestLoadAllowsEnabledSliceInTestEnvironment(t *testing.T) {
+	t.Setenv("APP_ENV", "test")
+	t.Setenv("LEARNING_SLICE_ENABLED", "true")
+	if _, err := Load(); err != nil {
+		t.Fatal(err)
+	}
+}

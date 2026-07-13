@@ -109,8 +109,8 @@ func Load() (Config, error) {
 	if _, _, err := net.SplitHostPort(config.ListenAddress); err != nil {
 		return Config{}, fmt.Errorf("invalid LISTEN_ADDRESS: %w", err)
 	}
-	if config.LearningSliceEnabled && config.AppEnv != "local" {
-		return Config{}, fmt.Errorf("Learning slice may only be enabled when APP_ENV=local")
+	if config.LearningSliceEnabled && config.AppEnv != "local" && config.AppEnv != "test" {
+		return Config{}, fmt.Errorf("Learning slice may only be enabled when APP_ENV=local or test")
 	}
 	if config.SandboxRPCDeadline+config.ExecutionPersistGrace >= config.ExecutionLease {
 		return Config{}, fmt.Errorf("EXECUTION_WORKER_LEASE must exceed SANDBOX_RPC_DEADLINE plus EXECUTION_PERSIST_GRACE")
