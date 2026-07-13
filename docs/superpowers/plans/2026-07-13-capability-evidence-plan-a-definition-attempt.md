@@ -130,12 +130,12 @@ Plan B/C 的表由各自 migration 新增，不在本计划提前创建空壳表
 
 ### A5 — 匿名 session
 
-- [ ] 为新建、复用、过期、伪造和 cookie 丢失写服务/API 测试。
-- [ ] 使用 CSPRNG 生成高熵 token，只持久化 token hash。
-- [ ] 设置 `HttpOnly`、`SameSite=Lax` 和 `/api/v1/learning` path；本地 HTTP 不设置 `Secure`。
-- [ ] 实现 `POST /api/v1/learning/session` 幂等返回当前 Learner。
-- [ ] 实现 session middleware；其余 Learning API 无效 session 返回 `401`。
-- [ ] 日志禁止输出原始 token 或 cookie。
+- [x] 为新建、复用、过期、伪造和 cookie 丢失写服务/API 测试。
+- [x] 使用 CSPRNG 生成高熵 token，只持久化 token hash。
+- [x] 设置 `HttpOnly`、`SameSite=Lax` 和 `/api/v1/learning` path；本地 HTTP 不设置 `Secure`。
+- [x] 实现 `POST /api/v1/learning/session` 幂等返回当前 Learner。
+- [x] 实现 session middleware；其余 Learning API 无效 session 返回 `401`。
+- [x] 日志禁止输出原始 token 或 cookie。
 
 完成条件：数据库泄露不直接暴露可用 token；不同 Learner 不能通过 UUID 参数绕过 cookie 所有权。
 
