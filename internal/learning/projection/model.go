@@ -74,3 +74,21 @@ type Result struct {
 	LastIndependentAt *time.Time         `json:"last_independent_at,omitempty"`
 	NextReviewAt      *time.Time         `json:"next_review_at,omitempty"`
 }
+
+type Snapshot struct {
+	LearnerID         string    `json:"learner_id"`
+	CapabilityID      string    `json:"capability_id"`
+	CapabilityVersion int       `json:"capability_version"`
+	CapabilityHash    string    `json:"capability_hash"`
+	ProjectionVersion int       `json:"projection_version"`
+	ProjectedAt       time.Time `json:"projected_at"`
+	Result
+}
+
+type RebuildInput struct {
+	LearnerID         string
+	ReleaseID         string
+	CapabilityID      string
+	CapabilityVersion int
+	AsOf              time.Time
+}

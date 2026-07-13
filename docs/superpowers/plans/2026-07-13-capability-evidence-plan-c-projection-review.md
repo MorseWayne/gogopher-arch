@@ -34,12 +34,12 @@
 
 ### C2 — CapabilityProjector 全量重建
 
-- [ ] 按 `learner + capability id + version` 查询全部有效 Evidence 和 active ReviewItem。
-- [ ] 从事实全量计算 Snapshot，不依赖旧 Snapshot 增量值。
-- [ ] 分别计算 acquisition、历史最高 independence、transfer、retention base、last evidence 和 next review。
-- [ ] `retention_state=due` 只在 API 读取时由 `as_of` 派生，不用定时任务改写。
-- [ ] 只由关联 review 的失败 Evidence 把 base state 改为 rusty。
-- [ ] 以 projection version 幂等 upsert，并在状态变化时写 scheduler outbox，不直接调用 scheduler。
+- [x] 按 `learner + capability id + version` 查询全部有效 Evidence 和 active ReviewItem。
+- [x] 从事实全量计算 Snapshot，不依赖旧 Snapshot 增量值。
+- [x] 分别计算 acquisition、历史最高 independence、transfer、retention base、last evidence 和 next review。
+- [x] `retention_state=due` 只在 API 读取时由 `as_of` 派生，不用定时任务改写。
+- [x] 只由关联 review 的失败 Evidence 把 base state 改为 rusty。
+- [x] 以 projection version 幂等 upsert，并在状态变化时写 scheduler outbox，不直接调用 scheduler。
 
 完成条件：删除 Snapshot 后可从历史事实完全重建；重放不会产生额外 Evidence 或 ReviewItem。
 

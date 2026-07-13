@@ -10,7 +10,7 @@ Level: 3
 Started: 2026-07-12
 Updated: 2026-07-13
 Priority: Product redesign specification; independent from the active DeepTutor spike.
-Current phase: Plan C C1 已完成，开始 CapabilityProjector 全量重建。
+Current phase: Plan C C2 已完成，开始 durable projection outbox worker。
 
 Intent: 为 M1-01、M1-03、M1-07、M1-09 建立第一条端到端能力训练切片，验证版本化能力定义、服务端 Attempt/Evidence、派生能力状态、多文件 Go 任务和维护调度闭环。
 
@@ -31,7 +31,7 @@ Plan:
 - [done] A7 — 实现 Gateway wiring、Learning feature gate、路由和旧 API 删除。
 
 Current todo:
-- [ ] Plan C C2 — 从 Evidence 和 active ReviewItem 全量重建 CapabilitySnapshot。
+- [ ] Plan C C3 — 消费 capability_projection.requested 并实现 lease/backoff/replay。
 
 Changes:
 - 用户确认 M1 14 节点、M2 16 节点、`gocheck`/`gocheck-hub` 内容原型和 Miniflux v2.3.2 训练项目方向。
@@ -86,12 +86,15 @@ Changes:
 - 第二个 Learner 读取该 Attempt 返回 `404 attempt_not_found`；metrics 与 Gateway logs 仅包含固定维度和内部 ID，Compose 服务均保持 healthy。
 - C1 已定义 acquisition、independence、transfer、retention base/due 状态与合法转换，并固定自治级别排序。
 - Registry 按 Capability version 返回各自 required_evidence 和 review_policy；projection 使用显式 as_of，输入 Evidence 顺序不改变 JSON result。
+- C2 migration 已新增 capability_snapshots、review_items、attempt_review_items 和 outbox consumer metadata/index。
+- CapabilityProjector 从完整 Evidence 与 active/completed ReviewItem 重建 Snapshot；unlinked review failure 不会变 rusty，active due 只在显式 as_of 下派生。
+- Snapshot 使用 projection_version 幂等 upsert；删除后重建得到相同状态，scheduler outbox 依赖 projection payload hash 去重。
 
 Prerequisites:
 - 当前 Sandbox 仅支持单个 `main.go` 且缺少生产级隔离；规格必须限制为本地可信环境，并明确公开运行前的安全门槛。
 - 现有 DeepTutor Spike 和用户对其 ledger/spec 的修改必须保持不变。
 
-Resume next: 实施 C2 migration 与 projector repository，按 learner + Capability version 全量读取事实并幂等 upsert Snapshot。
+Resume next: 实施 C3 versioned projection outbox payload、claim/lease、bounded backoff 和 crash replay。
 
 ### WF-2026-06-02-002 — DeepTutor 离线课程内容工作流 Spike
 Status: Active
