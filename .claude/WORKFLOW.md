@@ -4,44 +4,74 @@ Claude Code 开发工作的轻量级可恢复台账。
 
 ## Active
 
+### WF-2026-07-12-001 — 能力节点与证据纵向切片设计
+Status: Active
+Level: 3
+Started: 2026-07-12
+Updated: 2026-07-13
+Priority: Product redesign specification; independent from the active DeepTutor spike.
+Current phase: D5 — 用户审阅规格并决定是否进入分阶段实施计划。
+
+Intent: 为 M1-01、M1-03、M1-07、M1-09 建立第一条端到端能力训练切片，验证版本化能力定义、服务端 Attempt/Evidence、派生能力状态、多文件 Go 任务和维护调度闭环。
+
+Plan:
+- [done] D1 — 明确产品定位、能力图谱、能力维护和第一版范围。
+- [done] D2 — 核对当前课程、任务、Dashboard、Gateway 和 Sandbox 数据流。
+- [done] D3 — 比较数据方案并确认“版本化定义 + 服务端证据”方案。
+- [done] D4 — 写入设计规格并完成五轮独立规格评审。
+- [doing] D5 — 用户审阅规格后再进入分阶段实施计划。
+
+Current todo:
+- [ ] D5 — 用户审阅 `2026-07-12-capability-evidence-vertical-slice-design.md`；批准后拆分为定义/Attempt、执行/证据、投影/复习、前端/E2E 四份实施计划。
+
+Changes:
+- 用户确认 M1 14 节点、M2 16 节点、`gocheck`/`gocheck-hub` 内容原型和 Miniflux v2.3.2 训练项目方向。
+- 用户确认能力与活动使用仓库内版本化定义，用户尝试、证据、能力状态和复习队列使用服务端持久化。
+- 第一条实现规格只覆盖 M1-01、M1-03、M1-07、M1-09 和一个多文件完整程序任务。
+- 正式规格已通过独立审查，关闭发布包回放、幂等提交、多能力 ReviewItem、复习补救、帮助事件 cutoff、timeout 分类和本地网络边界等问题。
+
+Prerequisites:
+- 当前 Sandbox 仅支持单个 `main.go` 且缺少生产级隔离；规格必须限制为本地可信环境，并明确公开运行前的安全门槛。
+- 现有 DeepTutor Spike 和用户对其 ledger/spec 的修改必须保持不变。
+
+Resume next: 用户审阅正式规格；批准后按规格第 19 节分别编写四份独立实施计划，不合并成一个超大计划。
+
 ### WF-2026-06-02-002 — DeepTutor 离线课程内容工作流 Spike
 Status: Active
 Level: 3
 Started: 2026-06-02
-Updated: 2026-06-02
-Priority: Current discussion/design; WF-2026-06-02-001 remains paused.
-Current phase: D1 — 澄清 DeepTutor Spike 目标、边界和成功标准。
+Updated: 2026-06-03
+Priority: Current implementation planning; WF-2026-06-02-001 remains paused.
+Current phase: P3 — 安装/运行 DeepTutor 并生成章节正文草稿。
 
-Intent: 设计一个研究型集成 Spike，验证 DeepTutor 能否辅助 GoGopher Arch 接入外部资料、生成/改造课程内容，并为后续 AI 导师能力保留扩展路径。
+Intent: 验证 DeepTutor 能否作为离线课程内容研究工具，利用开放网页检索与站内课程约束生成明显优于原章节的教程级 Go 课程正文草稿。
 
 Plan:
-- [doing] D1 — 澄清 Spike 目标、边界、成功标准和资料范围。
-- [todo] D2 — 提出 2-3 个 DeepTutor 接入方案并选择推荐路线。
-- [todo] D3 — 呈现离线内容工作流设计，覆盖架构、组件、数据流、错误处理和测试。
-- [todo] D4 — 写入并评审设计规格文档。
-- [todo] D5 — 用户审阅规格后转入实施计划。
+- [done] D1-D5 — 需求澄清、方案选择、设计规格、规格评审和用户审阅已完成。
+- [done] P1 — 审查 13 章并选择目标章节。
+- [done] P2 — 准备 DeepTutor 输入包与课程风格契约。
+- [doing] P3 — 安装/运行 DeepTutor 并生成章节正文草稿。
+- [todo] P4 — 审计草稿并替换目标 MDX。
+- [todo] P5 — 验证内容质量、构建和回滚决策。
+- [todo] P6 — 记录结论、更新 ledger 并提交。
 
 Current todo:
-- [ ] D1 — 明确课程内容生成的资料来源、人工校验边界、样例章节范围和 AI 导师是否纳入本次 Spike。
+- [ ] P3 — 确认 DeepTutor 安装/运行方式，将 `input-package.md` 交给 DeepTutor 生成 ch10 正文草稿和来源记录。
 
 Changes:
 - 用户选择研究型集成 Spike，而不是立即产品化或直接深度集成。
-- 用户明确优先方向为离线内容工作流：利用 DeepTutor 集成外部资料并辅助生成/改造课程内容；AI 导师作为第二关注方向。
-- 课程内容方向需遵守项目原则：外部资料作为知识来源层，最终转化为站内课程正文；不直接外链替代、不自动发布未经校验内容。
+- 用户明确优先方向为离线内容工作流；AI 导师作为后续方向。
+- 用户选择开放网页检索、完整审计包、内容质量优先，以及“方案 A 起步，方案 B 作为加分验证”。
+- 设计规格已写入 `docs/superpowers/specs/2026-06-03-deeptutor-course-content-spike-design.md` 并通过规格评审；规格提交为 `78c31c7`。
+- 实施计划已写入 `docs/superpowers/plans/2026-06-03-deeptutor-course-content-spike-implementation.md`；规格状态更新为 Approved for implementation planning。
+- P1 已完成 13 章评分，选择 `ch10-packages-tools` 作为 DeepTutor Spike 目标章节；结果写入 `docs/superpowers/spikes/deeptutor-course-content/chapter-selection.md`。
+- P2 已完成 DeepTutor 输入包，包含 ch10 原文、metadata/练习摘要、课程风格契约、开放检索要求、输出格式和最终提示模板；文件为 `docs/superpowers/spikes/deeptutor-course-content/input-package.md`。
 
 Prerequisites:
-- 需要确认 DeepTutor 可用入口：CLI/API/KB/Memory/TutorBot 中哪些适合本地验证。
-- 需要确认用于 Spike 的课程样例章节和外部资料边界。
+- DeepTutor 安装/运行可能需要外部依赖、账号或模型配置；若成本较重，按 Stop condition 暂停确认。
+- 课程正文仍需遵守站内正文优先、外部资料只作来源层和禁止拼贴的项目原则。
 
-Resume next: 继续 D1，确认离线内容工作流优先验证的产物类型：章节正文、练习、复盘、知识图谱或来源审计。
-
-## Backlog / Future
-
-- [ ] 将 ch11 Testing 完整改造成订单通知测试样板；本轮仅做蓝图衔接，避免范围膨胀。
-- [ ] 将 ch07 Interfaces 样板推广到 ch05/ch06/ch08 等后续章节；需先确认下一批范围和验证批次。
-- [ ] 若课程数据继续膨胀，后续可考虑将 13 章拆分为独立章节文件；当前计划明确首版保留单文件。
-
-## Completed
+Resume next: 执行 P3：确认 DeepTutor 安装/运行方式，并尝试用 `input-package.md` 生成 ch10 正文草稿和来源记录。
 
 ### WF-2026-06-02-001 — Go 课程质量样板设计
 Completed: 2026-06-02
@@ -164,4 +194,3 @@ Close summary:
 - Outcome: 已按计划将 Go 基础训练营改为 GoGopher Arch 完整内置课程；重写课程数据模型和 13 章内容，改造课程总览页、章节详情页、Landing 文案和 README 来源边界；课程页面不再依赖外部教程正文链接。
 - Validation: 运行文本检查，确认课程数据无旧 source 字段/旧概念模型，课程页面无外部原文入口文案；通过 esbuild bundle 调用 `validateGoBasicsCourse()`，结果 `[]`；本地 `go run` 验证 13 个 exercise starterCode 输出匹配；通过 `npm run build --prefix web`。
 - Gaps: 未启动浏览器逐页人工抽样；未验证 sandbox 服务实际运行按钮，因为本次未启动 Gateway/Sandbox Engine。
-
