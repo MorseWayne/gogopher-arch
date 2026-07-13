@@ -10,7 +10,7 @@ Level: 3
 Started: 2026-07-12
 Updated: 2026-07-13
 Priority: Product redesign specification; independent from the active DeepTutor spike.
-Current phase: A6 — 匿名 session 已完成，开始实现 Attempt 与 workspace 并发控制。
+Current phase: A7 — Attempt 与 workspace 已完成，开始 Gateway 路由、配置和 breaking-change 清理。
 
 Intent: 为 M1-01、M1-03、M1-07、M1-09 建立第一条端到端能力训练切片，验证版本化能力定义、服务端 Attempt/Evidence、派生能力状态、多文件 Go 任务和维护调度闭环。
 
@@ -27,10 +27,11 @@ Plan:
 - [done] A3 — 实现 canonical hash、release manifest、bundle 构建和 verify command。
 - [done] A4 — 实现只读 DefinitionRegistry、启动校验和数据库不可变版本登记。
 - [done] A5 — 实现匿名 Learner session、token hash 和 cookie 所有权边界。
-- [doing] A6 — 实现 Attempt 创建、所有权读取、workspace revision/hash 与并发保存。
+- [done] A6 — 实现 Attempt 创建、所有权读取、workspace revision/hash 与并发保存。
+- [doing] A7 — 实现 Gateway wiring、Learning feature gate、路由和旧 API 删除。
 
 Current todo:
-- [ ] A6 — 先实现 starter workspace、路径/限额和 revision conflict 测试，再实现 repository transaction。
+- [ ] A7 — 建立新 `cmd/gateway` wiring 与 config，注册 Plan A 路由并删除旧 `/api/v1/execute` service。
 
 Changes:
 - 用户确认 M1 14 节点、M2 16 节点、`gocheck`/`gocheck-hub` 内容原型和 Miniflux v2.3.2 训练项目方向。
@@ -52,12 +53,14 @@ Changes:
 - `ReleaseStore` 使用 serializable transaction 与 advisory lock 登记 release/definition history；真实 PostgreSQL 已验证幂等登记、current 指针、Attempt 引用查询和 version hash 冲突回滚。
 - A5 已实现 256-bit CSPRNG session token、SHA-256-only persistence、匿名 Learner transaction、过期/伪造替换语义和 owner context middleware。
 - session cookie 固定 `HttpOnly`、`SameSite=Lax` 与 `/api/v1/learning` path；真实 PostgreSQL 已验证 hash-only persistence、复用、过期拒绝和新 Learner 替换。
+- A6 已实现冻结 release/activity/task hash 的 Attempt、完整 public workspace、readonly/大小限制与 length-prefixed SHA-256 workspace hash。
+- workspace 保存使用 `SELECT ... FOR UPDATE` 和 revision CAS；真实 PostgreSQL 并发测试确认两个同 revision 保存恰好一个成功，另一个返回当前 revision/hash。
 
 Prerequisites:
 - 当前 Sandbox 仅支持单个 `main.go` 且缺少生产级隔离；规格必须限制为本地可信环境，并明确公开运行前的安全门槛。
 - 现有 DeepTutor Spike 和用户对其 ledger/spec 的修改必须保持不变。
 
-Resume next: 实施 A6；先完成 starter workspace、owner 隔离、路径/大小限制、revision conflict 和 hash 稳定性测试。
+Resume next: 实施 A7；建立新 `cmd/gateway` wiring、Learning feature gate 与 Plan A 路由，然后删除旧 Gateway `/api/v1/execute` 实现。
 
 ### WF-2026-06-02-002 — DeepTutor 离线课程内容工作流 Spike
 Status: Active

@@ -141,13 +141,13 @@ Plan B/C 的表由各自 migration 新增，不在本计划提前创建空壳表
 
 ### A6 — Attempt 和 workspace 并发控制
 
-- [ ] 为 starter 创建、owner 隔离、路径白名单、大小限制、revision 冲突和 hash 稳定性写测试。
-- [ ] 实现 `POST /attempts`，只接受 Activity id/version，从固定 release 创建完整 starter workspace。
-- [ ] 实现 `GET /attempts/{id}`，非 owner 统一返回 `404`。
-- [ ] 实现 `PUT /attempts/{id}/workspace`，接收 `base_revision + files`，只保存完整文件映射。
-- [ ] 在单个数据库事务中锁定 Attempt、校验 active/revision、校验路径与限额、更新 workspace 和 hash。
-- [ ] 对旧 revision 返回 `409`，附当前 revision/hash，不静默合并。
-- [ ] 预留 Attempt 读取 DTO 中的 execution/evidence 摘要字段，但 Plan A 返回空集合并明确 API version。
+- [x] 为 starter 创建、owner 隔离、路径白名单、大小限制、revision 冲突和 hash 稳定性写测试。
+- [x] 实现 `POST /attempts`，只接受 Activity id/version，从固定 release 创建完整 starter workspace。
+- [x] 实现 `GET /attempts/{id}`，非 owner 统一返回 `404`。
+- [x] 实现 `PUT /attempts/{id}/workspace`，接收 `base_revision + files`，只保存完整文件映射。
+- [x] 在单个数据库事务中锁定 Attempt、校验 active/revision、校验路径与限额、更新 workspace 和 hash。
+- [x] 对旧 revision 返回 `409`，附当前 revision/hash，不静默合并。
+- [x] 预留 Attempt 读取 DTO 中的 execution/evidence 摘要字段，但 Plan A 返回空集合并明确 API version。
 
 完成条件：两个并发保存只有一个成功；刷新后可从服务端恢复完全相同的 workspace。
 
