@@ -19,6 +19,7 @@ import (
 	"github.com/MorseWayne/gogopher-arch/internal/learning/httpapi"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/observability"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/projection"
+	"github.com/MorseWayne/gogopher-arch/internal/learning/review"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/session"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/submission"
 	"github.com/MorseWayne/gogopher-arch/internal/platform/config"
@@ -43,7 +44,7 @@ type App struct {
 
 func Build(ctx context.Context, cfg config.Config) (*App, error) {
 	if !cfg.LearningSliceEnabled {
-		return &App{Handler: httpapi.NewRouter(false, nil, nil, nil, nil, nil)}, nil
+		return &App{Handler: httpapi.NewRouter(false, nil, nil, nil, nil, nil, nil)}, nil
 	}
 	db, err := database.Open(ctx, cfg.DatabaseURL)
 	if err != nil {
@@ -95,6 +96,14 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 		return fail(err)
 	}
 	attemptHandler, err := httpapi.NewAttemptHandler(attemptService, attemptViewRepository, metrics)
+	if err != nil {
+		return fail(err)
+	}
+	reviewService, err := review.NewService(db, registry, review.ServiceOptions{})
+	if err != nil {
+		return fail(err)
+	}
+	reviewHandler, err := httpapi.NewReviewHandler(reviewService, metrics)
 	if err != nil {
 		return fail(err)
 	}
@@ -279,7 +288,7 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 		}
 	}()
 	return &App{
-		Handler:  httpapi.NewRouter(true, sessionHandler, attemptHandler, httpapi.NewDefinitionHandler(registry), workflowHandler, metrics),
+		Handler:  httpapi.NewRouter(true, sessionHandler, attemptHandler, reviewHandler, httpapi.NewDefinitionHandler(registry), workflowHandler, metrics),
 		database: db, assistanceService: assistanceService, executionService: executionService,
 		ruleGenerator: ruleGenerator, submissionService: submissionService,
 		workerCancel: workerCancel, workerDone: workerDone, evaluationDone: evaluationDone,

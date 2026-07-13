@@ -69,13 +69,15 @@
 
 ### C5 — ReviewItem 领取和 Attempt 绑定
 
-- [ ] 实现 `POST /review-items/{id}/attempts` 的数据库锁和 owner 校验。
-- [ ] 领取同组仍未完成项，创建一个固定 review Activity/Task version 的 Attempt。
-- [ ] 创建 `attempt_review_items` links；每个 ReviewItem 最多关联一个 Attempt。
-- [ ] 相同 Learner 重试领取返回现有 Attempt；其他 Learner 一律 `404`。
-- [ ] claimed item 不因刷新或重复 `/next` 被另一个 Attempt 再领取。
+- [x] 实现 `POST /review-items/{id}/attempts` 的数据库锁和 owner 校验。
+- [x] 领取同组仍未完成项，创建一个固定 review Activity/Task version 的 Attempt。
+- [x] 创建 `attempt_review_items` links；每个 ReviewItem 最多关联一个 Attempt。
+- [x] 相同 Learner 重试领取返回现有 Attempt；其他 Learner 一律 `404`。
+- [x] claimed item 不因刷新或重复 `/next` 被另一个 Attempt 再领取。
 
 完成条件：并发领取只有一个 Attempt，且所有被领取 Capability links 可重放。
+
+验收记录：`POST /api/v1/learning/review-items/{id}/attempts` 按 Learner 定位目标，并按稳定 ID 顺序在同一 transaction 锁定整个 active review group。真实 PostgreSQL 中并发领取同组两个不同 ReviewItem 只创建一个冻结 `review` Attempt、将 4 个 ReviewItem 全部标记为 `claimed` 并写入 4 条唯一 link；两个响应返回同一 Attempt 且只有首个响应为 `201`。同 Learner 重放返回 `200` 和原 Attempt，其他 Learner 对相同 item 得到 `404`。
 
 ### C6 — Review 成功、失败和未评估流转
 
