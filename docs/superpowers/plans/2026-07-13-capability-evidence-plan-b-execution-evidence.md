@@ -1,6 +1,6 @@
 # 能力证据纵向切片 Plan B：多文件执行、提交与证据
 
-> 状态：Blocked until Plan A is accepted
+> 状态：In progress — B1/B2/B3 accepted
 > 日期：2026-07-13
 > 上游：Plan A 已验收的 definition、session、Attempt 和 workspace 契约
 
@@ -36,33 +36,33 @@
 
 ### B1 — 固化内部 ExecutionSpec 协议
 
-- [ ] 在共享 Go package 定义 versioned `ExecutionSpec`、file asset、action policy、stage result、RuleResult 和 response。
-- [ ] 为 build/test/vet/submit 写 JSON round-trip 与协议不变量测试；不测试旧 payload 兼容。
-- [ ] 只允许 `build`、`test`、`vet`、`submit` 四种动作，命令由 Sandbox 内部映射。
-- [ ] 校验 clean 相对路径、可编辑/只读来源、文件数量/总大小、timeout、输出上限和 asset hash。
-- [ ] 未实现的 `network=none` 必须在响应中标记为 policy-only，日志和 UI 不能宣称已隔离。
+- [x] 在共享 Go package 定义 versioned `ExecutionSpec`、file asset、action policy、stage result、RuleResult 和 response。
+- [x] 为 build/test/vet/submit 写 JSON round-trip 与协议不变量测试；不测试旧 payload 兼容。
+- [x] 只允许 `build`、`test`、`vet`、`submit` 四种动作，命令由 Sandbox 内部映射。
+- [x] 校验 clean 相对路径、可编辑/只读来源、文件数量/总大小、timeout、输出上限和 asset hash。
+- [x] 未实现的 `network=none` 必须在响应中标记为 policy-only，日志和 UI 不能宣称已隔离。
 
 完成条件：无法用协议表达任意 shell、env、absolute path 或宿主 mount。
 
 ### B2 — Sandbox 多文件 runner
 
-- [ ] 先用 fixture 写 build/test/vet、path traversal、symlink、超限和输出截断失败测试。
-- [ ] 每次执行从 ExecutionSpec 在新临时目录重建 workspace，不接受已有目录。
-- [ ] 对 readonly/held-out asset 在写入前复核 SHA-256；拒绝未登记文件和路径覆盖。
-- [ ] 把动作映射为直接 argv 调用，不经过 shell 插值。
-- [ ] 捕获 stdout/stderr、exit code、duration、timeout 和 truncation，区分用户失败与 runner 基础设施失败。
-- [ ] 用户进程文件变更不回写 Attempt；执行结束清理临时目录。
+- [x] 先用 fixture 写 build/test/vet、path traversal、symlink、超限和输出截断失败测试。
+- [x] 每次执行从 ExecutionSpec 在新临时目录重建 workspace，不接受已有目录。
+- [x] 对 readonly/held-out asset 在写入前复核 SHA-256；拒绝未登记文件和路径覆盖。
+- [x] 把动作映射为直接 argv 调用，不经过 shell 插值。
+- [x] 捕获 stdout/stderr、exit code、duration、timeout 和 truncation，区分用户失败与 runner 基础设施失败。
+- [x] 用户进程文件变更不回写 Attempt；执行结束清理临时目录。
 
 完成条件：普通 module 可稳定执行；所有恶意路径 fixture 在启动 `go` 前被拒绝。
 
 ### B3 — submit 的 visible/held-out 阶段
 
-- [ ] 为 submit 编写分阶段执行 fixture 和结构化 `go test -json` parser 测试。
-- [ ] 先运行 visible tests；只有定义允许的后续阶段才注入 held-out tests。
-- [ ] 对每个 assessment package 使用 `go test -c`，再把二进制和 runtime fixture 放入干净目录。
-- [ ] 使用 `go tool test2json` 收集 package/test 事件，生成稳定 stage result。
-- [ ] 返回 TaskDefinition 允许公开的 held-out 摘要，不返回源码、绝对路径或具体隐藏输入。
-- [ ] 增加用户代码枚举目录时读不到 held-out 源码的回归测试，并保留“不抗恶意逆向”的文档声明。
+- [x] 为 submit 编写分阶段执行 fixture 和结构化 `go test -json` parser 测试。
+- [x] 先运行 visible tests；只有定义允许的后续阶段才注入 held-out tests。
+- [x] 对每个 assessment package 使用 `go test -c`，再把二进制和 runtime fixture 放入干净目录。
+- [x] 使用 `go tool test2json` 收集 package/test 事件，生成稳定 stage result。
+- [x] 返回 TaskDefinition 允许公开的 held-out 摘要，不返回源码、绝对路径或具体隐藏输入。
+- [x] 增加用户代码枚举目录时读不到 held-out 源码的回归测试，并保留“不抗恶意逆向”的文档声明。
 
 完成条件：评估依赖结构化结果，不通过 stdout 字符串猜测通过状态。
 
@@ -133,8 +133,8 @@
 
 ```bash
 go test ./...
-go test ./src/services/sandbox-engine/... -count=10
-go test ./src/services/gateway/internal/learning/... -count=10
+go test ./internal/sandbox/... -count=10
+go test ./internal/learning/execution/... -count=10
 docker compose config
 git diff --check
 ```

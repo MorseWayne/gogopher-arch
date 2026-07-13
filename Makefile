@@ -1,10 +1,11 @@
 .PHONY: dev test build lint migrate-up migrate-status learning-content-validate learning-content-verify clean
 
 dev:
-	docker compose up postgres redis -d
+	docker compose up postgres -d
 	# 本地混合开发：后台启动 Gateway，前台启动前端 dev server
 	# 停止时运行 `make clean`
 	DATABASE_URL=$${DATABASE_URL:-postgres://user:pass@localhost:5432/gogopher?sslmode=disable} go run ./cmd/migrate up
+	go run ./cmd/sandbox &
 	DATABASE_URL=$${DATABASE_URL:-postgres://user:pass@localhost:5432/gogopher?sslmode=disable} LEARNING_SLICE_ENABLED=true APP_ENV=local go run ./cmd/gateway &
 	cd web && npm run dev
 
@@ -32,3 +33,4 @@ learning-content-verify:
 clean:
 	docker compose down -v
 	pkill -f "go run ./cmd/gateway" || true
+	pkill -f "go run ./cmd/sandbox" || true

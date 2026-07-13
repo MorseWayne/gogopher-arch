@@ -10,7 +10,7 @@ Level: 3
 Started: 2026-07-12
 Updated: 2026-07-13
 Priority: Product redesign specification; independent from the active DeepTutor spike.
-Current phase: Plan A validation — Gateway 纵向切片已连通，执行最终验收并准备进入 Plan B。
+Current phase: B4 — versioned ExecutionSpec 与多文件 Sandbox 已完成，开始 PostgreSQL queue/lease。
 
 Intent: 为 M1-01、M1-03、M1-07、M1-09 建立第一条端到端能力训练切片，验证版本化能力定义、服务端 Attempt/Evidence、派生能力状态、多文件 Go 任务和维护调度闭环。
 
@@ -31,7 +31,7 @@ Plan:
 - [done] A7 — 实现 Gateway wiring、Learning feature gate、路由和旧 API 删除。
 
 Current todo:
-- [ ] Plan A validation — 固定最终验证记录并提交；随后进入 Plan B 的多文件 ExecutionSpec 与 Sandbox replacement。
+- [ ] B4 — 新增 execution migration、幂等创建、lease 领取/续租、终态写入和失败分类。
 
 Changes:
 - 用户确认 M1 14 节点、M2 16 节点、`gocheck`/`gocheck-hub` 内容原型和 Miniflux v2.3.2 训练项目方向。
@@ -57,12 +57,16 @@ Changes:
 - workspace 保存使用 `SELECT ... FOR UPDATE` 和 revision CAS；真实 PostgreSQL 并发测试确认两个同 revision 保存恰好一个成功，另一个返回当前 revision/hash。
 - A7 已切换到 `cmd/gateway` 与显式 App wiring；Learning feature gate 仅允许 local，关闭时返回 `503 learning_disabled`，旧 `/api/v1/execute` 返回 `404`。
 - 隔离 Compose smoke test 已通过 Web proxy 完成 session → Activity → Attempt → workspace revision 1；Gateway/Sandbox 无宿主发布端口，Web 仅绑定 `127.0.0.1`。
+- Plan A 已以 `ee32072` 完成提交和推送；A1–A7 的全仓测试、Web build、release verify 与真实 Compose smoke 均通过。
+- B1 已固化无 command/env/mount 的 versioned ExecutionSpec；SpecBuilder 只允许冻结 TaskDefinition 生成 action policy 与 release asset。
+- B2/B3 已用 `cmd/sandbox` 替换旧单文件 service，支持多文件 build/test/vet 与 visible → held-out submit，响应明确记录 `network=none` 仅为 `policy_only`。
+- 非 root Sandbox 容器已完成真实 HTTP build smoke；旧 `/execute` 返回 `404`，临时目录与 held-out source 在执行后清理。
 
 Prerequisites:
 - 当前 Sandbox 仅支持单个 `main.go` 且缺少生产级隔离；规格必须限制为本地可信环境，并明确公开运行前的安全门槛。
 - 现有 DeepTutor Spike 和用户对其 ledger/spec 的修改必须保持不变。
 
-Resume next: 完成 Plan A 最终验收记录和提交，然后按 Plan B 先定义 versioned 多文件 ExecutionSpec 并替换旧 Sandbox protocol。
+Resume next: 实施 B4；创建 PostgreSQL execution queue/lease 与终态状态机，然后把 Gateway worker 接到 `/v1/executions`。
 
 ### WF-2026-06-02-002 — DeepTutor 离线课程内容工作流 Spike
 Status: Active

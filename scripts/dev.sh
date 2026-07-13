@@ -5,7 +5,6 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WEB_DIR="$ROOT_DIR/web"
 
 LOCAL_DATABASE_URL="${DATABASE_URL:-postgres://user:pass@localhost:5432/gogopher?sslmode=disable}"
-LOCAL_REDIS_URL="${REDIS_URL:-localhost:6379}"
 
 usage() {
   cat <<'EOF'
@@ -19,12 +18,12 @@ GoGopher Arch 启动助手
   docker           全 Docker 生产式启动，会重新构建镜像
   docker:up        全 Docker 生产式启动，不主动重新构建镜像
   docker:down      停止 Docker Compose 服务
-  deps             只启动 Postgres 和 Redis
-  backend          用 Docker 启动 Gateway、migration 和 PostgreSQL
+  deps             只启动 PostgreSQL
+  backend          用 Docker 启动 Gateway、Sandbox、migration 和 PostgreSQL
   web              启动本地 Vite 前端开发服务，访问 http://localhost:5173
-  sandbox          本地启动 Sandbox Engine，自动注入本地 DB/Redis 环境变量
+  sandbox          本地启动 versioned multi-file Sandbox
   gateway          执行 migration 并本地启动 Learning Gateway
-  local            启动 Postgres/Redis，并提示分别运行 gateway、web
+  local            启动 PostgreSQL，并提示分别运行 sandbox、gateway、web
   status           查看 Docker Compose 服务状态
   logs [service]   跟随查看 Docker Compose 日志，可选 service 名
 
@@ -71,21 +70,19 @@ case "$command" in
     run_compose down "$@"
     ;;
   deps)
-    run_compose up -d postgres redis
+    run_compose up -d postgres
     ;;
   backend)
-    run_compose up -d gateway
+    run_compose up -d gateway sandbox-engine
     ;;
   web)
     ensure_web_deps
     npm run dev --prefix "$WEB_DIR"
     ;;
   sandbox)
-    export DB_URL="$LOCAL_DATABASE_URL"
-    export REDIS_URL="$LOCAL_REDIS_URL"
-    echo "DB_URL=$DB_URL"
-    echo "REDIS_URL=$REDIS_URL"
-    go run "$ROOT_DIR/src/services/sandbox-engine/main.go"
+    export SANDBOX_LISTEN_ADDRESS="${SANDBOX_LISTEN_ADDRESS:-127.0.0.1:8081}"
+    echo "SANDBOX_LISTEN_ADDRESS=$SANDBOX_LISTEN_ADDRESS"
+    go run "$ROOT_DIR/cmd/sandbox"
     ;;
   gateway)
     export DATABASE_URL="$LOCAL_DATABASE_URL"
@@ -97,11 +94,12 @@ case "$command" in
     go run "$ROOT_DIR/cmd/gateway"
     ;;
   local)
-    run_compose up -d postgres redis
+    run_compose up -d postgres
     cat <<EOF
-Postgres 和 Redis 已启动。
+PostgreSQL 已启动。
 
-请分别开 2 个终端运行：
+请分别开 3 个终端运行：
+  ./scripts/dev.sh sandbox
   ./scripts/dev.sh gateway
   ./scripts/dev.sh web
 

@@ -101,15 +101,14 @@ cp .env.example .env # 可选：需要改端口或默认连接串时再执行
 
 ### 服务架构
 
-本项目通过 Docker Compose 编排以下服务。PostgreSQL 和 Redis 保留在默认启动链路中，作为本地平台依赖和后续数据库/缓存任务的运行环境；当前 Go 基础课程的代码运行主链路主要经过 `web`、`gateway` 和 `sandbox-engine`。
+本项目通过 Docker Compose 编排 Web、Learning Gateway、versioned multi-file Sandbox 和 PostgreSQL。Web 是唯一默认发布的应用入口；Gateway 与 Sandbox 只在 Compose 内部网络监听。
 
 | 服务 | 说明 | 镜像 / 构建方式 | 默认访问 |
 | :--- | :--- | :--- | :--- |
 | `web` | React + Tailwind 前端（Nginx 托管，代理 `/api`） | `web/Dockerfile` | `http://localhost:3000` |
-| `gateway` | Go API 网关 | `src/services/gateway/Dockerfile` | `http://localhost:8080` |
-| `sandbox-engine` | Go 沙盒执行引擎 | `src/services/sandbox-engine/Dockerfile` | `http://localhost:8081` |
+| `gateway` | Learning API 与应用 wiring | `cmd/gateway/Dockerfile` | Compose internal `gateway:8080` |
+| `sandbox-engine` | versioned multi-file Go runner | `cmd/sandbox/Dockerfile` | Compose internal `sandbox-engine:8081` |
 | `postgres` | 数据库 | `postgres:15-alpine` | `localhost:5432` |
-| `redis` | 缓存 | `redis:7-alpine` | `localhost:6379` |
 
 ### 部署步骤
 
@@ -142,8 +141,9 @@ cp .env.example .env # 可选：需要改端口或默认连接串时再执行
 
    ```bash
    ./scripts/dev.sh status
-   curl http://localhost:8080/health
-   curl http://localhost:8081/health
+   curl http://localhost:3000/api/v1/learning/session -X POST
+   docker compose exec gateway wget --spider -q http://localhost:8080/health
+   docker compose exec sandbox-engine wget --spider -q http://localhost:8081/health
    ```
 
 5. **查看日志**
@@ -174,12 +174,12 @@ cp .env.example .env # 可选：需要改端口或默认连接串时再执行
 | :--- | :--- |
 | `./scripts/dev.sh docker` | 完整 Docker 部署验证，会执行 `docker compose up --build` |
 | `./scripts/dev.sh docker:up` | 使用已有镜像启动完整 Docker 环境，不主动重新构建 |
-| `./scripts/dev.sh backend` | 用 Docker 启动 Gateway、Sandbox Engine、PostgreSQL、Redis，适合前端本地热开发 |
-| `./scripts/dev.sh deps` | 只启动 PostgreSQL 和 Redis，适合 Go 服务本地运行 |
-| `./scripts/dev.sh sandbox` | 本地启动 Sandbox Engine，并自动注入本地 DB/Redis 环境变量 |
-| `./scripts/dev.sh gateway` | 本地启动 Gateway，并自动注入本地 DB/Redis/Sandbox 环境变量 |
+| `./scripts/dev.sh backend` | 用 Docker 启动 Gateway、Sandbox、migration 和 PostgreSQL，适合前端本地热开发 |
+| `./scripts/dev.sh deps` | 只启动 PostgreSQL，适合 Go service 本地运行 |
+| `./scripts/dev.sh sandbox` | 本地启动 versioned multi-file Sandbox |
+| `./scripts/dev.sh gateway` | 执行 migration 并本地启动 Learning Gateway |
 | `./scripts/dev.sh web` | 启动本地 Vite 前端开发服务，访问 `http://localhost:5173` |
-| `./scripts/dev.sh local` | 启动 PostgreSQL/Redis，并提示本地热开发需要开的 3 个终端 |
+| `./scripts/dev.sh local` | 启动 PostgreSQL，并提示本地热开发需要开的 3 个终端 |
 | `./scripts/dev.sh status` | 查看 Docker Compose 服务状态 |
 | `./scripts/dev.sh logs [service]` | 跟随查看所有服务或指定服务日志 |
 
@@ -201,13 +201,13 @@ cp .env.example .env # 可选：需要改端口或默认连接串时再执行
 
 ### 本地开发（混合模式）
 
-如果你希望在本地运行上层应用代码（便于断点调试和热重载），同时用 Docker 只启动基础依赖（PostgreSQL、Redis），可按以下步骤操作。
+如果你希望在本地运行上层应用代码（便于断点调试和热重载），同时用 Docker 只启动 PostgreSQL，可按以下步骤操作。
 
 #### 本地开发环境要求
 
 - [Docker](https://docs.docker.com/get-docker/) 20.10+
 - [Node.js](https://nodejs.org/) 20+
-- [Go](https://go.dev/dl/) 1.24+
+- [Go](https://go.dev/dl/) 1.25+
 
 #### 1. 启动基础组件
 
@@ -246,6 +246,7 @@ API 网关默认监听 `http://localhost:8080`，健康检查地址为 `http://l
 | `DATABASE_URL` | `postgres://user:pass@localhost:5432/gogopher?sslmode=disable` | Learning Gateway 连接本地 PostgreSQL |
 | `LEARNING_SLICE_ENABLED` | `true` | 仅在 `APP_ENV=local` 时启用 Learning API |
 | `LEARNING_CONTENT_DIR` | `content/learning` | release、schema 与 current pointer 根目录 |
+| `SANDBOX_LISTEN_ADDRESS` | `127.0.0.1:8081` | 本地 Sandbox 监听地址；Compose 内显式覆盖为容器接口 |
 | `VITE_API_BASE_URL` | `/api/v1` | 前端 API 基址；默认走相对路径和代理 |
 
 ### 环境变量
@@ -256,7 +257,6 @@ API 网关默认监听 `http://localhost:8080`，健康检查地址为 `http://l
 | :--- | :--- | :--- | :--- |
 | `WEB_PORT` | host | `3000` | Web 容器映射到宿主机的端口 |
 | `POSTGRES_PORT` | host | `5432` | PostgreSQL 映射到宿主机的端口 |
-| `REDIS_PORT` | host | `6379` | Redis 映射到宿主机的端口 |
 | `DATABASE_URL` | `gateway`, `migrate` | `postgres://user:pass@postgres:5432/gogopher?sslmode=disable` | PostgreSQL 连接串 |
 | `LEARNING_SESSION_TTL` | `gateway` | `720h` | 匿名 Learner session 有效期 |
 | `POSTGRES_USER` | `postgres` | `user` | 数据库用户名 |
@@ -270,14 +270,14 @@ API 网关默认监听 `http://localhost:8080`，健康检查地址为 `http://l
 - **前端界面**：[http://localhost:3000](http://localhost:3000)
 - **Learning API**：通过 Web 的 [http://localhost:3000/api/v1/learning](http://localhost:3000/api/v1/learning) 反向代理访问
 - **PostgreSQL**：`localhost:5432`
-- **Redis**：`localhost:6379`
 
 ### 生产环境注意事项
 
 - 请将默认的数据库密码 (`pass`) 修改为强密码，并通过环境变量或 Docker Secrets 注入。
 - 前端 Nginx 已在本地容器模式下代理 `/api` 到 Gateway；生产环境可根据需要补充 HTTPS、Gzip 压缩、缓存策略和外层反向代理。
 - Compose 已为核心服务配置健康检查和 `restart: unless-stopped`，但还没有覆盖滚动发布、备份恢复和集中式日志。
-- 当前 Sandbox 只适合本地可信学习环境，不应直接暴露到公网；P2 会再处理更强的执行隔离和资源限制。
+- 当前 Sandbox 只适合本地可信学习环境；`network=none` 在响应中明确标记为 `policy_only`，不代表进程已被网络、CPU 或内存隔离。
+- held-out source 在测试 binary 生成后、运行用户代码前删除，但开源内容和同一进程信任域意味着该机制不能抵抗恶意逆向，也不能作为认证防作弊边界。
 - 如需暴露到公网，请在网关前添加反向代理（如 Nginx、Traefik）并配置 SSL 证书。
 
 ---
