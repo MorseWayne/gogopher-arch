@@ -1,214 +1,161 @@
-import type { ReactNode } from "react";
-import { Link } from "react-router";
-import { ArrowRight, BookOpen, Bot, CheckCircle2, Code2, Github, Map, Rocket, ShieldCheck, Sparkles, Terminal } from "lucide-react";
-import { Badge } from "../components/ui/badge";
-import { Button } from "../components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
-import { Separator } from "../components/ui/separator";
-import { goBasicsChapters } from "../data/goBasicsCourse";
-import { missions } from "../data/missions";
+import type { ReactNode } from 'react'
+import { Link } from 'react-router'
+import {
+  ArrowRight,
+  Boxes,
+  CalendarClock,
+  CheckCircle2,
+  Github,
+  Layers3,
+  ShieldCheck,
+  Sparkles,
+  Terminal,
+} from 'lucide-react'
 
-const paths = [
+import { Badge } from '../components/ui/badge'
+import { Button } from '../components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
+
+const workflow = [
   {
-    title: "Go 基础训练营",
-    description: "13 章内置课程，从第一段 Go 程序到测试、并发和工程实践。",
-    href: "/courses/go-basics",
-    status: "可学习",
-    icon: BookOpen,
+    icon: <Layers3 />,
+    title: '冻结学习上下文',
+    text: 'Attempt 固定 release、Activity、Task、workspace 与规则 hash，刷新后仍从服务端恢复同一事实。',
   },
   {
-    title: "后端实习任务线",
-    description: "围绕真实团队第一周任务，练习修 Bug、读日志、写验收。",
-    href: `/missions/${missions[0].slug}`,
-    status: "可挑战",
-    icon: Code2,
+    icon: <Terminal />,
+    title: '执行公开动作',
+    text: 'Build、Test、Vet 与 Submit 通过 versioned multi-file runner 执行，客户端不复制验收规则。',
   },
   {
-    title: "工程能力进阶",
-    description: "数据库、缓存、并发、可观测性和部署可靠性路线。",
-    status: "即将开放",
-    icon: ShieldCheck,
+    icon: <CheckCircle2 />,
+    title: '记录能力证据',
+    text: 'EvaluationBatch 生成 Evidence，再由 projection 更新 Capability Snapshot；页面只展示服务端结果。',
   },
   {
-    title: "AI 全栈路线",
-    description: "LLM API、RAG、Agent、评测和 AI 产品工程能力。",
-    status: "即将开放",
-    icon: Bot,
+    icon: <CalendarClock />,
+    title: '安排后续练习',
+    text: 'Learning queue 根据 prerequisite、Snapshot 与 review due time 返回下一项，而不是静态推荐。',
   },
-];
+]
 
 export function Landing() {
   return (
     <div className="bg-background">
       <section className="relative overflow-hidden border-b">
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,_rgba(0,173,216,0.18),_transparent_34%)]" />
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,_color-mix(in_oklab,var(--color-primary)_22%,transparent),_transparent_38%)]" />
         <div className="mx-auto grid min-h-[calc(100svh-4rem)] w-full max-w-7xl items-center gap-12 px-4 py-20 md:px-6 lg:grid-cols-[minmax(0,1.08fr)_minmax(360px,0.92fr)]">
-          <div className="flex flex-col gap-8">
-            <div className="flex flex-col gap-5">
+          <div className="space-y-8">
+            <div className="space-y-5">
               <Badge variant="secondary" className="w-fit">
-                <Sparkles data-icon="inline-start" />
-                Go 后端实习成长平台
+                <Sparkles />
+                Capability · Evidence · Review
               </Badge>
-              <div className="flex flex-col gap-4">
-                <h1 className="max-w-4xl text-4xl font-bold tracking-tight text-foreground md:text-6xl lg:text-7xl">
-                  从 Go 基础到真实后端任务
+              <div className="space-y-4">
+                <h1 className="max-w-4xl text-4xl font-bold tracking-tight md:text-6xl lg:text-7xl">
+                  用可复现证据推进 Go 能力
                 </h1>
                 <p className="max-w-2xl text-lg leading-8 text-muted-foreground md:text-xl">
-                  GoGopher Arch 把课程正文、浏览器沙盒和虚拟职场任务放在同一条路径里，帮助你从第一行 Go 代码走到后端实习基本功。
+                  GoGopher Arch 把学习定义、代码执行、评估证据和间隔 review 连成一个服务端闭环。
+                  学习进度来自可追溯 Evidence，不来自浏览器里的静态百分比。
                 </p>
               </div>
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button asChild size="lg">
-                <Link to="/courses/go-basics">
-                  开始 Go 基础训练营
-                  <ArrowRight data-icon="inline-end" />
+                <Link to="/dashboard">
+                  打开学习工作台
+                  <ArrowRight />
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg">
-                <Link to="/dashboard">进入学习总览</Link>
+                <a href="https://github.com/MorseWayne/gogopher-arch" target="_blank" rel="noreferrer">
+                  <Github />
+                  查看实现
+                </a>
               </Button>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3">
-              <HeroMetric label="内置章节" value={`${goBasicsChapters.length}`} />
-              <HeroMetric label="实习任务" value={`${missions.length}`} />
-              <HeroMetric label="沙盒链路" value="可运行" />
+              <Metric value="Versioned" label="immutable release" />
+              <Metric value="Server-side" label="Evidence projection" />
+              <Metric value="Due-aware" label="review scheduling" />
             </div>
           </div>
 
           <Card className="border-primary/20 bg-background/90 shadow-2xl shadow-primary/10 backdrop-blur">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Terminal className="text-primary" />
-                今日推荐路径
+                <Boxes className="text-primary" />
+                一次可追溯练习
               </CardTitle>
-              <CardDescription>先补齐 Go 基础，再进入任务线动手修复真实问题。</CardDescription>
+              <CardDescription>每一步都有明确的事实来源和失败语义。</CardDescription>
             </CardHeader>
-            <CardContent className="flex flex-col gap-5">
-              <div className="rounded-2xl border bg-muted/40 p-4">
-                <div className="mb-3 flex items-center justify-between gap-3">
-                  <div>
-                    <div className="font-semibold">Go 基础训练营 · 第 1 章</div>
-                    <div className="text-sm text-muted-foreground">从可运行程序入口开始</div>
-                  </div>
-                  <Badge>推荐</Badge>
-                </div>
-                <div className="h-2 rounded-full bg-muted">
-                  <div className="h-2 w-[18%] rounded-full bg-primary" />
-                </div>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-2">
-                <MiniStep icon={<BookOpen />} title="阅读正文" text="学习目标、现代 Go 说明、工程实践" />
-                <MiniStep icon={<Terminal />} title="运行练习" text="在沙盒中查看 stdout/stderr/exit code" />
-                <MiniStep icon={<Code2 />} title="挑战任务" text="进入实习任务线修复真实问题" />
-                <MiniStep icon={<Map />} title="查看路线" text="工程进阶与 AI 全栈路线标记为即将开放" />
-              </div>
+            <CardContent className="space-y-3">
+              <TraceRow index="01" title="Activity" text="公开目标、mode 与 assistance policy" />
+              <TraceRow index="02" title="Attempt" text="冻结 workspace 与 release 引用" />
+              <TraceRow index="03" title="Submission" text="幂等提交与基础设施 retry" />
+              <TraceRow index="04" title="Evidence" text="规则结果、independence 与 context" />
+              <TraceRow index="05" title="Snapshot" text="能力状态与下一次 review" />
             </CardContent>
           </Card>
         </div>
       </section>
 
-      <section id="paths" className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-16 md:px-6">
-        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-          <div>
-            <Badge variant="outline" className="mb-3">学习路径</Badge>
-            <h2 className="text-3xl font-bold tracking-tight md:text-4xl">一条清晰的成长路线</h2>
-            <p className="mt-3 max-w-2xl text-muted-foreground">已实现的入口可以直接学习或挑战；未实现路线只做预告，不制造假功能。</p>
-          </div>
-          <Button asChild variant="outline">
-            <a href="https://github.com/MorseWayne/gogopher-arch" target="_blank" rel="noreferrer">
-              <Github data-icon="inline-start" />
-              查看源码
-            </a>
-          </Button>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {paths.map((path) => (
-            <PathCard key={path.title} path={path} />
-          ))}
-        </div>
-      </section>
-
-      <Separator />
-
-      <section className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-16 md:px-6 lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="flex flex-col gap-4">
-          <Badge variant="secondary" className="w-fit">
-            <Rocket data-icon="inline-start" />
-            MVP 闭环
-          </Badge>
-          <h2 className="text-3xl font-bold tracking-tight">不是单纯看文档，而是边学边运行</h2>
-          <p className="text-muted-foreground leading-7">
-            课程页采用清爽阅读布局，任务页保留工作台和终端反馈。你会看到每段代码的输出、错误和下一步建议，而不是只在目录里跳转。
+      <section className="mx-auto w-full max-w-7xl px-4 py-16 md:px-6">
+        <div className="mb-8 max-w-3xl">
+          <Badge variant="outline" className="mb-3">Learning loop</Badge>
+          <h2 className="text-3xl font-bold tracking-tight md:text-4xl">产品围绕证据闭环，而不是内容目录</h2>
+          <p className="mt-3 leading-7 text-muted-foreground">
+            内容发布、执行、评估和 review 使用同一组 versioned identifiers；前端负责交互与解释，不自行判定掌握状态。
           </p>
         </div>
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Feature icon={<CheckCircle2 />} title="内置课程" text="内容完整留在应用内，外部资料只作参考。" />
-          <Feature icon={<Terminal />} title="沙盒反馈" text="运行结果、错误和 timeout 是学习反馈。" />
-          <Feature icon={<ShieldCheck />} title="无假功能" text="Coming soon 路线明确标识，不伪装成已实现能力。" />
+        <div className="grid gap-4 md:grid-cols-2">
+          {workflow.map((item) => <WorkflowCard key={item.title} {...item} />)}
+        </div>
+      </section>
+
+      <section className="border-t bg-muted/25">
+        <div className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-14 md:px-6 lg:grid-cols-[0.8fr_1.2fr]">
+          <div>
+            <Badge variant="secondary" className="mb-3">
+              <ShieldCheck />
+              Boundary
+            </Badge>
+            <h2 className="text-2xl font-bold">明确安全边界</h2>
+          </div>
+          <div className="space-y-3 text-sm leading-7 text-muted-foreground">
+            <p>匿名同源 session 只延续 Learner ownership，不等同于账号认证。</p>
+            <p>held-out checks 用于减少评估内容的意外暴露，不构成防作弊边界。</p>
+            <p>当前 Sandbox 面向本地可信学习环境；policy-only network 标记不代表生产级进程隔离。</p>
+          </div>
         </div>
       </section>
     </div>
-  );
+  )
 }
 
-function HeroMetric({ label, value }: { label: string; value: string }) {
+function Metric({ value, label }: { value: string; label: string }) {
   return (
     <div className="rounded-2xl border bg-background/70 p-4 shadow-sm">
-      <div className="text-2xl font-bold text-foreground">{value}</div>
-      <div className="text-sm text-muted-foreground">{label}</div>
+      <div className="font-semibold">{value}</div>
+      <div className="mt-1 text-xs text-muted-foreground">{label}</div>
     </div>
-  );
+  )
 }
 
-function MiniStep({ icon, title, text }: { icon: ReactNode; title: string; text: string }) {
+function TraceRow({ index, title, text }: { index: string; title: string; text: string }) {
   return (
-    <div className="rounded-xl border bg-background p-3">
-      <div className="mb-2 flex items-center gap-2 font-medium">
-        <span className="text-primary">{icon}</span>
-        {title}
-      </div>
-      <p className="text-sm text-muted-foreground">{text}</p>
+    <div className="grid grid-cols-[2rem_6rem_1fr] items-center gap-3 rounded-xl border bg-muted/25 p-3 text-sm">
+      <span className="font-mono text-xs text-primary">{index}</span>
+      <span className="font-semibold">{title}</span>
+      <span className="text-muted-foreground">{text}</span>
     </div>
-  );
+  )
 }
 
-function PathCard({ path }: { path: (typeof paths)[number] }) {
-  const Icon = path.icon;
-  const available = Boolean(path.href);
-  const card = (
-    <Card className="h-full transition-colors hover:border-primary/40">
-      <CardHeader>
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <Icon />
-          </span>
-          <Badge variant={available ? "default" : "secondary"}>{path.status}</Badge>
-        </div>
-        <CardTitle>{path.title}</CardTitle>
-        <CardDescription>{path.description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="inline-flex items-center gap-2 text-sm font-medium text-primary">
-          {available ? "进入路径" : "即将开放"}
-          {available && <ArrowRight className="size-4" />}
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  if (!path.href) {
-    return <div aria-disabled="true">{card}</div>;
-  }
-
-  return <Link to={path.href}>{card}</Link>;
-}
-
-function Feature({ icon, title, text }: { icon: ReactNode; title: string; text: string }) {
+function WorkflowCard({ icon, title, text }: { icon: ReactNode; title: string; text: string }) {
   return (
     <Card>
       <CardHeader>
@@ -216,8 +163,8 @@ function Feature({ icon, title, text }: { icon: ReactNode; title: string; text: 
         <CardTitle>{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-sm leading-6 text-muted-foreground">{text}</p>
+        <p className="leading-7 text-muted-foreground">{text}</p>
       </CardContent>
     </Card>
-  );
+  )
 }

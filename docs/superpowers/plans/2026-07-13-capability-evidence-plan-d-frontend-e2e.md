@@ -1,6 +1,6 @@
 # 能力证据纵向切片 Plan D：前端闭环与端到端验证
 
-> 状态：In progress — D1–D9 accepted
+> 状态：Complete — D1–D10 accepted
 > 日期：2026-07-13
 > 上游：Plan A–C 已验收的 Learning API 和状态语义
 
@@ -135,12 +135,12 @@ web/e2e/learning-slice.spec.ts
 
 ### D10 — 发布、回滚与文档
 
-- [ ] 更新 README 本地启用方式、migration、release 内容目录和安全限制。
-- [ ] 更新 `.env.example`，默认关闭 Learning slice。
-- [ ] 增加宿主绑定/Compose 端口断言，禁止 Gateway/Sandbox 对外发布。
-- [ ] 验证 feature flag 关闭时显示明确 unavailable 状态，不回退旧课程、Mission 或 sandbox。
-- [ ] 编写回滚步骤：关闭 flag，保留表、Evidence 和 release，不删除历史。
-- [ ] 人工检查所有产品文案，不得声称匿名 session 是认证、held-out 是防作弊、裸 Sandbox 是生产安全隔离。
+- [x] 更新 README 本地启用方式、migration、release 内容目录和安全限制。
+- [x] 更新 `.env.example`，默认关闭 Learning slice。
+- [x] 增加宿主绑定/Compose 端口断言，禁止 Gateway/Sandbox 对外发布。
+- [x] 验证 feature flag 关闭时显示明确 unavailable 状态，不回退旧课程、Mission 或 sandbox。
+- [x] 编写回滚步骤：关闭 flag，保留表、Evidence 和 release，不删除历史。
+- [x] 人工检查所有产品文案，不得声称匿名 session 是认证、held-out 是防作弊、裸 Sandbox 是生产安全隔离。
 
 ## 验证
 

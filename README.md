@@ -1,300 +1,236 @@
-# GoGopher Arch: Go 后端实习成长平台
+# GoGopher Arch
 
-[![Go Version](https://img.shields.io/badge/Go-1.22+-00ADD8?style=flat&logo=go)](https://golang.org)
-[![React](https://img.shields.io/badge/Frontend-React%20%2B%20Tailwind-61DAFB?style=flat&logo=react)](https://reactjs.org)
+[![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat&logo=go)](https://go.dev/)
+[![React](https://img.shields.io/badge/Frontend-React%20%2B%20TypeScript-61DAFB?style=flat&logo=react)](https://react.dev/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-**GoGopher Arch** 是一个面向 Go 学习者的实战成长平台。它通过虚拟职场任务，帮助用户从 Go 基础入门，成长到具备 Go 后端实习岗位能力，并进一步进阶为掌握 Go 技术栈与 AI 应用工程能力的新型全栈程序员。
+GoGopher Arch 是一个以 Capability、Evidence 和 Review 为核心的 Go 学习系统。它把 versioned 学习定义、冻结的 Attempt、多文件执行、服务端评估、能力投影和间隔 review 连成一条可复现的纵向闭环。
 
----
+## 产品事实模型
 
-## 核心定位
-
-GoGopher Arch 不把学习过程设计成单纯的课程目录，而是把知识点放进真实工作任务里：
-
-- 初学者先完成入职前训练营，补齐 Go 基础。
-- 准实习生和实习生通过任务卡练习修 Bug、补接口、写测试、读日志和处理评审意见。
-- 有经验的 Go 工程师继续进入数据库、缓存、并发、部署、可观测性等工程能力训练。
-- 进阶用户可以沿着 RAG、Agent、LLM 应用工程和 AI 产品评测路线，转向 AI 时代的新型全栈开发。
-
----
-
-## 核心特性
-
-- **Go 基础训练营**：GoGopher Arch 完整内置 Go 1.24+ 基础课程，按 13 章组织语法、数据结构、并发、测试和工程实践，每章配一个可运行的 Go 练习。
-- **实习生任务线**：以虚拟 Go 后端团队的入职第一周为主线，围绕任务卡、验收标准和导师反馈推进学习。
-- **任务前小课**：每个任务前只讲完成当前任务必须用到的 Go 知识，降低上手挫败感。
-- **交互式沙盒**：在浏览器中编写 Go 代码，运行程序或测试，立即看到输出、错误和任务反馈。
-- **任务后复盘**：完成任务后沉淀知识点、真实工作场景、常见坑和面试追问。
-- **成长路线图**：从 Go 基础、后端实习、工程进阶一路延伸到 RAG、Agent 和 AI 应用工程。
-
----
-
-## 技术栈
-
-| 模块 | 技术实现 |
+| 对象 | 作用 |
 | :--- | :--- |
-| 后端 | Go 1.22+, Gateway, Sandbox Engine |
-| 前端 | React, TypeScript, Tailwind CSS, shadcn/ui |
-| 沙盒 | Docker, `os/exec`, 执行超时控制 |
-| 反馈 | 编译结果、控制台输出、任务检查、导师提示 |
-| AI 路线 | LLM API、RAG、Agent、结构化输出、评测与安全 |
+| `Capability` | versioned 能力节点与 prerequisite graph |
+| `Activity` / `Task` | 公开学习目标、可用 action、workspace 和评估策略 |
+| `Attempt` | 固定 release、定义引用、workspace 与 rule set hash |
+| `Submission` | 幂等冻结一次待评估 workspace；基础设施失败可复用原 Submission retry |
+| `Evidence` | 记录规则结果、证据类型、independence 与 context |
+| `CapabilitySnapshot` | 由服务端 projection 从 Evidence 派生能力状态 |
+| `ReviewItem` | 按 Snapshot 与 due time 安排后续练习 |
 
----
+浏览器不计算掌握状态，也不生成静态 progress。Dashboard 的下一项只来自 `GET /api/v1/learning/next`。
 
-## 路线图
+## 当前纵向切片
 
-### 第零阶段：Go 基础训练营
-
-- [x] 建立 GoGopher Arch 完整内置的 13 章 Go 基础学习路径
-- [x] 每章提供课程正文、学习目标、现代 Go 说明、工程实践、常见坑、复盘问题和 sandbox 练习
-- [x] 课程总览页和章节详情页接入前端导航
-
-### 第一阶段：Go 后端实习生入职第一周
-
-- [x] 项目定位重构规格确认
-- [x] README、设计文档和实施计划统一为新定位
-- [x] 前端首屏改为实习生工作台
-- [x] Day 0：Go 基础自检和第一次沙盒运行
-- [x] Day 1：修复 slice、map 和指针相关 Bug
-- [x] Day 2：补全一个 HTTP API handler
-- [x] Day 3：增加参数校验和错误处理
-- [x] Day 4：编写表驱动测试
-- [x] Day 5：修复一个简单并发问题或 context 超时问题
-
-### 第二阶段：Go 工程能力进阶
-
-- [x] 数据库和事务任务
-- [x] 缓存和并发任务
-- [x] 日志、配置和可观测性任务
-- [x] 部署和服务可靠性任务
-
-### 第三阶段：AI 时代全栈工程路线
-
-- [ ] LLM API 调用和 Prompt 设计
-- [ ] 结构化输出和工具调用
-- [ ] RAG：文档切分、Embedding、向量检索和重排
-- [ ] Agent：规划、工具使用、记忆、上下文管理和评估
-- [ ] AI 产品的成本控制、安全边界和评测集
-
----
+- anonymous same-origin session 建立 Learner ownership，并通过 HttpOnly cookie 恢复；
+- immutable content release 固定 Capability、Activity、Task 和文件 hash；
+- 多文件 workspace 支持 revision conflict、服务端保存与刷新恢复；
+- Build、Test、Vet、hint reveal、Submit、infra retry 均有显式状态；
+- held-out evaluation 只返回公开摘要和 RuleResult；
+- Evidence projection 更新 Snapshot，并生成 acquisition、due review 或 remediation；
+- Playwright 在全新 PostgreSQL 上验证 guided → assessment → review 闭环。
 
 ## 快速开始
+
+要求 Docker 20.10+、Docker Compose v2。Learning slice 默认关闭，必须显式 opt in：
 
 ```bash
 git clone https://github.com/MorseWayne/gogopher-arch.git
 cd gogopher-arch
-cp .env.example .env # 可选：需要改端口或默认连接串时再执行
-./scripts/dev.sh docker
+cp .env.example .env
 ```
 
-前端默认运行在 `http://localhost:3000`，Gateway 默认运行在 `http://localhost:8080`。前端在容器模式下通过 Nginx 将 `/api` 反向代理到 Gateway，本地 Vite 开发模式也会将 `/api` 代理到 `localhost:8080`。
+编辑 `.env`：
 
----
-
-## 部署说明
-
-### 环境要求
-
-- [Docker](https://docs.docker.com/get-docker/) 20.10+
-- [Docker Compose](https://docs.docker.com/compose/install/) v2+
-
-### 服务架构
-
-本项目通过 Docker Compose 编排 Web、Learning Gateway、versioned multi-file Sandbox 和 PostgreSQL。Web 是唯一默认发布的应用入口；Gateway 与 Sandbox 只在 Compose 内部网络监听。
-
-| 服务 | 说明 | 镜像 / 构建方式 | 默认访问 |
-| :--- | :--- | :--- | :--- |
-| `web` | React + Tailwind 前端（Nginx 托管，代理 `/api`） | `web/Dockerfile` | `http://localhost:3000` |
-| `gateway` | Learning API 与应用 wiring | `cmd/gateway/Dockerfile` | Compose internal `gateway:8080` |
-| `sandbox-engine` | versioned multi-file Go runner | `cmd/sandbox/Dockerfile` | Compose internal `sandbox-engine:8081` |
-| `postgres` | 数据库 | `postgres:15-alpine` | `localhost:5432` |
-
-### 部署步骤
-
-1. **克隆仓库**
-
-   ```bash
-   git clone https://github.com/MorseWayne/gogopher-arch.git
-   cd gogopher-arch
-   ```
-
-2. **按需覆盖本地默认配置**
-
-   ```bash
-   cp .env.example .env
-   ```
-
-   如果默认端口没有冲突，可以跳过这一步。Docker Compose 会使用 `.env.example` 中展示的默认值。
-
-3. **启动所有服务**
-
-   ```bash
-   # 前台运行（便于查看日志）
-   ./scripts/dev.sh docker
-
-   # 后台运行
-   ./scripts/dev.sh docker -d
-   ```
-
-4. **查看服务状态和健康检查**
-
-   ```bash
-   ./scripts/dev.sh status
-   curl http://localhost:3000/api/v1/learning/session -X POST
-   docker compose exec gateway wget --spider -q http://localhost:8080/health
-   docker compose exec sandbox-engine wget --spider -q http://localhost:8081/health
-   ```
-
-5. **查看日志**
-
-   ```bash
-   # 查看所有服务日志
-   ./scripts/dev.sh logs
-
-   # 查看指定服务日志
-   ./scripts/dev.sh logs gateway
-   ```
-
-6. **停止服务**
-
-   ```bash
-   ./scripts/dev.sh docker:down
-   ```
-
-### 启动脚本
-
-项目提供 `scripts/dev.sh` 封装常用启动场景，避免反复手动输入环境变量和 `docker compose` 命令。
-
-```bash
-./scripts/dev.sh help
+```dotenv
+APP_ENV=local
+LEARNING_SLICE_ENABLED=true
 ```
 
-| 命令 | 适用场景 |
-| :--- | :--- |
-| `./scripts/dev.sh docker` | 完整 Docker 部署验证，会执行 `docker compose up --build` |
-| `./scripts/dev.sh docker:up` | 使用已有镜像启动完整 Docker 环境，不主动重新构建 |
-| `./scripts/dev.sh backend` | 用 Docker 启动 Gateway、Sandbox、migration 和 PostgreSQL，适合前端本地热开发 |
-| `./scripts/dev.sh deps` | 只启动 PostgreSQL，适合 Go service 本地运行 |
-| `./scripts/dev.sh sandbox` | 本地启动 versioned multi-file Sandbox |
-| `./scripts/dev.sh gateway` | 执行 migration 并本地启动 Learning Gateway |
-| `./scripts/dev.sh web` | 启动本地 Vite 前端开发服务，访问 `http://localhost:5173` |
-| `./scripts/dev.sh local` | 启动 PostgreSQL，并提示本地热开发需要开的 3 个终端 |
-| `./scripts/dev.sh status` | 查看 Docker Compose 服务状态 |
-| `./scripts/dev.sh logs [service]` | 跟随查看所有服务或指定服务日志 |
-
-如果只是修改前端 UI，推荐不要每次重建 Web 镜像：
+然后启动：
 
 ```bash
+./scripts/dev.sh docker -d
+```
+
+访问 [http://localhost:3000](http://localhost:3000)。Web 通过同源 `/api` 反向代理到 Gateway。
+
+如果不启用 feature flag，首页仍可访问，但 Dashboard 和直接 Activity route 会显示明确 unavailable 状态，不会回退到旧 Course、Mission 或 Sandbox 页面。
+
+## Compose 拓扑与端口
+
+基础 [docker-compose.yml](docker-compose.yml) 按 production-style topology 运行：
+
+| service | host exposure | internal endpoint |
+| :--- | :--- | :--- |
+| `web` | `127.0.0.1:3000` | `web:80` |
+| `gateway` | none | `gateway:8080` |
+| `sandbox-engine` | none | `sandbox-engine:8081` |
+| `postgres` | none | `postgres:5432` |
+| `migrate` | none | one-shot process |
+
+Gateway、Sandbox 和 PostgreSQL 不应由基础 Compose 发布到 host。以下断言同时检查基础 topology 与 loopback-only development overlay：
+
+```bash
+./scripts/check-compose-exposure.sh
+```
+
+[docker-compose.dev.yml](docker-compose.dev.yml) 只用于本地热开发，把 Gateway、Sandbox 和 PostgreSQL 映射到 `127.0.0.1`。不要把这个 overlay 当作公网部署配置。
+
+## 本地热开发
+
+只改前端：
+
+```bash
+# .env 中先设置 LEARNING_SLICE_ENABLED=true
 ./scripts/dev.sh backend
 ./scripts/dev.sh web
 ```
 
-如果前后端都要本地热开发，分别开终端运行：
+`backend` 使用 development overlay；Vite 在 [http://localhost:5173](http://localhost:5173) 启动，并把 `/api` 代理到 loopback Gateway。
+
+本地运行 Go service：
 
 ```bash
 ./scripts/dev.sh deps
+
+# 再分别开三个终端
 ./scripts/dev.sh sandbox
 ./scripts/dev.sh gateway
 ./scripts/dev.sh web
 ```
 
-### 本地开发（混合模式）
+`gateway` command 会执行 migration，并在 `APP_ENV=local` 下显式启用 Learning。可用 `LOCAL_DATABASE_URL` 覆盖它连接的 loopback PostgreSQL。
 
-如果你希望在本地运行上层应用代码（便于断点调试和热重载），同时用 Docker 只启动 PostgreSQL，可按以下步骤操作。
+## Database migration
 
-#### 本地开发环境要求
-
-- [Docker](https://docs.docker.com/get-docker/) 20.10+
-- [Node.js](https://nodejs.org/) 20+
-- [Go](https://go.dev/dl/) 1.25+
-
-#### 1. 启动基础组件
+完整 Compose 启动时，one-shot `migrate` service 先执行所有 up migration；只有成功后 Gateway 才启动。手动执行和检查：
 
 ```bash
-./scripts/dev.sh deps
+docker compose run --rm migrate up
+docker compose run --rm migrate status
 ```
 
-#### 2. 启动沙盒引擎（Go）
+本地 Go process：
 
 ```bash
-./scripts/dev.sh sandbox
+DATABASE_URL=postgres://user:pass@localhost:5432/gogopher?sslmode=disable \
+  go run ./cmd/migrate status
 ```
 
-沙盒引擎默认监听 `http://localhost:8081`，健康检查地址为 `http://localhost:8081/health`。
+Migration 只向前运行。发布回滚不得执行 down migration 或删除 Learning table。
 
-#### 3. 启动 API 网关（Go）
+## Content release
+
+Draft 与 runtime release 分离：
+
+```text
+content/learning/
+├── capabilities/          # draft Capability
+├── activities/            # draft Activity
+├── tasks/                 # draft Task assets
+├── schemas/               # release validation schemas
+├── current-release.json   # 新 Attempt 使用的 release pointer
+└── releases/
+    └── <release-id>/
+        ├── manifest.json
+        └── bundle/        # immutable runtime content
+```
+
+验证 draft：
 
 ```bash
-./scripts/dev.sh gateway
+go run ./cmd/learning-content validate --activity-set m1-first-slice
 ```
 
-API 网关默认监听 `http://localhost:8080`，健康检查地址为 `http://localhost:8080/health`。
-
-#### 4. 启动前端（React + Vite）
+创建新 release 时使用全新 `release-id`，禁止覆盖已有目录：
 
 ```bash
-./scripts/dev.sh web
+go run ./cmd/learning-content release \
+  --activity-set m1-first-slice \
+  --release-id m1-first-slice-v4 \
+  --created-at 2026-07-13T12:00:00Z
 ```
 
-前端开发服务器默认运行在 [http://localhost:5173](http://localhost:5173)。开发模式下，Vite 会将 `/api` 请求代理到 `http://localhost:8080`；如需绕过代理，可设置 `VITE_API_BASE_URL`。
+在更新 `current-release.json` 前验证 manifest、文件 hash 和 frontend bundle：
 
-#### 本地开发环境变量速查
+```bash
+npm run build --prefix web
+go run ./cmd/learning-content verify \
+  --release-dir content/learning/releases/m1-first-slice-v4 \
+  --web-dist web/dist
+```
 
-| 变量 | 值（本地混合模式） | 说明 |
+部署必须保留所有被历史 Attempt 引用的 release 目录。Pointer 只决定新 Attempt 使用哪个 release，不能改写历史。
+
+## 发布与回滚
+
+发布顺序：
+
+1. 运行 unit/component test、Go test、build、release verify 和 Compose exposure check。
+2. 先执行 up migration。
+3. 部署 immutable release 和 Web/Gateway/Sandbox image。
+4. 更新 `current-release.json` 后重新验证目标 release。
+5. 在 `APP_ENV=local` 或 `test` 环境显式设置 `LEARNING_SLICE_ENABLED=true`。
+
+发生应用、执行链或内容问题时：
+
+1. 将 `LEARNING_SLICE_ENABLED=false` 并重新部署 Gateway；Dashboard 会进入明确关闭状态。
+2. 保留所有 database table、Attempt、Submission、Evidence、Snapshot、ReviewItem 和 outbox record。
+3. 保留当前及历史 `content/learning/releases/<release-id>`；不要修改 immutable bundle。
+4. 内容 release 有缺陷时，在 flag 关闭期间把 `current-release.json` 指向已验证的旧 release，仅影响后续新 Attempt。
+5. 修复或选择 release 后重新运行 migration status、release verify、smoke test，再开启 flag。
+
+关闭 flag 是可逆的流量止损，不是数据回滚。删除表、Evidence 或 release 会破坏审计链和冻结 Attempt 的可恢复性。
+
+## 验证
+
+```bash
+go test ./...
+go vet ./...
+npm test --prefix web -- --run
+npm run build --prefix web
+./scripts/check-compose-exposure.sh
+go run ./cmd/learning-content verify \
+  --release-dir content/learning/releases/m1-first-slice-v3 \
+  --web-dist web/dist
+npm run e2e:compose --prefix web
+git diff --check
+```
+
+`e2e:compose` 使用独立 Compose project、临时 PostgreSQL volume、`APP_ENV=test` 和显式 feature flag，结束后自动清理。
+
+## 关键环境变量
+
+默认值见 [.env.example](.env.example)。
+
+| variable | default | purpose |
 | :--- | :--- | :--- |
-| `DATABASE_URL` | `postgres://user:pass@localhost:5432/gogopher?sslmode=disable` | Learning Gateway 连接本地 PostgreSQL |
-| `LEARNING_SLICE_ENABLED` | `true` | 仅在 `APP_ENV=local` 时启用 Learning API |
-| `LEARNING_CONTENT_DIR` | `content/learning` | release、schema 与 current pointer 根目录 |
-| `SANDBOX_LISTEN_ADDRESS` | `127.0.0.1:8081` | 本地 Sandbox 监听地址；Compose 内显式覆盖为容器接口 |
-| `VITE_API_BASE_URL` | `/api/v1` | 前端 API 基址；默认走相对路径和代理 |
+| `APP_ENV` | `local` | Learning 只允许在 `local` / `test` 开启 |
+| `LEARNING_SLICE_ENABLED` | `false` | Learning feature gate |
+| `LEARNING_CONTENT_DIR` | `content/learning` | schema、pointer 与 release root |
+| `LEARNING_SESSION_TTL` | `720h` | anonymous session lifetime |
+| `DATABASE_URL` | Compose internal URL | Gateway / migrate database connection |
+| `LOCAL_DATABASE_URL` | loopback URL | `scripts/dev.sh gateway` database connection |
+| `SANDBOX_ENDPOINT` | loopback URL | Gateway execution endpoint；Compose 内覆盖为 service URL |
+| `SANDBOX_RPC_DEADLINE` | `35s` | execution RPC deadline |
+| `EXECUTION_WORKER_LEASE` | `45s` | execution claim lease |
+| `PROJECTION_WORKER_MAX_ATTEMPTS` | `5` | projection request failure threshold |
+| `WEB_PORT` | `3000` | base Compose 唯一 published application port |
+| `GATEWAY_PORT` / `SANDBOX_PORT` / `POSTGRES_PORT` | `8080` / `8081` / `5432` | development overlay loopback ports |
 
-### 环境变量
+## 安全边界
 
-以下变量可在 `.env` 中覆盖；默认值见 `.env.example`。
+- anonymous same-origin session 用于本地 Learner ownership continuity，不是账号认证或授权系统。Cookie 丢失会创建新 Learner，旧 Attempt 不会跨 owner 暴露。
+- held-out source 在 test binary 生成后、执行用户代码前删除；它减少正常 UI/API 的意外泄漏，但开源内容与同一进程 trust domain 意味着它不是防作弊边界。
+- Sandbox 当前只适合本地可信学习环境。响应中的 `network=none` / `policy_only` 是策略声明，不代表网络、CPU、内存或 process 已获得生产级隔离。
+- 基础 Compose 只把 Web 绑定到 host loopback。公网部署仍需要独立的 authentication、authorization、TLS、rate limit、secret 管理和 hardened execution isolation。
+- 默认 database credential 只适合本地开发；部署前必须替换并通过 secret mechanism 注入。
 
-| 变量 | 所在服务 | 默认值 | 说明 |
-| :--- | :--- | :--- | :--- |
-| `WEB_PORT` | host | `3000` | Web 容器映射到宿主机的端口 |
-| `POSTGRES_PORT` | host | `5432` | PostgreSQL 映射到宿主机的端口 |
-| `DATABASE_URL` | `gateway`, `migrate` | `postgres://user:pass@postgres:5432/gogopher?sslmode=disable` | PostgreSQL 连接串 |
-| `LEARNING_SESSION_TTL` | `gateway` | `720h` | 匿名 Learner session 有效期 |
-| `SANDBOX_ENDPOINT` | `gateway` | `http://127.0.0.1:8081/v1/executions` | versioned Sandbox 内部 endpoint；Compose 会覆盖为 service 地址 |
-| `SANDBOX_RPC_DEADLINE` | `gateway` | `35s` | Gateway 等待 Sandbox 完整响应的上限 |
-| `EXECUTION_WORKER_LEASE` | `gateway` | `45s` | PostgreSQL execution worker lease 时长 |
-| `EXECUTION_MAX_CLAIMS` | `gateway` | `3` | worker crash/lease expiry 后允许的最大 claim 次数 |
-| `PROJECTION_WORKER_LEASE` | `gateway` | `30s` | Capability projection outbox claim 的 lease 时长 |
-| `PROJECTION_WORKER_POLL` | `gateway` | `250ms` | 无可用 projection request 时的 poll 间隔 |
-| `PROJECTION_WORKER_MAX_ATTEMPTS` | `gateway` | `5` | projection request 进入 `failed` 前的最大处理次数 |
-| `PROJECTION_WORKER_BASE_BACKOFF` | `gateway` | `1s` | projection retry 的首次等待时间 |
-| `PROJECTION_WORKER_MAX_BACKOFF` | `gateway` | `1m` | projection retry 指数 backoff 的上限 |
-| `POSTGRES_USER` | `postgres` | `user` | 数据库用户名 |
-| `POSTGRES_PASSWORD` | `postgres` | `pass` | 数据库密码 |
-| `POSTGRES_DB` | `postgres` | `gogopher` | 数据库名 |
+## License 与 attribution
 
-### 访问地址
+项目使用 [MIT License](LICENSE)。
 
-服务启动后，可通过以下地址访问：
-
-- **前端界面**：[http://localhost:3000](http://localhost:3000)
-- **Learning API**：通过 Web 的 [http://localhost:3000/api/v1/learning](http://localhost:3000/api/v1/learning) 反向代理访问
-- **PostgreSQL**：`localhost:5432`
-
-### 生产环境注意事项
-
-- 请将默认的数据库密码 (`pass`) 修改为强密码，并通过环境变量或 Docker Secrets 注入。
-- 前端 Nginx 已在本地容器模式下代理 `/api` 到 Gateway；生产环境可根据需要补充 HTTPS、Gzip 压缩、缓存策略和外层反向代理。
-- Compose 已为核心服务配置健康检查和 `restart: unless-stopped`，但还没有覆盖滚动发布、备份恢复和集中式日志。
-- 当前 Sandbox 只适合本地可信学习环境；`network=none` 在响应中明确标记为 `policy_only`，不代表进程已被网络、CPU 或内存隔离。
-- held-out source 在测试 binary 生成后、运行用户代码前删除，但开源内容和同一进程信任域意味着该机制不能抵抗恶意逆向，也不能作为认证防作弊边界。
-- 如需暴露到公网，请在网关前添加反向代理（如 Nginx、Traefik）并配置 SSL 证书。
-
----
-
-## 开源协议与课程来源
-
-本项目采用 [MIT License](LICENSE) 协议。
-
-Go 基础训练营是 GoGopher Arch 的完整内置课程：知识点组织、课程讲解、sandbox 练习、验收标准和复盘问题由本项目重新整理生成，课程页面不依赖外部教程正文或章节阅读入口。
-
-外部 Go 教程与社区资料仅作为历史参考和灵感来源保留在项目说明中。其中《Go 语言圣经中文版》项目 [gopl-zh/gopl-zh.github.com](https://github.com/gopl-zh/gopl-zh.github.com) 的仓库 LICENSE 为 [BSD 3-Clause](https://github.com/gopl-zh/gopl-zh.github.com/blob/master/LICENSE)；其[授权附录](https://gopl-zh.github.io/appendix/appendix-c-cpoyright.html)说明正文采用 CC-BY 3.0，代码遵循 Go 项目的 BSD 协议。
+仓库中保留的历史 Go course source 仅作为未接入当前 route 的参考资产。《Go 语言圣经中文版》
+[gopl-zh/gopl-zh.github.com](https://github.com/gopl-zh/gopl-zh.github.com) 的仓库代码采用
+[BSD 3-Clause](https://github.com/gopl-zh/gopl-zh.github.com/blob/master/LICENSE)，正文授权说明为 CC-BY 3.0。

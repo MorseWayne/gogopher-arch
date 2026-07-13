@@ -79,7 +79,9 @@ describe('Dashboard', () => {
 
     expect(await screen.findByRole('heading', { name: 'Learning 功能已关闭' })).toBeVisible()
     expect(screen.getByText(/learning_disabled（HTTP 503）/)).toBeVisible()
-    expect(screen.queryByText('Go 基础')).not.toBeInTheDocument()
+    expect(screen.queryByRole('link')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
+    expect(screen.queryByText(/Course|Mission|Sandbox|课程|沙盒|静态进度/)).not.toBeInTheDocument()
   })
 })
 

@@ -1,12 +1,12 @@
-.PHONY: dev test build lint migrate-up migrate-status learning-content-validate learning-content-verify clean
+.PHONY: dev test build lint migrate-up migrate-status learning-content-validate learning-content-verify check-compose-exposure clean
 
 dev:
-	docker compose up postgres -d
+	docker compose -f docker-compose.yml -f docker-compose.dev.yml up postgres -d
 	# 本地混合开发：后台启动 Gateway，前台启动前端 dev server
 	# 停止时运行 `make clean`
-	DATABASE_URL=$${DATABASE_URL:-postgres://user:pass@localhost:5432/gogopher?sslmode=disable} go run ./cmd/migrate up
+	DATABASE_URL=$${LOCAL_DATABASE_URL:-postgres://user:pass@localhost:5432/gogopher?sslmode=disable} go run ./cmd/migrate up
 	go run ./cmd/sandbox &
-	DATABASE_URL=$${DATABASE_URL:-postgres://user:pass@localhost:5432/gogopher?sslmode=disable} LEARNING_SLICE_ENABLED=true APP_ENV=local go run ./cmd/gateway &
+	DATABASE_URL=$${LOCAL_DATABASE_URL:-postgres://user:pass@localhost:5432/gogopher?sslmode=disable} LEARNING_SLICE_ENABLED=true APP_ENV=local go run ./cmd/gateway &
 	cd web && npm run dev
 
 test:
@@ -28,7 +28,10 @@ learning-content-validate:
 	go run ./cmd/learning-content validate --activity-set m1-first-slice
 
 learning-content-verify:
-	go run ./cmd/learning-content verify --release-dir content/learning/releases/m1-first-slice-v1 --web-dist web/dist
+	go run ./cmd/learning-content verify --release-dir content/learning/releases/m1-first-slice-v3 --web-dist web/dist
+
+check-compose-exposure:
+	./scripts/check-compose-exposure.sh
 
 clean:
 	docker compose down -v

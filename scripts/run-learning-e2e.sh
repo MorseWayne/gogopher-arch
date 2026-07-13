@@ -25,4 +25,4 @@ cd "$root/web"
 E2E_BASE_URL="http://127.0.0.1:$port" \
 E2E_COMPOSE_PROJECT="$project" \
 E2E_COMPOSE_ROOT="$root" \
-npx playwright test e2e/learning-slice.spec.ts
+npx playwright test

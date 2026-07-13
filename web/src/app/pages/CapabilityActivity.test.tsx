@@ -20,6 +20,28 @@ beforeEach(() => {
 })
 
 describe('CapabilityActivity', () => {
+  it('stops at an explicit unavailable state when the feature gate is disabled', async () => {
+    let definitionReads = 0
+    server.use(
+      http.post(`${root}/session`, () => HttpResponse.json(
+        { error: { code: 'learning_disabled', message: 'Learning slice is disabled' } },
+        { status: 503 },
+      )),
+      http.get(`${root}/activities/:id`, () => {
+        definitionReads += 1
+        return HttpResponse.json(activityFixture)
+      }),
+    )
+
+    renderActivity('/learning/activities/guided-run-model?version=2')
+
+    expect(await screen.findByRole('heading', { name: 'Learning 功能当前未启用' })).toBeVisible()
+    expect(screen.getByText('服务端 feature gate 已关闭，没有使用本地伪进度作为降级。')).toBeVisible()
+    expect(screen.queryByRole('button', { name: '开始活动' })).not.toBeInTheDocument()
+    expect(screen.queryByText(activityFixture.activity.title)).not.toBeInTheDocument()
+    expect(definitionReads).toBe(0)
+  })
+
   it('bootstraps an HttpOnly-backed session and renders public Activity context without local storage', async () => {
     useDefinitionHandlers()
 

@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WEB_DIR="$ROOT_DIR/web"
 
-LOCAL_DATABASE_URL="${DATABASE_URL:-postgres://user:pass@localhost:5432/gogopher?sslmode=disable}"
+LOCAL_DATABASE_URL="${LOCAL_DATABASE_URL:-postgres://user:pass@localhost:5432/gogopher?sslmode=disable}"
 
 usage() {
   cat <<'EOF'
@@ -18,12 +18,12 @@ GoGopher Arch 启动助手
   docker           全 Docker 生产式启动，会重新构建镜像
   docker:up        全 Docker 生产式启动，不主动重新构建镜像
   docker:down      停止 Docker Compose 服务
-  deps             只启动 PostgreSQL
-  backend          用 Docker 启动 Gateway、Sandbox、migration 和 PostgreSQL
+  deps             用 loopback development overlay 只启动 PostgreSQL
+  backend          用 loopback development overlay 启动后端依赖
   web              启动本地 Vite 前端开发服务，访问 http://localhost:5173
   sandbox          本地启动 versioned multi-file Sandbox
   gateway          执行 migration 并本地启动 Learning Gateway
-  local            启动 PostgreSQL，并提示分别运行 sandbox、gateway、web
+  local            启动 loopback PostgreSQL，并提示本地热开发命令
   status           查看 Docker Compose 服务状态
   logs [service]   跟随查看 Docker Compose 日志，可选 service 名
 
@@ -53,6 +53,14 @@ run_compose() {
   docker compose --project-directory "$ROOT_DIR" "$@"
 }
 
+run_compose_dev() {
+  docker compose \
+    --project-directory "$ROOT_DIR" \
+    -f "$ROOT_DIR/docker-compose.yml" \
+    -f "$ROOT_DIR/docker-compose.dev.yml" \
+    "$@"
+}
+
 command="${1:-help}"
 shift || true
 
@@ -70,10 +78,10 @@ case "$command" in
     run_compose down "$@"
     ;;
   deps)
-    run_compose up -d postgres
+    run_compose_dev up -d postgres
     ;;
   backend)
-    run_compose up -d gateway sandbox-engine
+    run_compose_dev up -d gateway sandbox-engine
     ;;
   web)
     ensure_web_deps
@@ -94,7 +102,7 @@ case "$command" in
     go run "$ROOT_DIR/cmd/gateway"
     ;;
   local)
-    run_compose up -d postgres
+    run_compose_dev up -d postgres
     cat <<EOF
 PostgreSQL 已启动。
 

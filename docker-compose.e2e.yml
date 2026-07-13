@@ -2,6 +2,7 @@ services:
   gateway:
     environment:
       - APP_ENV=test
+      - LEARNING_SLICE_ENABLED=true
 
   postgres:
     tmpfs:
