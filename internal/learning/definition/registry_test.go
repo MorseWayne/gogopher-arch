@@ -83,10 +83,13 @@ func TestRegistryViewsExcludePrivateEvaluationContract(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, forbidden := range []string{"held_out_tests", "assessment_rules", "evidence_rules", "actions", "bundle_path", "source", "sha256"} {
+	for _, forbidden := range []string{"held_out_tests", "assessment_rules", "evidence_rules", `"actions":`, "bundle_path", "source", "sha256"} {
 		if strings.Contains(string(encoded), forbidden) {
 			t.Fatalf("public view contains private field %q: %s", forbidden, encoded)
 		}
+	}
+	if task.Readme == "" || len(task.AllowedActions) == 0 {
+		t.Fatalf("public Task context is incomplete: %#v", task)
 	}
 
 	workspace, err := registry.PublicWorkspace(testReleaseID, activity.TaskRef.ID, activity.TaskRef.Version)

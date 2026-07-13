@@ -7,6 +7,7 @@ const Dashboard = lazy(() => import("./pages/Dashboard").then((module) => ({ def
 const MissionDetail = lazy(() => import("./pages/MissionDetail").then((module) => ({ default: module.MissionDetail })));
 const GoBasicsCourse = lazy(() => import("./pages/GoBasicsCourse").then((module) => ({ default: module.GoBasicsCourse })));
 const GoBasicsChapter = lazy(() => import("./pages/GoBasicsChapter").then((module) => ({ default: module.GoBasicsChapter })));
+const CapabilityActivity = lazy(() => import("./pages/CapabilityActivity").then((module) => ({ default: module.CapabilityActivity })));
 
 export const router = createBrowserRouter([
   {
@@ -25,4 +26,5 @@ export const router = createBrowserRouter([
       { path: "/courses/go-basics/:chapterSlug", Component: GoBasicsChapter },
     ],
   },
+  { path: "/learning/activities/:activityId", Component: CapabilityActivity },
 ]);

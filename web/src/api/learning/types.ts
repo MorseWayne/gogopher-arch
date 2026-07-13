@@ -50,6 +50,26 @@ export interface ActivityResponse {
   api_version: APIVersion
   release_id: string
   activity: Activity
+  task: Task
+}
+
+export interface Task {
+  id: string
+  version: number
+  content_hash: string
+  bundle_hash: string
+  language: string
+  workspace_root: string
+  editable_paths: string[]
+  readonly_paths: string[]
+  visible_tests: string[]
+  allowed_actions: ExecutionAction[]
+  limits: {
+    max_files: number
+    max_file_bytes: number
+    max_total_bytes: number
+  }
+  readme: string
 }
 
 export interface RequiredEvidence {

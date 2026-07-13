@@ -75,11 +75,17 @@ func (h *DefinitionHandler) Activity(w http.ResponseWriter, request *http.Reques
 		h.writeDefinitionError(w, err)
 		return
 	}
+	task, err := h.registry.TaskView(releaseID, value.TaskRef.ID, value.TaskRef.Version)
+	if err != nil {
+		h.writeDefinitionError(w, err)
+		return
+	}
 	writeJSON(w, http.StatusOK, struct {
 		APIVersion string                  `json:"api_version"`
 		ReleaseID  string                  `json:"release_id"`
 		Activity   definition.ActivityView `json:"activity"`
-	}{APIVersion: APIVersion, ReleaseID: releaseID, Activity: value})
+		Task       definition.TaskView     `json:"task"`
+	}{APIVersion: APIVersion, ReleaseID: releaseID, Activity: value, Task: task})
 }
 
 func (h *DefinitionHandler) Next(w http.ResponseWriter, request *http.Request) {

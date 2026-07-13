@@ -1,6 +1,6 @@
 # 能力证据纵向切片 Plan D：前端闭环与端到端验证
 
-> 状态：In progress — D1 accepted
+> 状态：In progress — D1–D3 accepted
 > 日期：2026-07-13
 > 上游：Plan A–C 已验收的 Learning API 和状态语义
 
@@ -49,21 +49,21 @@ web/e2e/learning-slice.spec.ts
 
 ### D2 — 匿名 session bootstrap
 
-- [ ] 在 Learning route 进入时调用 `POST /learning/session`，已有 cookie 时复用。
-- [ ] session 建立失败显示可重试错误，不降级成伪本地进度。
-- [ ] 不把原始 token、learner ID 或 cookie 写 localStorage。
-- [ ] 刷新页面验证 HttpOnly cookie 自动携带，Attempt 所有权保持。
-- [ ] 增加 cookie 丢失后得到新 Learner、旧 Attempt 返回 404 的测试和用户提示。
+- [x] 在 Learning route 进入时调用 `POST /learning/session`，已有 cookie 时复用。
+- [x] session 建立失败显示可重试错误，不降级成伪本地进度。
+- [x] 不把原始 token、learner ID 或 cookie 写 localStorage。
+- [x] 刷新页面验证 HttpOnly cookie 自动携带，Attempt 所有权保持。
+- [x] 增加 cookie 丢失后得到新 Learner、旧 Attempt 返回 404 的测试和用户提示。
 
 完成条件：浏览器代码从未读取 token，所有权完全由同源 cookie 建立。
 
 ### D3 — Activity route 与工作台骨架
 
-- [ ] 新增 `/learning/activities/:activityId` route，读取 Activity 公开定义。
-- [ ] 展示能力节点、活动 mode、本次证据目标、assistance policy 和 task README 摘要。
-- [ ] 开始活动时创建或恢复 Attempt；刷新直接 GET Attempt。
-- [ ] 按 loading/active/submitted/infra_failed/completed 渲染明确状态。
-- [ ] 只在 feature gate 开启且 API 可用时显示入口。
+- [x] 新增 `/learning/activities/:activityId` route，读取 Activity 公开定义。
+- [x] 展示能力节点、活动 mode、本次证据目标、assistance policy 和 task README 摘要。
+- [x] 开始活动时创建或恢复 Attempt；刷新直接 GET Attempt。
+- [x] 按 loading/active/submitted/infra_failed/completed 渲染明确状态。
+- [x] 只在 feature gate 开启且 API 可用时显示入口。
 
 完成条件：从 Activity 定义进入 Attempt，不使用前端硬编码 starter 或验收规则。
 

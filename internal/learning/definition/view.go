@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"sort"
 )
 
 var ErrHintNotFound = errors.New("task hint not found")
@@ -51,7 +52,9 @@ type TaskView struct {
 	EditablePaths   []string            `json:"editable_paths"`
 	ReadonlyPaths   []string            `json:"readonly_paths"`
 	VisibleTests    []string            `json:"visible_tests"`
+	AllowedActions  []string            `json:"allowed_actions"`
 	WorkspaceLimits WorkspaceLimitsView `json:"limits"`
+	Readme          string              `json:"readme"`
 }
 
 type HintView struct {
@@ -304,25 +307,65 @@ func (r *Registry) TaskView(releaseID, id string, version int) (TaskView, error)
 		return TaskView{}, err
 	}
 	var document struct {
-		ID            string              `json:"id"`
-		Version       int                 `json:"version"`
-		Language      string              `json:"language"`
-		WorkspaceRoot string              `json:"workspace_root"`
-		EditablePaths []string            `json:"editable_paths"`
-		ReadonlyPaths []string            `json:"readonly_paths"`
-		VisibleTests  []string            `json:"visible_tests"`
-		Limits        WorkspaceLimitsView `json:"limits"`
+		ID            string                     `json:"id"`
+		Version       int                        `json:"version"`
+		Language      string                     `json:"language"`
+		WorkspaceRoot string                     `json:"workspace_root"`
+		EditablePaths []string                   `json:"editable_paths"`
+		ReadonlyPaths []string                   `json:"readonly_paths"`
+		VisibleTests  []string                   `json:"visible_tests"`
+		Actions       map[string]json.RawMessage `json:"actions"`
+		Limits        WorkspaceLimitsView        `json:"limits"`
 	}
 	if err := json.Unmarshal(definition.Document, &document); err != nil {
 		return TaskView{}, fmt.Errorf("decode task view: %w", err)
+	}
+	allowedActions := make([]string, 0, len(document.Actions))
+	for action := range document.Actions {
+		allowedActions = append(allowedActions, action)
+	}
+	sort.Strings(allowedActions)
+	readme, err := r.publicTaskReadme(releaseID, id, version)
+	if err != nil {
+		return TaskView{}, err
 	}
 	return TaskView{
 		ID: document.ID, Version: document.Version, ContentHash: definition.ContentHash, BundleHash: definition.BundleHash,
 		Language: document.Language, WorkspaceRoot: document.WorkspaceRoot,
 		EditablePaths: append([]string(nil), document.EditablePaths...),
 		ReadonlyPaths: append([]string(nil), document.ReadonlyPaths...),
-		VisibleTests:  append([]string(nil), document.VisibleTests...), WorkspaceLimits: document.Limits,
+		VisibleTests:  append([]string(nil), document.VisibleTests...), AllowedActions: allowedActions,
+		WorkspaceLimits: document.Limits, Readme: readme,
 	}, nil
+}
+
+func (r *Registry) publicTaskReadme(releaseID, taskID string, taskVersion int) (string, error) {
+	manifest, err := r.Manifest(releaseID)
+	if err != nil {
+		return "", err
+	}
+	releaseDir, err := r.releaseDir(releaseID)
+	if err != nil {
+		return "", err
+	}
+	readmePath := ""
+	for _, asset := range manifest.Assets {
+		if asset.TaskID != taskID || asset.TaskVersion != taskVersion || asset.Role != "readme" {
+			continue
+		}
+		if readmePath != "" {
+			return "", fmt.Errorf("task %s version %d has multiple readme assets", taskID, taskVersion)
+		}
+		readmePath = asset.BundlePath
+	}
+	if readmePath == "" {
+		return "", nil
+	}
+	contents, err := readBundleFile(filepath.Join(releaseDir, "bundle"), readmePath)
+	if err != nil {
+		return "", err
+	}
+	return string(contents), nil
 }
 
 func (r *Registry) PublicWorkspace(releaseID, taskID string, taskVersion int) (map[string]string, error) {
