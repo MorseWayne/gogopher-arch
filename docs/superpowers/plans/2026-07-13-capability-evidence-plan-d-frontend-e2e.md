@@ -1,6 +1,6 @@
 # 能力证据纵向切片 Plan D：前端闭环与端到端验证
 
-> 状态：In progress — D1–D7 accepted
+> 状态：In progress — D1–D8 accepted
 > 日期：2026-07-13
 > 上游：Plan A–C 已验收的 Learning API 和状态语义
 
@@ -112,11 +112,11 @@ web/e2e/learning-slice.spec.ts
 
 ### D8 — Dashboard 真实下一活动入口
 
-- [ ] 用 `/learning/next` 替换“今日建议”中的一个静态条目。
-- [ ] 区分首次学习、到期 review、claimed review 和暂无建议。
-- [ ] 链接到 Activity 或已有 Attempt；review 入口先调用领取 API。
-- [ ] 删除静态进度和演示建议；产品状态只来自 Learning API。
-- [ ] API/feature gate 不可用时隐藏真实入口或显示明确关闭状态，不伪造 fallback progress。
+- [x] 用 `/learning/next` 替换“今日建议”中的一个静态条目。
+- [x] 区分首次学习、到期 review、claimed review 和暂无建议。
+- [x] 链接到 Activity 或已有 Attempt；review 入口先调用领取 API。
+- [x] 删除静态进度和演示建议；产品状态只来自 Learning API。
+- [x] API/feature gate 不可用时隐藏真实入口或显示明确关闭状态，不伪造 fallback progress。
 
 完成条件：Dashboard 至少一个建议来自真实服务端事实，且来源标签准确。
 

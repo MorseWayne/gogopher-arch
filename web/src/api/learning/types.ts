@@ -169,7 +169,7 @@ export interface ReviewItem {
   due_at: string
   priority: number
   reason: string
-  status: string
+  status: 'open' | 'claimed'
   claimed_attempt_id?: string
 }
 
@@ -181,8 +181,8 @@ export interface PrerequisiteStatus {
 }
 
 export interface NextRecommendation {
-  kind: string
-  reason: string
+  kind: 'acquisition' | 'review'
+  reason: 'acquisition_path' | 'due_review' | 'claimed_review'
   activity: Activity
   target_capability?: VersionedDefinitionRef
   review_item?: ReviewItem
