@@ -14,6 +14,7 @@ const actionMeta: Record<RunnableAction, { label: string; icon: typeof Blocks }>
 export function ActionBar({
   allowedActions,
   disabled,
+  disabledMessage,
   busy,
   error,
   retryLabel,
@@ -22,6 +23,7 @@ export function ActionBar({
 }: {
   allowedActions: ExecutionAction[]
   disabled: boolean
+  disabledMessage?: string
   busy: boolean
   error?: string
   retryLabel?: string
@@ -43,7 +45,7 @@ export function ActionBar({
           </Button>
         })}
       </div>
-      {disabled && <p className="mt-2 text-xs text-amber-600">请先把当前 workspace 保存到服务端，再运行工具动作。</p>}
+      {disabled && disabledMessage && <p className="mt-2 text-xs text-amber-600">{disabledMessage}</p>}
       {error && <div role="alert" className="mt-3 flex items-center justify-between gap-3 rounded-lg bg-destructive/10 p-3 text-xs text-destructive"><span>{error}</span><Button size="sm" variant="outline" onClick={onRetry}><RefreshCw />{retryLabel ?? '使用同一 request key 重试'}</Button></div>}
     </div>
   )

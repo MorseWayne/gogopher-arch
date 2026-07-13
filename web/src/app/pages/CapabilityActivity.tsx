@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useMemo, useState } from 'react'
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
 import {
   ArrowLeft,
@@ -26,6 +26,7 @@ import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
 import { ThemeToggle } from '../components/ThemeToggle'
 import { AssistancePanel } from '../components/learning/AssistancePanel'
+import { EvidenceSummary } from '../components/learning/EvidenceSummary'
 import { MultiFileEditor } from '../components/learning/MultiFileEditor'
 import { useLearningSession } from '../hooks/useLearningSession'
 
@@ -52,8 +53,10 @@ export function CapabilityActivity() {
   const [definition, setDefinition] = useState<RemoteState<{
     activity: ActivityResponse
     capabilities: CapabilityResponse[]
+    baselineCapabilities: CapabilityResponse[]
   }>>({ status: 'idle' })
   const [attempt, setAttempt] = useState<RemoteState<AttemptResponse>>({ status: 'idle' })
+  const refreshedSnapshots = useRef(new Set<string>())
 
   useEffect(() => {
     if (session.status !== 'ready' || !activityId) return
@@ -63,7 +66,7 @@ export function CapabilityActivity() {
       const capabilities = await Promise.all(
         activity.activity.capability_refs.map((reference) => getCapability(reference.id)),
       )
-      if (current) setDefinition({ status: 'ready', value: { activity, capabilities } })
+      if (current) setDefinition({ status: 'ready', value: { activity, capabilities, baselineCapabilities: capabilities } })
     }).catch((error: unknown) => {
       if (current) setDefinition({ status: 'error', error })
     })
@@ -107,6 +110,27 @@ export function CapabilityActivity() {
       setAttempt({ status: 'error', error })
     }
   }
+  function handleAttemptChange(value: AttemptResponse) {
+    setAttempt({ status: 'ready', value })
+    if (getAttemptPhase(value) !== 'completed' || definition.status !== 'ready' ||
+      refreshedSnapshots.current.has(value.id)) return
+    refreshedSnapshots.current.add(value.id)
+    const references = definition.value.activity.activity.capability_refs
+    void refreshCapabilitySnapshots(
+      references,
+      value.evidence,
+      (capabilities) => setDefinition((current) => {
+        if (current.status !== 'ready') return current
+        return {
+          status: 'ready',
+          value: { ...current.value, capabilities },
+        }
+      }),
+    ).catch(() => {
+      refreshedSnapshots.current.delete(value.id)
+    })
+  }
+
 
   if (session.status === 'loading') {
     return <CenteredState icon={<LoaderCircle className="animate-spin" />} title="正在建立学习会话" description="浏览器会通过 HttpOnly cookie 恢复匿名学习记录。" />
@@ -148,7 +172,7 @@ export function CapabilityActivity() {
           definition={definition.value}
           attempt={attempt}
           onStart={() => void startAttempt()}
-          onAttemptChange={(value) => setAttempt({ status: 'ready', value })}
+          onAttemptChange={handleAttemptChange}
         />
       )}
     </div>
@@ -161,7 +185,11 @@ function ActivityWorkspace({
   onStart,
   onAttemptChange,
 }: {
-  definition: { activity: ActivityResponse; capabilities: CapabilityResponse[] }
+  definition: {
+    activity: ActivityResponse
+    capabilities: CapabilityResponse[]
+    baselineCapabilities: CapabilityResponse[]
+  }
   attempt: RemoteState<AttemptResponse>
   onStart: () => void
   onAttemptChange: (attempt: AttemptResponse) => void
@@ -216,6 +244,8 @@ function ActivityWorkspace({
                 task={task}
                 phase={phase}
                 onAttemptChange={onAttemptChange}
+                capabilities={definition.capabilities}
+                baselineCapabilities={definition.baselineCapabilities}
               />
             )}
           </div>
@@ -267,12 +297,16 @@ function AttemptOverview({
   task,
   phase,
   onAttemptChange,
+  capabilities,
+  baselineCapabilities,
 }: {
   attempt: AttemptResponse
   activity: ActivityResponse['activity']
   task: ActivityResponse['task']
   phase: AttemptPhase
   onAttemptChange: (attempt: AttemptResponse) => void
+  capabilities: CapabilityResponse[]
+  baselineCapabilities: CapabilityResponse[]
 }) {
   const labels: Record<AttemptPhase, string> = {
     active: '进行中',
@@ -304,6 +338,12 @@ function AttemptOverview({
         onAttemptChange={onAttemptChange}
       />
       <MultiFileEditor attempt={attempt} task={task} onAttemptChange={onAttemptChange} />
+      <EvidenceSummary
+        attempt={attempt}
+        activity={activity}
+        capabilities={capabilities}
+        baselineCapabilities={baselineCapabilities}
+      />
     </div>
   )
 }
@@ -337,6 +377,38 @@ function Metric({ label, value }: { label: string; value: string }) {
   return <div className="rounded-xl bg-muted/50 p-3"><div className="text-xs text-muted-foreground">{label}</div><div className="mt-1 font-mono text-lg font-semibold">{value}</div></div>
 }
 
+async function refreshCapabilitySnapshots(
+  references: ActivityResponse['activity']['capability_refs'],
+  evidence: AttemptResponse['evidence'],
+  onRead: (capabilities: CapabilityResponse[]) => void,
+) {
+  for (let count = 0; count < 20; count += 1) {
+    const capabilities = await Promise.all(
+      references.map((reference) => getCapability(reference.id)),
+    )
+    onRead(capabilities)
+    if (snapshotsCoverEvidence(capabilities, evidence)) return
+    await delay(500)
+  }
+}
+
+function snapshotsCoverEvidence(
+  capabilities: CapabilityResponse[],
+  evidence: AttemptResponse['evidence'],
+): boolean {
+  return evidence.every((item) => {
+    const snapshot = capabilities.find(({ capability }) =>
+      capability.id === item.capability_id &&
+      capability.version === item.capability_version,
+    )?.snapshot
+    return snapshot?.last_evidence_at !== undefined &&
+      new Date(snapshot.last_evidence_at).getTime() >= new Date(item.occurred_at).getTime()
+  })
+}
+
+function delay(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds))
+}
 function summarizeReadme(readme: string): string {
   return readme
     .split('\n')

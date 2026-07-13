@@ -1,6 +1,6 @@
 # 能力证据纵向切片 Plan D：前端闭环与端到端验证
 
-> 状态：In progress — D1–D6 accepted
+> 状态：In progress — D1–D7 accepted
 > 日期：2026-07-13
 > 上游：Plan A–C 已验收的 Learning API 和状态语义
 
@@ -101,12 +101,12 @@ web/e2e/learning-slice.spec.ts
 
 ### D7 — Submit、retry、Evidence 和 Snapshot
 
-- [ ] Submit 前确保最新 workspace 已保存，使用稳定 submission key/revision/hash。
-- [ ] 双击或响应丢失重试复用 key；409 展示已有 Submission 并进入恢复轮询。
-- [ ] user_failed 展示规则级结果；infra_failed 提供对冻结 Submission 的显式 retry。
-- [ ] completed 后展示 Evidence result、type、independence、context 和对应 Capability。
-- [ ] 展示 Snapshot 前后变化以及“平台观察证据”说明，不使用防作弊/认证文案。
-- [ ] review Attempt 显示每个 Capability item 的 passed/failed/not_evaluated 后续安排。
+- [x] Submit 前确保最新 workspace 已保存，使用稳定 submission key/revision/hash。
+- [x] 双击或响应丢失重试复用 key；409 展示已有 Submission 并进入恢复轮询。
+- [x] user_failed 展示规则级结果；infra_failed 提供对冻结 Submission 的显式 retry。
+- [x] completed 后展示 Evidence result、type、independence、context 和对应 Capability。
+- [x] 展示 Snapshot 前后变化以及“平台观察证据”说明，不使用防作弊/认证文案。
+- [x] review Attempt 显示每个 Capability item 的 passed/failed/not_evaluated 后续安排。
 
 完成条件：重复提交/刷新不产生视觉上的第二次 Submission，Evidence 数量与服务端一致。
 

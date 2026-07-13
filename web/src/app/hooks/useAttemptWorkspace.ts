@@ -73,7 +73,7 @@ export function useAttemptWorkspace(
     const validation = validateWorkspace(files, task)
     if (validation) {
       setSaveState({ status: 'error', message: validation })
-      return
+      return null
     }
     setSaveState({ status: 'saving' })
     const staleKey = draftBackupKey(initialAttempt.id, baseRevision)
@@ -87,19 +87,21 @@ export function useAttemptWorkspace(
       setRecovered(false)
       setSaveState({ status: 'saved' })
       onAttemptChange(saved)
+      return saved
     } catch (error) {
       if (error instanceof LearningApiError && error.status === 409 &&
         (error.code === 'revision_conflict' || error.code === 'workspace_conflict')) {
         try {
           const serverAttempt = await getAttempt(initialAttempt.id)
           setSaveState({ status: 'conflict', value: { localFiles: { ...files }, serverAttempt } })
-          return
+          return null
         } catch (refreshError) {
           setSaveState({ status: 'error', message: errorText(refreshError) })
-          return
+          return null
         }
       }
       setSaveState({ status: 'error', message: errorText(error) })
+      return null
     }
   }, [baseRevision, files, initialAttempt.id, onAttemptChange, task])
 
