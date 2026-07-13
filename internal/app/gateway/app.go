@@ -16,6 +16,7 @@ import (
 	"github.com/MorseWayne/gogopher-arch/internal/learning/execution"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/httpapi"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/session"
+	"github.com/MorseWayne/gogopher-arch/internal/learning/submission"
 	"github.com/MorseWayne/gogopher-arch/internal/platform/config"
 	"github.com/MorseWayne/gogopher-arch/internal/platform/database"
 )
@@ -25,6 +26,7 @@ type App struct {
 	database          *sql.DB
 	assistanceService *assistance.Service
 	executionService  *execution.Service
+	submissionService *submission.Service
 	workerCancel      context.CancelFunc
 	workerDone        chan error
 	closeOnce         sync.Once
@@ -98,6 +100,14 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 	if err != nil {
 		return fail(err)
 	}
+	submissionRepository, err := submission.NewPostgresRepository(db, submission.RepositoryOptions{})
+	if err != nil {
+		return fail(err)
+	}
+	submissionService, err := submission.NewService(submissionRepository, attemptService, registry, specBuilder, submission.ServiceOptions{})
+	if err != nil {
+		return fail(err)
+	}
 	sandboxClient, err := execution.NewSandboxClient(execution.SandboxClientOptions{Endpoint: cfg.SandboxEndpoint})
 	if err != nil {
 		return fail(err)
@@ -138,7 +148,7 @@ func Build(ctx context.Context, cfg config.Config) (*App, error) {
 	}()
 	return &App{
 		Handler:  httpapi.NewRouter(true, sessionHandler, attemptHandler, httpapi.NewDefinitionHandler(registry)),
-		database: db, assistanceService: assistanceService, executionService: executionService,
+		database: db, assistanceService: assistanceService, executionService: executionService, submissionService: submissionService,
 		workerCancel: workerCancel, workerDone: workerDone,
 	}, nil
 }

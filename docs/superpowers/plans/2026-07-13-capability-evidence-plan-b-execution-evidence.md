@@ -91,12 +91,12 @@
 
 ### B6 — SubmissionWorkflow
 
-- [ ] 为相同 key 重试、同 key 内容变化、不同 key 并发和非 owner 访问写测试。
-- [ ] 在短事务中锁定 Attempt，校验 owner/active/revision/hash，冻结 workspace，创建唯一 Submission 和 submit Execution。
-- [ ] 保存 `rule_set_hash`、workspace hash/revision 和 assistance cutoff；事务内不调用 Sandbox。
-- [ ] 重复相同 submission key 返回同一 Submission；不同 fingerprint 返回 `409 idempotency_conflict`。
-- [ ] 第一个不同 key 冻结成功后，其他 key 返回 `409 attempt_already_submitted` 和已有 Submission ID。
-- [ ] `infra_failed` 把 Attempt 置为 `submit_infra_failed`；显式 retry 只复用冻结 workspace 并创建新 retry sequence。
+- [x] 为相同 key 重试、同 key 内容变化、不同 key 并发和非 owner 访问写测试。
+- [x] 在短事务中锁定 Attempt，校验 owner/active/revision/hash，冻结 workspace，创建唯一 Submission 和 submit Execution。
+- [x] 保存 `rule_set_hash`、workspace hash/revision 和 assistance cutoff；事务内不调用 Sandbox。
+- [x] 重复相同 submission key 返回同一 Submission；不同 fingerprint 返回 `409 idempotency_conflict`。
+- [x] 第一个不同 key 冻结成功后，其他 key 返回 `409 attempt_already_submitted` 和已有 Submission ID。
+- [x] `infra_failed` 把 Attempt 置为 `submit_infra_failed`；显式 retry 只复用冻结 workspace 并创建新 retry sequence。
 
 完成条件：任何并发/响应丢失场景都只存在一个冻结 Submission，且每次 retry 都有独立不可变 Execution。
 

@@ -168,6 +168,7 @@ func (r *PostgresRepository) Claim(ctx context.Context, owner string, now time.T
 		return Execution{}, false, err
 	}
 	_, err = tx.ExecContext(ctx, `
+		WITH exhausted AS (
 		UPDATE attempt_executions
 		SET status = 'infra_failed',
 			result = jsonb_build_object(
@@ -182,7 +183,19 @@ func (r *PostgresRepository) Claim(ctx context.Context, owner string, now time.T
 			),
 			lease_owner = NULL, lease_expires_at = NULL, lease_heartbeat_at = NULL,
 			finished_at = $1, updated_at = $1
-		WHERE status = 'running' AND lease_expires_at <= $1 AND claim_count >= $2`, now, maxClaims)
+		WHERE status = 'running' AND lease_expires_at <= $1 AND claim_count >= $2
+		RETURNING submission_id
+		), failed_submissions AS (
+			UPDATE attempt_submissions s
+			SET status = 'infra_failed'
+			FROM exhausted e
+			WHERE e.submission_id = s.id
+			RETURNING s.attempt_id
+		)
+		UPDATE learning_attempts a
+		SET status = 'submit_infra_failed', updated_at = GREATEST(a.updated_at, $1)
+		FROM failed_submissions f
+		WHERE a.id = f.attempt_id AND a.status = 'submitted'`, now, maxClaims)
 	if err != nil {
 		return Execution{}, false, fmt.Errorf("expire exhausted execution leases: %w", err)
 	}
@@ -284,6 +297,23 @@ func (r *PostgresRepository) Complete(ctx context.Context, executionID, owner st
 	}
 	if rows != 1 {
 		return ErrLeaseLost
+	}
+	if response.Status == ExecutionInfraFailed {
+		_, err = tx.ExecContext(ctx, `
+			WITH failed_submission AS (
+				UPDATE attempt_submissions s
+				SET status = 'infra_failed'
+				FROM attempt_executions e
+				WHERE e.id = $1 AND e.submission_id = s.id
+				RETURNING s.attempt_id
+			)
+			UPDATE learning_attempts a
+			SET status = 'submit_infra_failed', updated_at = GREATEST(a.updated_at, $2)
+			FROM failed_submission f
+			WHERE a.id = f.attempt_id AND a.status = 'submitted'`, executionID, now)
+		if err != nil {
+			return fmt.Errorf("mark submission infrastructure failure: %w", err)
+		}
 	}
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("commit execution completion: %w", err)

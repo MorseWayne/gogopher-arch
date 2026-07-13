@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS attempt_executions_submission_request_idx;
