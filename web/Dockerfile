@@ -1,8 +1,11 @@
+# syntax=docker/dockerfile:1.7
+
 # Stage 1: Build the React app
 FROM node:20-alpine AS builder
 WORKDIR /app
-COPY package.json ./
-RUN npm install
+COPY package.json package-lock.json ./
+RUN --mount=type=cache,id=gogopher-npm,target=/root/.npm \
+    npm ci --prefer-offline --no-audit --no-fund
 COPY . .
 RUN npm run build
 

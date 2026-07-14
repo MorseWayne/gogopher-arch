@@ -1,6 +1,20 @@
+x-build-proxy-args: &build-proxy-args
+  HTTP_PROXY: ${HTTP_PROXY:-}
+  HTTPS_PROXY: ${HTTPS_PROXY:-}
+  ALL_PROXY: ${ALL_PROXY:-}
+  NO_PROXY: ${NO_PROXY:-localhost,127.0.0.1}
+
+x-build-defaults: &build-defaults
+  # Loopback proxies such as 127.0.0.1:10808 are only reachable from build
+  # steps on the host network. Set BUILD_NETWORK=default when isolation is
+  # preferred and the proxy is reachable from Docker's bridge network.
+  network: ${BUILD_NETWORK:-host}
+  args: *build-proxy-args
+
 services:
   web:
     build:
+      <<: *build-defaults
       context: ./web
     ports:
       - "127.0.0.1:${WEB_PORT:-3000}:80"
@@ -11,6 +25,7 @@ services:
 
   gateway:
     build:
+      <<: *build-defaults
       context: .
       dockerfile: cmd/gateway/Dockerfile
     expose:
@@ -55,6 +70,7 @@ services:
 
   migrate:
     build:
+      <<: *build-defaults
       context: .
       dockerfile: cmd/migrate/Dockerfile
     depends_on:
@@ -66,6 +82,7 @@ services:
 
   sandbox-engine:
     build:
+      <<: *build-defaults
       context: .
       dockerfile: cmd/sandbox/Dockerfile
     expose:

@@ -55,6 +55,21 @@ LEARNING_SLICE_ENABLED=true
 
 访问 [http://localhost:3000](http://localhost:3000)。Web 通过同源 `/api` 反向代理到 Gateway。
 
+构建会自动把当前 shell 或 `.env` 中的 `HTTP_PROXY`、`HTTPS_PROXY`、`ALL_PROXY`、`NO_PROXY`
+传给 Docker build，但不会把这些值固化到最终镜像。Go module、Go build 和 npm 下载使用
+BuildKit cache；Web 依赖严格按 `package-lock.json` 通过 `npm ci` 安装。首次构建仍需下载依赖，
+后续构建会复用缓存。构建网络默认使用 `host`，使 `127.0.0.1` 形式的宿主机代理在 BuildKit
+步骤中仍然可达；无需 loopback 代理的环境可以设置 `BUILD_NETWORK=default` 恢复默认隔离。
+需要代理时可在启动前导出标准变量，例如：
+
+```bash
+export HTTP_PROXY=http://127.0.0.1:10808
+export HTTPS_PROXY=http://127.0.0.1:10808
+export ALL_PROXY=socks5://127.0.0.1:10808
+export NO_PROXY=localhost,127.0.0.1
+./scripts/dev.sh docker -d
+```
+
 如果不启用 feature flag，首页仍可访问，但 Dashboard 和直接 Activity route 会显示明确 unavailable 状态，不会回退到旧 Course、Mission 或 Sandbox 页面。
 
 ## Compose 拓扑与端口

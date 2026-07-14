@@ -1,12 +1,17 @@
+# syntax=docker/dockerfile:1.7
+
 FROM golang:1.25-alpine AS builder
 
 WORKDIR /src
 COPY go.mod go.sum ./
-RUN go mod download
+RUN --mount=type=cache,id=gogopher-go-mod,target=/go/pkg/mod \
+    go mod download
 
 COPY cmd/migrate ./cmd/migrate
 COPY internal/platform/database ./internal/platform/database
-RUN CGO_ENABLED=0 go build -trimpath -o /out/migrate ./cmd/migrate
+RUN --mount=type=cache,id=gogopher-go-mod,target=/go/pkg/mod \
+    --mount=type=cache,id=gogopher-go-build,target=/root/.cache/go-build \
+    CGO_ENABLED=0 go build -trimpath -o /out/migrate ./cmd/migrate
 
 FROM alpine:3.22
 

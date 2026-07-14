@@ -1,4 +1,12 @@
 .git
 .env
 web
+.claude
+.codegraph
+.codex
+.cursor
+.gitnexus
+.opencode
+.sisyphus
+.superpowers
 **/.DS_Store
