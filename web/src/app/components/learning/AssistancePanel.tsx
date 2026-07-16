@@ -178,7 +178,7 @@ export function AssistancePanel({
             <AssistanceAction
               icon={<BookOpenText />}
               title="课程讲解"
-              description={referenceRecorded ? '已记录本次重新查看课程讲解。' : '回到本节讲解，重新确认三个工具的职责。'}
+              description={referenceRecorded ? '已记录本次重新查看课程讲解。' : '回到本节讲解，重新确认任务目标和关键概念。'}
               buttonLabel="回到课程讲解"
               disabled={inactive || pending !== null}
               busy={pending === 'reference-opened'}

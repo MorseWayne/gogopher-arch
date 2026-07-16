@@ -1,15 +1,15 @@
 import type { ComponentType, ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
-import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2, Clock3, Lightbulb, MapPin, Star, Target } from "lucide-react";
-import { CourseExercisePanel } from "../components/CourseExercisePanel";
+import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2, Clock3, Lightbulb, Route, Star, Target } from "lucide-react";
+import { CourseExerciseBrief } from "../components/CourseExerciseBrief";
 import { CourseMdxContent } from "../components/CourseMdxContent";
 import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Separator } from "../components/ui/separator";
-import { getGoBasicsChapterBySlug, getGoBasicsLessonCount, getRelatedMissions, goBasicsChapters, type GoCourseChapter } from "../data/goBasicsCourse";
+import { getGoBasicsChapterBySlug, getGoBasicsLessonCount, goBasicsChapters, type GoCourseChapter } from "../data/goBasicsCourse";
 
 export function GoBasicsChapter() {
   const { chapterSlug } = useParams();
@@ -22,9 +22,8 @@ export function GoBasicsChapter() {
   const chapterIndex = goBasicsChapters.findIndex((item) => item.slug === chapter.slug);
   const previousChapter = goBasicsChapters[chapterIndex - 1];
   const nextChapter = goBasicsChapters[chapterIndex + 1];
-  const relatedMissions = getRelatedMissions(chapter);
   const hasMdxContent = Boolean(chapter.loadContent);
-  const headings = ["学习目标", hasMdxContent ? "课程文章" : "课程正文", "现代生态说明", "工程实践", "常见坑", "沙盒练习", "复盘问题"];
+  const headings = ["学习目标", hasMdxContent ? "课程文章" : "课程正文", "现代生态说明", "工程实践", "常见坑", "章节练习", "复盘问题"];
 
   return (
     <main className="mx-auto grid w-full max-w-[112rem] gap-6 px-4 py-6 md:px-6 md:py-8 2xl:px-8 xl:grid-cols-[220px_minmax(0,1fr)_240px] 2xl:grid-cols-[240px_minmax(0,1fr)_260px]">
@@ -102,7 +101,7 @@ export function GoBasicsChapter() {
               <BookOpen className="text-primary" />
               课程文章
             </CardTitle>
-            <CardDescription>{hasMdxContent ? "正文来自 MDX 内容文件，进入章节后按需加载，保留产品内 sandbox 和任务衔接。" : "浅色阅读 surface，代码块保持深色以突出运行语境。"}</CardDescription>
+            <CardDescription>{hasMdxContent ? "正文来自 MDX 内容文件，进入章节后按需加载。" : "课程正文与示例代码均内置在应用中。"}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
             {chapter.loadContent ? (
@@ -206,7 +205,7 @@ export function GoBasicsChapter() {
         </Card>
 
         <div id="exercise">
-          <CourseExercisePanel chapterSlug={chapter.slug} exercise={chapter.exercise} exercises={chapter.exercises} />
+          <CourseExerciseBrief exercise={chapter.exercise} exercises={chapter.exercises} />
         </div>
       </article>
 
@@ -251,21 +250,15 @@ export function GoBasicsChapter() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
-              <MapPin className="text-primary" />
-              衔接实习任务
+              <Route className="text-primary" />
+              继续动手练习
             </CardTitle>
+            <CardDescription>学习工作台会保存代码、运行记录和反馈，并推荐下一步。</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {relatedMissions.length > 0 ? (
-              relatedMissions.map((mission) => (
-                <Link key={mission.slug} to={`/missions/${mission.slug}`} className="block rounded-2xl border bg-muted/30 p-4 transition-colors hover:border-primary/40">
-                  <div className="mb-1 text-sm font-semibold">{mission.title}</div>
-                  <div className="text-xs text-muted-foreground">{mission.chapter} · {mission.difficulty}</div>
-                </Link>
-              ))
-            ) : (
-              <div className="rounded-2xl border border-dashed bg-muted/30 p-4 text-sm text-muted-foreground">暂无绑定实习任务。</div>
-            )}
+          <CardContent>
+            <Button asChild className="w-full">
+              <Link to="/dashboard">进入学习工作台</Link>
+            </Button>
           </CardContent>
         </Card>
       </aside>
@@ -390,7 +383,7 @@ function tocId(heading: string) {
     现代生态说明: "modern",
     工程实践: "practice",
     常见坑: "pitfalls",
-    沙盒练习: "exercise",
+    章节练习: "exercise",
     复盘问题: "review",
   };
 

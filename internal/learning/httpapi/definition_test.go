@@ -28,7 +28,7 @@ func TestCapabilityReturnsCurrentDefinitionAndExplicitStateSources(t *testing.T)
 	if err != nil {
 		t.Fatal(err)
 	}
-	request := httptest.NewRequest(http.MethodGet, "/api/v1/learning/capabilities/M1-01?version=1", nil)
+	request := httptest.NewRequest(http.MethodGet, "/api/v1/learning/capabilities/M1-01", nil)
 	request.SetPathValue("id", "M1-01")
 	request = authenticatedDefinitionRequest(request, "learner-1")
 	response := httptest.NewRecorder()
@@ -48,13 +48,66 @@ func TestCapabilityReturnsCurrentDefinitionAndExplicitStateSources(t *testing.T)
 	}
 }
 
+func TestCapabilityCanReadAFrozenHistoricalReleaseAndVersion(t *testing.T) {
+	registry := definitionTestRegistry(t)
+	capability, err := registry.CapabilityView("m1-first-slice-v3", "M1-01", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	reader := &learningReaderStub{capability: projection.CapabilityRead{
+		ReleaseID: "m1-first-slice-v3", Capability: capability, RecentEvidence: []projection.EvidenceSummary{},
+	}}
+	handler, err := NewDefinitionHandler(registry, reader, DefinitionHandlerOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	request := authenticatedDefinitionRequest(httptest.NewRequest(
+		http.MethodGet,
+		"/api/v1/learning/capabilities/M1-01?version=1&release_id=m1-first-slice-v3",
+		nil,
+	), "learner-historical-capability")
+	request.SetPathValue("id", "M1-01")
+	response := httptest.NewRecorder()
+
+	handler.Capability(response, request)
+
+	if response.Code != http.StatusOK ||
+		reader.selection != (projection.CapabilitySelection{ReleaseID: "m1-first-slice-v3", ID: "M1-01", Version: 1}) ||
+		!strings.Contains(response.Body.String(), `"release_id":"m1-first-slice-v3"`) ||
+		!strings.Contains(response.Body.String(), `"version":1`) {
+		t.Fatalf("response=%d selection=%#v body=%s", response.Code, reader.selection, response.Body.String())
+	}
+}
+
+func TestCapabilityRejectsInvalidExplicitVersion(t *testing.T) {
+	registry := definitionTestRegistry(t)
+	reader := &learningReaderStub{}
+	handler, err := NewDefinitionHandler(registry, reader, DefinitionHandlerOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	request := authenticatedDefinitionRequest(httptest.NewRequest(
+		http.MethodGet, "/api/v1/learning/capabilities/M1-01?version=0", nil,
+	), "learner-invalid-capability")
+	request.SetPathValue("id", "M1-01")
+	response := httptest.NewRecorder()
+
+	handler.Capability(response, request)
+
+	if response.Code != http.StatusBadRequest ||
+		!strings.Contains(response.Body.String(), `"code":"invalid_version"`) ||
+		reader.capabilityID != "" {
+		t.Fatalf("response=%d reader=%#v body=%s", response.Code, reader, response.Body.String())
+	}
+}
+
 func TestActivityReturnsPublicTaskContextWithoutPrivateEvaluationRules(t *testing.T) {
 	registry := definitionTestRegistry(t)
 	handler, err := NewDefinitionHandler(registry, &learningReaderStub{}, DefinitionHandlerOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
-	request := authenticatedDefinitionRequest(httptest.NewRequest(http.MethodGet, "/api/v1/learning/activities/guided-run-model?version=4", nil), "learner-activity")
+	request := authenticatedDefinitionRequest(httptest.NewRequest(http.MethodGet, "/api/v1/learning/activities/guided-run-model?version=6", nil), "learner-activity")
 	request.SetPathValue("id", "guided-run-model")
 	response := httptest.NewRecorder()
 	handler.Activity(response, request)
@@ -158,11 +211,12 @@ type learningReaderStub struct {
 	err          error
 	learnerID    string
 	capabilityID string
+	selection    projection.CapabilitySelection
 	asOf         time.Time
 }
 
-func (s *learningReaderStub) Capability(_ context.Context, learnerID, capabilityID string, asOf time.Time) (projection.CapabilityRead, error) {
-	s.learnerID, s.capabilityID, s.asOf = learnerID, capabilityID, asOf
+func (s *learningReaderStub) Capability(_ context.Context, learnerID string, selection projection.CapabilitySelection, asOf time.Time) (projection.CapabilityRead, error) {
+	s.learnerID, s.capabilityID, s.selection, s.asOf = learnerID, selection.ID, selection, asOf
 	return s.capability, s.err
 }
 

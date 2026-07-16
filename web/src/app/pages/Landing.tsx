@@ -68,6 +68,12 @@ export function Landing() {
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg">
+                <Link to="/courses/go-basics">
+                  <BookOpenText />
+                  浏览 13 章课程
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="lg">
                 <a href="https://github.com/MorseWayne/gogopher-arch" target="_blank" rel="noreferrer">
                   <Github />
                   查看开源项目

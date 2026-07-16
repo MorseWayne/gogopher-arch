@@ -57,8 +57,8 @@ func TestServiceClaimsReviewGroupOnceAcrossConcurrentItems(t *testing.T) {
 	executionID := "00000000-0000-4000-8000-000000000105"
 	batchID := "00000000-0000-4000-8000-000000000106"
 	releaseID := registry.CurrentReleaseID()
-	assessment, _ := registry.ActivityView(releaseID, "assessment-check-config", 3)
-	reviewActivity, _ := registry.ActivityView(releaseID, "review-check-config-variant", 2)
+	assessment, _ := registry.ActivityView(releaseID, "assessment-check-config", 4)
+	reviewActivity, _ := registry.ActivityView(releaseID, "review-check-config-variant", 3)
 	hash := strings.Repeat("a", 64)
 
 	tx, err := db.BeginTx(ctx, nil)
@@ -116,7 +116,7 @@ func TestServiceClaimsReviewGroupOnceAcrossConcurrentItems(t *testing.T) {
 		"00000000-0000-4000-8000-000000000303",
 		"00000000-0000-4000-8000-000000000304",
 	}
-	groupKey := "assessment:" + batchID + ":review:review-check-config-variant@2:policy:1"
+	groupKey := "assessment:" + batchID + ":review:review-check-config-variant@3:policy:1"
 	for index, ref := range reviewActivity.CapabilityRefs {
 		policy, err := registry.CapabilityPolicy(releaseID, ref.ID, ref.Version)
 		if err != nil {

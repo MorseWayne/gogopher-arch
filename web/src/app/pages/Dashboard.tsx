@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router'
 import {
   ArrowRight,
   BookOpenCheck,
+  BookOpenText,
   CalendarClock,
   CheckCircle2,
   CircleOff,
@@ -92,6 +93,22 @@ export function Dashboard() {
       ) : (
         <RecommendationSection response={next.value} claim={claim} onClaim={claimReview} />
       )}
+
+      <Card>
+        <CardHeader>
+          <div className="mb-2 text-primary"><BookOpenText /></div>
+          <CardTitle>Go 基础系统课程</CardTitle>
+          <CardDescription>13 个章节均可自由浏览。学习工作台仍会根据你的练习结果推荐当前最合适的一步。</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button asChild variant="outline">
+            <Link to="/courses/go-basics">
+              浏览 13 章课程
+              <ArrowRight />
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
     </main>
   )
 }

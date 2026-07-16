@@ -115,12 +115,22 @@ func TestReaderDoesNotInheritPreviousCapabilityVersion(t *testing.T) {
 		t.Fatal(err)
 	}
 	reader, _ := NewReader(db, registry, ReaderOptions{Schema: schema})
-	value, err := reader.Capability(ctx, learnerID, "M1-01", now)
+	value, err := reader.Capability(ctx, learnerID, CapabilitySelection{ID: "M1-01"}, now)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if value.Capability.Version != 2 || value.Snapshot != nil || len(value.RecentEvidence) != 0 {
 		t.Fatalf("current capability read = %#v", value)
+	}
+	historical, err := reader.Capability(ctx, learnerID, CapabilitySelection{
+		ReleaseID: "m1-first-slice-v3", ID: "M1-01", Version: 1,
+	}, now)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if historical.ReleaseID != "m1-first-slice-v3" || historical.Capability.Version != 1 ||
+		historical.Snapshot == nil || historical.Snapshot.AcquisitionState != AcquisitionStable {
+		t.Fatalf("historical capability read = %#v", historical)
 	}
 	next, err := reader.Next(ctx, learnerID, now)
 	if err != nil {

@@ -27,6 +27,7 @@ describe('Dashboard', () => {
       'href',
       `/learning/activities/${activityFixture.activity.id}?version=${activityFixture.activity.version}`,
     )
+    expect(screen.getByRole('link', { name: '浏览 13 章课程' })).toHaveAttribute('href', '/courses/go-basics')
     expect(screen.queryByText(/staticMock|演示进度|今日建议/)).not.toBeInTheDocument()
   })
 
@@ -67,7 +68,8 @@ describe('Dashboard', () => {
 
     expect(await screen.findByRole('heading', { name: '今天的任务已完成' })).toBeVisible()
     expect(screen.queryByText('server_learning_state')).not.toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: /Activity|课程|任务/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '浏览 13 章课程' })).toHaveAttribute('href', '/courses/go-basics')
+    expect(screen.queryByRole('link', { name: /Activity|任务/ })).not.toBeInTheDocument()
   })
 
   it('links an open acquisition Attempt back to the saved workspace', async () => {

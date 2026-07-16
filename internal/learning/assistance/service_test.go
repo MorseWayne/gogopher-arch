@@ -17,7 +17,7 @@ func TestServiceRecordsOnlyEventsAllowedByFrozenActivity(t *testing.T) {
 	repository := &repositoryStub{result: RecordResult{Created: true}}
 	service := newAssistanceService(t, repository, attempt.Attempt{
 		ID: "attempt-1", LearnerID: "learner-1", ReleaseID: registry.CurrentReleaseID(),
-		ActivityID: "review-check-config-variant", ActivityVersion: 2,
+		ActivityID: "review-check-config-variant", ActivityVersion: 3,
 	}, registry)
 
 	if _, err := service.Record(context.Background(), RecordInput{
@@ -44,7 +44,7 @@ func TestRevealHintReturnsContentOnlyAfterEventCommit(t *testing.T) {
 	registry := loadAssistanceRegistry(t)
 	current := attempt.Attempt{
 		ID: "attempt-1", LearnerID: "learner-1", ReleaseID: registry.CurrentReleaseID(),
-		ActivityID: "assessment-check-config", ActivityVersion: 3,
+		ActivityID: "assessment-check-config", ActivityVersion: 4,
 	}
 	hint := Hint{ID: "first", Title: "First step", Body: "Inspect the failing contract."}
 	repository := &repositoryStub{err: errors.New("commit failed")}

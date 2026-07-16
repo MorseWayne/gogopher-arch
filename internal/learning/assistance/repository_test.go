@@ -90,7 +90,7 @@ func TestPostgresRepositorySharesAttemptLockWithSubmissionCutoff(t *testing.T) {
 	fixture := setupAssistanceIntegration(t)
 	for index := 0; index < 12; index++ {
 		current, err := fixture.attempts.Create(fixture.ctx, attempt.CreateInput{
-			LearnerID: fixture.learnerID, ActivityID: "assessment-check-config", ActivityVersion: 3,
+			LearnerID: fixture.learnerID, ActivityID: "assessment-check-config", ActivityVersion: 4,
 		})
 		if err != nil {
 			t.Fatal(err)
@@ -207,7 +207,7 @@ func setupAssistanceIntegration(t *testing.T) assistanceIntegrationFixture {
 	attemptRepository, _ := attempt.NewPostgresRepository(db, attempt.RepositoryOptions{Schema: schema})
 	attemptService, _ := attempt.NewService(attemptRepository, registry, attempt.ServiceOptions{})
 	current, err := attemptService.Create(ctx, attempt.CreateInput{
-		LearnerID: learnerID, ActivityID: "assessment-check-config", ActivityVersion: 3,
+		LearnerID: learnerID, ActivityID: "assessment-check-config", ActivityVersion: 4,
 	})
 	if err != nil {
 		t.Fatal(err)

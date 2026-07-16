@@ -5,7 +5,6 @@ import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
-import { Progress } from "../components/ui/progress";
 import { goBasicsChapters, getGoBasicsExerciseCount, getGoBasicsLessonCount, validateGoBasicsCourse } from "../data/goBasicsCourse";
 
 const validationErrors = validateGoBasicsCourse();
@@ -25,7 +24,7 @@ export function GoBasicsCourse() {
             <div>
               <CardTitle className="text-3xl md:text-5xl">从第一行 Go 代码到后端实习基本功</CardTitle>
               <CardDescription className="mt-4 max-w-3xl text-base leading-7">
-                GoGopher Arch 内置课程开始迁移到 React + MDX 内容系统。课程文章用 Markdown/MDX 管理，页面继续保留工程实践、常见坑、复盘问题和可运行 sandbox 练习。
+                13 章 Go 基础内容可按目录自由浏览。每章包含课程文章、工程实践、常见坑、复盘问题和章节练习，不受个性化学习进度限制。
               </CardDescription>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -50,7 +49,7 @@ export function GoBasicsCourse() {
               <ShieldCheck className="text-primary" />
               内置课程说明
             </CardTitle>
-            <CardDescription>课程正文迁移到 MDX 后，仍在应用内完成练习和验收。</CardDescription>
+            <CardDescription>课程目录负责系统学习，学习工作台负责可执行练习、验收与下一步推荐。</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-2">
             <HeroMetric label="章节" value={`${goBasicsChapters.length}`} />
@@ -75,21 +74,17 @@ export function GoBasicsCourse() {
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">学习建议</CardTitle>
-              <CardDescription>先读正文，再运行练习，最后进入任务线。</CardDescription>
+              <CardDescription>按顺序学习，或直接打开当前需要查阅的章节。</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
-              <div>
-                <div className="mb-2 flex justify-between text-sm">
-                  <span className="text-muted-foreground">访客演示进度</span>
-                  <span>18%</span>
-                </div>
-                <Progress value={18} />
-              </div>
               <ul className="flex flex-col gap-3 text-sm text-muted-foreground">
-                <li className="flex gap-2"><CheckCircle2 className="text-primary" /> 每章都配一个可运行练习。</li>
-                <li className="flex gap-2"><CheckCircle2 className="text-primary" /> 课程正文优先服务浏览器练习。</li>
-                <li className="flex gap-2"><CheckCircle2 className="text-primary" /> 完成基础后进入后端实习任务线。</li>
+                <li className="flex gap-2"><CheckCircle2 className="text-primary" /> 13 章内容都可以直接打开。</li>
+                <li className="flex gap-2"><CheckCircle2 className="text-primary" /> 每章都包含起始代码和验收目标。</li>
+                <li className="flex gap-2"><CheckCircle2 className="text-primary" /> 需要在线运行和反馈时进入学习工作台。</li>
               </ul>
+              <Button asChild variant="outline">
+                <Link to="/dashboard">进入学习工作台</Link>
+              </Button>
             </CardContent>
           </Card>
         </aside>
@@ -118,7 +113,7 @@ export function GoBasicsCourse() {
                   </div>
                   <div className="flex items-center gap-2 text-sm text-primary">
                     <CheckCircle2 className="size-4" />
-                    {chapter.contentKind === "mdx" ? "MDX 文章 + sandbox 练习" : "内置正文 + sandbox 练习"}
+                    {chapter.contentKind === "mdx" ? "MDX 文章 + 章节练习" : "内置正文 + 章节练习"}
                   </div>
                 </CardContent>
               </Card>

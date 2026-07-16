@@ -65,7 +65,7 @@ test.describe('Learning slice vertical scenarios', () => {
     const resultSection = page.getByRole('heading', { name: '本节结果' }).locator('xpath=ancestor::section[1]')
     await expect(resultSection).toBeVisible()
     await expect(resultSection.getByText('代码可以完成编译')).toBeVisible()
-    await expect(resultSection.getByText('已写下工具反馈小结')).toBeVisible()
+    await expect(resultSection.getByText('已写下工具反馈小结')).toHaveCount(0)
 
     await pollCapability(page, 'M1-01', (value) => value.snapshot?.acquisition_state === 'exploring')
     await page.getByRole('link', { name: /学习总览/ }).click()
@@ -216,7 +216,7 @@ test.describe('Learning slice vertical scenarios', () => {
       assertNoHeldOut(await response.text())
     }
 
-    await readJSON(await page.request.get(apiRoot + '/activities/assessment-check-config?version=3'), [200])
+    await readJSON(await page.request.get(apiRoot + '/activities/assessment-check-config?version=4'), [200])
     await readJSON(await page.request.get(apiRoot + '/next'), [200])
   })
 })
@@ -228,7 +228,7 @@ async function bootstrap(page: Page) {
 async function createAssessment(page: Page): Promise<AttemptResponse> {
   return readJSON<AttemptResponse>(
     await page.request.post(apiRoot + '/attempts', {
-      data: { activity_id: 'assessment-check-config', activity_version: 3 },
+      data: { activity_id: 'assessment-check-config', activity_version: 4 },
     }),
     [201],
   )

@@ -770,7 +770,7 @@ Dashboard 只需要把静态“今日建议”替换为 `/learning/next` 的一�
 
 ## 18. 发布与回滚
 
-第一切片默认通过功能开关关闭，只在本地开发环境开启。
+应用配置未显式提供 `LEARNING_SLICE_ENABLED` 时默认关闭。仓库提供的 `.env.example` 和 local Compose 可以为一键本地体验显式设为 `true`；非 `local` / `test` 环境仍禁止启用。
 
 发布前检查：
 

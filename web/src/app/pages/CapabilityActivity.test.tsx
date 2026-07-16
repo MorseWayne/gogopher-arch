@@ -33,7 +33,7 @@ describe('CapabilityActivity', () => {
       }),
     )
 
-    renderActivity('/learning/activities/guided-run-model?version=4')
+    renderActivity('/learning/activities/guided-run-model?version=6')
 
     expect(await screen.findByRole('heading', { name: '学习功能暂不可用' })).toBeVisible()
     expect(screen.getByText('当前环境还没有开启学习服务，请联系维护者后再试。')).toBeVisible()
@@ -45,7 +45,7 @@ describe('CapabilityActivity', () => {
   it('bootstraps an HttpOnly-backed session and renders public Activity context without local storage', async () => {
     useDefinitionHandlers()
 
-    renderActivity('/learning/activities/guided-run-model?version=4')
+    renderActivity('/learning/activities/guided-run-model?version=6')
 
     expect(await screen.findByRole('heading', { name: activityFixture.activity.title })).toBeVisible()
     expect(screen.getAllByText(/依次运行 Build、Test、Vet/)[0]).toBeVisible()
@@ -69,7 +69,7 @@ describe('CapabilityActivity', () => {
     )
     const user = userEvent.setup()
 
-    renderActivity('/learning/activities/guided-run-model?version=4')
+    renderActivity('/learning/activities/guided-run-model?version=6')
     expect(await screen.findByRole('heading', { name: '暂时无法恢复学习进度' })).toBeVisible()
     await user.click(screen.getByRole('button', { name: '重试' }))
 
@@ -85,7 +85,7 @@ describe('CapabilityActivity', () => {
       return HttpResponse.json(attemptFixture)
     }))
 
-    renderActivity('/learning/activities/guided-run-model?version=4&attempt=attempt-current')
+    renderActivity('/learning/activities/guided-run-model?version=6&attempt=attempt-current')
 
     expect(await screen.findByRole('heading', { name: '进行中' })).toBeVisible()
     expect(screen.getByRole('button', { name: 'main.go' })).toBeVisible()
@@ -94,13 +94,33 @@ describe('CapabilityActivity', () => {
 
   it('loads the frozen release when continuing an older Attempt', async () => {
     let requestedRelease = ''
+    let capabilityRelease = ''
+    let capabilityVersion = ''
+    const historicalActivity = {
+      ...activityFixture,
+      release_id: 'm1-first-slice-v3',
+      activity: {
+        ...activityFixture.activity,
+        version: 3,
+        capability_refs: [{ id: 'M1-01', version: 1 }],
+      },
+    }
     server.use(
       http.post(`${root}/session`, () => HttpResponse.json(sessionFixture)),
       http.get(`${root}/activities/:id`, ({ request }) => {
         requestedRelease = new URL(request.url).searchParams.get('release_id') ?? ''
-        return HttpResponse.json(activityFixture)
+        return HttpResponse.json(historicalActivity)
       }),
-      http.get(`${root}/capabilities/:id`, () => HttpResponse.json(capabilityFixture)),
+      http.get(`${root}/capabilities/:id`, ({ request }) => {
+        const query = new URL(request.url).searchParams
+        capabilityRelease = query.get('release_id') ?? ''
+        capabilityVersion = query.get('version') ?? ''
+        return HttpResponse.json({
+          ...capabilityFixture,
+          release_id: 'm1-first-slice-v3',
+          capability: { ...capabilityFixture.capability, version: 1 },
+        })
+      }),
       http.get(`${root}/attempts/:id`, () => HttpResponse.json(attemptFixture)),
     )
 
@@ -108,6 +128,8 @@ describe('CapabilityActivity', () => {
 
     expect(await screen.findByRole('heading', { name: '进行中' })).toBeVisible()
     expect(requestedRelease).toBe('m1-first-slice-v3')
+    expect(capabilityRelease).toBe('m1-first-slice-v3')
+    expect(capabilityVersion).toBe('1')
   })
 
   it('explains owner isolation when a new session cannot read the old Attempt', async () => {
@@ -117,7 +139,7 @@ describe('CapabilityActivity', () => {
       { status: 404 },
     )))
 
-    renderActivity('/learning/activities/guided-run-model?version=4&attempt=old-owner-attempt')
+    renderActivity('/learning/activities/guided-run-model?version=6&attempt=old-owner-attempt')
 
     expect(await screen.findByRole('alert')).toHaveTextContent('无法恢复这份学习记录')
     expect(screen.getByRole('button', { name: '重新开始本节' })).toBeVisible()
@@ -134,7 +156,7 @@ describe('CapabilityActivity', () => {
       http.get(`${root}/attempts/:id`, () => HttpResponse.json(attemptFixture)),
     )
     const user = userEvent.setup()
-    renderActivity('/learning/activities/guided-run-model?version=4')
+    renderActivity('/learning/activities/guided-run-model?version=6')
 
     await user.click(await screen.findByRole('button', { name: '开始本节练习' }))
 

@@ -37,7 +37,7 @@ func TestAttemptHandlerResumesOpenAttemptWithoutCreatingAnotherFact(t *testing.T
 	service := &attemptServiceStub{createdResult: &resumed}
 	observer := &attemptObserverStub{}
 	handler, _ := NewAttemptHandler(service, nil, observer)
-	request := httptest.NewRequest(http.MethodPost, "/api/v1/learning/attempts", strings.NewReader(`{"activity_id":"guided-run-model","activity_version":4}`))
+	request := httptest.NewRequest(http.MethodPost, "/api/v1/learning/attempts", strings.NewReader(`{"activity_id":"guided-run-model","activity_version":5}`))
 	request = request.WithContext(context.WithValue(request.Context(), sessionContextKey{}, learningsession.Session{LearnerID: "owner"}))
 	response := httptest.NewRecorder()
 
@@ -54,7 +54,7 @@ func TestAttemptHandlerResumesOpenAttemptWithoutCreatingAnotherFact(t *testing.T
 func TestAttemptHandlerRequiresReviewItemClaim(t *testing.T) {
 	service := &attemptServiceStub{createErr: attempt.ErrReviewClaimRequired}
 	handler, _ := NewAttemptHandler(service, nil)
-	request := httptest.NewRequest(http.MethodPost, "/api/v1/learning/attempts", strings.NewReader(`{"activity_id":"review-check-config-variant","activity_version":2}`))
+	request := httptest.NewRequest(http.MethodPost, "/api/v1/learning/attempts", strings.NewReader(`{"activity_id":"review-check-config-variant","activity_version":3}`))
 	request = request.WithContext(context.WithValue(request.Context(), sessionContextKey{}, learningsession.Session{LearnerID: "owner"}))
 	response := httptest.NewRecorder()
 	handler.Create(response, request)

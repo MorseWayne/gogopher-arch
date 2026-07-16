@@ -7,8 +7,13 @@ export function getActivity(activityID: string, version = 1, releaseID = ''): Pr
   return learningRequest(`/activities/${encodeURIComponent(activityID)}?${query}`)
 }
 
-export function getCapability(capabilityID: string): Promise<CapabilityResponse> {
-  return learningRequest(`/capabilities/${encodeURIComponent(capabilityID)}`)
+export function getCapability(capabilityID: string, version?: number, releaseID = ''): Promise<CapabilityResponse> {
+  const query = new URLSearchParams()
+  if (version !== undefined) query.set('version', String(version))
+  if (releaseID) query.set('release_id', releaseID)
+  const encoded = query.toString()
+  const suffix = encoded ? `?${encoded}` : ''
+  return learningRequest(`/capabilities/${encodeURIComponent(capabilityID)}${suffix}`)
 }
 
 export function getNextRecommendation(): Promise<NextResponse> {

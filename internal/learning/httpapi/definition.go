@@ -13,7 +13,7 @@ import (
 )
 
 type LearningReader interface {
-	Capability(context.Context, string, string, time.Time) (projection.CapabilityRead, error)
+	Capability(context.Context, string, projection.CapabilitySelection, time.Time) (projection.CapabilityRead, error)
 	Next(context.Context, string, time.Time) (*projection.NextRecommendation, error)
 }
 
@@ -46,7 +46,15 @@ func (h *DefinitionHandler) Capability(w http.ResponseWriter, request *http.Requ
 		return
 	}
 	asOf := h.now().UTC()
-	value, err := h.reader.Capability(request.Context(), owner.LearnerID, request.PathValue("id"), asOf)
+	version, ok := optionalRequestedVersion(w, request)
+	if !ok {
+		return
+	}
+	value, err := h.reader.Capability(request.Context(), owner.LearnerID, projection.CapabilitySelection{
+		ReleaseID: request.URL.Query().Get("release_id"),
+		ID:        request.PathValue("id"),
+		Version:   version,
+	}, asOf)
 	if err != nil {
 		h.writeDefinitionError(w, err)
 		return
@@ -157,6 +165,14 @@ func requestedVersion(w http.ResponseWriter, request *http.Request) (int, bool) 
 		return 0, false
 	}
 	return version, true
+}
+
+func optionalRequestedVersion(w http.ResponseWriter, request *http.Request) (int, bool) {
+	raw := request.URL.Query().Get("version")
+	if raw == "" {
+		return 0, true
+	}
+	return requestedVersion(w, request)
 }
 func (h *DefinitionHandler) writeDefinitionError(w http.ResponseWriter, err error) {
 	if errors.Is(err, definition.ErrDefinitionNotFound) {

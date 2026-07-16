@@ -136,7 +136,7 @@ web/e2e/learning-slice.spec.ts
 ### D10 — 发布、回滚与文档
 
 - [x] 更新 README 本地启用方式、migration、release 内容目录和安全限制。
-- [x] 更新 `.env.example`，默认关闭 Learning slice。
+- [x] 保持应用配置默认关闭；`.env.example` 与 local Compose 为本地一键体验显式开启 Learning slice。
 - [x] 增加宿主绑定/Compose 端口断言，禁止 Gateway/Sandbox 对外发布。
 - [x] 验证 feature flag 关闭时显示明确 unavailable 状态，不回退旧课程、Mission 或 sandbox。
 - [x] 编写回滚步骤：关闭 flag，保留表、Evidence 和 release，不删除历史。

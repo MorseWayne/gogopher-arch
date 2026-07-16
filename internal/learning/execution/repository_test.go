@@ -217,7 +217,7 @@ func setupExecutionIntegration(t *testing.T) executionIntegrationFixture {
 	}
 	attemptRepository, _ := attempt.NewPostgresRepository(db, attempt.RepositoryOptions{Schema: schema})
 	attemptService, _ := attempt.NewService(attemptRepository, registry, attempt.ServiceOptions{})
-	current, err := attemptService.Create(ctx, attempt.CreateInput{LearnerID: learnerID, ActivityID: "guided-run-model", ActivityVersion: 4})
+	current, err := attemptService.Create(ctx, attempt.CreateInput{LearnerID: learnerID, ActivityID: "guided-run-model", ActivityVersion: 5})
 	if err != nil {
 		t.Fatal(err)
 	}

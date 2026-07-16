@@ -95,7 +95,7 @@ const baseGoBasicsChapters: GoCourseChapter[] = [
     summary: "从第一段可运行的 Go 程序开始，建立命令行、标准输出、错误检查和本地工具链的基础手感。",
     goals: [
       "能解释 package main、func main 与可执行程序入口的关系。",
-      "能使用 go run 在 sandbox 中运行最小程序并阅读 stdout。",
+      "能使用 go run 在本地 Go 环境中运行最小程序并阅读 stdout。",
       "能区分程序输入、输出、错误和退出状态。",
       "能把小程序拆成清晰的变量、分支和输出步骤。",
     ],
@@ -131,7 +131,7 @@ func main() {
     ],
     modernNotes: [
       { title: "Go 1.24+ 仍重视简单启动路径", body: "现代 Go 增加了工具链、标准库和性能改进，但一个服务能否被快速运行、快速观察、快速失败，仍取决于 main 包入口和清晰的初始化流程。" },
-      { title: "sandbox 与本地环境要分开理解", body: "浏览器 sandbox 适合练习语法和最小复现；真实项目还会受环境变量、网络、文件系统和容器镜像影响。课程练习刻意保持可移植，避免依赖特定机器。" },
+      { title: "练习环境与真实项目要分开理解", body: "本地小程序适合练习语法和最小复现；真实项目还会受环境变量、网络、文件系统和容器镜像影响。课程练习刻意保持可移植，避免依赖特定机器。" },
     ],
     engineeringPractices: [
       "先运行最小程序，再逐步增加输入、分支和依赖，避免一次写太多导致错误来源不清。",
@@ -145,7 +145,7 @@ func main() {
     ],
     exercise: {
       title: "打印入职欢迎信息",
-      prompt: "运行一段最小 Go 程序，确认你能通过 sandbox 得到稳定输出。",
+      prompt: "运行一段最小 Go 程序，确认你能通过本地 Go 工具链得到稳定输出。",
       starterCode: `package main
 
 import "fmt"
@@ -915,7 +915,7 @@ func main() {
 }`,
       expectedOutput: "goos=",
       outputMatch: "contains",
-      hints: ["不同 sandbox 可能运行在不同 GOOS/GOARCH 上。", "contains 匹配允许保留平台差异。"],
+      hints: ["不同机器可能运行在不同 GOOS/GOARCH 上。", "contains 匹配允许保留平台差异。"],
     },
     checklist: ["能解释 module 和 package。", "能说出 gofmt/go test/go build 的职责。", "能识别循环导入问题。"],
     reviewQuestions: [

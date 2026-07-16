@@ -23,7 +23,7 @@ func TestServiceRequiresAndFreezesGuidedExplanation(t *testing.T) {
 		t.Fatal(err)
 	}
 	releaseID := registry.CurrentReleaseID()
-	activity, err := registry.ActivityView(releaseID, "guided-run-model", 4)
+	activity, err := registry.ActivityView(releaseID, "guided-run-model", 6)
 	if err != nil {
 		t.Fatal(err)
 	}

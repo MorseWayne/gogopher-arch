@@ -47,6 +47,12 @@ type CapabilityRead struct {
 	RecentEvidence []EvidenceSummary         `json:"recent_evidence"`
 }
 
+type CapabilitySelection struct {
+	ReleaseID string
+	ID        string
+	Version   int
+}
+
 type ReviewItemView struct {
 	ID                string    `json:"id"`
 	ReleaseID         string    `json:"release_id"`
@@ -106,16 +112,23 @@ func NewReader(db *sql.DB, registry *definition.Registry, options ReaderOptions)
 	return &Reader{db: db, schema: schema, registry: registry, recentEvidenceLimit: limit}, nil
 }
 
-func (r *Reader) Capability(ctx context.Context, learnerID, capabilityID string, asOf time.Time) (CapabilityRead, error) {
-	if learnerID == "" || capabilityID == "" || asOf.IsZero() {
+func (r *Reader) Capability(ctx context.Context, learnerID string, selection CapabilitySelection, asOf time.Time) (CapabilityRead, error) {
+	if learnerID == "" || selection.ID == "" || selection.Version < 0 || asOf.IsZero() {
 		return CapabilityRead{}, fmt.Errorf("learner, capability, and as_of are required")
 	}
-	releaseID := r.registry.CurrentReleaseID()
-	stored, err := r.registry.Latest(releaseID, definition.KindCapability, capabilityID)
-	if err != nil {
-		return CapabilityRead{}, err
+	releaseID := selection.ReleaseID
+	if releaseID == "" {
+		releaseID = r.registry.CurrentReleaseID()
 	}
-	capability, err := r.registry.CapabilityView(releaseID, stored.ID, stored.Version)
+	version := selection.Version
+	if version == 0 {
+		stored, err := r.registry.Latest(releaseID, definition.KindCapability, selection.ID)
+		if err != nil {
+			return CapabilityRead{}, err
+		}
+		version = stored.Version
+	}
+	capability, err := r.registry.CapabilityView(releaseID, selection.ID, version)
 	if err != nil {
 		return CapabilityRead{}, err
 	}

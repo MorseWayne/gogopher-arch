@@ -14,12 +14,12 @@ import (
 func TestServiceCreatesFrozenStarterAndEnforcesOwner(t *testing.T) {
 	service, repository := newTestService(t)
 	created, err := service.Create(context.Background(), CreateInput{
-		LearnerID: "owner", ActivityID: "assessment-check-config", ActivityVersion: 3,
+		LearnerID: "owner", ActivityID: "assessment-check-config", ActivityVersion: 4,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if created.ReleaseID != "m1-first-slice-v4" || created.ActivityHash == "" || created.TaskHash == "" || len(created.CapabilityRefs) != 4 {
+	if created.ReleaseID != "m1-first-slice-v7" || created.ActivityHash == "" || created.TaskHash == "" || len(created.CapabilityRefs) != 4 {
 		t.Fatalf("frozen attempt = %#v", created)
 	}
 	if _, exists := created.Workspace["internal/config/heldout_test.go"]; exists {
@@ -39,7 +39,7 @@ func TestServiceCreatesFrozenStarterAndEnforcesOwner(t *testing.T) {
 func TestServiceRequiresReviewItemClaimForReviewActivity(t *testing.T) {
 	service, _ := newTestService(t)
 	_, err := service.Create(context.Background(), CreateInput{
-		LearnerID: "owner", ActivityID: "review-check-config-variant", ActivityVersion: 2,
+		LearnerID: "owner", ActivityID: "review-check-config-variant", ActivityVersion: 3,
 	})
 	if !errors.Is(err, ErrReviewClaimRequired) {
 		t.Fatalf("Create(review) error = %v", err)
@@ -48,7 +48,7 @@ func TestServiceRequiresReviewItemClaimForReviewActivity(t *testing.T) {
 
 func TestServiceSavesCompleteWorkspaceWithRevisionCAS(t *testing.T) {
 	service, _ := newTestService(t)
-	created, err := service.Create(context.Background(), CreateInput{LearnerID: "owner", ActivityID: "assessment-check-config", ActivityVersion: 3})
+	created, err := service.Create(context.Background(), CreateInput{LearnerID: "owner", ActivityID: "assessment-check-config", ActivityVersion: 4})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -70,7 +70,7 @@ func TestServiceSavesCompleteWorkspaceWithRevisionCAS(t *testing.T) {
 
 func TestServiceRejectsWorkspaceContractViolations(t *testing.T) {
 	service, _ := newTestService(t)
-	created, err := service.Create(context.Background(), CreateInput{LearnerID: "owner", ActivityID: "assessment-check-config", ActivityVersion: 3})
+	created, err := service.Create(context.Background(), CreateInput{LearnerID: "owner", ActivityID: "assessment-check-config", ActivityVersion: 4})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -26,7 +26,7 @@ func TestLoadRegistryIndexesCurrentAndHistoricalDefinitions(t *testing.T) {
 	if got, want := len(definitions), 17; got != want {
 		t.Fatalf("len(Definitions()) = %d, want %d", got, want)
 	}
-	ref := DefinitionRef{ReleaseID: testReleaseID, Kind: KindActivity, ID: "assessment-check-config", Version: 3}
+	ref := DefinitionRef{ReleaseID: testReleaseID, Kind: KindActivity, ID: "assessment-check-config", Version: 4}
 	definition, err := registry.Get(ref)
 	if err != nil {
 		t.Fatal(err)
@@ -52,13 +52,19 @@ func TestRegistryViewsExcludePrivateEvaluationContract(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	activity, err := registry.ActivityView(testReleaseID, "assessment-check-config", 3)
+	activity, err := registry.ActivityView(testReleaseID, "assessment-check-config", 4)
 	if err != nil {
 		t.Fatal(err)
+	}
+	if activity.ContentRef != "web/src/content/learning/config-normalizer-assessment-v1.mdx" {
+		t.Fatalf("assessment content ref = %q", activity.ContentRef)
 	}
 	review, err := registry.ReviewActivity(testReleaseID, activity.CapabilityRefs)
 	if err != nil || review.ID != "review-check-config-variant" || review.Mode != "review" {
 		t.Fatalf("ReviewActivity() = %#v, %v", review, err)
+	}
+	if review.ContentRef != "web/src/content/learning/config-merge-review-v1.mdx" {
+		t.Fatalf("review content ref = %q", review.ContentRef)
 	}
 	toolingRemediation, err := registry.RemediationActivity(testReleaseID, VersionedDefinitionRef{ID: "M1-01", Version: 2})
 	if err != nil || toolingRemediation.ID != "guided-run-model" || toolingRemediation.Mode != "guided" {

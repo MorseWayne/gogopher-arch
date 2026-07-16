@@ -37,7 +37,7 @@ export const mdxGoBasicsChapterMetadata: GoBasicsMdxChapter[] = [
     concepts: ["package main", "fmt.Printf", "stdout"],
     estimatedMinutes: 6,
     title: "打印入职欢迎信息",
-    prompt: "运行一段最小 Go 程序，确认你能通过 sandbox 得到稳定输出。",
+    prompt: "运行一段最小 Go 程序，确认你能通过本地 Go 工具链得到稳定输出。",
     starterCode: `package main
 
 import "fmt"
@@ -59,7 +59,7 @@ func main() {
       concepts: ["package main", "fmt.Printf", "stdout"],
       estimatedMinutes: 6,
       title: "打印入职欢迎信息",
-      prompt: "运行一段最小 Go 程序，确认你能通过 sandbox 得到稳定输出。",
+      prompt: "运行一段最小 Go 程序，确认你能通过本地 Go 工具链得到稳定输出。",
       starterCode: `package main
 
 import "fmt"
@@ -1774,7 +1774,7 @@ func main() {
 }`,
     expectedOutput: "goos=",
     outputMatch: "contains",
-    hints: ["不同 sandbox 可能运行在不同 GOOS/GOARCH 上。", "contains 匹配允许保留平台差异。", "真实项目还可以用 go env 查看更完整工具链环境。"],
+    hints: ["不同机器可能运行在不同 GOOS/GOARCH 上。", "contains 匹配允许保留平台差异。", "真实项目还可以用 go env 查看更完整工具链环境。"],
     solutionOutline: ["导入 runtime 包。", "读取 runtime.GOOS 和 runtime.GOARCH。", "使用稳定前缀输出，允许不同平台差异。"],
   },
   exercises: [
@@ -1798,7 +1798,7 @@ func main() {
 }`,
       expectedOutput: "goos=",
       outputMatch: "contains",
-      hints: ["不同 sandbox 可能运行在不同 GOOS/GOARCH 上。", "contains 匹配允许保留平台差异。", "真实项目还可以用 go env 查看更完整工具链环境。"],
+      hints: ["不同机器可能运行在不同 GOOS/GOARCH 上。", "contains 匹配允许保留平台差异。", "真实项目还可以用 go env 查看更完整工具链环境。"],
       solutionOutline: ["导入 runtime 包。", "读取 runtime.GOOS 和 runtime.GOARCH。", "使用稳定前缀输出，允许不同平台差异。"],
     },
     {
@@ -2078,7 +2078,7 @@ func main() {
       estimatedMinutes: 25,
       title: "比较两种字符串拼接策略",
       prompt: "补全 builderJoin，让它和 slowJoin 输出一致。这个练习模拟 benchmark 前先保证行为一致。",
-      context: "真正优化前应先写基准测试；sandbox 里先用相同输入输出建立正确性基线。",
+      context: "真正优化前应先写基准测试；练习时先用相同输入输出建立正确性基线。",
       starterCode: `package main
 
 import (
@@ -2393,7 +2393,7 @@ func main() {
 }`,
     expectedOutput: "size=16",
     outputMatch: "trimmed-exact",
-    hints: ["int64 通常需要 8 字节对齐。", "bool 只有 1 字节，但结构体整体会包含填充。", "不同架构上大小可能不同，课程 sandbox 通常是 64 位环境。"],
+    hints: ["int64 通常需要 8 字节对齐。", "bool 只有 1 字节，但结构体整体会包含填充。", "不同架构上大小可能不同，请以实际运行环境为准。"],
     solutionOutline: ["导入 unsafe 包。", "定义包含 int64 和 bool 的 Metric。", "用 unsafe.Sizeof(Metric{}) 输出结构体固定大小。"],
   },
   exercises: [
@@ -2422,7 +2422,7 @@ func main() {
 }`,
       expectedOutput: "size=16",
       outputMatch: "trimmed-exact",
-      hints: ["int64 通常需要 8 字节对齐。", "bool 只有 1 字节，但结构体整体会包含填充。", "不同架构上大小可能不同，课程 sandbox 通常是 64 位环境。"],
+      hints: ["int64 通常需要 8 字节对齐。", "bool 只有 1 字节，但结构体整体会包含填充。", "不同架构上大小可能不同，请以实际运行环境为准。"],
       solutionOutline: ["导入 unsafe 包。", "定义包含 int64 和 bool 的 Metric。", "用 unsafe.Sizeof(Metric{}) 输出结构体固定大小。"],
     },
     {

@@ -131,7 +131,7 @@ func TestGeneratorRejectsInfrastructureFailure(t *testing.T) {
 	}
 }
 
-func TestGeneratorEvaluatesGuidedExplanationFromFrozenSubmission(t *testing.T) {
+func TestGeneratorReplaysHistoricalGuidedExplanationRule(t *testing.T) {
 	contentDir, err := filepath.Abs("../../../content/learning")
 	if err != nil {
 		t.Fatal(err)
@@ -144,8 +144,8 @@ func TestGeneratorEvaluatesGuidedExplanationFromFrozenSubmission(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	releaseID := registry.CurrentReleaseID()
-	task, err := registry.ExecutionTask(releaseID, "guided-run-model-v2", 4)
+	releaseID := "m1-first-slice-v6"
+	task, err := registry.ExecutionTask(releaseID, "guided-run-model-v2", 5)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -178,6 +178,44 @@ func TestGeneratorEvaluatesGuidedExplanationFromFrozenSubmission(t *testing.T) {
 	}
 }
 
+func TestGeneratorDoesNotScoreCurrentGuidedExplanation(t *testing.T) {
+	contentDir, err := filepath.Abs("../../../content/learning")
+	if err != nil {
+		t.Fatal(err)
+	}
+	registry, err := definition.LoadRegistry(definition.RegistryOptions{ContentDir: contentDir})
+	if err != nil {
+		t.Fatal(err)
+	}
+	generator, err := NewGenerator(registry)
+	if err != nil {
+		t.Fatal(err)
+	}
+	releaseID := registry.CurrentReleaseID()
+	task, err := registry.ExecutionTask(releaseID, "guided-run-model-v2", 6)
+	if err != nil {
+		t.Fatal(err)
+	}
+	workspace, err := registry.PublicWorkspace(releaseID, task.ID, task.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	frozen := submission.Submission{
+		ID: "submission-guided-current", AttemptID: "attempt-guided-current", ReleaseID: releaseID,
+		TaskID: task.ID, TaskVersion: task.Version, TaskHash: task.BundleHash,
+		Workspace: workspace, Explanation: strings.Repeat("学", 20),
+	}
+	terminal := terminalExecution(frozen, execution.ExecutionSucceeded, []execution.StageResult{passedStage(execution.StageBuild)})
+
+	results, err := generator.Generate(frozen, terminal)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(results) != 1 || results[0].RuleID != "toolchain-baseline-builds" {
+		t.Fatalf("current guided results = %#v", results)
+	}
+}
+
 func TestGeneratorConsumesRealAssessmentSandboxResult(t *testing.T) {
 	contentDir, err := filepath.Abs("../../../content/learning")
 	if err != nil {
@@ -188,7 +226,7 @@ func TestGeneratorConsumesRealAssessmentSandboxResult(t *testing.T) {
 		t.Fatal(err)
 	}
 	releaseID := registry.CurrentReleaseID()
-	activity, err := registry.ActivityView(releaseID, "assessment-check-config", 3)
+	activity, err := registry.ActivityView(releaseID, "assessment-check-config", 4)
 	if err != nil {
 		t.Fatal(err)
 	}

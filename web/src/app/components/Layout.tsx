@@ -1,5 +1,5 @@
 import { Link, Outlet } from 'react-router'
-import { Github, Home, LayoutDashboard, Terminal } from 'lucide-react'
+import { BookOpenText, Github, Home, LayoutDashboard, Terminal } from 'lucide-react'
 
 import { Button } from './ui/button'
 import { ThemeToggle } from './ThemeToggle'
@@ -11,6 +11,12 @@ export function PublicLayout() {
         <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 md:px-6">
           <Brand />
           <nav className="flex items-center gap-2">
+            <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex">
+              <Link to="/courses/go-basics">
+                <BookOpenText />
+                课程目录
+              </Link>
+            </Button>
             <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
               <a href="https://github.com/MorseWayne/gogopher-arch" target="_blank" rel="noreferrer">
                 <Github />
@@ -36,6 +42,7 @@ export function PublicLayout() {
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between md:px-6">
           <span>© 2026 GoGopher Arch · MIT License</span>
           <div className="flex items-center gap-4">
+            <Link to="/courses/go-basics" className="hover:text-foreground">课程目录</Link>
             <Link to="/dashboard" className="hover:text-foreground">学习工作台</Link>
             <a
               href="https://github.com/MorseWayne/gogopher-arch"
@@ -65,6 +72,18 @@ export function LearningLayout() {
             <div className="truncate text-xs text-muted-foreground">读懂概念，在代码中练会</div>
           </div>
           <div className="ml-auto flex items-center gap-2">
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/courses/go-basics">
+                <BookOpenText />
+                <span className="hidden sm:inline">课程目录</span>
+              </Link>
+            </Button>
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/dashboard">
+                <LayoutDashboard />
+                <span className="hidden md:inline">学习工作台</span>
+              </Link>
+            </Button>
             <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
               <Link to="/">
                 <Home />

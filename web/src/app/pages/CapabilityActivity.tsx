@@ -66,7 +66,8 @@ export function CapabilityActivity() {
     setDefinition({ status: 'loading' })
     void getActivity(activityId, version, releaseID).then(async (activity) => {
       const capabilities = await Promise.all(
-        activity.activity.capability_refs.map((reference) => getCapability(reference.id)),
+        activity.activity.capability_refs.map((reference) =>
+          getCapability(reference.id, reference.version, activity.release_id)),
       )
       if (current) setDefinition({ status: 'ready', value: { activity, capabilities, baselineCapabilities: capabilities } })
     }).catch((error: unknown) => {
@@ -121,6 +122,7 @@ export function CapabilityActivity() {
     const references = definition.value.activity.activity.capability_refs
     void refreshCapabilitySnapshots(
       references,
+      definition.value.activity.release_id,
       value.evidence,
       (capabilities) => setDefinition((current) => {
         if (current.status !== 'ready') return current
@@ -216,7 +218,7 @@ function ActivityWorkspace({
           </div>
 
           <div className="p-6 md:p-8">
-            <LearningContent contentRef={activity.content_ref} />
+            <LearningContent contentRef={activity.content_ref} mode={activity.mode} />
             <div className="mt-8 border-t pt-8">
             {attempt.status === 'idle' && (
               <div className="flex flex-col items-start gap-4 rounded-2xl border border-dashed p-6">
@@ -388,12 +390,13 @@ function evidenceLabel(type: string): string {
 
 async function refreshCapabilitySnapshots(
   references: ActivityResponse['activity']['capability_refs'],
+  releaseID: string,
   evidence: AttemptResponse['evidence'],
   onRead: (capabilities: CapabilityResponse[]) => void,
 ) {
   for (let count = 0; count < 20; count += 1) {
     const capabilities = await Promise.all(
-      references.map((reference) => getCapability(reference.id)),
+      references.map((reference) => getCapability(reference.id, reference.version, releaseID)),
     )
     onRead(capabilities)
     if (snapshotsCoverEvidence(capabilities, evidence)) return

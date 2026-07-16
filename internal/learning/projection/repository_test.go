@@ -57,8 +57,8 @@ func TestPostgresProjectorRebuildsFactsIdempotently(t *testing.T) {
 		policies[capabilityID], _ = registry.CapabilityPolicy(registry.CurrentReleaseID(), capabilityID, capabilityVersions[capabilityID])
 	}
 	policy := policies["M1-03"]
-	assessmentActivity, _ := registry.ActivityView(registry.CurrentReleaseID(), "assessment-check-config", 3)
-	reviewActivity, _ := registry.ActivityView(registry.CurrentReleaseID(), "review-check-config-variant", 2)
+	assessmentActivity, _ := registry.ActivityView(registry.CurrentReleaseID(), "assessment-check-config", 4)
+	reviewActivity, _ := registry.ActivityView(registry.CurrentReleaseID(), "review-check-config-variant", 3)
 	now := time.Date(2026, time.July, 13, 12, 0, 0, 0, time.UTC)
 	learnerID := "00000000-0000-4000-8000-000000000101"
 	attemptID := "00000000-0000-4000-8000-000000000102"
@@ -78,7 +78,7 @@ func TestPostgresProjectorRebuildsFactsIdempotently(t *testing.T) {
 		args  []any
 	}{
 		{`INSERT INTO learners (id,created_at) VALUES ($1,$2)`, []any{learnerID, now}},
-		{`INSERT INTO learning_attempts (id,learner_id,release_id,activity_id,activity_version,activity_hash,task_id,task_version,task_hash,capability_refs,mode,status,workspace,workspace_revision,workspace_hash,started_at,updated_at,submitted_at,completed_at) VALUES ($1,$2,$3,'assessment-check-config',3,$4,'assessment-check-config-v2',3,$5,'[]','assessment','completed','{}',0,$5,$6,$6,$6,$6)`, []any{attemptID, learnerID, registry.CurrentReleaseID(), assessmentActivity.ContentHash, hash64("c"), now}},
+		{`INSERT INTO learning_attempts (id,learner_id,release_id,activity_id,activity_version,activity_hash,task_id,task_version,task_hash,capability_refs,mode,status,workspace,workspace_revision,workspace_hash,started_at,updated_at,submitted_at,completed_at) VALUES ($1,$2,$3,'assessment-check-config',4,$4,'assessment-check-config-v2',3,$5,'[]','assessment','completed','{}',0,$5,$6,$6,$6,$6)`, []any{attemptID, learnerID, registry.CurrentReleaseID(), assessmentActivity.ContentHash, hash64("c"), now}},
 		{`INSERT INTO attempt_submissions (id,attempt_id,learner_id,submission_key,request_fingerprint,workspace,workspace_revision,workspace_hash,rule_set_hash,status,created_at,evaluated_at) VALUES ($1,$2,$3,'submit',$4,'{}',0,$4,$4,'evaluated',$5,$5)`, []any{submissionID, attemptID, learnerID, hash64("d"), now}},
 		{`INSERT INTO attempt_executions (id,attempt_id,submission_id,action,sequence,request_key,request_fingerprint,release_id,task_id,task_version,task_hash,workspace_revision,workspace_hash,spec,status,result,finished_at,created_at,updated_at) VALUES ($1,$2,$3,'submit',0,'submit:0',$4,$5,'assessment-check-config-v2',3,$4,0,$4,'{}','succeeded','{}',$6,$6,$6)`, []any{executionID, attemptID, submissionID, hash64("e"), registry.CurrentReleaseID(), now}},
 		{`INSERT INTO evaluation_batches (id,submission_id,execution_id,rule_set_hash,rule_results,created_at) VALUES ($1,$2,$3,$4,'[]',$5)`, []any{batchID, submissionID, executionID, hash64("f"), now}},
@@ -241,11 +241,11 @@ func TestPostgresProjectorRebuildsFactsIdempotently(t *testing.T) {
 		t.Fatalf("due Rebuild() = %#v, changed=%v, error=%v", dueSnapshot, changed, err)
 	}
 	reader, _ := NewReader(db, registry, ReaderOptions{Schema: schema})
-	capabilityRead, err := reader.Capability(ctx, learnerID, "M1-03", dueInput.AsOf)
+	capabilityRead, err := reader.Capability(ctx, learnerID, CapabilitySelection{ID: "M1-03"}, dueInput.AsOf)
 	if err != nil || capabilityRead.Snapshot == nil || capabilityRead.Snapshot.RetentionState != RetentionStateDue || len(capabilityRead.RecentEvidence) != 2 {
 		t.Fatalf("Capability(M1-03) = %#v, %v", capabilityRead, err)
 	}
-	guidedActivity, _ := registry.ActivityView(registry.CurrentReleaseID(), "guided-run-model", 4)
+	guidedActivity, _ := registry.ActivityView(registry.CurrentReleaseID(), "guided-run-model", 6)
 	guidedTask, _ := registry.TaskView(registry.CurrentReleaseID(), guidedActivity.TaskRef.ID, guidedActivity.TaskRef.Version)
 	openAttemptID := "00000000-0000-4000-8000-000000000116"
 	if _, err := db.ExecContext(ctx, `INSERT INTO "`+schema+`".learning_attempts (
@@ -451,7 +451,7 @@ func TestPostgresProjectorRebuildsFactsIdempotently(t *testing.T) {
 	if err != nil || !claimedRemediation.Created || claimedRemediation.Attempt.Mode != "practice" {
 		t.Fatalf("Claim(remediation) = %#v, %v", claimedRemediation, err)
 	}
-	remediationActivity, _ := registry.ActivityView(registry.CurrentReleaseID(), "practice-error-contract", 2)
+	remediationActivity, _ := registry.ActivityView(registry.CurrentReleaseID(), "practice-error-contract", 3)
 	remediationSubmissionID := "00000000-0000-4000-8000-000000000140"
 	remediationExecutionID := "00000000-0000-4000-8000-000000000141"
 	remediationBatchID := "00000000-0000-4000-8000-000000000142"

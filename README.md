@@ -19,6 +19,7 @@ GoGopher Arch 是一个以 Capability、Evidence 和 Review 为核心的 Go 学�
 | `ReviewItem` | 按 Snapshot 与 due time 安排后续练习 |
 
 浏览器不计算掌握状态，也不生成静态 progress。Dashboard 的下一项只来自 `GET /api/v1/learning/next`。
+文字小结会随 Submission 冻结并保存为 Artifact；当前切片不按字数自动生成 Evidence，也不参与能力投影。
 
 ## 当前纵向切片
 
@@ -32,7 +33,7 @@ GoGopher Arch 是一个以 Capability、Evidence 和 Review 为核心的 Go 学�
 
 ## 快速开始
 
-要求 Docker 20.10+、Docker Compose v2。Learning slice 默认关闭，必须显式 opt in：
+要求 Docker 20.10+、Docker Compose v2。应用配置在未提供环境变量时默认关闭 Learning slice；仓库提供的 `.env.example` 和 local Compose 为一键本地体验显式开启它：
 
 ```bash
 git clone https://github.com/MorseWayne/gogopher-arch.git
@@ -40,7 +41,7 @@ cd gogopher-arch
 cp .env.example .env
 ```
 
-编辑 `.env`：
+如需手动配置，确认 `.env` 包含：
 
 ```dotenv
 APP_ENV=local
@@ -163,8 +164,8 @@ go run ./cmd/learning-content validate --activity-set m1-first-slice
 ```bash
 go run ./cmd/learning-content release \
   --activity-set m1-first-slice \
-  --release-id m1-first-slice-v4 \
-  --created-at 2026-07-13T12:00:00Z
+  --release-id m1-first-slice-v7 \
+  --created-at 2026-07-16T16:39:53Z
 ```
 
 在更新 `current-release.json` 前验证 manifest、文件 hash 和 frontend bundle：
@@ -172,7 +173,7 @@ go run ./cmd/learning-content release \
 ```bash
 npm run build --prefix web
 go run ./cmd/learning-content verify \
-  --release-dir content/learning/releases/m1-first-slice-v4 \
+  --release-dir content/learning/releases/m1-first-slice-v7 \
   --web-dist web/dist
 ```
 
@@ -207,7 +208,7 @@ npm test --prefix web -- --run
 npm run build --prefix web
 ./scripts/check-compose-exposure.sh
 go run ./cmd/learning-content verify \
-  --release-dir content/learning/releases/m1-first-slice-v4 \
+  --release-dir content/learning/releases/m1-first-slice-v7 \
   --web-dist web/dist
 npm run e2e:compose --prefix web
 git diff --check
@@ -222,7 +223,7 @@ git diff --check
 | variable | default | purpose |
 | :--- | :--- | :--- |
 | `APP_ENV` | `local` | Learning 只允许在 `local` / `test` 开启 |
-| `LEARNING_SLICE_ENABLED` | `true`（Compose / `.env.example`） | 本地 Learning feature gate；生产环境仍禁止启用 |
+| `LEARNING_SLICE_ENABLED` | 应用默认 `false`；Compose / `.env.example` 为 `true` | 本地 Learning feature gate；生产环境仍禁止启用 |
 | `LEARNING_CONTENT_DIR` | `content/learning` | schema、pointer 与 release root |
 | `LEARNING_SESSION_TTL` | `720h` | anonymous session lifetime |
 | `DATABASE_URL` | Compose internal URL | Gateway / migrate database connection |
