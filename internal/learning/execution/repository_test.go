@@ -217,7 +217,7 @@ func setupExecutionIntegration(t *testing.T) executionIntegrationFixture {
 	}
 	attemptRepository, _ := attempt.NewPostgresRepository(db, attempt.RepositoryOptions{Schema: schema})
 	attemptService, _ := attempt.NewService(attemptRepository, registry, attempt.ServiceOptions{})
-	current, err := attemptService.Create(ctx, attempt.CreateInput{LearnerID: learnerID, ActivityID: "guided-run-model", ActivityVersion: 3})
+	current, err := attemptService.Create(ctx, attempt.CreateInput{LearnerID: learnerID, ActivityID: "guided-run-model", ActivityVersion: 4})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -225,7 +225,7 @@ func setupExecutionIntegration(t *testing.T) executionIntegrationFixture {
 	builder, _ := NewSpecBuilder(registry)
 	service, _ := NewService(repository, attemptService, builder, ServiceOptions{})
 	return executionIntegrationFixture{
-		ctx: ctx, learnerID: learnerID, current: current, registry: registry,
+		ctx: ctx, learnerID: learnerID, current: current.Attempt, registry: registry,
 		repository: repository, service: service,
 	}
 }

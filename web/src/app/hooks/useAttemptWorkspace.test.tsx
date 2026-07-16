@@ -73,7 +73,7 @@ describe('useAttemptWorkspace', () => {
     act(() => result.current.updateFile('main.go', 'package main\n\n// local draft'))
     await act(async () => result.current.save())
 
-    expect(result.current.saveState).toMatchObject({ status: 'error', message: expect.stringContaining('learning_unavailable') })
+    expect(result.current.saveState).toMatchObject({ status: 'error', message: '保存进度暂时失败，请重试。' })
     await waitFor(() => expect(localStorage.getItem(draftBackupKey(attemptFixture.id, 0))).not.toBeNull())
   })
 

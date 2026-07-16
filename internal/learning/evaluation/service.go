@@ -149,7 +149,9 @@ func (s *Service) Evaluate(ctx context.Context, learnerID, submissionID, executi
 				return Batch{}, false, err
 			}
 			artifactID := artifactIDs["test_report"]
-			if result.Stage == execution.StageAST || rule.EvidenceType == "implement" {
+			if result.Stage == execution.StageExplanation {
+				artifactID = artifactIDs["explanation"]
+			} else if result.Stage == execution.StageAST || rule.EvidenceType == "implement" {
 				artifactID = artifactIDs["diff"]
 			}
 			batch.Evidence = append(batch.Evidence, Evidence{
@@ -202,7 +204,7 @@ func (s *Service) buildArtifacts(frozen submission.Submission, task definition.E
 	}{
 		{kind: "workspace", content: map[string]any{"files": frozen.Workspace}},
 		{kind: "diff", content: map[string]any{"files": diffs}},
-		{kind: "explanation", content: map[string]any{"provided": false, "text": ""}},
+		{kind: "explanation", content: map[string]any{"provided": frozen.Explanation != "", "text": frozen.Explanation}},
 		{kind: "test_report", content: map[string]any{
 			"execution_id": terminal.ID,
 			"response":     terminal.Response,

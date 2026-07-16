@@ -108,6 +108,7 @@ const (
 	StageVet         Stage = "vet"
 	StageHeldOutTest Stage = "held_out_test"
 	StageAST         Stage = "ast"
+	StageExplanation Stage = "explanation"
 )
 
 type StageStatus string
@@ -447,7 +448,7 @@ func (r AssetRole) valid() bool {
 }
 
 func (s Stage) valid() bool {
-	return s == StageBuild || s == StageVisibleTest || s == StageVet || s == StageHeldOutTest || s == StageAST
+	return s == StageBuild || s == StageVisibleTest || s == StageVet || s == StageHeldOutTest || s == StageAST || s == StageExplanation
 }
 
 var (

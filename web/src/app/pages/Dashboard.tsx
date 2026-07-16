@@ -56,7 +56,7 @@ export function Dashboard() {
     setClaim({ status: 'claiming' })
     try {
       const attempt = await claimReviewAttempt(reviewItem.id)
-      navigate(activityHref(recommendation, attempt.id))
+      navigate(activityHref(recommendation, attempt.id, attempt.release_id))
     } catch (error) {
       if (error instanceof LearningApiError && error.status === 409) await loadNext()
       setClaim({ status: 'error', error })
@@ -64,7 +64,7 @@ export function Dashboard() {
   }
 
   if (session.status === 'loading') {
-    return <PageState icon={<LoaderCircle className="animate-spin" />} title="正在建立学习会话" description="Dashboard 只读取当前匿名会话的服务端学习状态。" />
+    return <PageState icon={<LoaderCircle className="animate-spin" />} title="正在恢复学习进度" description="马上带你回到上次学习的位置。" />
   }
   if (session.status === 'error') {
     return <UnavailableState error={session.error} retry={session.retry} />
@@ -74,21 +74,21 @@ export function Dashboard() {
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 md:px-6">
       <section className="rounded-3xl border bg-card p-6 shadow-sm md:p-8">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge>匿名同源会话</Badge>
-          <Badge variant="secondary">服务端学习状态</Badge>
+          <Badge>今日学习</Badge>
+          <Badge variant="secondary">进度已自动保存</Badge>
         </div>
-        <h1 className="mt-5 text-3xl font-bold tracking-tight md:text-4xl">学习工作台</h1>
+        <h1 className="mt-5 text-3xl font-bold tracking-tight md:text-4xl">继续你的 Go 学习</h1>
         <p className="mt-3 max-w-2xl leading-7 text-muted-foreground">
-          下一活动由 Learning API 根据当前 release、Capability Snapshot 和到期 review 计算；页面不生成本地 progress 或演示建议。
+          每次只专注一个清晰目标。完成练习并理解反馈后，这里会给出下一步。
         </p>
       </section>
 
       {next.status === 'loading' || next.status === 'idle' ? (
-        <PageState icon={<LoaderCircle className="animate-spin" />} title="正在读取下一活动" description="来源：GET /learning/next" embedded />
+        <PageState icon={<LoaderCircle className="animate-spin" />} title="正在准备今天的学习" description="正在恢复你的进度和下一步。" embedded />
       ) : next.status === 'error' ? (
         isLearningDisabled(next.error)
           ? <UnavailableState error={next.error} retry={loadNext} embedded />
-          : <PageState icon={<ServerOff />} title="下一活动暂时不可用" description={errorText(next.error)} action={<Button onClick={() => void loadNext()}><RefreshCw />重试</Button>} embedded />
+          : <PageState icon={<ServerOff />} title="下一节暂时无法打开" description={errorText(next.error)} action={<Button onClick={() => void loadNext()}><RefreshCw />重试</Button>} embedded />
       ) : (
         <RecommendationSection response={next.value} claim={claim} onClaim={claimReview} />
       )}
@@ -110,51 +110,47 @@ function RecommendationSection({
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><CircleOff className="text-muted-foreground" />暂无建议</CardTitle>
-          <CardDescription>当前 release 没有已到期 review，也没有满足 prerequisite 的 acquisition Activity。</CardDescription>
+          <CardTitle className="flex items-center gap-2"><CircleOff className="text-muted-foreground" />今天的任务已完成</CardTitle>
+          <CardDescription>目前没有待复习或待完成的练习，可以稍后再回来看看。</CardDescription>
         </CardHeader>
-        <SourceFooter response={response} />
       </Card>
     )
   }
 
-  const claimedAttemptID = recommendation.review_item?.claimed_attempt_id
+  const openAttemptID = recommendation.open_attempt?.id ?? recommendation.review_item?.claimed_attempt_id
   const claiming = claim.status === 'claiming'
   return (
     <Card className="overflow-hidden border-primary/20">
       <CardHeader className="bg-primary/5">
         <div className="flex flex-wrap items-center gap-2">
           <Badge>{recommendationLabel(recommendation)}</Badge>
-          <Badge variant="outline">{recommendation.activity.mode}</Badge>
-          <Badge variant="secondary">reason: {recommendation.reason}</Badge>
+          <Badge variant="outline">{modeLabel(recommendation.activity.mode)}</Badge>
         </div>
         <CardTitle className="mt-3 text-2xl">{recommendation.activity.title}</CardTitle>
-        <CardDescription className="font-mono">
-          {recommendation.activity.id}@{recommendation.activity.version}
-        </CardDescription>
+        <CardDescription>{recommendationDescription(recommendation)}</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-5 pt-6 md:grid-cols-[1fr_auto] md:items-center">
         <div className="space-y-3 text-sm">
           {recommendation.target_capability && (
-            <Fact icon={<BookOpenCheck />} label="目标 Capability" value={`${recommendation.target_capability.id}@${recommendation.target_capability.version}`} />
+            <Fact icon={<BookOpenCheck />} label="学习目标" value={recommendation.activity.title} />
           )}
           {recommendation.review_item && (
-            <Fact icon={<CalendarClock />} label="Review due" value={formatDateTime(recommendation.review_item.due_at)} />
+            <Fact icon={<CalendarClock />} label="建议复习时间" value={formatDateTime(recommendation.review_item.due_at)} />
           )}
-          <Fact icon={<CheckCircle2 />} label="Hard prerequisites" value={prerequisiteSummary(recommendation.hard_prerequisites)} />
+          <Fact icon={<CheckCircle2 />} label="开始条件" value={prerequisiteSummary(recommendation.hard_prerequisites)} />
         </div>
 
         {recommendation.kind === 'review' && recommendation.reason === 'due_review' ? (
           <Button onClick={() => onClaim(recommendation)} disabled={claiming}>
             {claiming ? <LoaderCircle className="animate-spin" /> : <CalendarClock />}
-            {claiming ? '正在领取' : '领取并开始 review'}
+            {claiming ? '正在准备' : '开始复习'}
           </Button>
-        ) : recommendation.kind === 'review' && !claimedAttemptID ? (
-          <Button disabled>Claimed Attempt 不可用</Button>
+        ) : recommendation.kind === 'review' && !openAttemptID ? (
+          <Button disabled>暂时无法继续</Button>
         ) : (
           <Button asChild>
-            <Link to={activityHref(recommendation, claimedAttemptID)}>
-              {claimedAttemptID ? '继续已领取 review' : '打开 Activity'}
+            <Link to={activityHref(recommendation, openAttemptID)}>
+              {openAttemptID ? '继续学习' : '开始学习'}
               <ArrowRight />
             </Link>
           </Button>
@@ -162,23 +158,11 @@ function RecommendationSection({
 
         {claim.status === 'error' && (
           <div role="alert" className="rounded-lg bg-destructive/10 p-3 text-xs text-destructive md:col-span-2">
-            {errorText(claim.error)}。队列已重新读取；请按最新服务端状态继续。
+            复习安排刚刚发生变化，已为你刷新。请按当前页面继续。
           </div>
         )}
       </CardContent>
-      <SourceFooter response={response} />
     </Card>
-  )
-}
-
-function SourceFooter({ response }: { response: NextResponse }) {
-  return (
-    <div className="flex flex-wrap gap-x-5 gap-y-1 border-t bg-muted/30 px-6 py-3 text-xs text-muted-foreground">
-      <span>source: {response.source.state}</span>
-      <span>release: {response.source.release_id}</span>
-      <span>server clock: {response.source.clock}</span>
-      <span>as of: {formatDateTime(response.source.as_of)}</span>
-    </div>
   )
 }
 
@@ -197,7 +181,7 @@ function UnavailableState({ error, retry, embedded }: { error: unknown; retry: (
   return (
     <PageState
       icon={<ServerOff />}
-      title={disabled ? 'Learning 功能已关闭' : '学习会话不可用'}
+      title={disabled ? '学习功能暂不可用' : '暂时无法恢复学习进度'}
       description={errorText(error)}
       action={disabled ? undefined : <Button onClick={() => void retry()}><RefreshCw />重试</Button>}
       embedded={embedded}
@@ -233,22 +217,36 @@ function PageState({
 }
 
 function recommendationLabel(recommendation: NextRecommendation): string {
-  if (recommendation.reason === 'claimed_review') return '已领取 review'
-  if (recommendation.reason === 'due_review') return '到期 review'
+  if (recommendation.reason === 'continue_attempt') return '继续上次进度'
+  if (recommendation.reason === 'claimed_review') return '继续复习'
+  if (recommendation.reason === 'due_review') return '该复习了'
   if (recommendation.activity.mode === 'guided') return '首次学习'
   return '能力进阶'
 }
 
-function activityHref(recommendation: NextRecommendation, attemptID?: string): string {
+function recommendationDescription(recommendation: NextRecommendation): string {
+  if (recommendation.reason === 'continue_attempt') return '你的工作区和运行记录都已保存，可以从上次的位置继续。'
+  if (recommendation.reason === 'due_review') return '通过一次变式练习，确认这项能力仍然熟练。'
+  if (recommendation.activity.mode === 'guided') return '先读一段讲解，再通过动手练习建立最小反馈循环。'
+  return '完成练习后，你会得到明确反馈和下一步建议。'
+}
+
+function modeLabel(mode: string): string {
+  return ({ guided: '引导学习', practice: '独立练习', assessment: '能力检查', review: '复习' } as Record<string, string>)[mode] ?? mode
+}
+
+function activityHref(recommendation: NextRecommendation, attemptID?: string, releaseID?: string): string {
   const query = new URLSearchParams({ version: String(recommendation.activity.version) })
   if (attemptID) query.set('attempt', attemptID)
+  const frozenReleaseID = releaseID ?? recommendation.open_attempt?.release_id ?? recommendation.review_item?.release_id
+  if (attemptID && frozenReleaseID) query.set('release', frozenReleaseID)
   return `/learning/activities/${encodeURIComponent(recommendation.activity.id)}?${query}`
 }
 
 function prerequisiteSummary(values: NextRecommendation['hard_prerequisites']): string {
-  if (values.length === 0) return 'none'
+  if (values.length === 0) return '可以直接开始'
   const satisfied = values.filter((value) => value.satisfied).length
-  return `${satisfied}/${values.length} satisfied`
+  return `已满足 ${satisfied}/${values.length} 项`
 }
 
 function formatDateTime(value: string): string {
@@ -260,7 +258,7 @@ function isLearningDisabled(error: unknown): boolean {
 }
 
 function errorText(error: unknown): string {
-  if (error instanceof LearningApiError) return `${error.code}（HTTP ${error.status}）：${error.message}`
+  if (error instanceof LearningApiError) return '学习服务暂时无法完成请求，请稍后重试。'
   if (error instanceof Error) return error.message
-  return 'Learning API 请求失败'
+  return '学习服务暂时无法完成请求，请稍后重试。'
 }

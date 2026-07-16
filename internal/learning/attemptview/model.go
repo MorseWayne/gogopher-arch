@@ -15,6 +15,7 @@ type Submission struct {
 	WorkspaceHash         string
 	RuleSetHash           string
 	AssistanceCutoff      int64
+	Explanation           string
 	Status                submission.Status
 	LatestExecutionID     string
 	LatestExecutionSeq    int

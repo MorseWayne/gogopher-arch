@@ -24,7 +24,7 @@ describe('AssistancePanel', () => {
     expect(screen.queryByText(secret)).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: '显示提示：先定位第一条失败信息' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('hint service unavailable')
+    expect(await screen.findByRole('alert')).toHaveTextContent('帮助操作暂时失败，请重试。')
     expect(screen.queryByText(secret)).not.toBeInTheDocument()
   })
 
@@ -48,7 +48,7 @@ describe('AssistancePanel', () => {
     await user.click(screen.getByRole('button', { name: '显示提示：先定位第一条失败信息' }))
 
     expect(await screen.findByText(body)).toBeVisible()
-    expect(await screen.findByText('服务端观察：使用提示')).toBeVisible()
+    expect(await screen.findByText('完成方式：使用提示')).toBeVisible()
   })
 
   it('reuses the same event key and payload for duplicate AI declarations', async () => {
@@ -79,8 +79,34 @@ describe('AssistancePanel', () => {
       payload: { source: 'learner_declaration' },
     })
     expect(requests[1]).toEqual(requests[0])
-    expect(await screen.findByText('服务端已记录 AI 辅助。重复声明不会新增事件。')).toBeVisible()
-    expect(screen.getByText('服务端观察：AI 辅助')).toBeVisible()
+    expect(await screen.findByText('已记录本次使用了 AI 辅助。')).toBeVisible()
+    expect(screen.getByText('完成方式：AI 辅助')).toBeVisible()
+  })
+
+  it('records and reveals the actual reference solution', async () => {
+    const event = assistanceEvent('solution-viewed', 'solution_viewed')
+    let request: unknown
+    server.use(
+      http.post(`${root}/attempts/:id/assistance-events`, async ({ request: incoming }) => {
+        request = await incoming.json()
+        return HttpResponse.json({ api_version: 'v1', event })
+      }),
+      http.get(`${root}/attempts/:id`, () => HttpResponse.json(assessmentAttempt({
+        assistance: { level: 'referenced', events: [event] },
+      }))),
+    )
+    const user = userEvent.setup()
+
+    render(<Harness />)
+    expect(screen.queryByText(activityFixture.task.solution!)).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: '查看参考思路' }))
+
+    expect(await screen.findByText(activityFixture.task.solution!)).toBeVisible()
+    expect(request).toEqual({
+      event_key: 'solution-viewed',
+      event_type: 'solution_viewed',
+      payload: { source: 'activity_solution' },
+    })
   })
 
   it('refreshes a concurrently submitted Attempt and disables every assistance action', async () => {
@@ -94,9 +120,9 @@ describe('AssistancePanel', () => {
     const user = userEvent.setup()
 
     render(<Harness />)
-    await user.click(screen.getByRole('button', { name: '记录已查看参考解法' }))
+    await user.click(screen.getByRole('button', { name: '查看参考思路' }))
 
-    expect(await screen.findByText(/Attempt 已提交，已刷新服务端状态/)).toBeVisible()
+    expect(await screen.findByText(/本节已经提交，已刷新最新状态/)).toBeVisible()
     for (const button of screen.getAllByRole('button')) {
       expect(button).toBeDisabled()
     }

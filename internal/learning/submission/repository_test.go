@@ -332,5 +332,5 @@ func (f submissionIntegrationFixture) createAttempt(t *testing.T) attempt.Attemp
 	if err != nil {
 		t.Fatal(err)
 	}
-	return current
+	return current.Attempt
 }

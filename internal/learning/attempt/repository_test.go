@@ -60,6 +60,13 @@ func TestPostgresRepositorySerializesConcurrentWorkspaceSaves(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	if !created.Created {
+		t.Fatalf("first Create() = %#v, want Created", created)
+	}
+	resumed, err := service.Create(ctx, CreateInput{LearnerID: learnerID, ActivityID: "assessment-check-config", ActivityVersion: 3})
+	if err != nil || resumed.Created || resumed.ID != created.ID {
+		t.Fatalf("second Create() = %#v, %v, want resumed %s", resumed, err, created.ID)
+	}
 	if _, err := service.Get(ctx, "00000000-0000-4000-8000-000000000999", created.ID); !errors.Is(err, ErrNotFound) {
 		t.Fatalf("cross-owner Get() error = %v", err)
 	}

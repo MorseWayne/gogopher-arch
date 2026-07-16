@@ -15,7 +15,7 @@ export function WorkspaceExplorer({
 }) {
   return (
     <div className="h-full border-b bg-muted/20 md:border-r md:border-b-0">
-      <div className="border-b px-3 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Workspace</div>
+      <div className="border-b px-3 py-3 text-xs font-semibold tracking-[0.14em] text-muted-foreground">练习文件</div>
       <ScrollArea className="h-48 md:h-[33rem]">
         <div className="space-y-1 p-2">
           {paths.map((path) => {
@@ -29,7 +29,7 @@ export function WorkspaceExplorer({
               >
                 {path.endsWith('.md') ? <FileText className="size-3.5" /> : <FileCode2 className="size-3.5" />}
                 <span className="min-w-0 flex-1 truncate">{path}</span>
-                {!editable && <LockKeyhole aria-label="readonly" className="size-3" />}
+                {!editable && <LockKeyhole aria-label="只读" className="size-3" />}
               </button>
             )
           })}

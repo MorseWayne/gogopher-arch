@@ -71,6 +71,7 @@ export interface Task {
   visible_tests: string[]
   allowed_actions: ExecutionAction[]
   hints: TaskHintSummary[]
+  solution?: string
   limits: {
     max_files: number
     max_file_bytes: number
@@ -182,10 +183,16 @@ export interface PrerequisiteStatus {
 
 export interface NextRecommendation {
   kind: 'acquisition' | 'review'
-  reason: 'acquisition_path' | 'due_review' | 'claimed_review'
+  reason: 'acquisition_path' | 'continue_attempt' | 'due_review' | 'claimed_review'
   activity: Activity
   target_capability?: VersionedDefinitionRef
   review_item?: ReviewItem
+  open_attempt?: {
+    id: string
+    release_id: string
+    status: 'active' | 'submitted' | 'submit_infra_failed'
+    updated_at: string
+  }
   hard_prerequisites: PrerequisiteStatus[]
   recommended_prerequisites: PrerequisiteStatus[]
 }
@@ -201,11 +208,11 @@ export interface NextResponse {
   }
 }
 
-export type AttemptStatus = 'active' | 'submitted'
+export type AttemptStatus = 'active' | 'submitted' | 'submit_infra_failed' | 'completed'
 export type ExecutionAction = 'build' | 'test' | 'vet' | 'submit'
 export type ExecutionStatus = 'queued' | 'running' | 'succeeded' | 'user_failed' | 'infra_failed'
 export type RuleStatus = 'passed' | 'failed' | 'not_evaluated'
-export type ExecutionStage = 'build' | 'visible_test' | 'vet' | 'held_out_test' | 'ast'
+export type ExecutionStage = 'build' | 'visible_test' | 'vet' | 'held_out_test' | 'ast' | 'explanation'
 
 export interface TestEvent {
   action: string
@@ -253,6 +260,7 @@ export interface Submission {
   workspace_hash: string
   rule_set_hash: string
   assistance_cutoff_seq: number
+  explanation: string
   status: 'frozen' | 'executing' | 'evaluated' | 'infra_failed'
   latest_execution_id: string
   latest_execution_sequence: number
@@ -334,6 +342,7 @@ export interface SubmitAttemptRequest {
   submission_key: string
   workspace_revision: number
   workspace_hash: string
+  explanation: string
 }
 
 export interface SubmissionResponse {

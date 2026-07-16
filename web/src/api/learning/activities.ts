@@ -1,8 +1,10 @@
 import { learningRequest } from './client'
 import type { ActivityResponse, CapabilityResponse, NextResponse } from './types'
 
-export function getActivity(activityID: string, version = 1): Promise<ActivityResponse> {
-  return learningRequest(`/activities/${encodeURIComponent(activityID)}?version=${version}`)
+export function getActivity(activityID: string, version = 1, releaseID = ''): Promise<ActivityResponse> {
+  const query = new URLSearchParams({ version: String(version) })
+  if (releaseID) query.set('release_id', releaseID)
+  return learningRequest(`/activities/${encodeURIComponent(activityID)}?${query}`)
 }
 
 export function getCapability(capabilityID: string): Promise<CapabilityResponse> {

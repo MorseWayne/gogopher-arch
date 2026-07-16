@@ -43,7 +43,7 @@ export function PublicLayout() {
               rel="noreferrer"
               className="hover:text-foreground"
             >
-              Source
+              源代码
             </a>
           </div>
         </div>
@@ -61,8 +61,8 @@ export function LearningLayout() {
             <Terminal className="size-5" />
           </Link>
           <div className="min-w-0">
-            <div className="truncate font-semibold">Capability Evidence Lab</div>
-            <div className="truncate text-xs text-muted-foreground">服务端事实驱动的学习工作台</div>
+            <div className="truncate font-semibold">GoGopher 学习</div>
+            <div className="truncate text-xs text-muted-foreground">读懂概念，在代码中练会</div>
           </div>
           <div className="ml-auto flex items-center gap-2">
             <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">

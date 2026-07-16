@@ -47,8 +47,9 @@ func TestWorkflowSubmitAndRetryReturnStableSubmission(t *testing.T) {
 	handler := newWorkflowTestHandler(t, &workflowExecutionStub{}, submissions, &workflowAssistanceStub{})
 
 	response := httptest.NewRecorder()
-	handler.Submit(response, authenticatedRequest(http.MethodPost, "/submit", `{"submission_key":"submit-1","workspace_revision":3,"workspace_hash":"hash"}`), "attempt-id")
-	if response.Code != http.StatusAccepted || submissions.submitInput.LearnerID != "learner-id" || submissions.submitInput.AttemptID != "attempt-id" {
+	handler.Submit(response, authenticatedRequest(http.MethodPost, "/submit", `{"submission_key":"submit-1","workspace_revision":3,"workspace_hash":"hash","explanation":"Build checks compilation before I inspect Test and Vet feedback."}`), "attempt-id")
+	if response.Code != http.StatusAccepted || submissions.submitInput.LearnerID != "learner-id" || submissions.submitInput.AttemptID != "attempt-id" ||
+		submissions.submitInput.Explanation != "Build checks compilation before I inspect Test and Vet feedback." {
 		t.Fatalf("submit=%d input=%#v", response.Code, submissions.submitInput)
 	}
 

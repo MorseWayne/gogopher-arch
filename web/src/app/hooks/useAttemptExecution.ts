@@ -47,7 +47,9 @@ export function useAttemptExecution(
         if (!mountedRef.current) return
         onAttemptChange(refreshed)
         const execution = refreshed.executions.find((item) => item.id === executionID)
-        if (!execution || terminalStatuses.has(execution.status)) return
+        if (!execution) continue
+        if (terminalStatuses.has(execution.status) &&
+          (!execution.submission_id || refreshed.submission?.status === 'evaluated' || refreshed.submission?.status === 'infra_failed')) return
       }
     } catch (error) {
       if (mountedRef.current) setPollingFailure({ executionID, message: errorText(error) })
@@ -125,7 +127,7 @@ function delay(milliseconds: number): Promise<void> {
 }
 
 function errorText(error: unknown): string {
-  if (error instanceof LearningApiError) return `${error.code}（HTTP ${error.status}）：${error.message}`
+  if (error instanceof LearningApiError) return '运行检查暂时失败，请重试。'
   if (error instanceof Error) return error.message
-  return 'Execution 请求失败'
+  return '运行检查暂时失败，请重试。'
 }

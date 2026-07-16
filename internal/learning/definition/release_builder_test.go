@@ -11,10 +11,10 @@ import (
 
 const (
 	testActivitySet = "m1-first-slice"
-	testReleaseID   = "m1-first-slice-v3"
+	testReleaseID   = "m1-first-slice-v4"
 )
 
-var testCreatedAt = time.Date(2026, time.July, 13, 12, 0, 0, 0, time.UTC)
+var testCreatedAt = time.Date(2026, time.July, 16, 0, 0, 0, 0, time.UTC)
 
 func TestBuildReleaseIsDeterministicAndVerifiable(t *testing.T) {
 	contentDir := repositoryContentDir(t)

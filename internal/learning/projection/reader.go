@@ -67,12 +67,20 @@ type PrerequisiteStatus struct {
 	SatisfiedVersion int    `json:"satisfied_version,omitempty"`
 }
 
+type OpenAttemptView struct {
+	ID        string    `json:"id"`
+	ReleaseID string    `json:"release_id"`
+	Status    string    `json:"status"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
 type NextRecommendation struct {
 	Kind                     string                             `json:"kind"`
 	Reason                   string                             `json:"reason"`
 	Activity                 definition.ActivityView            `json:"activity"`
 	TargetCapability         *definition.VersionedDefinitionRef `json:"target_capability,omitempty"`
 	ReviewItem               *ReviewItemView                    `json:"review_item,omitempty"`
+	OpenAttempt              *OpenAttemptView                   `json:"open_attempt,omitempty"`
 	HardPrerequisites        []PrerequisiteStatus               `json:"hard_prerequisites"`
 	RecommendedPrerequisites []PrerequisiteStatus               `json:"recommended_prerequisites"`
 }
@@ -145,6 +153,16 @@ func (r *Reader) Next(ctx context.Context, learnerID string, asOf time.Time) (*N
 	if err := r.setSearchPath(ctx, tx); err != nil {
 		return nil, err
 	}
+	open, err := r.readOpenAcquisition(ctx, tx, learnerID)
+	if err != nil {
+		return nil, err
+	}
+	if open != nil {
+		if err := tx.Commit(); err != nil {
+			return nil, fmt.Errorf("commit open attempt query: %w", err)
+		}
+		return open, nil
+	}
 	review, err := r.readNextReview(ctx, tx, learnerID, asOf.UTC())
 	if err != nil {
 		return nil, err
@@ -167,6 +185,44 @@ func (r *Reader) Next(ctx context.Context, learnerID string, asOf time.Time) (*N
 		return nil, err
 	}
 	return selectAcquisition(capabilities, activities, states), nil
+}
+
+func (r *Reader) readOpenAcquisition(ctx context.Context, tx *sql.Tx, learnerID string) (*NextRecommendation, error) {
+	var attempt OpenAttemptView
+	var activityID, activityHash string
+	var activityVersion int
+	err := tx.QueryRowContext(ctx, `
+		SELECT id,status,updated_at,release_id,activity_id,activity_version,activity_hash
+		FROM learning_attempts
+		WHERE learner_id=$1 AND mode <> 'review'
+			AND status IN ('active','submitted','submit_infra_failed')
+		ORDER BY updated_at DESC,id DESC
+		LIMIT 1`, learnerID).Scan(
+		&attempt.ID, &attempt.Status, &attempt.UpdatedAt,
+		&attempt.ReleaseID, &activityID, &activityVersion, &activityHash,
+	)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("query open learning attempt: %w", err)
+	}
+	activity, err := r.registry.ActivityView(attempt.ReleaseID, activityID, activityVersion)
+	if err != nil {
+		return nil, fmt.Errorf("resolve open attempt activity: %w", err)
+	}
+	if activity.ContentHash != activityHash {
+		return nil, fmt.Errorf("open attempt does not match frozen activity")
+	}
+	result := &NextRecommendation{
+		Kind: "acquisition", Reason: "continue_attempt", Activity: activity, OpenAttempt: &attempt,
+		HardPrerequisites: []PrerequisiteStatus{}, RecommendedPrerequisites: []PrerequisiteStatus{},
+	}
+	if len(activity.CapabilityRefs) == 1 {
+		target := activity.CapabilityRefs[0]
+		result.TargetCapability = &target
+	}
+	return result, nil
 }
 
 func (r *Reader) DueReviewCount(ctx context.Context, asOf time.Time) (int, error) {

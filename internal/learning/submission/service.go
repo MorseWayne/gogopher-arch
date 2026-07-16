@@ -10,7 +10,9 @@ import (
 	"fmt"
 	"io"
 	"regexp"
+	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/MorseWayne/gogopher-arch/internal/learning/attempt"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/definition"
@@ -47,6 +49,7 @@ type SubmitInput struct {
 	SubmissionKey     string
 	WorkspaceRevision int64
 	WorkspaceHash     string
+	Explanation       string
 }
 
 type RetryInput struct {
@@ -86,6 +89,13 @@ func (s *Service) Submit(ctx context.Context, input SubmitInput) (Result, error)
 	if activity.ContentHash != current.ActivityHash {
 		return Result{}, fmt.Errorf("frozen activity content hash mismatch")
 	}
+	explanation := strings.TrimSpace(input.Explanation)
+	if utf8.RuneCountInString(explanation) > 4000 {
+		return Result{}, fmt.Errorf("%w: explanation must contain at most 4000 characters", ErrInvalidRequest)
+	}
+	if current.Mode == "guided" && utf8.RuneCountInString(explanation) < 20 {
+		return Result{}, fmt.Errorf("%w: guided learning explanation must contain at least 20 characters", ErrInvalidRequest)
+	}
 	submissionID, err := randomUUID(s.random, "submission")
 	if err != nil {
 		return Result{}, err
@@ -98,13 +108,14 @@ func (s *Service) Submit(ctx context.Context, input SubmitInput) (Result, error)
 	if err != nil {
 		return Result{}, err
 	}
-	fingerprint := RequestFingerprint(input.WorkspaceRevision, input.WorkspaceHash, current.TaskHash, activity.RuleSetHash)
+	fingerprint := RequestFingerprint(input.WorkspaceRevision, input.WorkspaceHash, current.TaskHash, activity.RuleSetHash, explanation)
 	return s.repository.Freeze(ctx, FreezeRecord{
 		SubmissionID: submissionID, ExecutionID: executionID, LearnerID: input.LearnerID, AttemptID: input.AttemptID,
 		SubmissionKey: input.SubmissionKey, RequestFingerprint: fingerprint,
 		Workspace:         cloneWorkspace(current.Workspace),
 		WorkspaceRevision: input.WorkspaceRevision, WorkspaceHash: input.WorkspaceHash,
-		ReleaseID: current.ReleaseID, ActivityID: current.ActivityID, ActivityVersion: current.ActivityVersion,
+		Explanation: explanation,
+		ReleaseID:   current.ReleaseID, ActivityID: current.ActivityID, ActivityVersion: current.ActivityVersion,
 		ActivityHash: current.ActivityHash, TaskID: current.TaskID, TaskVersion: current.TaskVersion, TaskHash: current.TaskHash,
 		RuleSetHash: activity.RuleSetHash, Spec: spec, CreatedAt: s.now().UTC(),
 	})
@@ -144,11 +155,11 @@ func (s *Service) Retry(ctx context.Context, input RetryInput) (Result, error) {
 	})
 }
 
-func RequestFingerprint(workspaceRevision int64, workspaceHash, taskHash, ruleSetHash string) string {
+func RequestFingerprint(workspaceRevision int64, workspaceHash, taskHash, ruleSetHash, explanation string) string {
 	hash := sha256.New()
 	var revision [8]byte
 	binary.BigEndian.PutUint64(revision[:], uint64(workspaceRevision))
-	for _, value := range [][]byte{revision[:], []byte(workspaceHash), []byte(taskHash), []byte(ruleSetHash)} {
+	for _, value := range [][]byte{revision[:], []byte(workspaceHash), []byte(taskHash), []byte(ruleSetHash), []byte(explanation)} {
 		var size [8]byte
 		binary.BigEndian.PutUint64(size[:], uint64(len(value)))
 		_, _ = hash.Write(size[:])

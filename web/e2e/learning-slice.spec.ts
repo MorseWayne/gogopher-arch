@@ -23,22 +23,55 @@ test.describe('Learning slice vertical scenarios', () => {
   test.describe.configure({ mode: 'serial', timeout: 120_000 })
   test.skip(!composeProject || !composeRoot, 'requires npm run e2e:compose')
 
-  test('anonymous session saves and restores a guided workspace through the UI', async ({ page }) => {
-    await page.goto('/learning/activities/guided-run-model?version=3')
+  test('a learner completes the first guided lesson and reaches the next step through the UI', async ({ page }) => {
+    await page.goto('/')
+    await expect(page.getByRole('heading', { name: '从会写 Go 语法，到能独立完成程序' })).toBeVisible()
+    await page.getByRole('link', { name: /开始第一节/ }).click()
+    await expect(page.getByRole('heading', { name: '继续你的 Go 学习' })).toBeVisible()
+    await page.getByRole('link', { name: /开始学习/ }).click()
+
     await expect(page.getByRole('heading', { name: '读懂 Go 工具链反馈' })).toBeVisible()
-    await page.getByRole('button', { name: '开始活动' }).click()
+    await expect(page.getByRole('heading', { name: '先理解，再动手' })).toBeVisible()
+    await expect(page.getByText(/Build、Test、Vet：先知道工具在回答什么/)).toBeVisible()
+    await page.getByRole('button', { name: '开始本节练习' }).click()
     await expect(page.getByRole('heading', { name: '进行中' })).toBeVisible()
 
-    const editor = page.getByRole('textbox', { name: 'main.go editor' })
-    const persistedCode = 'package main\n\nfunc main() { println("e2e persisted") }\n'
+    const editor = page.getByRole('textbox', { name: 'main.go 代码编辑器' })
+    const persistedCode = 'package main\n\nimport "fmt"\n\nfunc main() {\n\tfmt.Println("toolchain ready") // e2e persisted\n}\n'
     await editor.fill(persistedCode)
     await expect(page.getByText('未同步')).toBeVisible()
-    await page.getByRole('button', { name: '保存到服务端' }).click()
-    await expect(page.getByText(/revision 1 ·/)).toBeVisible()
+    await page.getByRole('button', { name: '保存进度' }).click()
+    await expect(page.getByText('未同步')).toHaveCount(0)
 
     await page.reload()
-    await expect(page.getByText(/revision 1 ·/)).toBeVisible()
-    await expect(page.getByRole('textbox', { name: 'main.go editor' })).toContainText('e2e persisted')
+    await expect(page.getByRole('heading', { name: '进行中' })).toBeVisible()
+    await expect(page.getByRole('textbox', { name: 'main.go 代码编辑器' })).toContainText('e2e persisted')
+
+    await page.getByRole('button', { name: 'Build', exact: true }).click()
+    await expect(page.getByText(/Build · 第/)).toBeVisible()
+    await expect(page.getByText('检查通过')).toHaveCount(1, { timeout: 45_000 })
+
+    await page.getByRole('button', { name: 'Test', exact: true }).click()
+    await expect(page.getByText(/Test · 第/)).toBeVisible()
+    await expect(page.getByText('检查通过')).toHaveCount(2, { timeout: 45_000 })
+
+    await page.getByRole('button', { name: 'Vet', exact: true }).click()
+    await expect(page.getByText(/Vet · 第/)).toBeVisible()
+    await expect(page.getByText('检查通过')).toHaveCount(3, { timeout: 45_000 })
+
+    await page.getByLabel('完成小结').fill('Build 检查能否编译，Test 验证程序行为，Vet 检查可疑写法；失败时我先看第一条有效错误。')
+    await page.getByRole('button', { name: '完成本节', exact: true }).click()
+    await expect(page.getByRole('heading', { name: '评估完成' })).toBeVisible({ timeout: 45_000 })
+    const resultSection = page.getByRole('heading', { name: '本节结果' }).locator('xpath=ancestor::section[1]')
+    await expect(resultSection).toBeVisible()
+    await expect(resultSection.getByText('代码可以完成编译')).toBeVisible()
+    await expect(resultSection.getByText('已写下工具反馈小结')).toBeVisible()
+
+    await pollCapability(page, 'M1-01', (value) => value.snapshot?.acquisition_state === 'exploring')
+    await page.getByRole('link', { name: /学习总览/ }).click()
+    await expect(page.getByText('能力进阶')).toBeVisible()
+    await expect(page.getByRole('heading', { name: '读懂 Go 工具链反馈' })).toHaveCount(0)
+    await expect(page.getByRole('link', { name: /开始学习/ })).toBeVisible()
   })
 
   test('hint reveal downgrades assessment Evidence independence', async ({ page }) => {

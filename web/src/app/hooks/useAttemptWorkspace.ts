@@ -179,18 +179,18 @@ function validateWorkspace(files: Record<string, string>, task: Task): string | 
   for (const [path, contents] of entries) {
     const size = new TextEncoder().encode(contents).length
     if (size > task.limits.max_file_bytes) {
-      return `${path} 为 ${size} bytes，超过单文件限制 ${task.limits.max_file_bytes} bytes`
+      return `${path} 为 ${size} 字节，超过单文件限制 ${task.limits.max_file_bytes} 字节`
     }
     total += size
   }
   if (total > task.limits.max_total_bytes) {
-    return `workspace 为 ${total} bytes，超过总限制 ${task.limits.max_total_bytes} bytes`
+    return `全部文件共 ${total} 字节，超过总限制 ${task.limits.max_total_bytes} 字节`
   }
   return null
 }
 
 function errorText(error: unknown): string {
-  if (error instanceof LearningApiError) return `${error.code}（HTTP ${error.status}）：${error.message}`
+  if (error instanceof LearningApiError) return '保存进度暂时失败，请重试。'
   if (error instanceof Error) return error.message
-  return 'workspace 保存失败'
+  return '保存进度暂时失败，请重试。'
 }

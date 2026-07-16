@@ -55,6 +55,7 @@ type Submission struct {
 	WorkspaceHash         string                    `json:"workspace_hash"`
 	RuleSetHash           string                    `json:"rule_set_hash"`
 	AssistanceCutoff      int64                     `json:"assistance_cutoff_seq"`
+	Explanation           string                    `json:"explanation"`
 	Status                Status                    `json:"status"`
 	LatestExecutionID     string                    `json:"latest_execution_id"`
 	LatestExecutionSeq    int                       `json:"latest_execution_sequence"`

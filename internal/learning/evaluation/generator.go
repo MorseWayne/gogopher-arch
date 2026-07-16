@@ -8,6 +8,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/MorseWayne/gogopher-arch/internal/learning/definition"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/execution"
@@ -53,7 +54,7 @@ func (g *Generator) Generate(frozen submission.Submission, terminal execution.Ex
 	}
 	results := make([]execution.RuleResult, 0, len(task.AssessmentRules))
 	for _, rule := range task.AssessmentRules {
-		result, err := evaluateRule(rule, task, frozen.Workspace, stages, terminal.ID)
+		result, err := evaluateRule(rule, task, frozen.Workspace, frozen.Explanation, stages, terminal.ID)
 		if err != nil {
 			return nil, fmt.Errorf("evaluate rule %q: %w", rule.RuleID, err)
 		}
@@ -65,7 +66,7 @@ func (g *Generator) Generate(frozen submission.Submission, terminal execution.Ex
 	return results, nil
 }
 
-func evaluateRule(rule definition.AssessmentRule, task definition.ExecutionTask, workspace map[string]string, stages map[execution.Stage]execution.StageResult, executionID string) (execution.RuleResult, error) {
+func evaluateRule(rule definition.AssessmentRule, task definition.ExecutionTask, workspace map[string]string, explanation string, stages map[execution.Stage]execution.StageResult, executionID string) (execution.RuleResult, error) {
 	if rule.Condition != "passed" {
 		return execution.RuleResult{}, fmt.Errorf("unsupported condition %q", rule.Condition)
 	}
@@ -76,7 +77,16 @@ func evaluateRule(rule definition.AssessmentRule, task definition.ExecutionTask,
 	}
 	var status execution.RuleStatus
 	var analyzer string
-	if stage == execution.StageAST {
+	if stage == execution.StageExplanation {
+		if rule.Selector.MinimumChars < 1 {
+			return execution.RuleResult{}, fmt.Errorf("explanation selector requires minimum_chars")
+		}
+		if utf8.RuneCountInString(strings.TrimSpace(explanation)) >= rule.Selector.MinimumChars {
+			status = execution.RulePassed
+		} else {
+			status = execution.RuleFailed
+		}
+	} else if stage == execution.StageAST {
 		status, analyzer = evaluateASTRule(rule, task, workspace, stages)
 	} else {
 		status = evaluateExecutionRule(rule, stages)

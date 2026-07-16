@@ -41,6 +41,7 @@ type FreezeRecord struct {
 	TaskVersion        int
 	TaskHash           string
 	RuleSetHash        string
+	Explanation        string
 	Spec               execution.ExecutionSpec
 	CreatedAt          time.Time
 }
@@ -151,10 +152,10 @@ func (r *PostgresRepository) Freeze(ctx context.Context, record FreezeRecord) (R
 		INSERT INTO attempt_submissions (
 			id, attempt_id, learner_id, submission_key, request_fingerprint,
 			workspace, workspace_revision, workspace_hash, rule_set_hash,
-			assistance_cutoff_seq, status, created_at
-		) VALUES ($1,$2,$3,$4,$5,$6::jsonb,$7,$8,$9,$10,'executing',$11)`,
+			assistance_cutoff_seq, explanation, status, created_at
+		) VALUES ($1,$2,$3,$4,$5,$6::jsonb,$7,$8,$9,$10,$11,'executing',$12)`,
 		record.SubmissionID, record.AttemptID, record.LearnerID, record.SubmissionKey, record.RequestFingerprint,
-		string(workspaceJSON), workspaceRevision, workspaceHash, record.RuleSetHash, cutoff, frozenAt)
+		string(workspaceJSON), workspaceRevision, workspaceHash, record.RuleSetHash, cutoff, record.Explanation, frozenAt)
 	if err != nil {
 		return Result{}, fmt.Errorf("insert frozen submission: %w", err)
 	}
@@ -322,7 +323,7 @@ func validateFreezeRecord(record FreezeRecord) error {
 const submissionSelect = `SELECT
 	s.id, s.attempt_id, s.submission_key, s.request_fingerprint, s.workspace,
 	s.workspace_revision, s.workspace_hash, s.rule_set_hash, s.assistance_cutoff_seq,
-	s.status, s.created_at, s.evaluated_at,
+	s.explanation, s.status, s.created_at, s.evaluated_at,
 	a.learner_id, a.release_id, a.activity_id, a.activity_version, a.activity_hash,
 	a.task_id, a.task_version, a.task_hash, a.mode,
 	e.id, e.sequence, e.status
@@ -345,7 +346,7 @@ func scanSubmission(row rowScanner) (Submission, error) {
 	err := row.Scan(
 		&value.ID, &value.AttemptID, &value.SubmissionKey, &value.RequestFingerprint, &workspaceJSON,
 		&value.WorkspaceRevision, &value.WorkspaceHash, &value.RuleSetHash, &value.AssistanceCutoff,
-		&value.Status, &value.CreatedAt, &evaluatedAt,
+		&value.Explanation, &value.Status, &value.CreatedAt, &evaluatedAt,
 		&value.LearnerID, &value.ReleaseID, &value.ActivityID, &value.ActivityVersion, &value.ActivityHash,
 		&value.TaskID, &value.TaskVersion, &value.TaskHash, &value.Mode,
 		&value.LatestExecutionID, &value.LatestExecutionSeq, &value.LatestExecutionStatus)

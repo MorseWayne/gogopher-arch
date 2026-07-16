@@ -70,6 +70,42 @@ describe('useAttemptExecution', () => {
     expect(reads).toBe(1)
   })
 
+  it('keeps polling a successful submission execution until evaluation finishes', async () => {
+    const submission = {
+      id: 'submission-1', workspace_revision: 0, workspace_hash: 'workspace-hash',
+      rule_set_hash: 'rule-set-hash', assistance_cutoff_seq: 0, explanation: '完成小结',
+      status: 'executing' as const, latest_execution_id: 'execution-1', latest_execution_sequence: 1,
+      latest_execution_status: 'queued' as const, created_at: '2026-07-13T00:00:00Z',
+    }
+    const queuedExecution = { ...execution('queued'), action: 'submit' as const, submission_id: submission.id }
+    const queued = { ...attemptFixture, status: 'submitted' as const, submission, executions: [queuedExecution] }
+    const executionFinished = {
+      ...queued,
+      submission: { ...submission, latest_execution_status: 'succeeded' as const },
+      executions: [{ ...queuedExecution, status: 'succeeded' as const }],
+    }
+    const evaluated = {
+      ...executionFinished,
+      submission: { ...executionFinished.submission, status: 'evaluated' as const },
+    }
+    let reads = 0
+    server.use(http.get(`${root}/attempts/:id`, () => {
+      reads += 1
+      return HttpResponse.json(reads === 1 ? executionFinished : evaluated)
+    }))
+    const onAttemptChange = vi.fn()
+
+    renderHook(() => useAttemptExecution(
+      queued,
+      { revision: 0, hash: 'workspace-hash', dirty: false },
+      onAttemptChange,
+      0,
+    ))
+
+    await waitFor(() => expect(onAttemptChange).toHaveBeenCalledWith(evaluated))
+    expect(reads).toBe(2)
+  })
+
   it('does not run an action while the workspace is dirty', () => {
     const { result } = renderHook(() => useAttemptExecution(
       attemptFixture,

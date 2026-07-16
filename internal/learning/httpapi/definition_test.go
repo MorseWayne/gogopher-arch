@@ -54,7 +54,7 @@ func TestActivityReturnsPublicTaskContextWithoutPrivateEvaluationRules(t *testin
 	if err != nil {
 		t.Fatal(err)
 	}
-	request := authenticatedDefinitionRequest(httptest.NewRequest(http.MethodGet, "/api/v1/learning/activities/guided-run-model?version=3", nil), "learner-activity")
+	request := authenticatedDefinitionRequest(httptest.NewRequest(http.MethodGet, "/api/v1/learning/activities/guided-run-model?version=4", nil), "learner-activity")
 	request.SetPathValue("id", "guided-run-model")
 	response := httptest.NewRecorder()
 	handler.Activity(response, request)
@@ -62,7 +62,7 @@ func TestActivityReturnsPublicTaskContextWithoutPrivateEvaluationRules(t *testin
 		t.Fatalf("response=%d body=%s", response.Code, response.Body.String())
 	}
 	body := response.Body.String()
-	for _, expected := range []string{`"task":`, `"allowed_actions":["build","test","vet"]`, `"hints":[{"id":"read-first-error","level":1`, `"readme":"# 读懂工具链反馈`} {
+	for _, expected := range []string{`"task":`, `"allowed_actions":["build","submit","test","vet"]`, `"hints":[{"id":"read-first-error","level":1`, `"readme":"# 读懂 Go 工具链反馈`, `"solution":"一个合格的小结`} {
 		if !strings.Contains(body, expected) {
 			t.Fatalf("body missing %s: %s", expected, body)
 		}
@@ -71,6 +71,29 @@ func TestActivityReturnsPublicTaskContextWithoutPrivateEvaluationRules(t *testin
 		if strings.Contains(body, forbidden) {
 			t.Fatalf("body contains private field %q: %s", forbidden, body)
 		}
+	}
+}
+
+func TestActivityCanReadAFrozenHistoricalRelease(t *testing.T) {
+	registry := definitionTestRegistry(t)
+	handler, err := NewDefinitionHandler(registry, &learningReaderStub{}, DefinitionHandlerOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	request := authenticatedDefinitionRequest(httptest.NewRequest(
+		http.MethodGet,
+		"/api/v1/learning/activities/guided-run-model?version=3&release_id=m1-first-slice-v3",
+		nil,
+	), "learner-historical-activity")
+	request.SetPathValue("id", "guided-run-model")
+	response := httptest.NewRecorder()
+
+	handler.Activity(response, request)
+
+	if response.Code != http.StatusOK ||
+		!strings.Contains(response.Body.String(), `"release_id":"m1-first-slice-v3"`) ||
+		!strings.Contains(response.Body.String(), `"version":3`) {
+		t.Fatalf("response=%d body=%s", response.Code, response.Body.String())
 	}
 }
 

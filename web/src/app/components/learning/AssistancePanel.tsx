@@ -36,6 +36,9 @@ export function AssistancePanel({
   const [locked, setLocked] = useState(false)
   const [feedback, setFeedback] = useState<Feedback>(null)
   const [revealedHints, setRevealedHints] = useState<Record<string, HintResponse['hint']>>({})
+  const [solutionVisible, setSolutionVisible] = useState(
+    () => attempt.assistance.events.some((event) => event.event_type === 'solution_viewed'),
+  )
   const inactive = locked || attempt.status !== 'active'
 
   async function refreshAttempt() {
@@ -48,15 +51,16 @@ export function AssistancePanel({
       setLocked(true)
       try {
         await refreshAttempt()
-        setFeedback({ kind: 'status', message: 'Attempt 已提交，已刷新服务端状态；assistance 操作现已关闭。' })
+        setFeedback({ kind: 'status', message: '本节已经提交，已刷新最新状态；帮助操作现已关闭。' })
       } catch {
-        setFeedback({ kind: 'error', message: 'Attempt 已提交，assistance 操作已关闭，但服务端状态刷新失败。' })
+        setFeedback({ kind: 'error', message: '本节已经提交，帮助功能已关闭，但最新结果暂时未能载入。' })
       }
       return
     }
     setFeedback({
       kind: 'error',
-      message: error instanceof Error ? error.message : 'Assistance 操作失败，请重试。',
+      message: error instanceof LearningApiError ? '帮助操作暂时失败，请重试。' :
+        error instanceof Error ? error.message : '帮助操作暂时失败，请重试。',
     })
   }
 
@@ -65,15 +69,17 @@ export function AssistancePanel({
     type: AssistanceEventType,
     payload: Record<string, unknown>,
     successMessage: string,
-  ) {
+  ): Promise<boolean> {
     setPending(key)
     setFeedback(null)
     try {
       await recordAssistance(attempt.id, key, type, payload)
       await refreshAttempt()
       setFeedback({ kind: 'status', message: successMessage })
+      return true
     } catch (error) {
       await handleFailure(error)
+      return false
     } finally {
       setPending(null)
     }
@@ -103,18 +109,18 @@ export function AssistancePanel({
       <div className="flex flex-wrap items-start gap-3 border-b px-4 py-4">
         <div className="mr-auto">
           <h3 id="assistance-title" className="flex items-center gap-2 font-semibold">
-            <Lightbulb className="size-4" />Assistance
+            <Lightbulb className="size-4" />需要帮助？
           </h3>
           <p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">
-            当前级别由服务端根据本页面记录的 assistance events 计算；平台无法检测复制、聊天工具或其他外部帮助。
+            可以按需查看提示、课程讲解或参考思路。使用情况会随本次练习一起保存。
           </p>
         </div>
-        <Badge variant="secondary">服务端观察：{levelLabel(attempt.assistance.level)}</Badge>
+        <Badge variant="secondary">完成方式：{levelLabel(attempt.assistance.level)}</Badge>
       </div>
 
       {inactive && (
         <div className="flex items-center gap-2 border-b border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm">
-          <LockKeyhole className="size-4" />Attempt 已提交，不能再新增 assistance event。
+          <LockKeyhole className="size-4" />本节已经提交，帮助记录已锁定。
         </div>
       )}
       {feedback && (
@@ -131,7 +137,7 @@ export function AssistancePanel({
           <div className="rounded-xl border p-4">
             <h4 className="flex items-center gap-2 text-sm font-semibold"><Lightbulb className="size-4" />分阶段提示</h4>
             <div className="mt-3 space-y-3">
-              {task.hints.length === 0 && <p className="text-xs text-muted-foreground">这个 Task 没有公开提示。</p>}
+              {task.hints.length === 0 && <p className="text-xs text-muted-foreground">这项练习暂时没有分步提示。</p>}
               {task.hints.map((hint) => {
                 const key = `hint:${hint.id}`
                 const revealed = revealedHints[hint.id]
@@ -141,7 +147,7 @@ export function AssistancePanel({
                     <div className="flex items-start gap-2">
                       <div className="mr-auto">
                         <div className="text-sm font-medium">{hint.level}. {hint.title}</div>
-                        <div className="mt-1 text-xs text-muted-foreground">{recorded ? '服务端已记录' : '尚未查看'}</div>
+                        <div className="mt-1 text-xs text-muted-foreground">{recorded ? '已查看' : '尚未查看'}</div>
                       </div>
                       <Button
                         size="sm"
@@ -171,35 +177,49 @@ export function AssistancePanel({
           {policy.references && (
             <AssistanceAction
               icon={<BookOpenText />}
-              title="参考资料"
-              description={referenceRecorded && contentRef ? `已记录：${contentRef}` : '查看或使用参考资料前先留下服务端事件。'}
-              buttonLabel="记录并查看参考资料"
+              title="课程讲解"
+              description={referenceRecorded ? '已记录本次重新查看课程讲解。' : '回到本节讲解，重新确认三个工具的职责。'}
+              buttonLabel="回到课程讲解"
               disabled={inactive || pending !== null}
               busy={pending === 'reference-opened'}
               onClick={() => void record(
-                'reference-opened',
-                'reference_opened',
+                'reference-opened', 'reference_opened',
                 { reference_id: contentRef ?? 'activity-reference' },
-                '已记录参考资料使用。',
-              )}
+                '已回到课程讲解。',
+              ).then((recorded) => {
+                if (recorded) document.getElementById('lesson-content')?.scrollIntoView({ behavior: 'smooth' })
+              })}
             />
           )}
           {policy.solution && (
-            <AssistanceAction
-              icon={<ScrollText />}
-              title="参考解法"
-              description={hasEvent('solution_viewed') ? '服务端已记录参考解法使用。' : '确认查看参考解法会降低本次 independence。'}
-              buttonLabel="记录已查看参考解法"
-              disabled={inactive || pending !== null}
-              busy={pending === 'solution-viewed'}
-              onClick={() => void record('solution-viewed', 'solution_viewed', { source: 'activity_solution' }, '已记录参考解法使用。')}
-            />
+            <div className="rounded-xl border p-4">
+              <h4 className="flex items-center gap-2 text-sm font-semibold"><ScrollText />参考思路</h4>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                {hasEvent('solution_viewed') ? '已记录本次查看参考思路。' : '卡住时再看；查看后仍请用自己的话完成小结。'}
+              </p>
+              <Button
+                className="mt-3"
+                size="sm"
+                variant="outline"
+                disabled={inactive || pending !== null || !task.solution}
+                onClick={() => void record(
+                  'solution-viewed', 'solution_viewed',
+                  { source: 'activity_solution' }, '已显示参考思路。',
+                ).then((recorded) => setSolutionVisible(recorded))}
+              >
+                {pending === 'solution-viewed' && <LoaderCircle className="animate-spin" />}
+                查看参考思路
+              </Button>
+              {solutionVisible && task.solution && (
+                <div className="mt-3 border-t pt-3 text-sm leading-6 text-muted-foreground">{task.solution}</div>
+              )}
+            </div>
           )}
           {policy.ai_declaration && (
             <AssistanceAction
               icon={<Bot />}
               title="AI 辅助声明"
-              description={hasEvent('ai_declared') ? '服务端已记录 AI 辅助。重复声明不会新增事件。' : '如实声明本次是否使用了 AI。'}
+              description={hasEvent('ai_declared') ? '已记录本次使用了 AI 辅助。' : '如实声明本次是否使用了 AI。'}
               buttonLabel="声明使用了 AI 辅助"
               disabled={inactive || pending !== null}
               busy={pending === 'ai-declared'}

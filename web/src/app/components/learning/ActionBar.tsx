@@ -35,8 +35,8 @@ export function ActionBar({
     <div className="border-t bg-muted/15 p-4">
       <div className="flex flex-wrap items-center gap-2">
         <div className="mr-auto">
-          <div className="text-sm font-semibold">固定工具动作</div>
-          <div className="text-xs text-muted-foreground">仅执行 release 公开允许的 action，不接受自定义命令。</div>
+          <div className="text-sm font-semibold">运行工具检查</div>
+          <div className="text-xs text-muted-foreground">建议按 Build → Test → Vet 的顺序运行，并阅读每一步反馈。</div>
         </div>
         {actions.map((action) => {
           const Icon = actionMeta[action].icon
@@ -46,7 +46,7 @@ export function ActionBar({
         })}
       </div>
       {disabled && disabledMessage && <p className="mt-2 text-xs text-amber-600">{disabledMessage}</p>}
-      {error && <div role="alert" className="mt-3 flex items-center justify-between gap-3 rounded-lg bg-destructive/10 p-3 text-xs text-destructive"><span>{error}</span><Button size="sm" variant="outline" onClick={onRetry}><RefreshCw />{retryLabel ?? '使用同一 request key 重试'}</Button></div>}
+      {error && <div role="alert" className="mt-3 flex items-center justify-between gap-3 rounded-lg bg-destructive/10 p-3 text-xs text-destructive"><span>{error}</span><Button size="sm" variant="outline" onClick={onRetry}><RefreshCw />{retryLabel ?? '重试这一步'}</Button></div>}
     </div>
   )
 }

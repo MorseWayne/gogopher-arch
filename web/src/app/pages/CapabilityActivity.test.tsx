@@ -33,11 +33,11 @@ describe('CapabilityActivity', () => {
       }),
     )
 
-    renderActivity('/learning/activities/guided-run-model?version=2')
+    renderActivity('/learning/activities/guided-run-model?version=4')
 
-    expect(await screen.findByRole('heading', { name: 'Learning 功能当前未启用' })).toBeVisible()
-    expect(screen.getByText('服务端 feature gate 已关闭，没有使用本地伪进度作为降级。')).toBeVisible()
-    expect(screen.queryByRole('button', { name: '开始活动' })).not.toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: '学习功能暂不可用' })).toBeVisible()
+    expect(screen.getByText('当前环境还没有开启学习服务，请联系维护者后再试。')).toBeVisible()
+    expect(screen.queryByRole('button', { name: '开始本节练习' })).not.toBeInTheDocument()
     expect(screen.queryByText(activityFixture.activity.title)).not.toBeInTheDocument()
     expect(definitionReads).toBe(0)
   })
@@ -45,12 +45,13 @@ describe('CapabilityActivity', () => {
   it('bootstraps an HttpOnly-backed session and renders public Activity context without local storage', async () => {
     useDefinitionHandlers()
 
-    renderActivity('/learning/activities/guided-run-model?version=2')
+    renderActivity('/learning/activities/guided-run-model?version=4')
 
     expect(await screen.findByRole('heading', { name: activityFixture.activity.title })).toBeVisible()
-    expect(screen.getByText(/依次运行 Build、Test、Vet/)).toBeVisible()
-    expect(screen.getByText(/M1-01 · 使用 Go 工具链反馈/)).toBeVisible()
-    expect(screen.getByText('匿名同源会话')).toBeVisible()
+    expect(screen.getAllByText(/依次运行 Build、Test、Vet/)[0]).toBeVisible()
+    expect(screen.getAllByText('使用 Go 工具链获取反馈')[0]).toBeVisible()
+    expect(screen.getByText('进度自动保存')).toBeVisible()
+    expect(await screen.findByRole('heading', { name: '先理解，再动手' })).toBeVisible()
     expect(localStorage).toHaveLength(0)
   })
 
@@ -68,8 +69,8 @@ describe('CapabilityActivity', () => {
     )
     const user = userEvent.setup()
 
-    renderActivity('/learning/activities/guided-run-model?version=2')
-    expect(await screen.findByRole('heading', { name: '学习会话建立失败' })).toBeVisible()
+    renderActivity('/learning/activities/guided-run-model?version=4')
+    expect(await screen.findByRole('heading', { name: '暂时无法恢复学习进度' })).toBeVisible()
     await user.click(screen.getByRole('button', { name: '重试' }))
 
     expect(await screen.findByRole('heading', { name: activityFixture.activity.title })).toBeVisible()
@@ -84,11 +85,29 @@ describe('CapabilityActivity', () => {
       return HttpResponse.json(attemptFixture)
     }))
 
-    renderActivity('/learning/activities/guided-run-model?version=2&attempt=attempt-current')
+    renderActivity('/learning/activities/guided-run-model?version=4&attempt=attempt-current')
 
     expect(await screen.findByRole('heading', { name: '进行中' })).toBeVisible()
     expect(screen.getByRole('button', { name: 'main.go' })).toBeVisible()
     expect(reads).toBe(1)
+  })
+
+  it('loads the frozen release when continuing an older Attempt', async () => {
+    let requestedRelease = ''
+    server.use(
+      http.post(`${root}/session`, () => HttpResponse.json(sessionFixture)),
+      http.get(`${root}/activities/:id`, ({ request }) => {
+        requestedRelease = new URL(request.url).searchParams.get('release_id') ?? ''
+        return HttpResponse.json(activityFixture)
+      }),
+      http.get(`${root}/capabilities/:id`, () => HttpResponse.json(capabilityFixture)),
+      http.get(`${root}/attempts/:id`, () => HttpResponse.json(attemptFixture)),
+    )
+
+    renderActivity('/learning/activities/guided-run-model?version=3&attempt=attempt-current&release=m1-first-slice-v3')
+
+    expect(await screen.findByRole('heading', { name: '进行中' })).toBeVisible()
+    expect(requestedRelease).toBe('m1-first-slice-v3')
   })
 
   it('explains owner isolation when a new session cannot read the old Attempt', async () => {
@@ -98,10 +117,10 @@ describe('CapabilityActivity', () => {
       { status: 404 },
     )))
 
-    renderActivity('/learning/activities/guided-run-model?version=2&attempt=old-owner-attempt')
+    renderActivity('/learning/activities/guided-run-model?version=4&attempt=old-owner-attempt')
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('当前会话无法访问这个 Attempt')
-    expect(screen.getByRole('button', { name: '在新会话中开始' })).toBeVisible()
+    expect(await screen.findByRole('alert')).toHaveTextContent('无法恢复这份学习记录')
+    expect(screen.getByRole('button', { name: '重新开始本节' })).toBeVisible()
   })
 
   it('creates an Attempt and switches to the server workspace', async () => {
@@ -115,12 +134,12 @@ describe('CapabilityActivity', () => {
       http.get(`${root}/attempts/:id`, () => HttpResponse.json(attemptFixture)),
     )
     const user = userEvent.setup()
-    renderActivity('/learning/activities/guided-run-model?version=2')
+    renderActivity('/learning/activities/guided-run-model?version=4')
 
-    await user.click(await screen.findByRole('button', { name: '开始活动' }))
+    await user.click(await screen.findByRole('button', { name: '开始本节练习' }))
 
     expect(await screen.findByRole('heading', { name: '进行中' })).toBeVisible()
-    expect(screen.getByText('Workspace revision')).toBeVisible()
+    expect(screen.getByText('保存版本')).toBeVisible()
     expect(creates).toBe(1)
   })
 })
@@ -167,6 +186,7 @@ function submission(status: 'infra_failed' | 'evaluated') {
     workspace_hash: 'workspace-hash',
     rule_set_hash: 'rule-set-hash',
     assistance_cutoff_seq: 0,
+    explanation: '',
     status,
     latest_execution_id: 'execution-1',
     latest_execution_sequence: 1,

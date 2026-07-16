@@ -3,6 +3,7 @@ package evaluation
 import (
 	"context"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/MorseWayne/gogopher-arch/internal/learning/attempt"
@@ -127,6 +128,53 @@ func TestGeneratorRejectsInfrastructureFailure(t *testing.T) {
 	terminal.Response.Failure = &execution.Failure{Code: "sandbox_unreachable", Message: "Sandbox unavailable"}
 	if _, err := generator.Generate(frozen, terminal); err == nil {
 		t.Fatal("Generate(infra failure) error = nil")
+	}
+}
+
+func TestGeneratorEvaluatesGuidedExplanationFromFrozenSubmission(t *testing.T) {
+	contentDir, err := filepath.Abs("../../../content/learning")
+	if err != nil {
+		t.Fatal(err)
+	}
+	registry, err := definition.LoadRegistry(definition.RegistryOptions{ContentDir: contentDir})
+	if err != nil {
+		t.Fatal(err)
+	}
+	generator, err := NewGenerator(registry)
+	if err != nil {
+		t.Fatal(err)
+	}
+	releaseID := registry.CurrentReleaseID()
+	task, err := registry.ExecutionTask(releaseID, "guided-run-model-v2", 4)
+	if err != nil {
+		t.Fatal(err)
+	}
+	workspace, err := registry.PublicWorkspace(releaseID, task.ID, task.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	frozen := submission.Submission{
+		ID: "submission-guided", AttemptID: "attempt-guided", ReleaseID: releaseID,
+		TaskID: task.ID, TaskVersion: task.Version, TaskHash: task.BundleHash,
+		Workspace: workspace, Explanation: strings.Repeat("学", 20),
+	}
+	terminal := terminalExecution(frozen, execution.ExecutionSucceeded, []execution.StageResult{passedStage(execution.StageBuild)})
+
+	results, err := generator.Generate(frozen, terminal)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resultByID(t, results, "toolchain-baseline-builds").Status != execution.RulePassed ||
+		resultByID(t, results, "toolchain-reflection-recorded").Status != execution.RulePassed {
+		t.Fatalf("guided results = %#v", results)
+	}
+	frozen.Explanation = strings.Repeat("学", 19)
+	results, err = generator.Generate(frozen, terminal)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resultByID(t, results, "toolchain-reflection-recorded").Status != execution.RuleFailed {
+		t.Fatalf("short explanation results = %#v", results)
 	}
 }
 

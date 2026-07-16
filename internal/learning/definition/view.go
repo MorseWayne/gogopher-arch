@@ -60,6 +60,7 @@ type TaskView struct {
 	VisibleTests    []string            `json:"visible_tests"`
 	AllowedActions  []string            `json:"allowed_actions"`
 	Hints           []HintSummaryView   `json:"hints"`
+	Solution        string              `json:"solution,omitempty"`
 	WorkspaceLimits WorkspaceLimitsView `json:"limits"`
 	Readme          string              `json:"readme"`
 }
@@ -327,7 +328,8 @@ func (r *Registry) TaskView(releaseID, id string, version int) (TaskView, error)
 			Level int    `json:"level"`
 			Title string `json:"title"`
 		} `json:"hints"`
-		Limits WorkspaceLimitsView `json:"limits"`
+		Solution string              `json:"solution"`
+		Limits   WorkspaceLimitsView `json:"limits"`
 	}
 	if err := json.Unmarshal(definition.Document, &document); err != nil {
 		return TaskView{}, fmt.Errorf("decode task view: %w", err)
@@ -355,7 +357,7 @@ func (r *Registry) TaskView(releaseID, id string, version int) (TaskView, error)
 		EditablePaths: append([]string(nil), document.EditablePaths...),
 		ReadonlyPaths: append([]string(nil), document.ReadonlyPaths...),
 		VisibleTests:  append([]string(nil), document.VisibleTests...), AllowedActions: allowedActions,
-		Hints: hints, WorkspaceLimits: document.Limits, Readme: readme,
+		Hints: hints, Solution: document.Solution, WorkspaceLimits: document.Limits, Readme: readme,
 	}, nil
 }
 

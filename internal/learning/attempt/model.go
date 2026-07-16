@@ -45,6 +45,13 @@ type CreateRecord struct {
 	Attempt
 }
 
+// CreateResult distinguishes a newly-created Attempt from an existing open
+// Attempt that was resumed for the same learner and frozen Activity.
+type CreateResult struct {
+	Attempt
+	Created bool
+}
+
 type SaveRecord struct {
 	AttemptID     string
 	LearnerID     string

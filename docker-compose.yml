@@ -40,7 +40,7 @@ services:
     environment:
       - APP_ENV=local
       - LISTEN_ADDRESS=0.0.0.0:8080
-      - LEARNING_SLICE_ENABLED=${LEARNING_SLICE_ENABLED:-false}
+      - LEARNING_SLICE_ENABLED=${LEARNING_SLICE_ENABLED:-true}
       - LEARNING_CONTENT_DIR=/app/content/learning
       - LEARNING_SESSION_TTL=${LEARNING_SESSION_TTL:-720h}
       - DATABASE_URL=${DATABASE_URL:-postgres://user:pass@postgres:5432/gogopher?sslmode=disable}

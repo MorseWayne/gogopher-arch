@@ -12,7 +12,7 @@ export function NotFound() {
           <RouteOff className="mb-3 size-8 text-primary" />
           <CardTitle>页面不存在</CardTitle>
           <CardDescription>
-            当前产品只暴露服务端驱动的 Dashboard 与 Activity route，不提供静态 Course、Mission 或 Sandbox fallback。
+            这个地址可能已经失效。你可以回到学习台，继续当前课程或查看下一步。
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3 sm:flex-row">

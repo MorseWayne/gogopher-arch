@@ -19,7 +19,7 @@ import (
 )
 
 type AttemptService interface {
-	Create(context.Context, attempt.CreateInput) (attempt.Attempt, error)
+	Create(context.Context, attempt.CreateInput) (attempt.CreateResult, error)
 	Get(context.Context, string, string) (attempt.Attempt, error)
 	Save(context.Context, attempt.SaveInput) (attempt.Attempt, error)
 }
@@ -76,10 +76,14 @@ func (h *AttemptHandler) Create(w http.ResponseWriter, request *http.Request) {
 		writeError(w, http.StatusInternalServerError, "attempt_unavailable", "learning attempt is unavailable")
 		return
 	}
-	if h.observer != nil {
-		h.observer.AttemptCreated(created)
+	if created.Created && h.observer != nil {
+		h.observer.AttemptCreated(created.Attempt)
 	}
-	writeJSON(w, http.StatusCreated, attemptResponse(created))
+	status := http.StatusOK
+	if created.Created {
+		status = http.StatusCreated
+	}
+	writeJSON(w, status, attemptResponse(created.Attempt))
 }
 
 func (h *AttemptHandler) Get(w http.ResponseWriter, request *http.Request, attemptID string) {
@@ -182,6 +186,7 @@ type submissionDTO struct {
 	WorkspaceHash         string                    `json:"workspace_hash"`
 	RuleSetHash           string                    `json:"rule_set_hash"`
 	AssistanceCutoff      int64                     `json:"assistance_cutoff_seq"`
+	Explanation           string                    `json:"explanation"`
 	Status                string                    `json:"status"`
 	LatestExecutionID     string                    `json:"latest_execution_id"`
 	LatestExecutionSeq    int                       `json:"latest_execution_sequence"`
@@ -230,6 +235,7 @@ func attemptDetailResponse(response attemptDTO, related attemptview.Related) att
 		response.Submission = &submissionDTO{
 			ID: value.ID, WorkspaceRevision: value.WorkspaceRevision, WorkspaceHash: value.WorkspaceHash,
 			RuleSetHash: value.RuleSetHash, AssistanceCutoff: value.AssistanceCutoff, Status: string(value.Status),
+			Explanation:       value.Explanation,
 			LatestExecutionID: value.LatestExecutionID, LatestExecutionSeq: value.LatestExecutionSeq,
 			LatestExecutionStatus: value.LatestExecutionStatus, CreatedAt: value.CreatedAt, EvaluatedAt: value.EvaluatedAt,
 		}

@@ -97,6 +97,7 @@ func (h *WorkflowHandler) Submit(w http.ResponseWriter, request *http.Request, a
 		SubmissionKey     string `json:"submission_key"`
 		WorkspaceRevision int64  `json:"workspace_revision"`
 		WorkspaceHash     string `json:"workspace_hash"`
+		Explanation       string `json:"explanation"`
 	}
 	if decodeJSON(request, &body) != nil || body.SubmissionKey == "" || body.WorkspaceRevision < 0 || body.WorkspaceHash == "" {
 		writeError(w, http.StatusUnprocessableEntity, "validation_failed", "submission_key, workspace_revision, and workspace_hash are required")
@@ -105,6 +106,7 @@ func (h *WorkflowHandler) Submit(w http.ResponseWriter, request *http.Request, a
 	result, err := h.submissions.Submit(request.Context(), submission.SubmitInput{
 		LearnerID: learnerID, AttemptID: attemptID, SubmissionKey: body.SubmissionKey,
 		WorkspaceRevision: body.WorkspaceRevision, WorkspaceHash: body.WorkspaceHash,
+		Explanation: body.Explanation,
 	})
 	if err != nil {
 		writeLearningError(w, err)

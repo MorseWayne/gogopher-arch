@@ -245,6 +245,27 @@ func TestPostgresProjectorRebuildsFactsIdempotently(t *testing.T) {
 	if err != nil || capabilityRead.Snapshot == nil || capabilityRead.Snapshot.RetentionState != RetentionStateDue || len(capabilityRead.RecentEvidence) != 2 {
 		t.Fatalf("Capability(M1-03) = %#v, %v", capabilityRead, err)
 	}
+	guidedActivity, _ := registry.ActivityView(registry.CurrentReleaseID(), "guided-run-model", 4)
+	guidedTask, _ := registry.TaskView(registry.CurrentReleaseID(), guidedActivity.TaskRef.ID, guidedActivity.TaskRef.Version)
+	openAttemptID := "00000000-0000-4000-8000-000000000116"
+	if _, err := db.ExecContext(ctx, `INSERT INTO "`+schema+`".learning_attempts (
+		id,learner_id,release_id,activity_id,activity_version,activity_hash,
+		task_id,task_version,task_hash,capability_refs,mode,status,workspace,workspace_hash,started_at,updated_at
+	) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'[]','guided','active','{}',$9,$10,$10)`,
+		openAttemptID, learnerID, registry.CurrentReleaseID(), guidedActivity.ID, guidedActivity.Version,
+		guidedActivity.ContentHash, guidedTask.ID, guidedTask.Version, guidedTask.BundleHash, dueInput.AsOf); err != nil {
+		t.Fatal(err)
+	}
+	continuedRecommendation, err := reader.Next(ctx, learnerID, dueInput.AsOf)
+	if err != nil || continuedRecommendation == nil || continuedRecommendation.Reason != "continue_attempt" ||
+		continuedRecommendation.OpenAttempt == nil || continuedRecommendation.OpenAttempt.ID != openAttemptID ||
+		continuedRecommendation.OpenAttempt.ReleaseID != registry.CurrentReleaseID() ||
+		continuedRecommendation.Activity.ID != guidedActivity.ID {
+		t.Fatalf("Next(open attempt) = %#v, %v", continuedRecommendation, err)
+	}
+	if _, err := db.ExecContext(ctx, `DELETE FROM "`+schema+`".learning_attempts WHERE id=$1`, openAttemptID); err != nil {
+		t.Fatal(err)
+	}
 	dueRecommendation, err := reader.Next(ctx, learnerID, dueInput.AsOf)
 	if err != nil || dueRecommendation == nil || dueRecommendation.Kind != "review" || dueRecommendation.Reason != "due_review" || dueRecommendation.Activity.ID != reviewActivity.ID {
 		t.Fatalf("Next(due review) = %#v, %v", dueRecommendation, err)

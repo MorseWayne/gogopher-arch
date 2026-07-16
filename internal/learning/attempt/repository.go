@@ -34,22 +34,41 @@ func NewPostgresRepository(db *sql.DB, options RepositoryOptions) (*PostgresRepo
 	return &PostgresRepository{db: db, schema: schema}, nil
 }
 
-func (r *PostgresRepository) Create(ctx context.Context, record CreateRecord) (Attempt, error) {
+func (r *PostgresRepository) Create(ctx context.Context, record CreateRecord) (CreateResult, error) {
 	capabilities, err := json.Marshal(record.CapabilityRefs)
 	if err != nil {
-		return Attempt{}, err
+		return CreateResult{}, err
 	}
 	workspace, err := json.Marshal(record.Workspace)
 	if err != nil {
-		return Attempt{}, err
+		return CreateResult{}, err
 	}
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return Attempt{}, fmt.Errorf("begin attempt creation: %w", err)
+		return CreateResult{}, fmt.Errorf("begin attempt creation: %w", err)
 	}
 	defer tx.Rollback()
 	if err := r.setSearchPath(ctx, tx); err != nil {
-		return Attempt{}, err
+		return CreateResult{}, err
+	}
+	lockKey := fmt.Sprintf("%d:%s%d:%s%d:%s%d", len(record.LearnerID), record.LearnerID,
+		len(record.ReleaseID), record.ReleaseID, len(record.ActivityID), record.ActivityID, record.ActivityVersion)
+	if _, err := tx.ExecContext(ctx, `SELECT pg_advisory_xact_lock(hashtextextended($1::text, 0))`, lockKey); err != nil {
+		return CreateResult{}, fmt.Errorf("lock attempt creation: %w", err)
+	}
+	existing, err := scanAttempt(tx.QueryRowContext(ctx, attemptSelect+`
+		WHERE learner_id = $1 AND release_id = $2 AND activity_id = $3 AND activity_version = $4
+			AND status IN ('active', 'submitted', 'submit_infra_failed')
+		ORDER BY updated_at DESC, id DESC
+		LIMIT 1`, record.LearnerID, record.ReleaseID, record.ActivityID, record.ActivityVersion))
+	if err == nil {
+		if err := tx.Commit(); err != nil {
+			return CreateResult{}, fmt.Errorf("commit resumed attempt read: %w", err)
+		}
+		return CreateResult{Attempt: existing}, nil
+	}
+	if !errors.Is(err, ErrNotFound) {
+		return CreateResult{}, err
 	}
 	_, err = tx.ExecContext(ctx, `
 		INSERT INTO learning_attempts (
@@ -61,12 +80,12 @@ func (r *PostgresRepository) Create(ctx context.Context, record CreateRecord) (A
 		record.TaskID, record.TaskVersion, record.TaskHash, string(capabilities), record.Mode, record.Status,
 		string(workspace), record.WorkspaceHash, record.StartedAt)
 	if err != nil {
-		return Attempt{}, fmt.Errorf("insert learning attempt: %w", err)
+		return CreateResult{}, fmt.Errorf("insert learning attempt: %w", err)
 	}
 	if err := tx.Commit(); err != nil {
-		return Attempt{}, fmt.Errorf("commit attempt creation: %w", err)
+		return CreateResult{}, fmt.Errorf("commit attempt creation: %w", err)
 	}
-	return cloneAttempt(record.Attempt), nil
+	return CreateResult{Attempt: cloneAttempt(record.Attempt), Created: true}, nil
 }
 
 func (r *PostgresRepository) Get(ctx context.Context, learnerID, attemptID string) (Attempt, error) {

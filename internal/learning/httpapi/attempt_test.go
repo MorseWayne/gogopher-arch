@@ -30,6 +30,27 @@ func TestAttemptHandlerCreatesForAuthenticatedOwner(t *testing.T) {
 	}
 }
 
+func TestAttemptHandlerResumesOpenAttemptWithoutCreatingAnotherFact(t *testing.T) {
+	resumed := attempt.CreateResult{Attempt: attempt.Attempt{
+		ID: "attempt-existing", LearnerID: "owner", Status: "active", Workspace: map[string]string{},
+	}}
+	service := &attemptServiceStub{createdResult: &resumed}
+	observer := &attemptObserverStub{}
+	handler, _ := NewAttemptHandler(service, nil, observer)
+	request := httptest.NewRequest(http.MethodPost, "/api/v1/learning/attempts", strings.NewReader(`{"activity_id":"guided-run-model","activity_version":4}`))
+	request = request.WithContext(context.WithValue(request.Context(), sessionContextKey{}, learningsession.Session{LearnerID: "owner"}))
+	response := httptest.NewRecorder()
+
+	handler.Create(response, request)
+
+	if response.Code != http.StatusOK || !strings.Contains(response.Body.String(), `"id":"attempt-existing"`) {
+		t.Fatalf("response=%d %s", response.Code, response.Body.String())
+	}
+	if observer.created != 0 {
+		t.Fatalf("AttemptCreated calls = %d, want 0", observer.created)
+	}
+}
+
 func TestAttemptHandlerRequiresReviewItemClaim(t *testing.T) {
 	service := &attemptServiceStub{createErr: attempt.ErrReviewClaimRequired}
 	handler, _ := NewAttemptHandler(service, nil)
@@ -130,13 +151,14 @@ func TestDisabledRouterReturnsExplicitUnavailableAndRemovesExecuteAPI(t *testing
 }
 
 type attemptServiceStub struct {
-	created     attempt.Attempt
-	createInput attempt.CreateInput
-	createErr   error
-	got         attempt.Attempt
-	getErr      error
-	saved       attempt.Attempt
-	saveErr     error
+	created       attempt.Attempt
+	createdResult *attempt.CreateResult
+	createInput   attempt.CreateInput
+	createErr     error
+	got           attempt.Attempt
+	getErr        error
+	saved         attempt.Attempt
+	saveErr       error
 }
 
 type attemptDetailsStub struct {
@@ -148,9 +170,12 @@ func (s *attemptDetailsStub) Load(context.Context, string, string) (attemptview.
 	return s.related, s.err
 }
 
-func (s *attemptServiceStub) Create(_ context.Context, input attempt.CreateInput) (attempt.Attempt, error) {
+func (s *attemptServiceStub) Create(_ context.Context, input attempt.CreateInput) (attempt.CreateResult, error) {
 	s.createInput = input
-	return s.created, s.createErr
+	if s.createdResult != nil {
+		return *s.createdResult, s.createErr
+	}
+	return attempt.CreateResult{Attempt: s.created, Created: true}, s.createErr
 }
 func (s *attemptServiceStub) Get(context.Context, string, string) (attempt.Attempt, error) {
 	return s.got, s.getErr
@@ -158,3 +183,7 @@ func (s *attemptServiceStub) Get(context.Context, string, string) (attempt.Attem
 func (s *attemptServiceStub) Save(context.Context, attempt.SaveInput) (attempt.Attempt, error) {
 	return s.saved, s.saveErr
 }
+
+type attemptObserverStub struct{ created int }
+
+func (s *attemptObserverStub) AttemptCreated(attempt.Attempt) { s.created++ }

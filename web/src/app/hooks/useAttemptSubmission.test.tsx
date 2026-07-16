@@ -29,14 +29,18 @@ describe('useAttemptSubmission', () => {
     ))
 
     act(() => {
-      void result.current.submit()
-      void result.current.submit()
+      void result.current.submit('Build 检查编译，Test 验证行为，Vet 检查可疑写法。')
+      void result.current.submit('Build 检查编译，Test 验证行为，Vet 检查可疑写法。')
     })
 
     await waitFor(() => expect(result.current.busy).toBe(false))
     expect(save).toHaveBeenCalledTimes(1)
     expect(requests).toHaveLength(1)
-    expect(requests[0]).toMatchObject({ workspace_revision: 4, workspace_hash: 'saved-hash' })
+    expect(requests[0]).toMatchObject({
+      workspace_revision: 4,
+      workspace_hash: 'saved-hash',
+      explanation: 'Build 检查编译，Test 验证行为，Vet 检查可疑写法。',
+    })
     expect(requests[0].submission_key).toEqual(expect.any(String))
     expect(onAttemptChange).toHaveBeenCalledWith(expect.objectContaining({ status: 'submitted' }))
   })
@@ -132,6 +136,7 @@ function submittedAttempt(status: 'executing' | 'infra_failed' = 'executing'): A
       workspace_hash: 'workspace-hash',
       rule_set_hash: 'rule-set-hash',
       assistance_cutoff_seq: 0,
+      explanation: '',
       status,
       latest_execution_id: 'execution-submit',
       latest_execution_sequence: 1,

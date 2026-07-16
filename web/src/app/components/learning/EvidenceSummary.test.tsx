@@ -6,7 +6,7 @@ import { activityFixture, attemptFixture, capabilityFixture } from '../../../tes
 import { EvidenceSummary } from './EvidenceSummary'
 
 describe('EvidenceSummary', () => {
-  it('renders server Evidence, review outcomes, and Snapshot changes without certification claims', () => {
+  it('renders learner-facing results without exposing internal rule identifiers', () => {
     const activity = {
       ...activityFixture.activity,
       mode: 'review',
@@ -26,6 +26,7 @@ describe('EvidenceSummary', () => {
         workspace_hash: 'workspace-hash',
         rule_set_hash: 'rule-set-hash',
         assistance_cutoff_seq: 0,
+        explanation: '',
         status: 'evaluated' as const,
         latest_execution_id: 'execution-review',
         latest_execution_sequence: 1,
@@ -55,15 +56,17 @@ describe('EvidenceSummary', () => {
       baselineCapabilities={baseline}
     />)
 
-    expect(screen.getByRole('heading', { name: '平台观察到的 Evidence' })).toBeVisible()
-    expect(screen.getByText('module-builds')).toBeVisible()
-    expect(screen.getByText('error-chain-preserved')).toBeVisible()
-    const m107 = screen.getAllByText('M1-07@1')[0].parentElement!.parentElement!
-    expect(within(m107).getByText('not_evaluated')).toBeVisible()
-    expect(screen.getByText('暂无已投影 remediation 安排')).toBeVisible()
-    expect(screen.getByText('exploring')).toBeVisible()
-    expect(screen.getByText('verified')).toBeVisible()
-    expect(screen.getByText(/不把它描述为身份认证、防作弊结论/)).toBeVisible()
+    expect(screen.getByRole('heading', { name: '本节结果' })).toBeVisible()
+    expect(screen.getByText('代码可以完成编译')).toBeVisible()
+    expect(screen.getByText('错误原因得到保留')).toBeVisible()
+    expect(screen.queryByText('module-builds')).not.toBeInTheDocument()
+    expect(screen.queryByText('error-chain-preserved')).not.toBeInTheDocument()
+    const m107 = screen.getAllByText('能力 M1-07')[0].parentElement!.parentElement!
+    expect(within(m107).getByText('未检查')).toBeVisible()
+    expect(screen.getByText('将根据结果安排补强练习')).toBeVisible()
+    expect(screen.getByText('正在学习')).toBeVisible()
+    expect(screen.getByText('已验证')).toBeVisible()
+    expect(screen.getByText(/最终检查完成后/)).toBeVisible()
   })
 })
 
@@ -96,7 +99,7 @@ function capability(
 ): CapabilityResponse {
   return {
     ...capabilityFixture,
-    capability: { ...capabilityFixture.capability, id, version },
+    capability: { ...capabilityFixture.capability, id, version, name: `能力 ${id}` },
     snapshot: value,
   }
 }

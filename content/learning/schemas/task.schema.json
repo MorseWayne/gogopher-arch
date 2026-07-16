@@ -44,6 +44,7 @@
         }
       }
     },
+    "solution": {"type": "string", "minLength": 1, "maxLength": 8000},
     "visible_tests": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/path"}},
     "held_out_tests": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/path"}},
     "assessment_rules": {
@@ -53,7 +54,7 @@
         "required": ["rule_id", "stage", "selector", "capability_refs", "evidence_type", "condition"],
         "properties": {
           "rule_id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
-          "stage": {"enum": ["build", "visible_test", "vet", "held_out_test", "ast"]},
+          "stage": {"enum": ["build", "visible_test", "vet", "held_out_test", "ast", "explanation"]},
           "selector": {"type": "object", "minProperties": 1},
           "capability_refs": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/capabilityRef"}},
           "evidence_type": {"enum": ["implement", "test", "diagnose"]},

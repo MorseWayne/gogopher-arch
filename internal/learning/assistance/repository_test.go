@@ -214,7 +214,7 @@ func setupAssistanceIntegration(t *testing.T) assistanceIntegrationFixture {
 	}
 	repository, _ := NewPostgresRepository(db, RepositoryOptions{Schema: schema})
 	return assistanceIntegrationFixture{
-		ctx: ctx, db: db, schema: schema, learnerID: learnerID, current: current,
+		ctx: ctx, db: db, schema: schema, learnerID: learnerID, current: current.Attempt,
 		attempts: attemptService, repository: repository,
 	}
 }

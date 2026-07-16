@@ -100,7 +100,7 @@ func (r *PostgresRepository) readSubmission(ctx context.Context, tx *sql.Tx, lea
 	var evaluatedAt sql.NullTime
 	err := tx.QueryRowContext(ctx, `
 		SELECT s.id, s.workspace_revision, s.workspace_hash, s.rule_set_hash,
-			s.assistance_cutoff_seq, s.status, s.created_at, s.evaluated_at,
+			s.assistance_cutoff_seq, s.explanation, s.status, s.created_at, s.evaluated_at,
 			COALESCE(e.id::text, ''), COALESCE(e.sequence, 0), COALESCE(e.status, '')
 		FROM attempt_submissions s
 		JOIN learning_attempts a ON a.id = s.attempt_id AND a.learner_id = $1
@@ -110,7 +110,7 @@ func (r *PostgresRepository) readSubmission(ctx context.Context, tx *sql.Tx, lea
 		) e ON true
 		WHERE s.attempt_id = $2`, learnerID, attemptID).Scan(
 		&value.ID, &value.WorkspaceRevision, &value.WorkspaceHash, &value.RuleSetHash,
-		&value.AssistanceCutoff, &value.Status, &value.CreatedAt, &evaluatedAt,
+		&value.AssistanceCutoff, &value.Explanation, &value.Status, &value.CreatedAt, &evaluatedAt,
 		&value.LatestExecutionID, &value.LatestExecutionSeq, &value.LatestExecutionStatus,
 	)
 	if err == sql.ErrNoRows {

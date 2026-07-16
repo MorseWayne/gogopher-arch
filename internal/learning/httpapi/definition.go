@@ -69,7 +69,10 @@ func (h *DefinitionHandler) Activity(w http.ResponseWriter, request *http.Reques
 	if !ok {
 		return
 	}
-	releaseID := h.registry.CurrentReleaseID()
+	releaseID := request.URL.Query().Get("release_id")
+	if releaseID == "" {
+		releaseID = h.registry.CurrentReleaseID()
+	}
 	value, err := h.registry.ActivityView(releaseID, request.PathValue("id"), version)
 	if err != nil {
 		h.writeDefinitionError(w, err)

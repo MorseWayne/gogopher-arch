@@ -34,12 +34,29 @@ describe('ExecutionPanel', () => {
 
     render(<ExecutionPanel executions={[value]} ruleResults={rules} />)
 
-    expect(screen.getByText(/执行基础设施失败，未判定为任务失败/)).toBeVisible()
+    expect(screen.getByText(/运行环境暂时不可用，本次不计为练习失败/)).toBeVisible()
     expect(screen.getByText('用户代码超过本次动作时间限制')).toBeVisible()
-    expect(screen.getByText('Held-out checks')).toBeVisible()
+    expect(screen.getByText('最终检查')).toBeVisible()
     expect(screen.getByText('2 hidden checks did not pass')).toBeVisible()
+    expect(screen.getByText('main.go:8: syntax error')).toBeVisible()
+    expect(screen.queryByText('build failed')).not.toBeInTheDocument()
     expect(screen.getByText('输出已截断')).toBeVisible()
-    expect(screen.getByText('tool-feedback-explained')).toBeVisible()
+    expect(screen.getByText('理解并解释工具反馈')).toBeInTheDocument()
+  })
+
+  it('localizes generic runner summaries', () => {
+    const value = executionFixture()
+    value.status = 'succeeded'
+    value.failure = undefined
+    value.stages = [{
+      stage: 'visible_test', status: 'passed', exit_code: 0, duration_ms: 80,
+      timed_out: false, output_truncated: false, public_summary: 'visible tests completed',
+    }]
+
+    render(<ExecutionPanel executions={[value]} ruleResults={[]} />)
+
+    expect(screen.getByText('测试已完成')).toBeVisible()
+    expect(screen.queryByText('visible tests completed')).not.toBeInTheDocument()
   })
 })
 
@@ -62,6 +79,10 @@ function executionFixture(): Execution {
       {
         stage: 'held_out_test', status: 'failed', exit_code: 1, duration_ms: 100,
         timed_out: false, output_truncated: false, public_summary: '2 hidden checks did not pass',
+      },
+      {
+        stage: 'build', status: 'failed', exit_code: 1, duration_ms: 80,
+        timed_out: false, output_truncated: false, public_summary: 'build failed', stderr: 'main.go:8: syntax error',
       },
     ],
     created_at: '2026-07-13T00:00:00Z',

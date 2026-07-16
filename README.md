@@ -207,7 +207,7 @@ npm test --prefix web -- --run
 npm run build --prefix web
 ./scripts/check-compose-exposure.sh
 go run ./cmd/learning-content verify \
-  --release-dir content/learning/releases/m1-first-slice-v3 \
+  --release-dir content/learning/releases/m1-first-slice-v4 \
   --web-dist web/dist
 npm run e2e:compose --prefix web
 git diff --check
@@ -222,7 +222,7 @@ git diff --check
 | variable | default | purpose |
 | :--- | :--- | :--- |
 | `APP_ENV` | `local` | Learning 只允许在 `local` / `test` 开启 |
-| `LEARNING_SLICE_ENABLED` | `false` | Learning feature gate |
+| `LEARNING_SLICE_ENABLED` | `true`（Compose / `.env.example`） | 本地 Learning feature gate；生产环境仍禁止启用 |
 | `LEARNING_CONTENT_DIR` | `content/learning` | schema、pointer 与 release root |
 | `LEARNING_SESSION_TTL` | `720h` | anonymous session lifetime |
 | `DATABASE_URL` | Compose internal URL | Gateway / migrate database connection |

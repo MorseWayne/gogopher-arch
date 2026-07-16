@@ -70,7 +70,7 @@ export function useAttemptSubmission(
     }
   }, [attempt.id, refresh])
 
-  const submit = useCallback(async () => {
+  const submit = useCallback(async (explanation = '') => {
     if (inFlight.current || attempt.status !== 'active') return
     inFlight.current = true
     setState({ status: 'sending' })
@@ -80,7 +80,7 @@ export function useAttemptSubmission(
       const saved = await workspace.save()
       if (!saved) {
         inFlight.current = false
-        setState({ status: 'error', message: 'workspace 未成功保存，本次没有提交。' })
+        setState({ status: 'error', message: '代码尚未保存成功，本次没有提交。' })
         return
       }
       current = saved
@@ -92,6 +92,7 @@ export function useAttemptSubmission(
         submission_key: requestKey(),
         workspace_revision: current.workspace_revision,
         workspace_hash: current.workspace_hash,
+        explanation,
       },
     }
     await perform(pending)
@@ -128,7 +129,7 @@ function requestKey(): string {
 }
 
 function errorText(error: unknown): string {
-  if (error instanceof LearningApiError) return `${error.code}（HTTP ${error.status}）：${error.message}`
+  if (error instanceof LearningApiError) return '本次提交暂时失败，请重试。'
   if (error instanceof Error) return error.message
-  return 'Submission 请求失败'
+  return '本次提交暂时失败，请重试。'
 }

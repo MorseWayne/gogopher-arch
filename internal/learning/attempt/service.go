@@ -11,7 +11,7 @@ import (
 )
 
 type Repository interface {
-	Create(context.Context, CreateRecord) (Attempt, error)
+	Create(context.Context, CreateRecord) (CreateResult, error)
 	Get(context.Context, string, string) (Attempt, error)
 	Save(context.Context, SaveRecord) (Attempt, error)
 }
@@ -41,26 +41,26 @@ func NewService(repository Repository, registry *definition.Registry, options Se
 	return &Service{repository: repository, registry: registry, random: options.Random, now: options.Now}, nil
 }
 
-func (s *Service) Create(ctx context.Context, input CreateInput) (Attempt, error) {
+func (s *Service) Create(ctx context.Context, input CreateInput) (CreateResult, error) {
 	releaseID := s.registry.CurrentReleaseID()
 	activity, err := s.registry.ActivityView(releaseID, input.ActivityID, input.ActivityVersion)
 	if err != nil {
-		return Attempt{}, fmt.Errorf("resolve activity: %w", err)
+		return CreateResult{}, fmt.Errorf("resolve activity: %w", err)
 	}
 	if activity.Mode == "review" {
-		return Attempt{}, ErrReviewClaimRequired
+		return CreateResult{}, ErrReviewClaimRequired
 	}
 	task, err := s.registry.TaskView(releaseID, activity.TaskRef.ID, activity.TaskRef.Version)
 	if err != nil {
-		return Attempt{}, fmt.Errorf("resolve task: %w", err)
+		return CreateResult{}, fmt.Errorf("resolve task: %w", err)
 	}
 	workspace, err := s.registry.PublicWorkspace(releaseID, task.ID, task.Version)
 	if err != nil {
-		return Attempt{}, fmt.Errorf("restore starter workspace: %w", err)
+		return CreateResult{}, fmt.Errorf("restore starter workspace: %w", err)
 	}
 	id, err := randomUUID(s.random)
 	if err != nil {
-		return Attempt{}, err
+		return CreateResult{}, err
 	}
 	now := s.now().UTC()
 	record := Attempt{

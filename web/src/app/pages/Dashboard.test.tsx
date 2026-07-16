@@ -22,8 +22,8 @@ describe('Dashboard', () => {
 
     expect(await screen.findByText('首次学习')).toBeVisible()
     expect(screen.getByRole('heading', { name: activityFixture.activity.title })).toBeVisible()
-    expect(screen.getByText('source: server_learning_state')).toBeVisible()
-    expect(screen.getByRole('link', { name: /打开 Activity/ })).toHaveAttribute(
+    expect(screen.queryByText('server_learning_state')).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /开始学习/ })).toHaveAttribute(
       'href',
       `/learning/activities/${activityFixture.activity.id}?version=${activityFixture.activity.version}`,
     )
@@ -42,10 +42,10 @@ describe('Dashboard', () => {
     const user = userEvent.setup()
     renderDashboard()
 
-    await user.click(await screen.findByRole('button', { name: '领取并开始 review' }))
+    await user.click(await screen.findByRole('button', { name: '开始复习' }))
 
     expect(await screen.findByTestId('location')).toHaveTextContent(
-      `/learning/activities/${activityFixture.activity.id}?version=${activityFixture.activity.version}&attempt=${attemptFixture.id}`,
+      `/learning/activities/${activityFixture.activity.id}?version=${activityFixture.activity.version}&attempt=${attemptFixture.id}&release=${attemptFixture.release_id}`,
     )
     expect(claims).toBe(1)
   })
@@ -54,10 +54,10 @@ describe('Dashboard', () => {
     server.use(http.get(`${root}/next`, () => HttpResponse.json(nextResponse(claimedReview()))))
     renderDashboard()
 
-    expect(await screen.findByText('已领取 review')).toBeVisible()
-    expect(screen.getByRole('link', { name: /继续已领取 review/ })).toHaveAttribute(
+    expect(await screen.findByText('继续复习')).toBeVisible()
+    expect(screen.getByRole('link', { name: /继续学习/ })).toHaveAttribute(
       'href',
-      `/learning/activities/${activityFixture.activity.id}?version=${activityFixture.activity.version}&attempt=attempt-claimed`,
+      `/learning/activities/${activityFixture.activity.id}?version=${activityFixture.activity.version}&attempt=attempt-claimed&release=m1-first-slice-v3`,
     )
   })
 
@@ -65,9 +65,20 @@ describe('Dashboard', () => {
     server.use(http.get(`${root}/next`, () => HttpResponse.json(nextResponse(null))))
     renderDashboard()
 
-    expect(await screen.findByRole('heading', { name: '暂无建议' })).toBeVisible()
-    expect(screen.getByText('source: server_learning_state')).toBeVisible()
+    expect(await screen.findByRole('heading', { name: '今天的任务已完成' })).toBeVisible()
+    expect(screen.queryByText('server_learning_state')).not.toBeInTheDocument()
     expect(screen.queryByRole('link', { name: /Activity|课程|任务/ })).not.toBeInTheDocument()
+  })
+
+  it('links an open acquisition Attempt back to the saved workspace', async () => {
+    server.use(http.get(`${root}/next`, () => HttpResponse.json(nextResponse(openAcquisition()))))
+    renderDashboard()
+
+    expect(await screen.findByText('继续上次进度')).toBeVisible()
+    expect(screen.getByRole('link', { name: /继续学习/ })).toHaveAttribute(
+      'href',
+      `/learning/activities/${activityFixture.activity.id}?version=${activityFixture.activity.version}&attempt=${attemptFixture.id}&release=m1-first-slice-v3`,
+    )
   })
 
   it('shows an explicit closed state when the Learning feature gate is disabled', async () => {
@@ -77,8 +88,8 @@ describe('Dashboard', () => {
     )))
     renderDashboard()
 
-    expect(await screen.findByRole('heading', { name: 'Learning 功能已关闭' })).toBeVisible()
-    expect(screen.getByText(/learning_disabled（HTTP 503）/)).toBeVisible()
+    expect(await screen.findByRole('heading', { name: '学习功能暂不可用' })).toBeVisible()
+    expect(screen.getByText('学习服务暂时无法完成请求，请稍后重试。')).toBeVisible()
     expect(screen.queryByRole('link')).not.toBeInTheDocument()
     expect(screen.queryByRole('button')).not.toBeInTheDocument()
     expect(screen.queryByText(/Course|Mission|Sandbox|课程|沙盒|静态进度/)).not.toBeInTheDocument()
@@ -155,6 +166,19 @@ function claimedReview(): NonNullable<NextResponse['recommendation']> {
       ...due.review_item!,
       status: 'claimed',
       claimed_attempt_id: 'attempt-claimed',
+    },
+  }
+}
+
+function openAcquisition(): NonNullable<NextResponse['recommendation']> {
+  return {
+    ...acquisition(),
+    reason: 'continue_attempt',
+    open_attempt: {
+      id: attemptFixture.id,
+      release_id: 'm1-first-slice-v3',
+      status: 'active',
+      updated_at: '2026-07-13T12:00:00Z',
     },
   }
 }

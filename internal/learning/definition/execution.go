@@ -53,6 +53,7 @@ type AssessmentSelector struct {
 	DeferredCall string `json:"deferred_call,omitempty"`
 	Glob         string `json:"glob,omitempty"`
 	MinimumCases int    `json:"minimum_cases,omitempty"`
+	MinimumChars int    `json:"minimum_chars,omitempty"`
 	ExitCode     *int   `json:"exit_code,omitempty"`
 }
 

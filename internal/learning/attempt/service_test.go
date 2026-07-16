@@ -19,7 +19,7 @@ func TestServiceCreatesFrozenStarterAndEnforcesOwner(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if created.ReleaseID != "m1-first-slice-v3" || created.ActivityHash == "" || created.TaskHash == "" || len(created.CapabilityRefs) != 4 {
+	if created.ReleaseID != "m1-first-slice-v4" || created.ActivityHash == "" || created.TaskHash == "" || len(created.CapabilityRefs) != 4 {
 		t.Fatalf("frozen attempt = %#v", created)
 	}
 	if _, exists := created.Workspace["internal/config/heldout_test.go"]; exists {
@@ -136,9 +136,9 @@ func newTestService(t *testing.T) (*Service, *memoryRepository) {
 
 type memoryRepository struct{ attempts map[string]Attempt }
 
-func (r *memoryRepository) Create(_ context.Context, record CreateRecord) (Attempt, error) {
+func (r *memoryRepository) Create(_ context.Context, record CreateRecord) (CreateResult, error) {
 	r.attempts[record.ID] = cloneAttempt(record.Attempt)
-	return cloneAttempt(record.Attempt), nil
+	return CreateResult{Attempt: cloneAttempt(record.Attempt), Created: true}, nil
 }
 func (r *memoryRepository) Get(_ context.Context, learnerID, attemptID string) (Attempt, error) {
 	value, exists := r.attempts[attemptID]
