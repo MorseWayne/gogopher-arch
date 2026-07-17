@@ -1,0 +1,14 @@
+{
+  "id": "M1-05",
+  "version": 1,
+  "name": "struct、方法、组合与领域建模",
+  "description": "能够用类型不变量和行为方法表达小型领域模型，以组合代替继承式层级和无意义访问器。",
+  "milestone": "M1",
+  "domain": "domain-modeling",
+  "prerequisites": {"hard": [{"id": "M1-03", "version": 1}, {"id": "M1-04", "version": 1}], "recommended": []},
+  "required_evidence": [
+    {"type": "implement", "independence": "independent", "context": "same_context", "rule_ids": ["domain-invariants-enforced", "behavior-methods-correct"]}
+  ],
+  "review_policy": {"first_review_after_days": 3, "success_interval_days": 14, "failure_remediation_after_days": 1},
+  "resource_refs": ["web/src/content/go-basics/ch04-composite-types.mdx", "web/src/content/go-basics/ch06-methods.mdx", "https://go.dev/doc/effective_go"]
+}

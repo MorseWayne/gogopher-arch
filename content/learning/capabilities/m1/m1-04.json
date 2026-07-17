@@ -1,0 +1,14 @@
+{
+  "id": "M1-04",
+  "version": 1,
+  "name": "slice、map、数组与内存语义",
+  "description": "能够识别并修复 slice 共享底层数组、窗口保留、扩容和 map 初始化或覆盖契约问题。",
+  "milestone": "M1",
+  "domain": "collections-memory",
+  "prerequisites": {"hard": [{"id": "M1-02", "version": 1}, {"id": "M1-03", "version": 1}], "recommended": []},
+  "required_evidence": [
+    {"type": "implement", "independence": "independent", "context": "same_context", "rule_ids": ["slice-ownership-isolated", "map-contract-correct"]}
+  ],
+  "review_policy": {"first_review_after_days": 3, "success_interval_days": 14, "failure_remediation_after_days": 1},
+  "resource_refs": ["web/src/content/go-basics/ch04-composite-types.mdx", "https://go.dev/blog/slices-intro"]
+}

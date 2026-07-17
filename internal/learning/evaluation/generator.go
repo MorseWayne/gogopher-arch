@@ -143,6 +143,16 @@ func evaluateASTRule(rule definition.AssessmentRule, task definition.ExecutionTa
 		}
 		return execution.RuleFailed, "go_ast_deferred_call"
 	}
+	if rule.Selector.DocumentedExports {
+		build, exists := stages[execution.StageBuild]
+		if !exists || build.Status != execution.StagePassed {
+			return execution.RuleNotEvaluated, "go_ast_documented_exports"
+		}
+		if hasDocumentedExports(workspace[rule.Selector.File]) {
+			return execution.RulePassed, "go_ast_documented_exports"
+		}
+		return execution.RuleFailed, "go_ast_documented_exports"
+	}
 	if rule.Selector.MinimumCases > 0 {
 		visible, exists := stages[execution.StageVisibleTest]
 		if !exists {
@@ -177,6 +187,59 @@ func hasDeferredCall(source, callName string) bool {
 		return !found
 	})
 	return found
+}
+
+func hasDocumentedExports(source string) bool {
+	file, err := parser.ParseFile(token.NewFileSet(), "source.go", source, parser.ParseComments)
+	if err != nil || file.Doc == nil || !commentStartsWith(file.Doc, "Package "+file.Name.Name) {
+		return false
+	}
+	found := false
+	for _, declaration := range file.Decls {
+		switch value := declaration.(type) {
+		case *ast.FuncDecl:
+			if !value.Name.IsExported() {
+				continue
+			}
+			found = true
+			if !commentStartsWith(value.Doc, value.Name.Name) {
+				return false
+			}
+		case *ast.GenDecl:
+			for _, specification := range value.Specs {
+				var names []*ast.Ident
+				var documentation *ast.CommentGroup
+				switch item := specification.(type) {
+				case *ast.TypeSpec:
+					names = []*ast.Ident{item.Name}
+					documentation = item.Doc
+				case *ast.ValueSpec:
+					names = item.Names
+					documentation = item.Doc
+				}
+				if documentation == nil {
+					documentation = value.Doc
+				}
+				for _, name := range names {
+					if !name.IsExported() {
+						continue
+					}
+					found = true
+					if !commentStartsWith(documentation, name.Name) {
+						return false
+					}
+				}
+			}
+		}
+	}
+	return found
+}
+
+func commentStartsWith(group *ast.CommentGroup, prefix string) bool {
+	if group == nil {
+		return false
+	}
+	return strings.HasPrefix(strings.TrimSpace(group.Text()), prefix)
 }
 
 func hasLearnerTableTests(task definition.ExecutionTask, workspace map[string]string, selector definition.AssessmentSelector) bool {

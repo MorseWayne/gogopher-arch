@@ -47,14 +47,15 @@ type ExecutionAsset struct {
 }
 
 type AssessmentSelector struct {
-	Package      string `json:"package,omitempty"`
-	Test         string `json:"test,omitempty"`
-	File         string `json:"file,omitempty"`
-	DeferredCall string `json:"deferred_call,omitempty"`
-	Glob         string `json:"glob,omitempty"`
-	MinimumCases int    `json:"minimum_cases,omitempty"`
-	MinimumChars int    `json:"minimum_chars,omitempty"`
-	ExitCode     *int   `json:"exit_code,omitempty"`
+	Package           string `json:"package,omitempty"`
+	Test              string `json:"test,omitempty"`
+	File              string `json:"file,omitempty"`
+	DeferredCall      string `json:"deferred_call,omitempty"`
+	DocumentedExports bool   `json:"documented_exports,omitempty"`
+	Glob              string `json:"glob,omitempty"`
+	MinimumCases      int    `json:"minimum_cases,omitempty"`
+	MinimumChars      int    `json:"minimum_chars,omitempty"`
+	ExitCode          *int   `json:"exit_code,omitempty"`
 }
 
 type AssessmentRule struct {

@@ -131,6 +131,36 @@ func TestGeneratorRejectsInfrastructureFailure(t *testing.T) {
 	}
 }
 
+func TestDocumentedExportsAnalyzerRequiresPackageAndDeclarationComments(t *testing.T) {
+	valid := `// Package report creates stable reports.
+package report
+
+// Summary describes a report.
+type Summary struct{}
+
+// Build creates a Summary.
+func Build() Summary { return Summary{} }
+
+// Count returns the number of entries.
+func (Summary) Count() int { return 0 }
+`
+	if !hasDocumentedExports(valid) {
+		t.Fatal("hasDocumentedExports(valid) = false")
+	}
+	for name, source := range map[string]string{
+		"package": strings.Replace(valid, "// Package report creates stable reports.\n", "", 1),
+		"type":    strings.Replace(valid, "// Summary describes a report.\n", "", 1),
+		"function": strings.Replace(valid, "// Build creates a Summary.\n", "// Create builds a Summary.\n", 1),
+		"method": strings.Replace(valid, "// Count returns the number of entries.\n", "", 1),
+	} {
+		t.Run(name, func(t *testing.T) {
+			if hasDocumentedExports(source) {
+				t.Fatalf("hasDocumentedExports(%s without valid comment) = true", name)
+			}
+		})
+	}
+}
+
 func TestGeneratorReplaysHistoricalGuidedExplanationRule(t *testing.T) {
 	contentDir, err := filepath.Abs("../../../content/learning")
 	if err != nil {

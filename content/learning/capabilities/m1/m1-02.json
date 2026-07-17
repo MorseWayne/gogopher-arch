@@ -1,0 +1,14 @@
+{
+  "id": "M1-02",
+  "version": 1,
+  "name": "值、类型、控制流与 Go 语义",
+  "description": "能够使用零值、命名类型、显式转换、Unicode 语义、分支和循环独立完成数据处理功能。",
+  "milestone": "M1",
+  "domain": "language-semantics",
+  "prerequisites": {"hard": [{"id": "M1-01", "version": 2}], "recommended": []},
+  "required_evidence": [
+    {"type": "implement", "independence": "independent", "context": "same_context", "rule_ids": ["unicode-control-flow-correct", "named-type-zero-defaults"]}
+  ],
+  "review_policy": {"first_review_after_days": 3, "success_interval_days": 14, "failure_remediation_after_days": 1},
+  "resource_refs": ["web/src/content/go-basics/ch03-basic-types.mdx", "https://go.dev/ref/spec"]
+}
