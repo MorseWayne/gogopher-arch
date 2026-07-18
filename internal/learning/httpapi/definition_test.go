@@ -38,7 +38,7 @@ func TestCapabilityReturnsCurrentDefinitionAndExplicitStateSources(t *testing.T)
 	}
 	body := response.Body.String()
 	for _, expected := range []string{
-		`"version":2`, `"snapshot":null`, `"recent_evidence":[]`,
+		`"version":3`, `"snapshot":null`, `"recent_evidence":[]`,
 		`"definition":"release_bundle"`, `"snapshot":"capability_snapshots"`,
 		`"evidence":"evidence_records"`, `"retention":"derived_at_read"`,
 	} {
@@ -107,7 +107,7 @@ func TestActivityReturnsPublicTaskContextWithoutPrivateEvaluationRules(t *testin
 	if err != nil {
 		t.Fatal(err)
 	}
-	request := authenticatedDefinitionRequest(httptest.NewRequest(http.MethodGet, "/api/v1/learning/activities/guided-run-model?version=6", nil), "learner-activity")
+	request := authenticatedDefinitionRequest(httptest.NewRequest(http.MethodGet, "/api/v1/learning/activities/guided-run-model?version=7", nil), "learner-activity")
 	request.SetPathValue("id", "guided-run-model")
 	response := httptest.NewRecorder()
 	handler.Activity(response, request)
@@ -115,12 +115,12 @@ func TestActivityReturnsPublicTaskContextWithoutPrivateEvaluationRules(t *testin
 		t.Fatalf("response=%d body=%s", response.Code, response.Body.String())
 	}
 	body := response.Body.String()
-	for _, expected := range []string{`"task":`, `"allowed_actions":["build","submit","test","vet"]`, `"hints":[{"id":"read-first-error","level":1`, `"readme":"# 读懂 Go 工具链反馈`, `"solution":"一个合格的小结`} {
+	for _, expected := range []string{`"task":`, `"allowed_actions":["build","submit","test","vet"]`, `"hints":[{"id":"return-a-string","level":1`, `"readme":"# 亲手完成第一个 Go 程序`, `"solution":"func welcome`} {
 		if !strings.Contains(body, expected) {
 			t.Fatalf("body missing %s: %s", expected, body)
 		}
 	}
-	for _, forbidden := range []string{"held_out_tests", "race_tests", "assessment_rules", `"actions":`, "bundle_path", "从输出顶部找到"} {
+	for _, forbidden := range []string{"held_out_tests", "race_tests", "assessment_rules", `"actions":`, "bundle_path", "welcome 的返回类型"} {
 		if strings.Contains(body, forbidden) {
 			t.Fatalf("body contains private field %q: %s", forbidden, body)
 		}
@@ -205,9 +205,40 @@ func TestNextRejectsInvalidTestAsOf(t *testing.T) {
 	}
 }
 
+func TestRoadmapReturnsServerDerivedCapabilityStates(t *testing.T) {
+	registry := definitionTestRegistry(t)
+	now := time.Date(2026, time.July, 19, 12, 0, 0, 0, time.UTC)
+	capability, err := registry.CapabilityView(registry.CurrentReleaseID(), "M1-01", 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+	reader := &learningReaderStub{roadmap: projection.RoadmapRead{
+		ReleaseID: registry.CurrentReleaseID(),
+		Items: []projection.RoadmapItem{{
+			Capability: capability, Status: projection.RoadmapAvailable,
+			HardPrerequisites: []projection.PrerequisiteStatus{}, RecommendedPrerequisites: []projection.PrerequisiteStatus{},
+		}},
+	}}
+	handler, _ := NewDefinitionHandler(registry, reader, DefinitionHandlerOptions{Now: func() time.Time { return now }})
+	request := authenticatedDefinitionRequest(httptest.NewRequest(http.MethodGet, "/api/v1/learning/roadmap", nil), "learner-roadmap")
+	response := httptest.NewRecorder()
+
+	handler.Roadmap(response, request)
+
+	if response.Code != http.StatusOK || reader.learnerID != "learner-roadmap" || !reader.asOf.Equal(now) {
+		t.Fatalf("response=%d reader=%#v body=%s", response.Code, reader, response.Body.String())
+	}
+	for _, expected := range []string{`"release_id":"m1-first-slice-v16"`, `"name":"编写并运行第一个 Go 程序"`, `"status":"available"`, `"state":"server_learning_state"`} {
+		if !strings.Contains(response.Body.String(), expected) {
+			t.Fatalf("body missing %s: %s", expected, response.Body.String())
+		}
+	}
+}
+
 type learningReaderStub struct {
 	capability   projection.CapabilityRead
 	next         *projection.NextRecommendation
+	roadmap      projection.RoadmapRead
 	err          error
 	learnerID    string
 	capabilityID string
@@ -223,6 +254,11 @@ func (s *learningReaderStub) Capability(_ context.Context, learnerID string, sel
 func (s *learningReaderStub) Next(_ context.Context, learnerID string, asOf time.Time) (*projection.NextRecommendation, error) {
 	s.learnerID, s.asOf = learnerID, asOf
 	return s.next, s.err
+}
+
+func (s *learningReaderStub) Roadmap(_ context.Context, learnerID string, asOf time.Time) (projection.RoadmapRead, error) {
+	s.learnerID, s.asOf = learnerID, asOf
+	return s.roadmap, s.err
 }
 
 func definitionTestRegistry(t *testing.T) *definition.Registry {

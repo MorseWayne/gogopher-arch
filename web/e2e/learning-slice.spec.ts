@@ -38,16 +38,23 @@ test.describe('Learning slice vertical scenarios', () => {
     await expect(page.getByRole('heading', { name: '从会写 Go 语法，到能独立完成程序' })).toBeVisible()
     await page.getByRole('link', { name: /开始第一节/ }).click()
     await expect(page.getByRole('heading', { name: '继续你的 Go 学习' })).toBeVisible()
+    await page.getByRole('link', { name: '打开成长路线' }).click()
+    await expect(page.getByRole('heading', { name: '从 Go 基础走向后端工程' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: '第一阶段 · Go 程序基础' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: '第四阶段 · Go 后端开发' })).toBeVisible()
+    await expect(page.getByText('可以开始')).toHaveCount(1)
+    await expect(page.getByText('前置未完成').first()).toBeVisible()
+    await page.getByRole('link', { name: /回到学习工作台/ }).click()
     await page.getByRole('link', { name: /开始学习/ }).click()
 
-    await expect(page.getByRole('heading', { name: '读懂 Go 工具链反馈' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: '亲手完成第一个 Go 程序' })).toBeVisible()
     await expect(page.getByRole('heading', { name: '先理解，再动手' })).toBeVisible()
-    await expect(page.getByText(/Build、Test、Vet：先知道工具在回答什么/)).toBeVisible()
+    await expect(page.getByText(/先写出程序，再理解工具反馈/)).toBeVisible()
     await page.getByRole('button', { name: '开始本节练习' }).click()
     await expect(page.getByRole('heading', { name: '进行中' })).toBeVisible()
 
     const editor = page.getByRole('textbox', { name: 'main.go 代码编辑器' })
-    const persistedCode = 'package main\n\nimport "fmt"\n\nfunc main() {\n\tfmt.Println("toolchain ready") // e2e persisted\n}\n'
+    const persistedCode = 'package main\n\nimport "fmt"\n\nfunc welcome(name string) string {\n\treturn fmt.Sprintf("welcome, %s", name) // e2e persisted\n}\n\nfunc main() {\n\tfmt.Println(welcome("Gopher"))\n}\n'
     await editor.fill(persistedCode)
     await expect(page.getByText('未同步')).toBeVisible()
     await page.getByRole('button', { name: '保存进度' }).click()
@@ -74,13 +81,14 @@ test.describe('Learning slice vertical scenarios', () => {
     await expect(page.getByRole('heading', { name: '评估完成' })).toBeVisible({ timeout: 45_000 })
     const resultSection = page.getByRole('heading', { name: '本节结果' }).locator('xpath=ancestor::section[1]')
     await expect(resultSection).toBeVisible()
-    await expect(resultSection.getByText('代码可以完成编译')).toBeVisible()
+    await expect(resultSection.getByText('第一个 Go 程序行为正确')).toBeVisible()
     await expect(resultSection.getByText('已写下工具反馈小结')).toHaveCount(0)
 
     await pollCapability(page, 'M1-01', (value) => value.snapshot?.acquisition_state === 'exploring')
     await page.getByRole('link', { name: /学习总览/ }).click()
     await expect(page.getByText('能力进阶')).toBeVisible()
-    await expect(page.getByRole('heading', { name: '读懂 Go 工具链反馈' })).toHaveCount(0)
+    await expect(page.getByRole('heading', { name: '亲手完成第一个 Go 程序' })).toHaveCount(0)
+    await expect(page.getByRole('heading', { name: '用函数和分支生成状态消息' })).toBeVisible()
     await expect(page.getByRole('link', { name: /开始学习/ })).toBeVisible()
   })
 
@@ -109,7 +117,7 @@ test.describe('Learning slice vertical scenarios', () => {
       }),
       [201],
     )
-    expect(attempt.release_id).toBe('m1-first-slice-v14')
+    expect(attempt.release_id).toBe('m1-first-slice-v16')
     expect(attempt.workspace['health/consumer_test.go']).toBeUndefined()
 
     const saved = await readJSON<AttemptResponse>(
@@ -142,7 +150,7 @@ test.describe('Learning slice vertical scenarios', () => {
       }),
       [201],
     )
-    expect(attempt.release_id).toBe('m1-first-slice-v14')
+    expect(attempt.release_id).toBe('m1-first-slice-v16')
     expect(attempt.workspace['registry_race_test.go']).toBeUndefined()
 
     const saved = await readJSON<AttemptResponse>(
@@ -183,7 +191,7 @@ test.describe('Learning slice vertical scenarios', () => {
       }),
       [201],
     )
-    expect(attempt.release_id).toBe('m1-first-slice-v14')
+    expect(attempt.release_id).toBe('m1-first-slice-v16')
     expect(attempt.workspace['report_private_test.go']).toBeUndefined()
 
     const saved = await readJSON<AttemptResponse>(
@@ -230,7 +238,7 @@ test.describe('Learning slice vertical scenarios', () => {
       }),
       [201],
     )
-    expect(attempt.release_id).toBe('m1-first-slice-v14')
+    expect(attempt.release_id).toBe('m1-first-slice-v16')
     expect(attempt.workspace['TASK.md']).toBeDefined()
     expect(attempt.workspace['go.mod']).toBeUndefined()
 
@@ -309,7 +317,7 @@ test.describe('Learning slice vertical scenarios', () => {
 
     const verified = await pollCapability(
       page,
-      'M1-01',
+      'M1-03',
       (value) => value.snapshot?.acquisition_state === 'verified' || value.snapshot?.acquisition_state === 'stable',
     )
     expect(verified.snapshot?.independence_state).toBe('independent')
@@ -336,7 +344,29 @@ test.describe('Learning slice vertical scenarios', () => {
           base_revision: claimedReview.workspace_revision,
           files: {
             ...claimedReview.workspace,
-            'internal/merge/merge.go': 'package merge\n\nfunc broken(\n',
+            'internal/merge/merge.go': `package merge
+
+import "fmt"
+
+type Service struct {
+  Name string
+  Endpoint string
+  Retry int
+}
+
+type Document struct { Services []Service }
+
+func Load(path string) (Document, error) {
+  return Document{}, fmt.Errorf("Load %q: not implemented", path)
+}
+
+func Merge(base, override Document) (Document, error) {
+  if len(override.Services) > 0 {
+    return override, nil
+  }
+  return base, nil
+}
+`,
           },
         },
       }),
@@ -346,7 +376,7 @@ test.describe('Learning slice vertical scenarios', () => {
     const failedReview = await pollAttempt(page, brokenReview.id, (value) => value.submission?.status === 'evaluated')
     expect(failedReview.evidence.some((item) => item.result === 'failed')).toBe(true)
 
-    const rusty = await pollCapability(page, 'M1-01', (value) => value.snapshot?.retention_state === 'rusty')
+    const rusty = await pollCapability(page, 'M1-03', (value) => value.snapshot?.retention_state === 'rusty')
     expect(rusty.snapshot?.retention_state).toBe('rusty')
 
     const failureTime = Math.max(...failedReview.evidence.map((item) => Date.parse(item.occurred_at)))
@@ -401,7 +431,7 @@ test.describe('Learning slice vertical scenarios', () => {
       assertNoHeldOut(await response.text())
     }
 
-    await readJSON(await page.request.get(apiRoot + '/activities/assessment-check-config?version=4'), [200])
+    await readJSON(await page.request.get(apiRoot + '/activities/assessment-check-config?version=5'), [200])
     await readJSON(await page.request.get(apiRoot + '/next'), [200])
   })
 })
@@ -413,7 +443,7 @@ async function bootstrap(page: Page) {
 async function createAssessment(page: Page): Promise<AttemptResponse> {
   return readJSON<AttemptResponse>(
     await page.request.post(apiRoot + '/attempts', {
-      data: { activity_id: 'assessment-check-config', activity_version: 4 },
+      data: { activity_id: 'assessment-check-config', activity_version: 5 },
     }),
     [201],
   )

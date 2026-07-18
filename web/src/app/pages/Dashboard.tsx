@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   CircleOff,
   LoaderCircle,
+  MapPinned,
   RefreshCw,
   ServerOff,
 } from 'lucide-react'
@@ -94,21 +95,38 @@ export function Dashboard() {
         <RecommendationSection response={next.value} claim={claim} onClaim={claimReview} />
       )}
 
-      <Card>
-        <CardHeader>
-          <div className="mb-2 text-primary"><BookOpenText /></div>
-          <CardTitle>Go 基础系统课程</CardTitle>
-          <CardDescription>13 个章节均可自由浏览。学习工作台仍会根据你的练习结果推荐当前最合适的一步。</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button asChild variant="outline">
-            <Link to="/courses/go-basics">
-              浏览 13 章课程
-              <ArrowRight />
-            </Link>
-          </Button>
-        </CardContent>
-      </Card>
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <div className="mb-2 text-primary"><MapPinned /></div>
+            <CardTitle>查看完整成长路线</CardTitle>
+            <CardDescription>理解当前任务位于 Go 基础、工程能力、高阶 Go 和后端开发中的什么位置。</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild variant="outline">
+              <Link to="/roadmap">
+                打开成长路线
+                <ArrowRight />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <div className="mb-2 text-primary"><BookOpenText /></div>
+            <CardTitle>Go 基础系统课程</CardTitle>
+            <CardDescription>13 个章节均可自由浏览。需要补概念时，可以把它作为当前任务的参考资料。</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild variant="outline">
+              <Link to="/courses/go-basics">
+                浏览 13 章课程
+                <ArrowRight />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     </main>
   )
 }

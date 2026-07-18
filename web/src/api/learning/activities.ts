@@ -1,5 +1,5 @@
 import { learningRequest } from './client'
-import type { ActivityResponse, CapabilityResponse, NextResponse } from './types'
+import type { ActivityResponse, CapabilityResponse, NextResponse, RoadmapResponse } from './types'
 
 export function getActivity(activityID: string, version = 1, releaseID = ''): Promise<ActivityResponse> {
   const query = new URLSearchParams({ version: String(version) })
@@ -18,4 +18,8 @@ export function getCapability(capabilityID: string, version?: number, releaseID 
 
 export function getNextRecommendation(): Promise<NextResponse> {
   return learningRequest('/next')
+}
+
+export function getRoadmap(): Promise<RoadmapResponse> {
+  return learningRequest('/roadmap')
 }

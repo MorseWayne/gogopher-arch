@@ -91,6 +91,28 @@ type NextRecommendation struct {
 	RecommendedPrerequisites []PrerequisiteStatus               `json:"recommended_prerequisites"`
 }
 
+type RoadmapStatus string
+
+const (
+	RoadmapLocked     RoadmapStatus = "locked"
+	RoadmapAvailable  RoadmapStatus = "available"
+	RoadmapInProgress RoadmapStatus = "in_progress"
+	RoadmapVerified   RoadmapStatus = "verified"
+)
+
+type RoadmapItem struct {
+	Capability               definition.CapabilityView `json:"capability"`
+	Snapshot                 *Snapshot                 `json:"snapshot"`
+	Status                   RoadmapStatus             `json:"status"`
+	HardPrerequisites        []PrerequisiteStatus      `json:"hard_prerequisites"`
+	RecommendedPrerequisites []PrerequisiteStatus      `json:"recommended_prerequisites"`
+}
+
+type RoadmapRead struct {
+	ReleaseID string        `json:"release_id"`
+	Items     []RoadmapItem `json:"items"`
+}
+
 func NewReader(db *sql.DB, registry *definition.Registry, options ReaderOptions) (*Reader, error) {
 	if db == nil || registry == nil {
 		return nil, fmt.Errorf("database and definition registry are required")
@@ -198,6 +220,49 @@ func (r *Reader) Next(ctx context.Context, learnerID string, asOf time.Time) (*N
 		return nil, err
 	}
 	return selectAcquisition(capabilities, activities, states), nil
+}
+
+func (r *Reader) Roadmap(ctx context.Context, learnerID string, asOf time.Time) (RoadmapRead, error) {
+	if learnerID == "" || asOf.IsZero() {
+		return RoadmapRead{}, fmt.Errorf("learner and as_of are required")
+	}
+	capabilities, _, err := r.currentDefinitions()
+	if err != nil {
+		return RoadmapRead{}, err
+	}
+	tx, err := r.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})
+	if err != nil {
+		return RoadmapRead{}, fmt.Errorf("begin roadmap query: %w", err)
+	}
+	defer tx.Rollback()
+	if err := r.setSearchPath(ctx, tx); err != nil {
+		return RoadmapRead{}, err
+	}
+
+	items := make([]RoadmapItem, 0, len(capabilities))
+	states := make(map[string]currentState, len(capabilities))
+	for _, capability := range capabilities {
+		snapshot, err := r.readSnapshot(ctx, tx, learnerID, capability, asOf.UTC())
+		if err != nil {
+			return RoadmapRead{}, err
+		}
+		if snapshot != nil {
+			states[capability.ID] = currentState{
+				Version: snapshot.CapabilityVersion, Hash: snapshot.CapabilityHash, Acquisition: snapshot.AcquisitionState,
+			}
+		}
+		items = append(items, RoadmapItem{Capability: capability, Snapshot: snapshot})
+	}
+	for index := range items {
+		hard := prerequisiteStatuses(items[index].Capability.Prerequisites.Hard, states)
+		items[index].HardPrerequisites = hard
+		items[index].RecommendedPrerequisites = prerequisiteStatuses(items[index].Capability.Prerequisites.Recommended, states)
+		items[index].Status = roadmapStatus(items[index].Snapshot, hard)
+	}
+	if err := tx.Commit(); err != nil {
+		return RoadmapRead{}, fmt.Errorf("commit roadmap query: %w", err)
+	}
+	return RoadmapRead{ReleaseID: r.registry.CurrentReleaseID(), Items: items}, nil
 }
 
 func (r *Reader) readOpenAcquisition(ctx context.Context, tx *sql.Tx, learnerID string) (*NextRecommendation, error) {
@@ -527,6 +592,21 @@ func hasUnsatisfied(values []PrerequisiteStatus) bool {
 		}
 	}
 	return false
+}
+
+func roadmapStatus(snapshot *Snapshot, hard []PrerequisiteStatus) RoadmapStatus {
+	if snapshot != nil {
+		if acquisitionRanks[snapshot.AcquisitionState] >= acquisitionRanks[AcquisitionVerified] {
+			return RoadmapVerified
+		}
+		if acquisitionRanks[snapshot.AcquisitionState] > acquisitionRanks[AcquisitionNotStarted] {
+			return RoadmapInProgress
+		}
+	}
+	if hasUnsatisfied(hard) {
+		return RoadmapLocked
+	}
+	return RoadmapAvailable
 }
 
 func derivedRetention(base RetentionBaseState, nextReviewAt *time.Time, asOf time.Time) RetentionState {

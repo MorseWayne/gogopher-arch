@@ -67,6 +67,61 @@ func TestSelectAcquisitionReturnsNilForBlockedOrUnavailablePath(t *testing.T) {
 	}
 }
 
+func TestSelectAcquisitionKeepsBeginnerFirstProgramSequence(t *testing.T) {
+	capability := definition.CapabilityView{ID: "M1-01", Version: 3, ContentHash: hash64("first-program")}
+	ref := []definition.VersionedDefinitionRef{{ID: "M1-01", Version: 3}}
+	activities := []definition.ActivityView{
+		{ID: "assessment-first-program", Version: 1, Mode: "assessment", CapabilityRefs: ref},
+		{ID: "guided-run-model", Version: 7, Mode: "guided", CapabilityRefs: ref},
+		{ID: "practice-first-program", Version: 1, Mode: "practice", CapabilityRefs: ref},
+	}
+	tests := []struct {
+		name  string
+		state AcquisitionState
+		want  string
+	}{
+		{name: "new learner writes a program first", state: AcquisitionNotStarted, want: "guided-run-model"},
+		{name: "guided completion moves to hand practice", state: AcquisitionExploring, want: "practice-first-program"},
+		{name: "practice completion moves to assessment", state: AcquisitionPracticed, want: "assessment-first-program"},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			states := map[string]currentState{}
+			if testCase.state != AcquisitionNotStarted {
+				states[capability.ID] = currentState{Version: capability.Version, Hash: capability.ContentHash, Acquisition: testCase.state}
+			}
+			next := selectAcquisition([]definition.CapabilityView{capability}, activities, states)
+			if next == nil || next.Activity.ID != testCase.want {
+				t.Fatalf("recommendation = %#v, want %s", next, testCase.want)
+			}
+		})
+	}
+}
+
+func TestRoadmapStatusUsesEvidenceAndPrerequisites(t *testing.T) {
+	unsatisfied := []PrerequisiteStatus{{ID: "M1-01", RequiredVersion: 3, Satisfied: false}}
+	tests := []struct {
+		name     string
+		snapshot *Snapshot
+		hard     []PrerequisiteStatus
+		want     RoadmapStatus
+	}{
+		{name: "locked", hard: unsatisfied, want: RoadmapLocked},
+		{name: "available", hard: []PrerequisiteStatus{}, want: RoadmapAvailable},
+		{name: "exploring", snapshot: &Snapshot{Result: Result{AcquisitionState: AcquisitionExploring}}, hard: unsatisfied, want: RoadmapInProgress},
+		{name: "practiced", snapshot: &Snapshot{Result: Result{AcquisitionState: AcquisitionPracticed}}, want: RoadmapInProgress},
+		{name: "verified", snapshot: &Snapshot{Result: Result{AcquisitionState: AcquisitionVerified}}, hard: unsatisfied, want: RoadmapVerified},
+		{name: "stable", snapshot: &Snapshot{Result: Result{AcquisitionState: AcquisitionStable}}, want: RoadmapVerified},
+	}
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			if got := roadmapStatus(testCase.snapshot, testCase.hard); got != testCase.want {
+				t.Fatalf("roadmapStatus() = %s, want %s", got, testCase.want)
+			}
+		})
+	}
+}
+
 func TestReaderDoesNotInheritPreviousCapabilityVersion(t *testing.T) {
 	databaseURL := os.Getenv("TEST_DATABASE_URL")
 	if databaseURL == "" {
@@ -119,7 +174,7 @@ func TestReaderDoesNotInheritPreviousCapabilityVersion(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if value.Capability.Version != 2 || value.Snapshot != nil || len(value.RecentEvidence) != 0 {
+	if value.Capability.Version != 3 || value.Snapshot != nil || len(value.RecentEvidence) != 0 {
 		t.Fatalf("current capability read = %#v", value)
 	}
 	historical, err := reader.Capability(ctx, learnerID, CapabilitySelection{
@@ -136,7 +191,7 @@ func TestReaderDoesNotInheritPreviousCapabilityVersion(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if next == nil || next.Kind != "acquisition" || next.Activity.ID != "guided-run-model" || next.TargetCapability == nil || next.TargetCapability.Version != 2 {
+	if next == nil || next.Kind != "acquisition" || next.Activity.ID != "guided-run-model" || next.TargetCapability == nil || next.TargetCapability.Version != 3 {
 		t.Fatalf("next after version change = %#v", next)
 	}
 }

@@ -1,5 +1,5 @@
 import { Link, Outlet } from 'react-router'
-import { BookOpenText, Github, Home, LayoutDashboard, Terminal } from 'lucide-react'
+import { BookOpenText, Github, Home, LayoutDashboard, MapPinned, Terminal } from 'lucide-react'
 
 import { Button } from './ui/button'
 import { ThemeToggle } from './ThemeToggle'
@@ -76,6 +76,12 @@ export function LearningLayout() {
               <Link to="/courses/go-basics">
                 <BookOpenText />
                 <span className="hidden sm:inline">课程目录</span>
+              </Link>
+            </Button>
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/roadmap">
+                <MapPinned />
+                <span className="hidden md:inline">成长路线</span>
               </Link>
             </Button>
             <Button asChild variant="ghost" size="sm">

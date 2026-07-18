@@ -28,6 +28,7 @@ describe('Dashboard', () => {
       `/learning/activities/${activityFixture.activity.id}?version=${activityFixture.activity.version}`,
     )
     expect(screen.getByRole('link', { name: '浏览 13 章课程' })).toHaveAttribute('href', '/courses/go-basics')
+    expect(screen.getByRole('link', { name: '打开成长路线' })).toHaveAttribute('href', '/roadmap')
     expect(screen.queryByText(/staticMock|演示进度|今日建议/)).not.toBeInTheDocument()
   })
 

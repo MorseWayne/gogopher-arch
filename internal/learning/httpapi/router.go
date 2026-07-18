@@ -21,6 +21,7 @@ func NewRouter(enabled bool, sessions *SessionHandler, attempts *AttemptHandler,
 	protected.HandleFunc("GET /api/v1/learning/capabilities/{id}", definitions.Capability)
 	protected.HandleFunc("GET /api/v1/learning/activities/{id}", definitions.Activity)
 	protected.HandleFunc("GET /api/v1/learning/next", definitions.Next)
+	protected.HandleFunc("GET /api/v1/learning/roadmap", definitions.Roadmap)
 	protected.HandleFunc("POST /api/v1/learning/attempts", attempts.Create)
 	protected.HandleFunc("POST /api/v1/learning/review-items/{id}/attempts", func(w http.ResponseWriter, r *http.Request) { reviews.Claim(w, r, r.PathValue("id")) })
 	protected.HandleFunc("GET /api/v1/learning/attempts/{id}", func(w http.ResponseWriter, r *http.Request) { attempts.Get(w, r, r.PathValue("id")) })

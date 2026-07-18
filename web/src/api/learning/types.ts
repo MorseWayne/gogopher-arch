@@ -213,6 +213,27 @@ export interface NextResponse {
   }
 }
 
+export type RoadmapStatus = 'locked' | 'available' | 'in_progress' | 'verified'
+
+export interface RoadmapItem {
+  capability: Capability
+  snapshot: CapabilitySnapshot | null
+  status: RoadmapStatus
+  hard_prerequisites: PrerequisiteStatus[]
+  recommended_prerequisites: PrerequisiteStatus[]
+}
+
+export interface RoadmapResponse {
+  api_version: APIVersion
+  release_id: string
+  items: RoadmapItem[]
+  source: {
+    state: 'server_learning_state'
+    as_of: string
+    clock: 'server' | 'test_override'
+  }
+}
+
 export type AttemptStatus = 'active' | 'submitted' | 'submit_infra_failed' | 'completed'
 export type ExecutionAction = 'build' | 'test' | 'vet' | 'submit'
 export type ExecutionStatus = 'queued' | 'running' | 'succeeded' | 'user_failed' | 'infra_failed'

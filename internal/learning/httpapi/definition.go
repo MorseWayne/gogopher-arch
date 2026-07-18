@@ -15,6 +15,7 @@ import (
 type LearningReader interface {
 	Capability(context.Context, string, projection.CapabilitySelection, time.Time) (projection.CapabilityRead, error)
 	Next(context.Context, string, time.Time) (*projection.NextRecommendation, error)
+	Roadmap(context.Context, string, time.Time) (projection.RoadmapRead, error)
 }
 
 type DefinitionHandlerOptions struct {
@@ -124,6 +125,31 @@ func (h *DefinitionHandler) Next(w http.ResponseWriter, request *http.Request) {
 	})
 }
 
+func (h *DefinitionHandler) Roadmap(w http.ResponseWriter, request *http.Request) {
+	owner, ok := SessionFromContext(request.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "unauthenticated", "learning session is required")
+		return
+	}
+	asOf, clock, ok := h.asOf(w, request)
+	if !ok {
+		return
+	}
+	value, err := h.reader.Roadmap(request.Context(), owner.LearnerID, asOf)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "learning_roadmap_unavailable", "learning roadmap is unavailable")
+		return
+	}
+	writeJSON(w, http.StatusOK, struct {
+		APIVersion string `json:"api_version"`
+		projection.RoadmapRead
+		Source roadmapSource `json:"source"`
+	}{
+		APIVersion: APIVersion, RoadmapRead: value,
+		Source: roadmapSource{State: "server_learning_state", AsOf: asOf, Clock: clock},
+	})
+}
+
 type capabilitySource struct {
 	Definition string    `json:"definition"`
 	Snapshot   string    `json:"snapshot"`
@@ -138,6 +164,12 @@ type nextSource struct {
 	State     string    `json:"state"`
 	AsOf      time.Time `json:"as_of"`
 	Clock     string    `json:"clock"`
+}
+
+type roadmapSource struct {
+	State string    `json:"state"`
+	AsOf  time.Time `json:"as_of"`
+	Clock string    `json:"clock"`
 }
 
 func (h *DefinitionHandler) asOf(w http.ResponseWriter, request *http.Request) (time.Time, string, bool) {

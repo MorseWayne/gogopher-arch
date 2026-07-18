@@ -19,6 +19,7 @@ GoGopher Arch 是一个以 Capability、Evidence 和 Review 为核心的 Go 学�
 | `ReviewItem` | 按 Snapshot 与 due time 安排后续练习 |
 
 浏览器不计算掌握状态，也不生成静态 progress。Dashboard 的下一项只来自 `GET /api/v1/learning/next`。
+成长路线页的能力定义、Snapshot、保持状态和前置条件只来自 `GET /api/v1/learning/roadmap`，前端只负责分阶段展示，不自行判定掌握。
 文字小结会随 Submission 冻结并保存为 Artifact；当前切片不按字数自动生成 Evidence，也不参与能力投影。
 
 ## 当前纵向切片
@@ -31,7 +32,7 @@ GoGopher Arch 是一个以 Capability、Evidence 和 Review 为核心的 Go 学�
 - Evidence projection 更新 Snapshot，并生成 acquisition、due review 或 remediation；
 - Playwright 在全新 PostgreSQL 上验证 guided → assessment → review 闭环。
 
-当前 `m1-first-slice-v14` 已发布 M1-01 至 M1-14 和 M2-01。M2 从标准库 HTTP 心智模型起步：先练习 handler/middleware 请求切片，再独立交付带 timeout 与 graceful shutdown 的 `gocheck-hub` HTTP 入口，最后用 `jobwatch` 变式进入延迟复验。
+当前 `m1-first-slice-v16` 已发布 M1-01 至 M1-14 和 M2-01。学习主链从“亲手完成第一个 Go 程序”开始，经练习、独立评估和变式复习后再进入类型语义、工程能力与 HTTP 后端开发。
 
 ## 快速开始
 
@@ -166,7 +167,7 @@ go run ./cmd/learning-content validate --activity-set m1-first-slice
 ```bash
 go run ./cmd/learning-content release \
   --activity-set m1-first-slice \
-  --release-id m1-first-slice-v14 \
+  --release-id m1-first-slice-v16 \
   --created-at 2026-07-18T00:00:00Z
 ```
 
@@ -175,7 +176,7 @@ go run ./cmd/learning-content release \
 ```bash
 npm run build --prefix web
 go run ./cmd/learning-content verify \
-  --release-dir content/learning/releases/m1-first-slice-v14 \
+  --release-dir content/learning/releases/m1-first-slice-v16 \
   --web-dist web/dist
 ```
 
@@ -210,7 +211,7 @@ npm test --prefix web -- --run
 npm run build --prefix web
 ./scripts/check-compose-exposure.sh
 go run ./cmd/learning-content verify \
-  --release-dir content/learning/releases/m1-first-slice-v14 \
+  --release-dir content/learning/releases/m1-first-slice-v16 \
   --web-dist web/dist
 npm run e2e:compose --prefix web
 git diff --check
