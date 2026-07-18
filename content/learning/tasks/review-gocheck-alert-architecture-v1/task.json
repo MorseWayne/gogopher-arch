@@ -1,0 +1,44 @@
+{
+  "id": "review-gocheck-alert-architecture-v1",
+  "version": 1,
+  "language": "go1.25",
+  "workspace_root": "workspace",
+  "files": [
+    {"source": "README.md", "path": "TASK.md", "role": "readme", "editable": false, "sha256": "e5ebf041c25c4eb7c984468501f5892dea1e5ed58f86c10aa782558c3730d130"},
+    {"source": "starter/go.mod", "path": "go.mod", "role": "starter", "editable": false, "sha256": "1a3440c3bebbedb74e39b94236596663c1c233ec2d87f5854cc797fa75765372"},
+    {"source": "starter/internal/alerts/manager.go", "path": "internal/alerts/manager.go", "role": "starter", "editable": true, "sha256": "05d90fa107cfb390ce4ea298df03760b6263c3815c0b65070d5060ea32a3a9d3"},
+    {"source": "starter/internal/alerts/memory/store.go", "path": "internal/alerts/memory/store.go", "role": "starter", "editable": true, "sha256": "17068992d92d5c8d06757df1defdb2972e8fe6fac84053eb0f080ec6566b1547"},
+    {"source": "starter/internal/alertapi/handler.go", "path": "internal/alertapi/handler.go", "role": "starter", "editable": true, "sha256": "7dff2736674fc7f38a289802c7796eb44817ac13e99c4d6b227ac88aa2310620"},
+    {"source": "starter/cmd/gocheckalerts/main.go", "path": "cmd/gocheckalerts/main.go", "role": "starter", "editable": true, "sha256": "e71d66c2f6ab0b28b238373709c87966384dbcc84a1adaf4e7e274a0ca3801f4"},
+    {"source": "starter/internal/alerts/manager_test.go", "path": "internal/alerts/manager_test.go", "role": "starter", "editable": true, "sha256": "ef142da47ef5e23a8ac6e81f02ec9b6027dddc4f59eee3a0536aafd89c072b24"},
+    {"source": "heldout/internal/alerts/usecase_private_test.go", "path": "internal/alerts/usecase_private_test.go", "role": "held_out_test", "editable": false, "sha256": "b0f59d54fbbf0b64ebf0ad30a13b5170392038e269b77e6a341feea581c91b47"},
+    {"source": "heldout/internal/alerts/memory/store_private_test.go", "path": "internal/alerts/memory/store_private_test.go", "role": "held_out_test", "editable": false, "sha256": "fe4a3abb77662252e8b9ad56fbdf774440d9c01aff1774ef4e99b13790e19e32"},
+    {"source": "heldout/internal/alertapi/contract_private_test.go", "path": "internal/alertapi/contract_private_test.go", "role": "held_out_test", "editable": false, "sha256": "f04b371356a8cb7b367d3e709d68a087330407fe3e17ec4fcb9ffcf4cd5a0434"},
+    {"source": "heldout/cmd/gocheckalerts/wiring_private_test.go", "path": "cmd/gocheckalerts/wiring_private_test.go", "role": "held_out_test", "editable": false, "sha256": "46ae7d2a1f7bc0b3672654a8b7bc8165d002d22b76cb2418f69343177596646c"}
+  ],
+  "editable_paths": ["internal/alerts/manager.go", "internal/alerts/memory/store.go", "internal/alertapi/handler.go", "cmd/gocheckalerts/main.go", "internal/alerts/manager_test.go"],
+  "readonly_paths": ["TASK.md", "go.mod"],
+  "workspace_policy": {"allow_new_files": true, "allow_delete_files": false},
+  "limits": {"max_files": 20, "max_file_bytes": 131072, "max_total_bytes": 786432},
+  "actions": {
+    "build": {"timeout_ms": 10000, "max_output_bytes": 131072, "network": "none"},
+    "test": {"timeout_ms": 12000, "max_output_bytes": 131072, "network": "none"},
+    "vet": {"timeout_ms": 10000, "max_output_bytes": 131072, "network": "none"},
+    "submit": {"timeout_ms": 30000, "max_output_bytes": 262144, "network": "none"}
+  },
+  "visible_tests": [],
+  "held_out_tests": ["internal/alerts/usecase_private_test.go", "internal/alerts/memory/store_private_test.go", "internal/alertapi/contract_private_test.go", "cmd/gocheckalerts/wiring_private_test.go"],
+  "race_tests": [],
+  "assessment_rules": [
+    {"rule_id": "layered-project-builds", "stage": "build", "selector": {"package": "./..."}, "capability_refs": [{"id": "M2-03", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "usecase-boundary-correct", "stage": "held_out_test", "selector": {"test": "TestUseCaseContract"}, "capability_refs": [{"id": "M2-03", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "storage-contract-correct", "stage": "held_out_test", "selector": {"test": "TestMemoryRepositoryContract"}, "capability_refs": [{"id": "M2-03", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "transport-usecase-separated", "stage": "held_out_test", "selector": {"test": "TestTransportContract"}, "capability_refs": [{"id": "M2-03", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "dependency-wiring-explicit", "stage": "held_out_test", "selector": {"test": "TestCompositionRootContract"}, "capability_refs": [{"id": "M2-03", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "constructor-calls-present", "stage": "ast", "selector": {"file": "cmd/gocheckalerts/main.go", "required_calls": ["memory.NewStore", "alerts.NewManager", "alertapi.NewHandler"]}, "capability_refs": [{"id": "M2-03", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "consumer-interface-owned", "stage": "ast", "selector": {"file": "internal/alerts/manager.go", "interface": "Store", "maximum_methods": 1}, "capability_refs": [{"id": "M2-03", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "boundary-tests-present", "stage": "ast", "selector": {"file": "internal/alerts/manager_test.go", "minimum_cases": 3}, "capability_refs": [{"id": "M2-03", "version": 1}], "evidence_type": "test", "condition": "passed"},
+    {"rule_id": "architecture-decisions-explained", "stage": "explanation", "selector": {"minimum_chars": 120, "required_terms": ["transport", "use case", "storage", "constructor"]}, "capability_refs": [{"id": "M2-03", "version": 1}], "evidence_type": "diagnose", "condition": "passed"}
+  ],
+  "artifact_rules": {"workspace": "full", "logs": ["build", "test", "vet", "submit"]}
+}

@@ -1,0 +1,12 @@
+## 先让业务规则拥有 storage 接口
+
+这一节把 gocheck-hub 的 checks 逻辑从单个 HTTP 文件中移出。`checks` 包只描述创建检查所需的业务输入、结果和最小 `Repository`；`memory` 包实现这个接口，却不反向决定 use case 的抽象。
+
+先完成 `Service.Create` 的校验、ID 分配和持久化，再实现并发安全的内存仓库。公开测试会从包外同时替换 storage 和调用真实 storage，帮助你观察依赖方向。
+
+### 完成标准
+
+- `Repository` 定义在使用它的 `checks` 包中。
+- use case 不依赖 HTTP，也不选择具体 storage。
+- storage 实现遵守取消与重复 target 契约。
+- constructor 接收依赖，测试不需要修改全局变量。

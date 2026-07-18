@@ -60,6 +60,7 @@ type AssessmentSelector struct {
 	MinimumChars      int      `json:"minimum_chars,omitempty"`
 	RequiredTerms     []string `json:"required_terms,omitempty"`
 	RequiredFiles     []string `json:"required_files,omitempty"`
+	RequiredCalls     []string `json:"required_calls,omitempty"`
 	ExitCode          *int     `json:"exit_code,omitempty"`
 }
 

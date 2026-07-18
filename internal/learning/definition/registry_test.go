@@ -23,7 +23,7 @@ func TestLoadRegistryIndexesCurrentAndHistoricalDefinitions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, want := len(definitions), 108; got != want {
+	if got, want := len(definitions), 115; got != want {
 		t.Fatalf("len(Definitions()) = %d, want %d", got, want)
 	}
 	ref := DefinitionRef{ReleaseID: testReleaseID, Kind: KindActivity, ID: "assessment-check-config", Version: 5}
@@ -166,6 +166,7 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 		{"M1-13", 1, "practice-cancellable-map", "assessment-cancellable-checks", "review-cancellable-fetch"},
 		{"M2-01", 1, "practice-http-request-slice", "assessment-gocheck-http", "review-jobwatch-http"},
 		{"M2-02", 1, "practice-json-api-contract", "assessment-gocheck-api", "review-alert-api"},
+		{"M2-03", 1, "practice-gocheck-architecture", "assessment-gocheck-architecture", "review-gocheck-alert-architecture"},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.capabilityID, func(t *testing.T) {
@@ -296,6 +297,32 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 	apiReview, err := registry.ReviewActivity(testReleaseID, apiActivity.CapabilityRefs)
 	if err != nil || apiReview.ID != "review-alert-api" || apiReview.EvidenceContext != "variant" {
 		t.Fatalf("M2-02 review = %#v, %v", apiReview, err)
+	}
+
+	architectureActivity, err := registry.ActivityView(testReleaseID, "assessment-gocheck-architecture", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	architectureTask, err := registry.ExecutionTask(testReleaseID, architectureActivity.TaskRef.ID, architectureActivity.TaskRef.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(architectureTask.AssessmentRules) != 9 || len(architectureTask.Files) != 12 {
+		t.Fatalf("M2-03 task contract = rules %d files %d", len(architectureTask.AssessmentRules), len(architectureTask.Files))
+	}
+	if calls := architectureTask.AssessmentRules[5].Selector.RequiredCalls; len(calls) != 3 {
+		t.Fatalf("M2-03 constructor calls = %#v", calls)
+	}
+	architectureWorkspace, err := registry.PublicWorkspace(testReleaseID, architectureTask.ID, architectureTask.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, exists := architectureWorkspace["cmd/gocheckhub/wiring_private_test.go"]; exists {
+		t.Fatal("M2-03 public workspace contains held-out wiring tests")
+	}
+	architectureReview, err := registry.ReviewActivity(testReleaseID, architectureActivity.CapabilityRefs)
+	if err != nil || architectureReview.ID != "review-gocheck-alert-architecture" || architectureReview.EvidenceContext != "variant" {
+		t.Fatalf("M2-03 review = %#v, %v", architectureReview, err)
 	}
 }
 

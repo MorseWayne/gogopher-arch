@@ -1,0 +1,5 @@
+## 独立完成 gocheck-hub 分层
+
+把创建 check 的流程拆成 transport、use case、storage 三个边界。HTTP 只负责严格 JSON 与协议映射；业务包负责 target 规则、ID 和存储协作；memory 包负责并发安全的数据保存。接口由调用依赖的一侧定义，`cmd/gocheckhub` 只通过 constructor 组装具体对象。
+
+隐藏测试会分别替换业务依赖、直接调用 storage、验证 HTTP 契约，并解析包 import 与 main 中的组装调用。请补充至少三个命名 case 的 use case 表格测试，并在提交说明中解释 transport、use case、storage 与 constructor 如何共同保持依赖方向。

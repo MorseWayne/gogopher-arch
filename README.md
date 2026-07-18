@@ -32,7 +32,7 @@ GoGopher Arch 是一个以 Capability、Evidence 和 Review 为核心的 Go 学�
 - Evidence projection 更新 Snapshot，并生成 acquisition、due review 或 remediation；
 - Playwright 在全新 PostgreSQL 上验证 guided → assessment → review 闭环。
 
-当前 `m1-first-slice-v17` 已发布 M1-01 至 M1-14、M2-01 和 M2-02。学习主链从“亲手完成第一个 Go 程序”开始，经练习、独立评估和变式复习后进入类型语义、工程能力、HTTP 服务与稳定 API 契约。
+当前 `m1-first-slice-v18` 已发布 M1-01 至 M1-14、M2-01 至 M2-03。学习主链从“亲手完成第一个 Go 程序”开始，经练习、独立评估和变式复习后进入类型语义、工程能力、HTTP 服务、稳定 API 契约与显式业务分层。
 
 ## 快速开始
 
@@ -176,7 +176,7 @@ go run ./cmd/learning-content release \
 ```bash
 npm run build --prefix web
 go run ./cmd/learning-content verify \
-  --release-dir content/learning/releases/m1-first-slice-v17 \
+  --release-dir content/learning/releases/m1-first-slice-v18 \
   --web-dist web/dist
 ```
 
@@ -211,7 +211,7 @@ npm test --prefix web -- --run
 npm run build --prefix web
 ./scripts/check-compose-exposure.sh
 go run ./cmd/learning-content verify \
-  --release-dir content/learning/releases/m1-first-slice-v17 \
+  --release-dir content/learning/releases/m1-first-slice-v18 \
   --web-dist web/dist
 npm run e2e:compose --prefix web
 git diff --check

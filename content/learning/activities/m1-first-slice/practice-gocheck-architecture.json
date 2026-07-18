@@ -1,0 +1,15 @@
+{
+  "id": "practice-gocheck-architecture",
+  "version": 1,
+  "title": "拆开 checks use case 与 memory storage",
+  "kind": "learning_task",
+  "mode": "practice",
+  "evidence_context": "same_context",
+  "capability_refs": [{"id": "M2-03", "version": 1}],
+  "task_ref": {"id": "practice-gocheck-architecture-v1", "version": 1},
+  "content_ref": "web/src/content/learning/gocheck-architecture-practice-v1.mdx",
+  "assistance_policy": {"hints": true, "references": true, "solution": false, "ai_declaration": true},
+  "evidence_rules": [
+    {"rule_id": "layering-practiced", "capability_id": "M2-03", "capability_version": 1, "evidence_type": "implement", "result": "passed"}
+  ]
+}

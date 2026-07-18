@@ -133,6 +133,16 @@ func evaluateExecutionRule(rule definition.AssessmentRule, stages map[execution.
 }
 
 func evaluateASTRule(rule definition.AssessmentRule, task definition.ExecutionTask, workspace map[string]string, stages map[execution.Stage]execution.StageResult) (execution.RuleStatus, string) {
+	if len(rule.Selector.RequiredCalls) > 0 {
+		build, exists := stages[execution.StageBuild]
+		if !exists || build.Status != execution.StagePassed {
+			return execution.RuleNotEvaluated, "go_ast_required_calls"
+		}
+		if hasRequiredCalls(workspace[rule.Selector.File], rule.Selector.RequiredCalls) {
+			return execution.RulePassed, "go_ast_required_calls"
+		}
+		return execution.RuleFailed, "go_ast_required_calls"
+	}
 	if len(rule.Selector.RequiredFiles) > 0 {
 		build, exists := stages[execution.StageBuild]
 		if !exists || build.Status != execution.StagePassed {
@@ -199,6 +209,38 @@ func evaluateASTRule(rule definition.AssessmentRule, task definition.ExecutionTa
 		return execution.RuleFailed, "go_ast_table_tests"
 	}
 	return execution.RuleFailed, "go_ast_unknown"
+}
+
+func hasRequiredCalls(source string, required []string) bool {
+	if len(required) == 0 {
+		return false
+	}
+	file, err := parser.ParseFile(token.NewFileSet(), "source.go", source, 0)
+	if err != nil {
+		return false
+	}
+	found := make(map[string]struct{}, len(required))
+	ast.Inspect(file, func(node ast.Node) bool {
+		call, ok := node.(*ast.CallExpr)
+		if !ok {
+			return true
+		}
+		selector, ok := call.Fun.(*ast.SelectorExpr)
+		if !ok {
+			return true
+		}
+		owner, ok := selector.X.(*ast.Ident)
+		if ok {
+			found[owner.Name+"."+selector.Sel.Name] = struct{}{}
+		}
+		return true
+	})
+	for _, name := range required {
+		if _, exists := found[name]; !exists {
+			return false
+		}
+	}
+	return true
 }
 
 func explanationSatisfies(explanation string, selector definition.AssessmentSelector) bool {

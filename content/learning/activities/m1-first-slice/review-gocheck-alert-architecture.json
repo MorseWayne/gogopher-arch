@@ -1,0 +1,23 @@
+{
+  "id": "review-gocheck-alert-architecture",
+  "version": 1,
+  "title": "迁移实现 gocheck-hub alert 边界",
+  "kind": "learning_task",
+  "mode": "review",
+  "evidence_context": "variant",
+  "capability_refs": [{"id": "M2-03", "version": 1}],
+  "task_ref": {"id": "review-gocheck-alert-architecture-v1", "version": 1},
+  "content_ref": "web/src/content/learning/gocheck-alert-architecture-review-v1.mdx",
+  "assistance_policy": {"hints": false, "references": false, "solution": false, "ai_declaration": true},
+  "evidence_rules": [
+    {"rule_id": "layered-project-builds", "capability_id": "M2-03", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "usecase-boundary-correct", "capability_id": "M2-03", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "storage-contract-correct", "capability_id": "M2-03", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "transport-usecase-separated", "capability_id": "M2-03", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "dependency-wiring-explicit", "capability_id": "M2-03", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "constructor-calls-present", "capability_id": "M2-03", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "consumer-interface-owned", "capability_id": "M2-03", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "boundary-tests-present", "capability_id": "M2-03", "capability_version": 1, "evidence_type": "test", "result": "passed"},
+    {"rule_id": "architecture-decisions-explained", "capability_id": "M2-03", "capability_version": 1, "evidence_type": "diagnose", "result": "passed"}
+  ]
+}

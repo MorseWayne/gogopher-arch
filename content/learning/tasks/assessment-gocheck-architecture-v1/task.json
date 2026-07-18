@@ -1,0 +1,50 @@
+{
+  "id": "assessment-gocheck-architecture-v1",
+  "version": 1,
+  "language": "go1.25",
+  "workspace_root": "workspace",
+  "files": [
+    {"source": "README.md", "path": "TASK.md", "role": "readme", "editable": false, "sha256": "79a0f1472417ac597fc0bf77f1d0c9e6207c05c5a9a5cc861613f5760b73a75b"},
+    {"source": "starter/go.mod", "path": "go.mod", "role": "starter", "editable": false, "sha256": "1a3440c3bebbedb74e39b94236596663c1c233ec2d87f5854cc797fa75765372"},
+    {"source": "starter/internal/checks/service.go", "path": "internal/checks/service.go", "role": "starter", "editable": true, "sha256": "a4ee535db5d291070c5cba855594b64e347a94ee5892559f43b2bcbd45eb6d1c"},
+    {"source": "starter/internal/checks/memory/repository.go", "path": "internal/checks/memory/repository.go", "role": "starter", "editable": true, "sha256": "2912c573d7618cb17e6afa328112f6b31938a7e700941d335975ef061156cd36"},
+    {"source": "starter/internal/httpapi/handler.go", "path": "internal/httpapi/handler.go", "role": "starter", "editable": true, "sha256": "b7621d60ad8d7575ecfbafe327a216918df3323732e0df3f86eb0bf8a9ab57ce"},
+    {"source": "starter/cmd/gocheckhub/main.go", "path": "cmd/gocheckhub/main.go", "role": "starter", "editable": true, "sha256": "e71d66c2f6ab0b28b238373709c87966384dbcc84a1adaf4e7e274a0ca3801f4"},
+    {"source": "starter/internal/checks/service_test.go", "path": "internal/checks/service_test.go", "role": "starter", "editable": true, "sha256": "07681dc7a06396f3d2122a5d6894e926cdadc1bdd4dcc16ca2a83a9f0388e56a"},
+    {"source": "visible/internal/checks/smoke_test.go", "path": "internal/checks/smoke_test.go", "role": "visible_test", "editable": false, "sha256": "16cd8e8531db9ebf100552d3e37f000fd57f9a00a45af1e189d2ce1b9567e3e7"},
+    {"source": "heldout/internal/checks/usecase_private_test.go", "path": "internal/checks/usecase_private_test.go", "role": "held_out_test", "editable": false, "sha256": "a11bca66f9fb01a9f07c6e90d8160670f86be4606c9069c6e28bf116e0eb90f0"},
+    {"source": "heldout/internal/checks/memory/repository_private_test.go", "path": "internal/checks/memory/repository_private_test.go", "role": "held_out_test", "editable": false, "sha256": "677ab3030ad615141ce77fa5e0a018ee7a5ecb20d70fac81b0f59642b61f4395"},
+    {"source": "heldout/internal/httpapi/contract_private_test.go", "path": "internal/httpapi/contract_private_test.go", "role": "held_out_test", "editable": false, "sha256": "c6de92420f47b2fb9bfbdd8ecf754fe1efc912748dad77b08951642266f10a36"},
+    {"source": "heldout/cmd/gocheckhub/wiring_private_test.go", "path": "cmd/gocheckhub/wiring_private_test.go", "role": "held_out_test", "editable": false, "sha256": "ea245960606e43ad9afbf3bb38e52f5388aeb92ef98d5abc3fdcc22c24968c27"}
+  ],
+  "editable_paths": ["internal/checks/service.go", "internal/checks/memory/repository.go", "internal/httpapi/handler.go", "cmd/gocheckhub/main.go", "internal/checks/service_test.go"],
+  "readonly_paths": ["TASK.md", "go.mod", "internal/checks/smoke_test.go"],
+  "workspace_policy": {"allow_new_files": true, "allow_delete_files": false},
+  "limits": {"max_files": 20, "max_file_bytes": 131072, "max_total_bytes": 786432},
+  "actions": {
+    "build": {"timeout_ms": 10000, "max_output_bytes": 131072, "network": "none"},
+    "test": {"timeout_ms": 12000, "max_output_bytes": 131072, "network": "none"},
+    "vet": {"timeout_ms": 10000, "max_output_bytes": 131072, "network": "none"},
+    "submit": {"timeout_ms": 30000, "max_output_bytes": 262144, "network": "none"}
+  },
+  "hints": [
+    {"id": "inside-out", "level": 1, "title": "从 use case 向外实现", "body": "先用替身跑通 checks.Service，再让 memory 满足 Repository，最后让 httpapi 的 Creator 由 Service 隐式实现。每层只导入更内侧的业务类型。"},
+    {"id": "composition-root", "level": 2, "title": "把 concrete choice 留给 main", "body": "buildHandler 依次创建 memory repository、checks service、HTTP handler。构造失败立即返回，不要用 init 或包级变量隐藏组装。"},
+    {"id": "strict-transport", "level": 3, "title": "transport 只翻译协议", "body": "HTTP 层严格解码 DTO，调用 Creator，再用 errors.Is 把业务错误映射为稳定状态码；target 的最终规范化仍由 use case 完成。"}
+  ],
+  "visible_tests": ["internal/checks/smoke_test.go"],
+  "held_out_tests": ["internal/checks/usecase_private_test.go", "internal/checks/memory/repository_private_test.go", "internal/httpapi/contract_private_test.go", "cmd/gocheckhub/wiring_private_test.go"],
+  "race_tests": [],
+  "assessment_rules": [
+    {"rule_id": "layered-project-builds", "stage": "build", "selector": {"package": "./..."}, "capability_refs": [{"id": "M2-03", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "usecase-boundary-correct", "stage": "held_out_test", "selector": {"test": "TestUseCaseContract"}, "capability_refs": [{"id": "M2-03", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "storage-contract-correct", "stage": "held_out_test", "selector": {"test": "TestMemoryRepositoryContract"}, "capability_refs": [{"id": "M2-03", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "transport-usecase-separated", "stage": "held_out_test", "selector": {"test": "TestTransportContract"}, "capability_refs": [{"id": "M2-03", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "dependency-wiring-explicit", "stage": "held_out_test", "selector": {"test": "TestCompositionRootContract"}, "capability_refs": [{"id": "M2-03", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "constructor-calls-present", "stage": "ast", "selector": {"file": "cmd/gocheckhub/main.go", "required_calls": ["memory.NewRepository", "checks.NewService", "httpapi.NewHandler"]}, "capability_refs": [{"id": "M2-03", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "consumer-interface-owned", "stage": "ast", "selector": {"file": "internal/checks/service.go", "interface": "Repository", "maximum_methods": 1}, "capability_refs": [{"id": "M2-03", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "boundary-tests-present", "stage": "ast", "selector": {"file": "internal/checks/service_test.go", "minimum_cases": 3}, "capability_refs": [{"id": "M2-03", "version": 1}], "evidence_type": "test", "condition": "passed"},
+    {"rule_id": "architecture-decisions-explained", "stage": "explanation", "selector": {"minimum_chars": 120, "required_terms": ["transport", "use case", "storage", "constructor"]}, "capability_refs": [{"id": "M2-03", "version": 1}], "evidence_type": "diagnose", "condition": "passed"}
+  ],
+  "artifact_rules": {"workspace": "full", "logs": ["build", "test", "vet", "submit"]}
+}

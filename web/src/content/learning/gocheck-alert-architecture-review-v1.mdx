@@ -1,0 +1,5 @@
+## 把分层原则迁移到 alert 规则
+
+这次仍在 gocheck-hub，但业务从 check 变成 alert rule：use case 接收 destination，storage 保证 destination 唯一，transport 暴露 `POST /alerts`。包名、接口名和方法名都已改变。
+
+没有提示或参考答案。请重新判断谁消费接口、错误应在哪一层产生，以及 concrete dependency 应在哪个 constructor 调用点出现；不要只把上一题的名字机械替换。

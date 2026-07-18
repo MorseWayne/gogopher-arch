@@ -185,6 +185,25 @@ func IndexBy[T any, K comparable](values []T, key func(T) K) map[K]T { return ni
 	}
 }
 
+func TestRequiredCallsAnalyzerFindsExplicitConstructorWiring(t *testing.T) {
+	valid := `package main
+func build() {
+	repository := memory.NewRepository()
+	service := checks.NewService(repository)
+	httpapi.NewHandler(service)
+}`
+	required := []string{"memory.NewRepository", "checks.NewService", "httpapi.NewHandler"}
+	if !hasRequiredCalls(valid, required) {
+		t.Fatal("hasRequiredCalls(valid) = false")
+	}
+	if hasRequiredCalls(strings.Replace(valid, "httpapi.NewHandler(service)", "_ = service", 1), required) {
+		t.Fatal("hasRequiredCalls accepted missing transport constructor")
+	}
+	if hasRequiredCalls("package main\nfunc build(", required) {
+		t.Fatal("hasRequiredCalls accepted invalid Go")
+	}
+}
+
 func TestExplanationSelectorRequiresLengthAndEvidenceTerms(t *testing.T) {
 	selector := definition.AssessmentSelector{MinimumChars: 20, RequiredTerms: []string{"alloc_space", "strings.Builder"}}
 	if !explanationSatisfies("根据 alloc_space profile，我选择 strings.Builder 降低分配。", selector) {

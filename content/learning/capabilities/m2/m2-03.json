@@ -1,0 +1,37 @@
+{
+  "id": "M2-03",
+  "version": 1,
+  "name": "业务建模、包边界与依赖组装",
+  "description": "能够把 transport、use case 与 storage 职责分开，由使用方定义最小接口，并通过 constructor 在程序入口显式组装依赖。",
+  "milestone": "M2",
+  "domain": "business-boundaries-dependency-wiring",
+  "prerequisites": {
+    "hard": [{"id": "M2-02", "version": 1}, {"id": "M1-06", "version": 1}, {"id": "M1-08", "version": 2}],
+    "recommended": []
+  },
+  "required_evidence": [
+    {
+      "type": "implement",
+      "independence": "independent",
+      "context": "same_context",
+      "rule_ids": [
+        "layered-project-builds",
+        "usecase-boundary-correct",
+        "storage-contract-correct",
+        "transport-usecase-separated",
+        "dependency-wiring-explicit",
+        "constructor-calls-present",
+        "consumer-interface-owned"
+      ]
+    },
+    {"type": "test", "independence": "independent", "context": "same_context", "rule_ids": ["boundary-tests-present"]},
+    {"type": "diagnose", "independence": "independent", "context": "same_context", "rule_ids": ["architecture-decisions-explained"]}
+  ],
+  "review_policy": {"first_review_after_days": 7, "success_interval_days": 30, "failure_remediation_after_days": 1},
+  "resource_refs": [
+    "web/src/content/learning/gocheck-architecture-practice-v1.mdx",
+    "https://go.dev/doc/modules/layout",
+    "https://go.dev/wiki/CodeReviewComments#interfaces",
+    "https://go.dev/doc/effective_go#interfaces_and_types"
+  ]
+}

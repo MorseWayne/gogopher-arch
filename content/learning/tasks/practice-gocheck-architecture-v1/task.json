@@ -1,0 +1,35 @@
+{
+  "id": "practice-gocheck-architecture-v1",
+  "version": 1,
+  "language": "go1.25",
+  "workspace_root": "workspace",
+  "files": [
+    {"source": "README.md", "path": "README.md", "role": "readme", "editable": false, "sha256": "5738b382d849b24f029b5bd6a737e261e1326483b70c96ccf5dc0942f2f11a8c"},
+    {"source": "starter/go.mod", "path": "go.mod", "role": "starter", "editable": false, "sha256": "1a3440c3bebbedb74e39b94236596663c1c233ec2d87f5854cc797fa75765372"},
+    {"source": "starter/internal/checks/service.go", "path": "internal/checks/service.go", "role": "starter", "editable": true, "sha256": "3f4f365ea3b87bbdb8004e636c02ce0bff580d3065b64fc29113dfe3199ec8e1"},
+    {"source": "starter/internal/checks/memory/repository.go", "path": "internal/checks/memory/repository.go", "role": "starter", "editable": true, "sha256": "45cee79fcab86e3971c2a86d50a8ed215fdc3caacedafeb307e3742f7af46d35"},
+    {"source": "visible/internal/checks/service_test.go", "path": "internal/checks/service_test.go", "role": "visible_test", "editable": false, "sha256": "f8f0d83d071c33a0fc45dfb18929e06cfb31824ed67a7a503b1b21f12f31c60d"}
+  ],
+  "editable_paths": ["internal/checks/service.go", "internal/checks/memory/repository.go"],
+  "readonly_paths": ["README.md", "go.mod", "internal/checks/service_test.go"],
+  "workspace_policy": {"allow_new_files": false, "allow_delete_files": false},
+  "limits": {"max_files": 10, "max_file_bytes": 65536, "max_total_bytes": 262144},
+  "actions": {
+    "build": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "test": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "vet": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "submit": {"timeout_ms": 15000, "max_output_bytes": 131072, "network": "none"}
+  },
+  "hints": [
+    {"id": "consumer-owns-interface", "level": 1, "title": "从 use case 的需求定义接口", "body": "Repository 只需要保存一个 Check。memory 导入 checks 并实现该方法；checks 不需要知道 memory 的存在。"},
+    {"id": "constructor-seam", "level": 2, "title": "用 constructor 固定依赖", "body": "NewService 校验 repository 和 nextID 后存入 Service。Create 只使用字段中的依赖，测试就能传入记录调用的替身。"},
+    {"id": "locked-uniqueness", "level": 3, "title": "在同一个临界区判断并写入", "body": "memory storage 用规范化 target 作为 map key，并让查重与写入共享同一把 mutex，避免并发时同时通过检查。"}
+  ],
+  "visible_tests": ["internal/checks/service_test.go"],
+  "held_out_tests": [],
+  "race_tests": [],
+  "assessment_rules": [
+    {"rule_id": "layering-practiced", "stage": "visible_test", "selector": {"test": "TestServiceAndMemoryBoundaries"}, "capability_refs": [{"id": "M2-03", "version": 1}], "evidence_type": "implement", "condition": "passed"}
+  ],
+  "artifact_rules": {"workspace": "full", "logs": ["build", "test", "vet", "submit"]}
+}
