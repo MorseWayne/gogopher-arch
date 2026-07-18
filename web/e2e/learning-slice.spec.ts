@@ -91,6 +91,39 @@ test.describe('Learning slice vertical scenarios', () => {
     expect(new Set(completed.evidence.map((item) => item.independence))).toEqual(new Set(['hinted']))
   })
 
+  test('v8 package API assessment records build, consumer, and documentation Evidence', async ({ page }) => {
+    await bootstrap(page)
+    const attempt = await readJSON<AttemptResponse>(
+      await page.request.post(apiRoot + '/attempts', {
+        data: { activity_id: 'assessment-status-module', activity_version: 1 },
+      }),
+      [201],
+    )
+    expect(attempt.release_id).toBe('m1-first-slice-v8')
+    expect(attempt.workspace['health/consumer_test.go']).toBeUndefined()
+
+    const saved = await readJSON<AttemptResponse>(
+      await page.request.put(apiRoot + '/attempts/' + attempt.id + '/workspace', {
+        data: {
+          base_revision: attempt.workspace_revision,
+          files: { ...attempt.workspace, 'health/report.go': statusModuleSolution },
+        },
+      }),
+      [200],
+    )
+    await submit(page, saved, 'package-api-submit')
+    const completed = await pollAttempt(page, saved.id, (value) => value.submission?.status === 'evaluated')
+
+    const results = new Map(completed.rule_results.map((item) => [item.rule_id, item]))
+    for (const ruleID of ['package-graph-builds', 'exported-api-usable', 'exported-api-documented']) {
+      expect(results.get(ruleID)?.status).toBe('passed')
+      expect(completed.evidence.some((item) => item.evidence_rule_id === ruleID && item.result === 'passed')).toBe(true)
+    }
+    expect(results.get('exported-api-documented')?.analyzer).toBe('go_ast_documented_exports')
+    const capability = await pollCapability(page, 'M1-08', (value) => value.snapshot?.acquisition_state === 'verified')
+    expect(capability.snapshot?.independence_state).toBe('independent')
+  })
+
   test('independent held-out pass is idempotent, verifies Snapshot, and schedules remediation after failed review', async ({ page }) => {
     await bootstrap(page)
     const saved = await saveAssessmentSolution(page, await createAssessment(page))
@@ -339,6 +372,42 @@ function compose(...args: string[]) {
 }
 
 const goStructTag = '`'
+
+const statusModuleSolution = `// Package health summarizes check results for command consumers.
+package health
+
+// Result describes one named health check outcome.
+type Result struct {
+    Name string
+    OK   bool
+}
+
+// Summary contains stable names and the number of failed checks.
+type Summary struct {
+    Names  []string
+    Failed int
+}
+
+// Summarize preserves input order and counts failed results.
+func Summarize(results []Result) Summary {
+    summary := Summary{Names: make([]string, 0, len(results))}
+    for _, result := range results {
+        summary.Names = append(summary.Names, result.Name)
+        if !result.OK {
+            summary.Failed++
+        }
+    }
+    return summary
+}
+
+// ExitCode returns zero when all checks pass and one otherwise.
+func (s Summary) ExitCode() int {
+    if s.Failed > 0 {
+        return 1
+    }
+    return 0
+}
+`
 
 const configSolution = String.raw`package config
 

@@ -1,0 +1,9 @@
+# 从状态报告迁移到输出格式包
+
+这次 module、包名、数据结构和命令入口都已变化。你仍需重新建立单向依赖、最小导出 API 和使用者文档，证明掌握的不是上一题文件名。
+
+## 异题复验契约
+
+`render.Lines` 保持记录顺序并生成 `key=value` 行，`Document.Count` 返回行数，`cmd/render` 只使用导出 API。package comment 与所有导出声明的 doc comment 必须符合命名开头约定。
+
+本次不提供提示、引用或参考解。建议按 package graph、外部 API、文档三个层次自行检查；提交后隐藏消费者测试和 AST 文档规则会共同判断迁移结果。

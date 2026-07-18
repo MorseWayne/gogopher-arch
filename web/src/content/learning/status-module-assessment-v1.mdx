@@ -1,0 +1,17 @@
+# 独立交付一个可被使用的 module
+
+这次评估同时检查三个层次：整个 package graph 能否构建、外部测试包能否只靠导出 API 完成工作、导出契约能否通过 doc comment 被使用者理解。
+
+## 文档也是 API 的一部分
+
+`health/report.go` 需要以 `Package health` 开头的 package comment。每个导出类型、函数和方法都要有以声明名开头的注释，并说明对调用者有意义的契约，不要只把函数签名翻译成中文。
+
+Go 官方 [Go Doc Comments](https://go.dev/doc/comment) 是这项验收的主资源。阅读 package、type、func、method comments 四部分，重点理解命名开头、段落和面向使用者描述的约定。
+
+## 提交前从三种视角检查
+
+1. 维护者：`health` 是否只包含状态报告规则？
+2. 使用者：外部 package 是否无需接触私有字段就能构造输入、得到结果和退出码？
+3. 工具：`go build ./...`、Test、Vet 与文档静态检查是否全部通过？
+
+隐藏测试使用 `health_test` 外部包验证 API。静态规则会解析源码验证 package comment 和导出声明注释；完成小结不能替代这些可检查证据。

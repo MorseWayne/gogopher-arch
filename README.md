@@ -164,8 +164,8 @@ go run ./cmd/learning-content validate --activity-set m1-first-slice
 ```bash
 go run ./cmd/learning-content release \
   --activity-set m1-first-slice \
-  --release-id m1-first-slice-v7 \
-  --created-at 2026-07-16T16:39:53Z
+  --release-id m1-first-slice-v8 \
+  --created-at 2026-07-18T00:00:00Z
 ```
 
 在更新 `current-release.json` 前验证 manifest、文件 hash 和 frontend bundle：
@@ -173,7 +173,7 @@ go run ./cmd/learning-content release \
 ```bash
 npm run build --prefix web
 go run ./cmd/learning-content verify \
-  --release-dir content/learning/releases/m1-first-slice-v7 \
+  --release-dir content/learning/releases/m1-first-slice-v8 \
   --web-dist web/dist
 ```
 
@@ -208,7 +208,7 @@ npm test --prefix web -- --run
 npm run build --prefix web
 ./scripts/check-compose-exposure.sh
 go run ./cmd/learning-content verify \
-  --release-dir content/learning/releases/m1-first-slice-v7 \
+  --release-dir content/learning/releases/m1-first-slice-v8 \
   --web-dist web/dist
 npm run e2e:compose --prefix web
 git diff --check

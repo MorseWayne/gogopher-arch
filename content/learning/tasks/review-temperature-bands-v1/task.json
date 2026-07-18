@@ -1,0 +1,29 @@
+{
+  "id": "review-temperature-bands-v1",
+  "version": 1,
+  "language": "go1.25",
+  "workspace_root": "workspace",
+  "files": [
+    {"source": "README.md", "path": "README.md", "role": "readme", "editable": false, "sha256": "d8ed2bd7a42ec22fbf596d320b91a0c25f6f96cc33980d3b86811ae3f56dedc4"},
+    {"source": "starter/go.mod", "path": "go.mod", "role": "starter", "editable": false, "sha256": "d1b8df99c2cdfaa5b5d9550ea4411a31d860e91dbb1bb669d7a460b583020e74"},
+    {"source": "starter/temperature.go", "path": "temperature.go", "role": "starter", "editable": true, "sha256": "03f0c9dc761fc808e6be23ed22e6bad063e724522a582756ebd7edca58d31a0b"},
+    {"source": "visible/temperature_test.go", "path": "temperature_test.go", "role": "visible_test", "editable": false, "sha256": "62b986f565596346c38f20c78673b0f94170d6aca73baefe2d52b03ce70c02d6"},
+    {"source": "heldout/temperature_heldout_test.go", "path": "temperature_heldout_test.go", "role": "held_out_test", "editable": false, "sha256": "eff92d0cbd95d9417fecb2b166770441734401b72e70ead4495ca70445d1c135"}
+  ],
+  "editable_paths": ["temperature.go"],
+  "readonly_paths": ["README.md", "go.mod", "temperature_test.go"],
+  "limits": {"max_files": 8, "max_file_bytes": 65536, "max_total_bytes": 262144},
+  "actions": {
+    "build": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "test": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "vet": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "submit": {"timeout_ms": 15000, "max_output_bytes": 131072, "network": "none"}
+  },
+  "visible_tests": ["temperature_test.go"],
+  "held_out_tests": ["temperature_heldout_test.go"],
+  "assessment_rules": [
+    {"rule_id": "unicode-control-flow-correct", "stage": "held_out_test", "selector": {"test": "TestClassifyReadingsHandlesBoundariesAndControlFlow"}, "capability_refs": [{"id": "M1-02", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "named-type-zero-defaults", "stage": "held_out_test", "selector": {"test": "TestClassifyReadingsReturnsZeroForInvalidRange"}, "capability_refs": [{"id": "M1-02", "version": 1}], "evidence_type": "implement", "condition": "passed"}
+  ],
+  "artifact_rules": {"workspace": "full", "logs": ["build", "test", "vet", "submit"]}
+}

@@ -1,0 +1,16 @@
+# package 边界首先是依赖方向
+
+把代码分成多个目录并不会自动得到好架构。这个练习只建立一条最小但重要的方向：`cmd/status` 负责进程入口和输出，`internal/report` 负责可测试的数据规则；入口依赖领域包，领域包不知道入口。
+
+## 从使用者开始设计
+
+`main` 只需要 `Result`、`Summary` 和 `Summarize`。先把这个最小 API 做通，再运行包测试和整个 module 的 Build。不要为了隐藏循环变量或方便调试而继续导出实现细节。
+
+Go 官方的 [Developing and publishing modules](https://go.dev/doc/modules/developing) 解释 module、package 与发布边界；本练习只读 package 组织和 module path 相关部分。后续评估会进一步检查外部使用者能否使用 API 以及文档是否完整。
+
+## 自检
+
+- `internal/report` 是否导入了任何 `cmd` 内容？
+- 领域逻辑能否不启动进程就直接测试？
+- `go build ./...` 是否能验证所有包，而不只是当前文件？
+- 新增导出名称是否真的被使用者需要？

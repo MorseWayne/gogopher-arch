@@ -1,0 +1,33 @@
+{
+  "id": "assessment-text-stats-v1",
+  "version": 1,
+  "language": "go1.25",
+  "workspace_root": "workspace",
+  "files": [
+    {"source": "README.md", "path": "README.md", "role": "readme", "editable": false, "sha256": "075a619f875fda3dd1dff26db30a6d2957c9ac8bc4d67c4c3794de0ce670f21e"},
+    {"source": "starter/go.mod", "path": "go.mod", "role": "starter", "editable": false, "sha256": "6e51669185d620843d0308e16d4b7b0f71ef3600487a37751e65e66467580617"},
+    {"source": "starter/stats.go", "path": "stats.go", "role": "starter", "editable": true, "sha256": "c767767d3d9d39e243641136573971257d1aaff38f8ebe3baa9a75c648967bf8"},
+    {"source": "visible/stats_test.go", "path": "stats_test.go", "role": "visible_test", "editable": false, "sha256": "b251eaffafa34196674b6730e929b45b8550821b9eaccdb189b3661a7f8ded35"},
+    {"source": "heldout/stats_heldout_test.go", "path": "stats_heldout_test.go", "role": "held_out_test", "editable": false, "sha256": "9d568a8246163337d6b8992a836b84abdca0b158c77944b783d109c3747dec11"}
+  ],
+  "editable_paths": ["stats.go"],
+  "readonly_paths": ["README.md", "go.mod", "stats_test.go"],
+  "limits": {"max_files": 8, "max_file_bytes": 65536, "max_total_bytes": 262144},
+  "actions": {
+    "build": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "test": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "vet": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "submit": {"timeout_ms": 15000, "max_output_bytes": 131072, "network": "none"}
+  },
+  "hints": [
+    {"id": "write-the-cases", "level": 1, "title": "先列出互斥分支", "body": "把 empty、too_long、accepted 三个分支按优先级写清，再在 accepted 分支累计总数，避免重复更新统计字段。"},
+    {"id": "unicode-contract", "level": 2, "title": "回到 Unicode 契约", "body": "公开样例只有 ASCII；提交前主动用中文或带重音字符验证 code point 数，而不是等待隐藏检查指出字节计数错误。"}
+  ],
+  "visible_tests": ["stats_test.go"],
+  "held_out_tests": ["stats_heldout_test.go"],
+  "assessment_rules": [
+    {"rule_id": "unicode-control-flow-correct", "stage": "held_out_test", "selector": {"test": "TestAnalyzeHandlesUnicodeAndControlFlow"}, "capability_refs": [{"id": "M1-02", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "named-type-zero-defaults", "stage": "held_out_test", "selector": {"test": "TestAnalyzeUsesNamedCategoriesAndZeroDefaults"}, "capability_refs": [{"id": "M1-02", "version": 1}], "evidence_type": "implement", "condition": "passed"}
+  ],
+  "artifact_rules": {"workspace": "full", "logs": ["build", "test", "vet", "submit"]}
+}

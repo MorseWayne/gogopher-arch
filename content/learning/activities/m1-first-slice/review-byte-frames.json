@@ -1,0 +1,15 @@
+{
+  "id": "review-byte-frames",
+  "version": 1,
+  "title": "字节帧所有权复验",
+  "kind": "learning_task",
+  "mode": "review",
+  "capability_refs": [{"id": "M1-04", "version": 1}],
+  "task_ref": {"id": "review-byte-frames-v1", "version": 1},
+  "content_ref": "web/src/content/learning/byte-frames-review-v1.mdx",
+  "assistance_policy": {"hints": false, "references": false, "solution": false, "ai_declaration": true},
+  "evidence_rules": [
+    {"rule_id": "slice-ownership-isolated", "capability_id": "M1-04", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "map-contract-correct", "capability_id": "M1-04", "capability_version": 1, "evidence_type": "implement", "result": "passed"}
+  ]
+}

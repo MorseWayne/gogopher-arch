@@ -23,7 +23,7 @@ func TestLoadRegistryIndexesCurrentAndHistoricalDefinitions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, want := len(definitions), 17; got != want {
+	if got, want := len(definitions), 45; got != want {
 		t.Fatalf("len(Definitions()) = %d, want %d", got, want)
 	}
 	ref := DefinitionRef{ReleaseID: testReleaseID, Kind: KindActivity, ID: "assessment-check-config", Version: 4}
@@ -110,6 +110,63 @@ func TestRegistryViewsExcludePrivateEvaluationContract(t *testing.T) {
 	}
 	if _, exists := workspace["internal/config/heldout_test.go"]; exists {
 		t.Fatal("public workspace contains held-out test")
+	}
+}
+
+func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.T) {
+	registry, err := LoadRegistry(RegistryOptions{ContentDir: repositoryContentDir(t)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	cases := []struct {
+		capabilityID string
+		acquisition  string
+		assessment   string
+		review       string
+	}{
+		{"M1-02", "guided-core-semantics", "assessment-text-stats", "review-temperature-bands"},
+		{"M1-04", "practice-slice-ownership", "assessment-event-batches", "review-byte-frames"},
+		{"M1-05", "practice-domain-model", "assessment-check-model", "review-budget-model"},
+		{"M1-08", "practice-package-contract", "assessment-status-module", "review-format-module"},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.capabilityID, func(t *testing.T) {
+			capability, err := registry.CapabilityView(testReleaseID, testCase.capabilityID, 1)
+			if err != nil || len(capability.RequiredEvidence) == 0 || len(capability.Prerequisites.Hard) == 0 {
+				t.Fatalf("CapabilityView() = %#v, %v", capability, err)
+			}
+			remediation, err := registry.RemediationActivity(testReleaseID, VersionedDefinitionRef{ID: testCase.capabilityID, Version: 1})
+			if err != nil || remediation.ID != testCase.acquisition {
+				t.Fatalf("RemediationActivity() = %#v, %v", remediation, err)
+			}
+			assessment, err := registry.ActivityView(testReleaseID, testCase.assessment, 1)
+			if err != nil || assessment.Mode != "assessment" {
+				t.Fatalf("assessment = %#v, %v", assessment, err)
+			}
+			review, err := registry.ReviewActivity(testReleaseID, assessment.CapabilityRefs)
+			if err != nil || review.ID != testCase.review {
+				t.Fatalf("ReviewActivity() = %#v, %v", review, err)
+			}
+		})
+	}
+
+	activity, err := registry.ActivityView(testReleaseID, "assessment-status-module", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	task, err := registry.ExecutionTask(testReleaseID, activity.TaskRef.ID, activity.TaskRef.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(task.AssessmentRules) != 3 || !task.AssessmentRules[2].Selector.DocumentedExports || task.AssessmentRules[2].Selector.File != "health/report.go" {
+		t.Fatalf("package API assessment rules = %#v", task.AssessmentRules)
+	}
+	workspace, err := registry.PublicWorkspace(testReleaseID, task.ID, task.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, exists := workspace["health/consumer_test.go"]; exists {
+		t.Fatal("package API starter exposed held-out consumer test")
 	}
 }
 

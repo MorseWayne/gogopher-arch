@@ -1,0 +1,33 @@
+{
+  "id": "assessment-event-batches-v1",
+  "version": 1,
+  "language": "go1.25",
+  "workspace_root": "workspace",
+  "files": [
+    {"source": "README.md", "path": "README.md", "role": "readme", "editable": false, "sha256": "ec10d9cdaa3444958fd0b12e55172c9fdb4967ccc7e9ae01551f33d0c5bebdeb"},
+    {"source": "starter/go.mod", "path": "go.mod", "role": "starter", "editable": false, "sha256": "354d8a714b29ebc9abf3e9109c9dd1006a73111675266f946f4354f43378513b"},
+    {"source": "starter/events.go", "path": "events.go", "role": "starter", "editable": true, "sha256": "79a2bdb2b05b928c47119ca657450c7192b849a4a38441c44dc4ac95cefd46f5"},
+    {"source": "visible/events_test.go", "path": "events_test.go", "role": "visible_test", "editable": false, "sha256": "93b068aa16333080b6c49e065902fabd45ca4726f0f558f9b2c4b9c7248dfcac"},
+    {"source": "heldout/events_heldout_test.go", "path": "events_heldout_test.go", "role": "held_out_test", "editable": false, "sha256": "054df7dc2dd83ab7fd67a5c626c4dfa4a29265a7749be034da09af20fc13f4b4"}
+  ],
+  "editable_paths": ["events.go"],
+  "readonly_paths": ["README.md", "go.mod", "events_test.go"],
+  "limits": {"max_files": 8, "max_file_bytes": 65536, "max_total_bytes": 262144},
+  "actions": {
+    "build": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "test": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "vet": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "submit": {"timeout_ms": 15000, "max_output_bytes": 131072, "network": "none"}
+  },
+  "hints": [
+    {"id": "state-ownership", "level": 1, "title": "先写清所有权", "body": "如果返回值承诺是快照，调用方就不应观察到输入后续变化；反过来，修改快照也不能改写输入。"},
+    {"id": "latest-wins", "level": 2, "title": "让循环表达覆盖规则", "body": "按输入顺序给同一 key 赋值，后出现项会自然覆盖先出现项；不要额外排序或跳过重复项。"}
+  ],
+  "visible_tests": ["events_test.go"],
+  "held_out_tests": ["events_heldout_test.go"],
+  "assessment_rules": [
+    {"rule_id": "slice-ownership-isolated", "stage": "held_out_test", "selector": {"test": "TestSnapshotWindowOwnsStorage"}, "capability_refs": [{"id": "M1-04", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "map-contract-correct", "stage": "held_out_test", "selector": {"test": "TestIndexLatestHandlesEmptyAndDuplicates"}, "capability_refs": [{"id": "M1-04", "version": 1}], "evidence_type": "implement", "condition": "passed"}
+  ],
+  "artifact_rules": {"workspace": "full", "logs": ["build", "test", "vet", "submit"]}
+}

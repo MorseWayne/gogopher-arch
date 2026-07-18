@@ -1,0 +1,15 @@
+{
+  "id": "assessment-check-model",
+  "version": 1,
+  "title": "独立设计检查目标模型",
+  "kind": "learning_task",
+  "mode": "assessment",
+  "capability_refs": [{"id": "M1-05", "version": 1}],
+  "task_ref": {"id": "assessment-check-model-v1", "version": 1},
+  "content_ref": "web/src/content/learning/check-model-assessment-v1.mdx",
+  "assistance_policy": {"hints": true, "references": true, "solution": false, "ai_declaration": true},
+  "evidence_rules": [
+    {"rule_id": "domain-invariants-enforced", "capability_id": "M1-05", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "behavior-methods-correct", "capability_id": "M1-05", "capability_version": 1, "evidence_type": "implement", "result": "passed"}
+  ]
+}

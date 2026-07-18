@@ -1,0 +1,29 @@
+{
+  "id": "review-budget-model-v1",
+  "version": 1,
+  "language": "go1.25",
+  "workspace_root": "workspace",
+  "files": [
+    {"source": "README.md", "path": "README.md", "role": "readme", "editable": false, "sha256": "966185f2463b4cdcb8815c8d5566f40c6a4cb0ea73f9f05a505e6b637af55170"},
+    {"source": "starter/go.mod", "path": "go.mod", "role": "starter", "editable": false, "sha256": "89e14ed674a1a7bd5b14733b3e5a00af127777f544dee73f59c6f41cd7ef3516"},
+    {"source": "starter/budget.go", "path": "budget.go", "role": "starter", "editable": true, "sha256": "b53cf30ed5ce0873a5706d9ba3e48f204ca65fe43b299bcbb6e45409592b7d86"},
+    {"source": "visible/budget_test.go", "path": "budget_test.go", "role": "visible_test", "editable": false, "sha256": "553a88b227904ef7130d1e28cb105f84b720c1bca48870a839c1ae95b5238d32"},
+    {"source": "heldout/budget_heldout_test.go", "path": "budget_heldout_test.go", "role": "held_out_test", "editable": false, "sha256": "712ce0c95194dde7584abd4123541be772f6097c7042a57f9795b8f027b3bc8a"}
+  ],
+  "editable_paths": ["budget.go"],
+  "readonly_paths": ["README.md", "go.mod", "budget_test.go"],
+  "limits": {"max_files": 8, "max_file_bytes": 65536, "max_total_bytes": 262144},
+  "actions": {
+    "build": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "test": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "vet": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "submit": {"timeout_ms": 15000, "max_output_bytes": 131072, "network": "none"}
+  },
+  "visible_tests": ["budget_test.go"],
+  "held_out_tests": ["budget_heldout_test.go"],
+  "assessment_rules": [
+    {"rule_id": "domain-invariants-enforced", "stage": "held_out_test", "selector": {"test": "TestBudgetEnforcesConstructionInvariants"}, "capability_refs": [{"id": "M1-05", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "behavior-methods-correct", "stage": "held_out_test", "selector": {"test": "TestBudgetBehaviorMethodsPreserveStateOnFailure"}, "capability_refs": [{"id": "M1-05", "version": 1}], "evidence_type": "implement", "condition": "passed"}
+  ],
+  "artifact_rules": {"workspace": "full", "logs": ["build", "test", "vet", "submit"]}
+}

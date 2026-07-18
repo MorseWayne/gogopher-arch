@@ -1,0 +1,14 @@
+{
+  "id": "guided-core-semantics",
+  "version": 1,
+  "title": "用 Go 语义整理名称",
+  "kind": "learning_task",
+  "mode": "guided",
+  "capability_refs": [{"id": "M1-02", "version": 1}],
+  "task_ref": {"id": "guided-core-semantics-v1", "version": 1},
+  "content_ref": "web/src/content/learning/core-semantics-guided-v1.mdx",
+  "assistance_policy": {"hints": true, "references": true, "solution": true, "ai_declaration": true},
+  "evidence_rules": [
+    {"rule_id": "core-semantics-practiced", "capability_id": "M1-02", "capability_version": 1, "evidence_type": "implement", "result": "passed"}
+  ]
+}

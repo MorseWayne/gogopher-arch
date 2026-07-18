@@ -1,0 +1,15 @@
+{
+  "id": "assessment-event-batches",
+  "version": 1,
+  "title": "独立实现事件批次快照",
+  "kind": "learning_task",
+  "mode": "assessment",
+  "capability_refs": [{"id": "M1-04", "version": 1}],
+  "task_ref": {"id": "assessment-event-batches-v1", "version": 1},
+  "content_ref": "web/src/content/learning/event-batches-assessment-v1.mdx",
+  "assistance_policy": {"hints": true, "references": true, "solution": false, "ai_declaration": true},
+  "evidence_rules": [
+    {"rule_id": "slice-ownership-isolated", "capability_id": "M1-04", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "map-contract-correct", "capability_id": "M1-04", "capability_version": 1, "evidence_type": "implement", "result": "passed"}
+  ]
+}

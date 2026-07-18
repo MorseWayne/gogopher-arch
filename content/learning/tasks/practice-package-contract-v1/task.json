@@ -1,0 +1,32 @@
+{
+  "id": "practice-package-contract-v1",
+  "version": 1,
+  "language": "go1.25",
+  "workspace_root": "workspace",
+  "files": [
+    {"source": "README.md", "path": "README.md", "role": "readme", "editable": false, "sha256": "11ea21258ed9fa19545ba864fa1d2d3025895b9b6cfe960eafc0aa1f1a5e9b67"},
+    {"source": "starter/go.mod", "path": "go.mod", "role": "starter", "editable": false, "sha256": "bf82d9a123d7afbfceae85cdd7c8b7d90ac5fbec99fb53a5a9db3e8893001e4c"},
+    {"source": "starter/internal/report/report.go", "path": "internal/report/report.go", "role": "starter", "editable": true, "sha256": "fe81db7bfc69d600ed3eab83b909a30c014e38b6f0faef78fd3a7f03c57419e1"},
+    {"source": "starter/cmd/status/main.go", "path": "cmd/status/main.go", "role": "starter", "editable": true, "sha256": "177fa55881cc9a574efeaf59111ce667c69681bbcbd840f00e64dfbee0561231"},
+    {"source": "visible/internal/report/report_test.go", "path": "internal/report/report_test.go", "role": "visible_test", "editable": false, "sha256": "15bd4330d92abf6e43e23493ad3ab2bbf8cd000ea3a2899dd0cf837ac7d988c6"}
+  ],
+  "editable_paths": ["internal/report/report.go", "cmd/status/main.go"],
+  "readonly_paths": ["README.md", "go.mod", "internal/report/report_test.go"],
+  "limits": {"max_files": 12, "max_file_bytes": 65536, "max_total_bytes": 262144},
+  "actions": {
+    "build": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "test": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "vet": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "submit": {"timeout_ms": 15000, "max_output_bytes": 131072, "network": "none"}
+  },
+  "hints": [
+    {"id": "dependency-direction", "level": 1, "title": "从依赖方向检查职责", "body": "cmd 可以调用 report；report 不应知道命令行参数、打印或退出码。先让领域包测试通过，再构建整个 module。"},
+    {"id": "small-exported-contract", "level": 2, "title": "只暴露使用者需要的契约", "body": "任务已经给出 Result、Summary 和 Summarize；不要为了实现方便再导出中间状态。"}
+  ],
+  "visible_tests": ["internal/report/report_test.go"],
+  "held_out_tests": [],
+  "assessment_rules": [
+    {"rule_id": "package-contract-practiced", "stage": "visible_test", "selector": {"test": "TestSummarizeKeepsDomainLogicInPackage"}, "capability_refs": [{"id": "M1-08", "version": 1}], "evidence_type": "implement", "condition": "passed"}
+  ],
+  "artifact_rules": {"workspace": "diff", "logs": ["build", "test", "vet", "submit"]}
+}

@@ -1,0 +1,31 @@
+{
+  "id": "practice-domain-model-v1",
+  "version": 1,
+  "language": "go1.25",
+  "workspace_root": "workspace",
+  "files": [
+    {"source": "README.md", "path": "README.md", "role": "readme", "editable": false, "sha256": "66b7a67a864f3f7696d4e3cb3c43315adbea14cd3bc74dca6caed8b0d0b0a4b0"},
+    {"source": "starter/go.mod", "path": "go.mod", "role": "starter", "editable": false, "sha256": "135f97154f9520c4857c9335bdbe5ba7e2cdfb3ea85411defe47067892ffb48d"},
+    {"source": "starter/check.go", "path": "check.go", "role": "starter", "editable": true, "sha256": "951fc589b1d3c292068deb05c2efab2540ac97e3c56ea4aa990e3006877386dc"},
+    {"source": "visible/check_test.go", "path": "check_test.go", "role": "visible_test", "editable": false, "sha256": "ab7954a5c6e52815b0a67b64e698f9e43e76d7e4b8cfbb6f0a1a4f3ba2c909f7"}
+  ],
+  "editable_paths": ["check.go"],
+  "readonly_paths": ["README.md", "go.mod", "check_test.go"],
+  "limits": {"max_files": 8, "max_file_bytes": 65536, "max_total_bytes": 262144},
+  "actions": {
+    "build": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "test": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "vet": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "submit": {"timeout_ms": 15000, "max_output_bytes": 131072, "network": "none"}
+  },
+  "hints": [
+    {"id": "construct-valid-values", "level": 1, "title": "先守住构造边界", "body": "构造函数返回 error 的目的，是不让无名称或无效上限的 Check 进入后续方法。"},
+    {"id": "methods-as-transitions", "level": 2, "title": "把方法看成状态转换", "body": "成功事件把连续失败归零；失败事件只增加计数。Health 只根据当前状态和上限派生，不需要缓存第二份状态。"}
+  ],
+  "visible_tests": ["check_test.go"],
+  "held_out_tests": [],
+  "assessment_rules": [
+    {"rule_id": "domain-model-practiced", "stage": "visible_test", "selector": {"test": "TestCheckProtectsInvariantsAndTransitions"}, "capability_refs": [{"id": "M1-05", "version": 1}], "evidence_type": "implement", "condition": "passed"}
+  ],
+  "artifact_rules": {"workspace": "diff", "logs": ["build", "test", "vet", "submit"]}
+}

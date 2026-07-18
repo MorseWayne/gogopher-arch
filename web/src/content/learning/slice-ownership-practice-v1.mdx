@@ -1,0 +1,15 @@
+# slice 是视图，所有权要由契约说清
+
+slice 不是数组本身，它描述一段底层数组。直接返回 `data[start:end]` 很便宜，但调用方与原始输入仍可能互相改写。什么时候共享、什么时候复制，不是固定风格，而是函数契约。
+
+## 这次要修复的两个陷阱
+
+`CloneWindow` 承诺快照，因此返回值必须拥有独立存储。只限制 capacity 仍然共享数据；需要新建目标 slice 并复制。
+
+`CountTags` 承诺可写 map。nil map 可以读取并得到零值，但写入会 panic；空输入仍应返回已经初始化、可继续写入的空 map。
+
+Go 官方的 [Go Slices: usage and internals](https://go.dev/blog/slices-intro) 展示了数组、slice 描述符、长度、容量和共享底层数组的关系。阅读目标是回答：为什么截取窗口不会自动复制，以及 `append` 什么时候可能换底层数组。
+
+## 练习方法
+
+先画出 input、window 和 backing array 的关系，再运行测试。通过后主动交换修改方向：既修改输入观察输出，也修改输出观察输入。完成小结记录你选择复制的契约原因，而不只是写“用了 copy”。

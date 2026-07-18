@@ -1,0 +1,33 @@
+{
+  "id": "assessment-check-model-v1",
+  "version": 1,
+  "language": "go1.25",
+  "workspace_root": "workspace",
+  "files": [
+    {"source": "README.md", "path": "README.md", "role": "readme", "editable": false, "sha256": "2dcd61c04ceb3ca7d85ba5c6fbc4ee3dd92c9d187a4c8eb1746dedd7bb838565"},
+    {"source": "starter/go.mod", "path": "go.mod", "role": "starter", "editable": false, "sha256": "a30ecbf36c667e4adf70f9e3ca67bed83efd7f445f2f4678a9c287c2056fbc82"},
+    {"source": "starter/target.go", "path": "target.go", "role": "starter", "editable": true, "sha256": "89082c4ecf705225084fd2bdfe0638e1657a46bd68fa87b117be5ea37305d37b"},
+    {"source": "visible/target_test.go", "path": "target_test.go", "role": "visible_test", "editable": false, "sha256": "800bf2566ed49fc09a5893d8c59db5f08e90f72469a5ce3d38cfb7c3389039d4"},
+    {"source": "heldout/target_heldout_test.go", "path": "target_heldout_test.go", "role": "held_out_test", "editable": false, "sha256": "7e547a53ed224843020340fd8e189e6faa6cd3b0316178b85cac5544ec9777dd"}
+  ],
+  "editable_paths": ["target.go"],
+  "readonly_paths": ["README.md", "go.mod", "target_test.go"],
+  "limits": {"max_files": 8, "max_file_bytes": 65536, "max_total_bytes": 262144},
+  "actions": {
+    "build": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "test": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "vet": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "submit": {"timeout_ms": 15000, "max_output_bytes": 131072, "network": "none"}
+  },
+  "hints": [
+    {"id": "protect-invariants", "level": 1, "title": "把非法值挡在构造阶段", "body": "先 trim 名称，再检查空值和 failureLimit；只有通过这些条件才返回 Target。"},
+    {"id": "derive-state", "level": 2, "title": "从事实派生状态", "body": "consecutiveFailures 是事实，State 是派生结果。RecordSuccess 和 RecordFailure 只维护事实，避免两个字段互相矛盾。"}
+  ],
+  "visible_tests": ["target_test.go"],
+  "held_out_tests": ["target_heldout_test.go"],
+  "assessment_rules": [
+    {"rule_id": "domain-invariants-enforced", "stage": "held_out_test", "selector": {"test": "TestTargetEnforcesConstructionInvariants"}, "capability_refs": [{"id": "M1-05", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "behavior-methods-correct", "stage": "held_out_test", "selector": {"test": "TestTargetBehaviorMethodsDriveTransitions"}, "capability_refs": [{"id": "M1-05", "version": 1}], "evidence_type": "implement", "condition": "passed"}
+  ],
+  "artifact_rules": {"workspace": "full", "logs": ["build", "test", "vet", "submit"]}
+}

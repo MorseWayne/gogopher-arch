@@ -148,10 +148,10 @@ func (Summary) Count() int { return 0 }
 		t.Fatal("hasDocumentedExports(valid) = false")
 	}
 	for name, source := range map[string]string{
-		"package": strings.Replace(valid, "// Package report creates stable reports.\n", "", 1),
-		"type":    strings.Replace(valid, "// Summary describes a report.\n", "", 1),
+		"package":  strings.Replace(valid, "// Package report creates stable reports.\n", "", 1),
+		"type":     strings.Replace(valid, "// Summary describes a report.\n", "", 1),
 		"function": strings.Replace(valid, "// Build creates a Summary.\n", "// Create builds a Summary.\n", 1),
-		"method": strings.Replace(valid, "// Count returns the number of entries.\n", "", 1),
+		"method":   strings.Replace(valid, "// Count returns the number of entries.\n", "", 1),
 	} {
 		t.Run(name, func(t *testing.T) {
 			if hasDocumentedExports(source) {
