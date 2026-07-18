@@ -1,0 +1,15 @@
+# 第一条 HTTP 请求纵向切片
+
+先建立标准库心智模型，再考虑框架。一次入站请求不是“调用 controller”，而是 `http.Server` 为连接构造 request，把它交给一个 `http.Handler`；middleware 也是 handler，只是在调用下一个 handler 前后增加行为；`ServeMux` 根据 method、host 与 path pattern 选择最终 handler。
+
+本练习只做内存内请求链：
+
+```text
+httptest request → request ID middleware → ServeMux → health/target handler → recorder
+```
+
+先阅读 [`net/http` 的 Server 与 ServeMux](https://pkg.go.dev/net/http)，确认 `GET /targets/{id}` 和 `Request.PathValue` 的语义；再阅读 [`httptest`](https://pkg.go.dev/net/http/httptest)，用 request/recorder 验证 handler，而不是为了测试启动端口。若 context 传值仍不熟，回看 [`context`](https://pkg.go.dev/context)，重点是派生新 context 后通过 `r.WithContext` 继续传递。
+
+实现顺序建议是：先注册两个 route；再让 target handler 只依赖注入的 lookup；最后在 mux 外包 request ID middleware。每一步都运行 Test，并用失败信息确认自己正在修哪一层。
+
+完成后用自己的话回答：为什么 request ID 不应该是全局变量？为什么 method-aware pattern 比在 handler 内写一组 path/method if 更容易保持 404/405 语义？

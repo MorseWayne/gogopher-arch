@@ -1,0 +1,12 @@
+# M2-01：独立交付 gocheck-hub HTTP 入口
+
+你已经在内存内走通 handler 链，现在要把它升级为有明确运行边界的标准库 HTTP server。任务保留函数签名和一个最短 smoke test，但路由、中间件、timeout 校验、Serve/Shutdown 协调和学习者测试都由你完成。
+
+先把工作拆成两个彼此可测的状态机：
+
+1. 请求路径：request ID middleware 派生 context，`ServeMux` 选择 route，handler 调用依赖并写 response。
+2. 进程内 server 路径：`Serve` 阻塞接收连接；取消到达后 `Shutdown` 关闭 listener、空闲连接并等待活动连接；最后回收 `Serve` 返回的 `http.ErrServerClosed`。
+
+不要在 handler 测试里启动真实端口；用 [`httptest`](https://pkg.go.dev/net/http/httptest) 做 table test。只有验证优雅关闭时才需要 loopback listener。以 [`net/http.Server`](https://pkg.go.dev/net/http#Server) 与 [`Server.Shutdown`](https://pkg.go.dev/net/http#Server.Shutdown) 的官方契约为准，特别留意 Shutdown 与 Serve 的返回顺序。
+
+这一步不设计 JSON、统一错误对象或业务分层，它们属于后续能力。当前目标是能解释并亲手控制标准库 transport 边界，而不是把细节藏进第三方框架。

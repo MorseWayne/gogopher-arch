@@ -31,6 +31,8 @@ GoGopher Arch 是一个以 Capability、Evidence 和 Review 为核心的 Go 学�
 - Evidence projection 更新 Snapshot，并生成 acquisition、due review 或 remediation；
 - Playwright 在全新 PostgreSQL 上验证 guided → assessment → review 闭环。
 
+当前 `m1-first-slice-v14` 已发布 M1-01 至 M1-14 和 M2-01。M2 从标准库 HTTP 心智模型起步：先练习 handler/middleware 请求切片，再独立交付带 timeout 与 graceful shutdown 的 `gocheck-hub` HTTP 入口，最后用 `jobwatch` 变式进入延迟复验。
+
 ## 快速开始
 
 要求 Docker 20.10+、Docker Compose v2。应用配置在未提供环境变量时默认关闭 Learning slice；仓库提供的 `.env.example` 和 local Compose 为一键本地体验显式开启它：
@@ -164,7 +166,7 @@ go run ./cmd/learning-content validate --activity-set m1-first-slice
 ```bash
 go run ./cmd/learning-content release \
   --activity-set m1-first-slice \
-  --release-id m1-first-slice-v13 \
+  --release-id m1-first-slice-v14 \
   --created-at 2026-07-18T00:00:00Z
 ```
 
@@ -173,7 +175,7 @@ go run ./cmd/learning-content release \
 ```bash
 npm run build --prefix web
 go run ./cmd/learning-content verify \
-  --release-dir content/learning/releases/m1-first-slice-v13 \
+  --release-dir content/learning/releases/m1-first-slice-v14 \
   --web-dist web/dist
 ```
 
@@ -208,7 +210,7 @@ npm test --prefix web -- --run
 npm run build --prefix web
 ./scripts/check-compose-exposure.sh
 go run ./cmd/learning-content verify \
-  --release-dir content/learning/releases/m1-first-slice-v13 \
+  --release-dir content/learning/releases/m1-first-slice-v14 \
   --web-dist web/dist
 npm run e2e:compose --prefix web
 git diff --check

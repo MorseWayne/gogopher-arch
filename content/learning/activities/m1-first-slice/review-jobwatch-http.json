@@ -1,0 +1,21 @@
+{
+  "id": "review-jobwatch-http",
+  "version": 1,
+  "title": "迁移实现 jobwatch admin server",
+  "kind": "learning_task",
+  "mode": "review",
+  "evidence_context": "variant",
+  "capability_refs": [{"id": "M2-01", "version": 1}],
+  "task_ref": {"id": "review-jobwatch-http-v1", "version": 1},
+  "content_ref": "web/src/content/learning/jobwatch-http-review-v1.mdx",
+  "assistance_policy": {"hints": false, "references": false, "solution": false, "ai_declaration": true},
+  "evidence_rules": [
+    {"rule_id": "http-service-builds", "capability_id": "M2-01", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "route-contract-correct", "capability_id": "M2-01", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "request-context-propagates", "capability_id": "M2-01", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "server-timeouts-configured", "capability_id": "M2-01", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "graceful-shutdown-correct", "capability_id": "M2-01", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "handler-tests-present", "capability_id": "M2-01", "capability_version": 1, "evidence_type": "test", "result": "passed"},
+    {"rule_id": "http-lifecycle-explained", "capability_id": "M2-01", "capability_version": 1, "evidence_type": "diagnose", "result": "passed"}
+  ]
+}

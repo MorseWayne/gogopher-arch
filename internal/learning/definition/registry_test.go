@@ -23,7 +23,7 @@ func TestLoadRegistryIndexesCurrentAndHistoricalDefinitions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, want := len(definitions), 87; got != want {
+	if got, want := len(definitions), 94; got != want {
 		t.Fatalf("len(Definitions()) = %d, want %d", got, want)
 	}
 	ref := DefinitionRef{ReleaseID: testReleaseID, Kind: KindActivity, ID: "assessment-check-config", Version: 4}
@@ -134,6 +134,7 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 		{"M1-11", 1, "practice-bounded-pipeline", "assessment-worker-pool", "review-thumbnail-pipeline"},
 		{"M1-12", 1, "practice-protected-counter", "assessment-concurrent-registry", "review-concurrent-ledger"},
 		{"M1-13", 1, "practice-cancellable-map", "assessment-cancellable-checks", "review-cancellable-fetch"},
+		{"M2-01", 1, "practice-http-request-slice", "assessment-gocheck-http", "review-jobwatch-http"},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.capabilityID, func(t *testing.T) {
@@ -215,6 +216,32 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 	review, err := registry.ReviewActivity(testReleaseID, projectActivity.CapabilityRefs)
 	if err != nil || review.ID != "review-endpoint-audit" || review.Version != 2 {
 		t.Fatalf("M1-14 review = %#v, %v", review, err)
+	}
+
+	httpActivity, err := registry.ActivityView(testReleaseID, "assessment-gocheck-http", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if httpActivity.EvidenceContext != "same_context" {
+		t.Fatalf("M2-01 assessment context = %q, want same_context", httpActivity.EvidenceContext)
+	}
+	httpTask, err := registry.ExecutionTask(testReleaseID, httpActivity.TaskRef.ID, httpActivity.TaskRef.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(httpTask.AssessmentRules) != 7 || len(httpTask.Files) != 6 {
+		t.Fatalf("M2-01 task contract = rules %d files %d", len(httpTask.AssessmentRules), len(httpTask.Files))
+	}
+	httpWorkspace, err := registry.PublicWorkspace(testReleaseID, httpTask.ID, httpTask.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, exists := httpWorkspace["httpserver/contract_private_test.go"]; exists {
+		t.Fatal("M2-01 public workspace contains held-out lifecycle tests")
+	}
+	httpReview, err := registry.ReviewActivity(testReleaseID, httpActivity.CapabilityRefs)
+	if err != nil || httpReview.ID != "review-jobwatch-http" || httpReview.EvidenceContext != "variant" {
+		t.Fatalf("M2-01 review = %#v, %v", httpReview, err)
 	}
 }
 

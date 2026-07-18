@@ -1,0 +1,5 @@
+# 延迟变式：jobwatch admin server
+
+这次关闭参考资料和提示，从需求重新画两条生命周期：一个 request 如何获得 trace ID 并到达 readiness/job handler；取消发生后 listener、空闲连接、活动请求、`Shutdown` 与 `Serve` 如何依次收敛。
+
+题材、route、header 和依赖名称都与 gocheck-hub 不同，但底层约束相同。先凭记忆实现，再用自己写的表格测试暴露缺口，最后才提交隐藏验证。若失败，记录问题属于 route 语义、context 传播、timeout 配置还是关闭协调；系统会按失败能力安排短间隔补救，而不是让你重读整章。

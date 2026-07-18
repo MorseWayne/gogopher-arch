@@ -25,6 +25,8 @@ const forbiddenHeldOutMarkers = [
   'probe_race_test.go',
   'TestLoadValidatesConfigurationAndPreservesErrors',
   'TestAllBoundsConcurrencyAndReleasesOnCancel',
+  'contract_private_test.go',
+  'TestServeWaitsForActiveRequestAndReturns',
 ]
 
 test.describe('Learning slice vertical scenarios', () => {
@@ -107,7 +109,7 @@ test.describe('Learning slice vertical scenarios', () => {
       }),
       [201],
     )
-    expect(attempt.release_id).toBe('m1-first-slice-v13')
+    expect(attempt.release_id).toBe('m1-first-slice-v14')
     expect(attempt.workspace['health/consumer_test.go']).toBeUndefined()
 
     const saved = await readJSON<AttemptResponse>(
@@ -140,7 +142,7 @@ test.describe('Learning slice vertical scenarios', () => {
       }),
       [201],
     )
-    expect(attempt.release_id).toBe('m1-first-slice-v13')
+    expect(attempt.release_id).toBe('m1-first-slice-v14')
     expect(attempt.workspace['registry_race_test.go']).toBeUndefined()
 
     const saved = await readJSON<AttemptResponse>(
@@ -181,7 +183,7 @@ test.describe('Learning slice vertical scenarios', () => {
       }),
       [201],
     )
-    expect(attempt.release_id).toBe('m1-first-slice-v13')
+    expect(attempt.release_id).toBe('m1-first-slice-v14')
     expect(attempt.workspace['report_private_test.go']).toBeUndefined()
 
     const saved = await readJSON<AttemptResponse>(
@@ -212,7 +214,7 @@ test.describe('Learning slice vertical scenarios', () => {
     expect(completed.rule_results.find((item) => item.rule_id === 'regression-fixed')?.test).toBeUndefined()
   })
 
-  test('v13 delivers gocheck from a blank workspace and records new-project Evidence', async ({ page }) => {
+  test('v14 preserves gocheck blank-workspace delivery and new-project Evidence', async ({ page }) => {
     await bootstrap(page)
     const definition = await readJSON<ActivityResponse>(
       await page.request.get(apiRoot + '/activities/assessment-gocheck-project?version=2'),
@@ -228,7 +230,7 @@ test.describe('Learning slice vertical scenarios', () => {
       }),
       [201],
     )
-    expect(attempt.release_id).toBe('m1-first-slice-v13')
+    expect(attempt.release_id).toBe('m1-first-slice-v14')
     expect(attempt.workspace['TASK.md']).toBeDefined()
     expect(attempt.workspace['go.mod']).toBeUndefined()
 

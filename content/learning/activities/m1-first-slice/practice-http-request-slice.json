@@ -1,0 +1,15 @@
+{
+  "id": "practice-http-request-slice",
+  "version": 1,
+  "title": "组装第一条 HTTP 请求纵向切片",
+  "kind": "learning_task",
+  "mode": "practice",
+  "evidence_context": "same_context",
+  "capability_refs": [{"id": "M2-01", "version": 1}],
+  "task_ref": {"id": "practice-http-request-slice-v1", "version": 1},
+  "content_ref": "web/src/content/learning/http-request-slice-v1.mdx",
+  "assistance_policy": {"hints": true, "references": true, "solution": false, "ai_declaration": true},
+  "evidence_rules": [
+    {"rule_id": "http-request-slice-practiced", "capability_id": "M2-01", "capability_version": 1, "evidence_type": "implement", "result": "passed"}
+  ]
+}

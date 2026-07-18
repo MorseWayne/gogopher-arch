@@ -1,0 +1,42 @@
+{
+  "id": "assessment-gocheck-http-v1",
+  "version": 1,
+  "language": "go1.25",
+  "workspace_root": "workspace",
+  "files": [
+    {"source": "README.md", "path": "TASK.md", "role": "readme", "editable": false, "sha256": "de9d1c12289d31eef851e492633fcb2a0dddd160d85f7ee2086070913a0ecb97"},
+    {"source": "starter/go.mod", "path": "go.mod", "role": "starter", "editable": false, "sha256": "1a3440c3bebbedb74e39b94236596663c1c233ec2d87f5854cc797fa75765372"},
+    {"source": "starter/httpserver/server.go", "path": "httpserver/server.go", "role": "starter", "editable": true, "sha256": "1ec208e807b3e0ef37f94ac0002fbf2cee50d012a414ff2c843c09e78400a8d1"},
+    {"source": "starter/httpserver/server_test.go", "path": "httpserver/server_test.go", "role": "starter", "editable": true, "sha256": "4c2e6494629727087ae52489e59d4ad1fa3da4e98f64fa4e2c2d2b863cae4d53"},
+    {"source": "visible/httpserver/smoke_test.go", "path": "httpserver/smoke_test.go", "role": "visible_test", "editable": false, "sha256": "8005f90a8539bb62bed3ca533e1f62e833d9bb0e614b63641469568da999f868"},
+    {"source": "heldout/httpserver/contract_private_test.go", "path": "httpserver/contract_private_test.go", "role": "held_out_test", "editable": false, "sha256": "c220db71d0c67828a4c60a940ace6b4d92593a500af70cfb9098c65d39bafda6"}
+  ],
+  "editable_paths": ["httpserver/server.go", "httpserver/server_test.go"],
+  "readonly_paths": ["TASK.md", "go.mod", "httpserver/smoke_test.go"],
+  "workspace_policy": {"allow_new_files": true, "allow_delete_files": false},
+  "limits": {"max_files": 16, "max_file_bytes": 131072, "max_total_bytes": 524288},
+  "actions": {
+    "build": {"timeout_ms": 10000, "max_output_bytes": 131072, "network": "none"},
+    "test": {"timeout_ms": 12000, "max_output_bytes": 131072, "network": "none"},
+    "vet": {"timeout_ms": 10000, "max_output_bytes": 131072, "network": "none"},
+    "submit": {"timeout_ms": 25000, "max_output_bytes": 262144, "network": "none"}
+  },
+  "hints": [
+    {"id": "route-first", "level": 1, "title": "先让纯 handler 可测试", "body": "先实现独立 ServeMux 和 request ID middleware，用 httptest 跑通 health、target、404 与 405；这一步不需要 listener。"},
+    {"id": "two-terminal-paths", "level": 2, "title": "同时等待两个终止来源", "body": "Serve 需要观察 server.Serve 的结果和 ctx.Done。取消路径先创建有截止时间的独立 shutdown context，等待 Shutdown，再收走 Serve 返回的 ErrServerClosed。"},
+    {"id": "test-behavior", "level": 3, "title": "用表格描述行为维度", "body": "表格 case 至少覆盖不同 path、method 或 request ID 来源；每行有 name，并在 t.Run 中构造独立 request 与 recorder。"}
+  ],
+  "visible_tests": ["httpserver/smoke_test.go"],
+  "held_out_tests": ["httpserver/contract_private_test.go"],
+  "race_tests": [],
+  "assessment_rules": [
+    {"rule_id": "http-service-builds", "stage": "build", "selector": {"package": "./..."}, "capability_refs": [{"id": "M2-01", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "route-contract-correct", "stage": "held_out_test", "selector": {"test": "TestRouteContract"}, "capability_refs": [{"id": "M2-01", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "request-context-propagates", "stage": "held_out_test", "selector": {"test": "TestRequestIDMiddlewarePropagatesContext"}, "capability_refs": [{"id": "M2-01", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "server-timeouts-configured", "stage": "held_out_test", "selector": {"test": "TestNewServerConfiguresAllTimeouts"}, "capability_refs": [{"id": "M2-01", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "graceful-shutdown-correct", "stage": "held_out_test", "selector": {"test": "TestServeWaitsForActiveRequestAndReturns"}, "capability_refs": [{"id": "M2-01", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "handler-tests-present", "stage": "ast", "selector": {"file": "httpserver/server_test.go", "minimum_cases": 3}, "capability_refs": [{"id": "M2-01", "version": 1}], "evidence_type": "test", "condition": "passed"},
+    {"rule_id": "http-lifecycle-explained", "stage": "explanation", "selector": {"minimum_chars": 120, "required_terms": ["ServeMux", "context", "timeout", "Shutdown"]}, "capability_refs": [{"id": "M2-01", "version": 1}], "evidence_type": "diagnose", "condition": "passed"}
+  ],
+  "artifact_rules": {"workspace": "full", "logs": ["build", "test", "vet", "submit"]}
+}
