@@ -33,7 +33,7 @@ describe('CapabilityActivity', () => {
       }),
     )
 
-    renderActivity('/learning/activities/guided-run-model?version=6')
+    renderActivity('/learning/activities/guided-run-model?version=7')
 
     expect(await screen.findByRole('heading', { name: '学习功能暂不可用' })).toBeVisible()
     expect(screen.getByText('当前环境还没有开启学习服务，请联系维护者后再试。')).toBeVisible()
@@ -45,11 +45,11 @@ describe('CapabilityActivity', () => {
   it('bootstraps an HttpOnly-backed session and renders public Activity context without local storage', async () => {
     useDefinitionHandlers()
 
-    renderActivity('/learning/activities/guided-run-model?version=6')
+    renderActivity('/learning/activities/guided-run-model?version=7')
 
     expect(await screen.findByRole('heading', { name: activityFixture.activity.title })).toBeVisible()
-    expect(screen.getAllByText(/依次运行 Build、Test、Vet/)[0]).toBeVisible()
-    expect(screen.getAllByText('使用 Go 工具链获取反馈')[0]).toBeVisible()
+    expect(screen.getAllByText(/补全 welcome，再运行 Test、Build 和 Vet/)[0]).toBeVisible()
+    expect(screen.getAllByText('编写并运行第一个 Go 程序')[0]).toBeVisible()
     expect(screen.getByText('进度自动保存')).toBeVisible()
     expect(await screen.findByRole('heading', { name: '先理解，再动手' })).toBeVisible()
     expect(localStorage).toHaveLength(0)
@@ -69,7 +69,7 @@ describe('CapabilityActivity', () => {
     )
     const user = userEvent.setup()
 
-    renderActivity('/learning/activities/guided-run-model?version=6')
+    renderActivity('/learning/activities/guided-run-model?version=7')
     expect(await screen.findByRole('heading', { name: '暂时无法恢复学习进度' })).toBeVisible()
     await user.click(screen.getByRole('button', { name: '重试' }))
 
@@ -85,7 +85,7 @@ describe('CapabilityActivity', () => {
       return HttpResponse.json(attemptFixture)
     }))
 
-    renderActivity('/learning/activities/guided-run-model?version=6&attempt=attempt-current')
+    renderActivity('/learning/activities/guided-run-model?version=7&attempt=attempt-current')
 
     expect(await screen.findByRole('heading', { name: '进行中' })).toBeVisible()
     expect(screen.getByRole('button', { name: 'main.go' })).toBeVisible()
@@ -139,7 +139,7 @@ describe('CapabilityActivity', () => {
       { status: 404 },
     )))
 
-    renderActivity('/learning/activities/guided-run-model?version=6&attempt=old-owner-attempt')
+    renderActivity('/learning/activities/guided-run-model?version=7&attempt=old-owner-attempt')
 
     expect(await screen.findByRole('alert')).toHaveTextContent('无法恢复这份学习记录')
     expect(screen.getByRole('button', { name: '重新开始本节' })).toBeVisible()
@@ -156,7 +156,7 @@ describe('CapabilityActivity', () => {
       http.get(`${root}/attempts/:id`, () => HttpResponse.json(attemptFixture)),
     )
     const user = userEvent.setup()
-    renderActivity('/learning/activities/guided-run-model?version=6')
+    renderActivity('/learning/activities/guided-run-model?version=7')
 
     await user.click(await screen.findByRole('button', { name: '开始本节练习' }))
 

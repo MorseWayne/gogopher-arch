@@ -1,5 +1,5 @@
 {
-  "id":"assessment-check-config-v2","version":3,"language":"go1.25","workspace_root":"workspace",
+  "id":"assessment-check-config-v2","version":4,"language":"go1.25","workspace_root":"workspace",
   "files":[
     {"source":"README.md","path":"README.md","role":"readme","editable":false,"sha256":"6cdee8a2b95bf271ac7381f9e040d4a57f700e99ff7f8b0a42b6419a4ae8bf2a"},
     {"source":"starter/go.mod","path":"go.mod","role":"starter","editable":false,"sha256":"456b0a3cb8249977843635cfe811ff0ad8979c9cc0c94da14d97bc3906f26184"},
@@ -21,8 +21,6 @@
   ],
   "visible_tests":["internal/config/visible_test.go"],"held_out_tests":["internal/config/heldout_test.go"],
   "assessment_rules":[
-    {"rule_id":"module-builds","stage":"build","selector":{"package":"./..."},"capability_refs":[{"id":"M1-01","version":2}],"evidence_type":"implement","condition":"passed"},
-    {"rule_id":"toolchain-checks-pass","stage":"vet","selector":{"package":"./..."},"capability_refs":[{"id":"M1-01","version":2}],"evidence_type":"diagnose","condition":"passed"},
     {"rule_id":"error-chain-preserved","stage":"held_out_test","selector":{"test":"TestLoadRejectsInvalidSchemeAndPreservesPathErrors"},"capability_refs":[{"id":"M1-03","version":1}],"evidence_type":"implement","condition":"passed"},
     {"rule_id":"resource-closed","stage":"ast","selector":{"file":"internal/config/config.go","deferred_call":"Close"},"capability_refs":[{"id":"M1-03","version":1}],"evidence_type":"implement","condition":"passed"},
     {"rule_id":"invalid-input-rejected","stage":"held_out_test","selector":{"test":"TestLoadRejectsInvalidSchemeAndPreservesPathErrors"},"capability_refs":[{"id":"M1-07","version":1}],"evidence_type":"implement","condition":"passed"},

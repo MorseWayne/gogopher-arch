@@ -6,8 +6,8 @@ type CapabilityLabelSource = {
 
 const capabilityLabels: Record<string, Pick<CapabilityLabelSource, 'name' | 'description'>> = {
   'M1-01': {
-    name: '使用 Go 工具链获取反馈',
-    description: '运行 Build、Test、Vet，并判断下一步应该检查代码、测试还是运行环境。',
+    name: '编写并运行第一个 Go 程序',
+    description: '亲手补全函数、参数和分支，运行程序，并用 Build、Test、Vet 检查结果。',
   },
 }
 
@@ -53,6 +53,12 @@ const ruleLabels: Record<string, string> = {
   'cli-exit-contract-correct': '命令参数与退出码符合契约',
   'project-tests-present': '已补充表格驱动项目测试',
   'delivery-decisions-explained': '已说明项目交付方案与取舍',
+  'first-program-runs': '第一个 Go 程序行为正确',
+  'first-program-practiced': '已用函数和分支完成练习',
+  'first-program-builds': '最小 Go 命令可以构建',
+  'first-program-behavior-passes': '程序能够处理不同输入',
+  'feedback-loop-explained': '能够解释 Build、Test、Vet 的反馈',
+  'first-program-variant-passes': '能够在新场景重新写出程序',
 }
 
 export function learnerCapabilityName(capability?: CapabilityLabelSource): string {

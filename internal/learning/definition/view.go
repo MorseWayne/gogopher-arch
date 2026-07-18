@@ -257,10 +257,35 @@ func (r *Registry) ReviewActivity(releaseID string, capabilityRefs []VersionedDe
 }
 
 func (r *Registry) RemediationActivity(releaseID string, capabilityRef VersionedDefinitionRef) (ActivityView, error) {
-	return r.uniqueActivity(releaseID, func(activity ActivityView) bool {
-		return (activity.Mode == "guided" || activity.Mode == "practice") &&
-			len(activity.CapabilityRefs) == 1 && activity.CapabilityRefs[0] == capabilityRef
-	}, fmt.Sprintf("remediation Activity for %s@%d", capabilityRef.ID, capabilityRef.Version))
+	definitions, err := r.Definitions(releaseID)
+	if err != nil {
+		return ActivityView{}, err
+	}
+	byMode := make(map[string]ActivityView, 2)
+	for _, stored := range definitions {
+		if stored.Kind != KindActivity {
+			continue
+		}
+		activity, err := r.ActivityView(releaseID, stored.ID, stored.Version)
+		if err != nil {
+			return ActivityView{}, err
+		}
+		if (activity.Mode != "guided" && activity.Mode != "practice") ||
+			len(activity.CapabilityRefs) != 1 || activity.CapabilityRefs[0] != capabilityRef {
+			continue
+		}
+		if _, exists := byMode[activity.Mode]; exists {
+			return ActivityView{}, fmt.Errorf("release %q has ambiguous remediation Activity for %s@%d in mode %s", releaseID, capabilityRef.ID, capabilityRef.Version, activity.Mode)
+		}
+		byMode[activity.Mode] = activity
+	}
+	if activity, exists := byMode["practice"]; exists {
+		return activity, nil
+	}
+	if activity, exists := byMode["guided"]; exists {
+		return activity, nil
+	}
+	return ActivityView{}, fmt.Errorf("release %q remediation Activity for %s@%d: %w", releaseID, capabilityRef.ID, capabilityRef.Version, ErrDefinitionNotFound)
 }
 
 func (r *Registry) VariantReviewActivity(releaseID string, capabilityRef VersionedDefinitionRef) (ActivityView, error) {

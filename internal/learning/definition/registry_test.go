@@ -23,10 +23,10 @@ func TestLoadRegistryIndexesCurrentAndHistoricalDefinitions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, want := len(definitions), 94; got != want {
+	if got, want := len(definitions), 101; got != want {
 		t.Fatalf("len(Definitions()) = %d, want %d", got, want)
 	}
-	ref := DefinitionRef{ReleaseID: testReleaseID, Kind: KindActivity, ID: "assessment-check-config", Version: 4}
+	ref := DefinitionRef{ReleaseID: testReleaseID, Kind: KindActivity, ID: "assessment-check-config", Version: 5}
 	definition, err := registry.Get(ref)
 	if err != nil {
 		t.Fatal(err)
@@ -52,7 +52,7 @@ func TestRegistryViewsExcludePrivateEvaluationContract(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	activity, err := registry.ActivityView(testReleaseID, "assessment-check-config", 4)
+	activity, err := registry.ActivityView(testReleaseID, "assessment-check-config", 5)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -66,8 +66,8 @@ func TestRegistryViewsExcludePrivateEvaluationContract(t *testing.T) {
 	if review.ContentRef != "web/src/content/learning/config-merge-review-v1.mdx" {
 		t.Fatalf("review content ref = %q", review.ContentRef)
 	}
-	toolingRemediation, err := registry.RemediationActivity(testReleaseID, VersionedDefinitionRef{ID: "M1-01", Version: 2})
-	if err != nil || toolingRemediation.ID != "guided-run-model" || toolingRemediation.Mode != "guided" {
+	toolingRemediation, err := registry.RemediationActivity(testReleaseID, VersionedDefinitionRef{ID: "M1-01", Version: 3})
+	if err != nil || toolingRemediation.ID != "practice-first-program" || toolingRemediation.Mode != "practice" {
 		t.Fatalf("RemediationActivity(M1-01) = %#v, %v", toolingRemediation, err)
 	}
 	errorRemediation, err := registry.RemediationActivity(testReleaseID, VersionedDefinitionRef{ID: "M1-03", Version: 1})
@@ -110,6 +110,36 @@ func TestRegistryViewsExcludePrivateEvaluationContract(t *testing.T) {
 	}
 	if _, exists := workspace["internal/config/heldout_test.go"]; exists {
 		t.Fatal("public workspace contains held-out test")
+	}
+}
+
+func TestRegistryExposesBeginnerFirstProgramLoop(t *testing.T) {
+	registry, err := LoadRegistry(RegistryOptions{ContentDir: repositoryContentDir(t)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	capability, err := registry.CapabilityView(testReleaseID, "M1-01", 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if capability.Name != "编写并运行第一个 Go 程序" || len(capability.Prerequisites.Hard) != 0 || len(capability.RequiredEvidence) != 2 {
+		t.Fatalf("beginner Capability = %#v", capability)
+	}
+	guided, err := registry.ActivityView(testReleaseID, "guided-run-model", 7)
+	if err != nil || guided.Title != "亲手完成第一个 Go 程序" || guided.Mode != "guided" {
+		t.Fatalf("beginner guided Activity = %#v, %v", guided, err)
+	}
+	remediation, err := registry.RemediationActivity(testReleaseID, VersionedDefinitionRef{ID: "M1-01", Version: 3})
+	if err != nil || remediation.ID != "practice-first-program" {
+		t.Fatalf("beginner remediation = %#v, %v", remediation, err)
+	}
+	assessment, err := registry.ActivityView(testReleaseID, "assessment-first-program", 1)
+	if err != nil || assessment.Mode != "assessment" {
+		t.Fatalf("beginner assessment = %#v, %v", assessment, err)
+	}
+	review, err := registry.ReviewActivity(testReleaseID, assessment.CapabilityRefs)
+	if err != nil || review.ID != "review-first-program" || review.EvidenceContext != "variant" {
+		t.Fatalf("beginner review = %#v, %v", review, err)
 	}
 }
 

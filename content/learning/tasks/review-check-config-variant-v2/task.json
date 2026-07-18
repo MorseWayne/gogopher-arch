@@ -1,5 +1,5 @@
 {
-  "id":"review-check-config-variant-v2","version":2,"language":"go1.25","workspace_root":"workspace",
+  "id":"review-check-config-variant-v2","version":3,"language":"go1.25","workspace_root":"workspace",
   "files":[
     {"source":"README.md","path":"README.md","role":"readme","editable":false,"sha256":"f3af9562d30baab5a660e3778e022dfc6c521cb344197c7575d29d5306562cc9"},
     {"source":"starter/go.mod","path":"go.mod","role":"starter","editable":false,"sha256":"e5543287db705509d5184e0bdd53141f908d1fd8ec16bf396ee3c08c9027b777"},
@@ -15,7 +15,6 @@
   "actions":{"build":{"timeout_ms":8000,"max_output_bytes":131072,"network":"none"},"test":{"timeout_ms":8000,"max_output_bytes":131072,"network":"none"},"vet":{"timeout_ms":8000,"max_output_bytes":131072,"network":"none"},"submit":{"timeout_ms":15000,"max_output_bytes":262144,"network":"none"}},
   "visible_tests":[],"held_out_tests":["internal/merge/heldout_test.go"],
   "assessment_rules":[
-    {"rule_id":"module-builds","stage":"build","selector":{"package":"./..."},"capability_refs":[{"id":"M1-01","version":2}],"evidence_type":"implement","condition":"passed"},
     {"rule_id":"error-chain-preserved","stage":"held_out_test","selector":{"package":"internal/merge"},"capability_refs":[{"id":"M1-03","version":1}],"evidence_type":"implement","condition":"passed"},
     {"rule_id":"invalid-input-rejected","stage":"held_out_test","selector":{"test":"TestMergeRejectsDuplicateAndInvalidRetry"},"capability_refs":[{"id":"M1-07","version":1}],"evidence_type":"implement","condition":"passed"},
     {"rule_id":"stable-output","stage":"held_out_test","selector":{"package":"internal/merge"},"capability_refs":[{"id":"M1-07","version":1}],"evidence_type":"implement","condition":"passed"},

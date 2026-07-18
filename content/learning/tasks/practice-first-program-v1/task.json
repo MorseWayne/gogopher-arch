@@ -1,0 +1,31 @@
+{
+  "id": "practice-first-program-v1",
+  "version": 1,
+  "language": "go1.25",
+  "workspace_root": "workspace",
+  "files": [
+    {"source": "README.md", "path": "README.md", "role": "readme", "editable": false, "sha256": "bd12228dacbccf20ff4539ebfefe50ba1166c7b52c39a6e498969258e92461c3"},
+    {"source": "starter/go.mod", "path": "go.mod", "role": "starter", "editable": false, "sha256": "10c488fe9a627d132ac70edd0b6a638676fc17268d2bbc881b7ea3e112bcfbd2"},
+    {"source": "starter/main.go", "path": "main.go", "role": "starter", "editable": true, "sha256": "570adb936e6cc45b8b8f638246deb6f216825228063eaed7d8d63d25a0c31425"},
+    {"source": "visible/main_test.go", "path": "main_test.go", "role": "visible_test", "editable": false, "sha256": "ceb2d5aa6963492ed9d6c1b30ca187131e5d23bf1335d14b1e7d61578bc2d60a"}
+  ],
+  "editable_paths": ["main.go"],
+  "readonly_paths": ["README.md", "go.mod", "main_test.go"],
+  "limits": {"max_files": 8, "max_file_bytes": 65536, "max_total_bytes": 262144},
+  "actions": {
+    "build": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "test": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "vet": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "submit": {"timeout_ms": 15000, "max_output_bytes": 131072, "network": "none"}
+  },
+  "hints": [
+    {"id": "write-the-branch-first", "level": 1, "title": "先写布尔分支", "body": "在 readiness 中判断 passed；true 时返回 ready，否则返回 retry。"},
+    {"id": "compose-the-functions", "level": 2, "title": "组合两个函数", "body": "report 可以调用 readiness(passed)，再用 fmt.Sprintf 组合 name 和状态。"}
+  ],
+  "visible_tests": ["main_test.go"],
+  "held_out_tests": [],
+  "assessment_rules": [
+    {"rule_id": "first-program-practiced", "stage": "visible_test", "selector": {"test": "TestReportUsesNameAndStatus"}, "capability_refs": [{"id": "M1-01", "version": 3}], "evidence_type": "implement", "condition": "passed"}
+  ],
+  "artifact_rules": {"workspace": "diff", "logs": ["build", "test", "vet", "submit"]}
+}

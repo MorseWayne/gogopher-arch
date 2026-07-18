@@ -1,0 +1,2701 @@
+{
+  "release_id": "m1-first-slice-v15",
+  "created_at": "2026-07-18T15:51:42Z",
+  "schema_version": 1,
+  "activity_set": "m1-first-slice",
+  "definitions": [
+    {
+      "kind": "activity",
+      "id": "assessment-cancellable-checks",
+      "version": 1,
+      "path": "activities/m1-first-slice/assessment-cancellable-checks.json",
+      "content_hash": "69f72c64c09f49438064b3233bed53f4696fbbfcd7f6e050677ac1e08ca5095b",
+      "rule_set_hash": "4555d367c65738fa8e2a6e5a26dda54d832492b819282d6bdb21b6fbfc91d6dd"
+    },
+    {
+      "kind": "activity",
+      "id": "assessment-check-config",
+      "version": 4,
+      "path": "activities/m1-first-slice/assessment-check-config.json",
+      "content_hash": "91b9afa3b4e2ac1d999d91c585e11c754c1a6703f4c4dfb00b1f1e3029c6ba1d",
+      "rule_set_hash": "324489b1770c18b5debf63a179c3f435c9ca5d7c462f600993c2bb619b16813c"
+    },
+    {
+      "kind": "activity",
+      "id": "assessment-check-model",
+      "version": 1,
+      "path": "activities/m1-first-slice/assessment-check-model.json",
+      "content_hash": "745c92114e260d53b319816f6043cc2bf17567dbc48478d94363963a6233e382",
+      "rule_set_hash": "132d1ddb3f5c1370ca362ed6313a92593335b5abb5c5c53a00046e1ec23ff2f6"
+    },
+    {
+      "kind": "activity",
+      "id": "assessment-concurrent-registry",
+      "version": 1,
+      "path": "activities/m1-first-slice/assessment-concurrent-registry.json",
+      "content_hash": "dfe4dccfaf0c066560bfb7ef2f9f9ae8041ca14e3a3acfafb961765c09a49172",
+      "rule_set_hash": "63d78054394bbc50e49c50cef6472cd8672f6fb3458d0ffa82f4d7ab29b99b77"
+    },
+    {
+      "kind": "activity",
+      "id": "assessment-delivery-service",
+      "version": 1,
+      "path": "activities/m1-first-slice/assessment-delivery-service.json",
+      "content_hash": "53663f67e6ad34b8eabdd6f587f579eb6d5f61e1eb1a0d1727ed2830755d3d99",
+      "rule_set_hash": "5534eb6db1670ecd5c6a6080196812a9d734c8ceacf7adca49229784bf39f2f8"
+    },
+    {
+      "kind": "activity",
+      "id": "assessment-event-batches",
+      "version": 1,
+      "path": "activities/m1-first-slice/assessment-event-batches.json",
+      "content_hash": "53fd2f0062861d8167efa3240206ec1651b2ebdda6dc7394784a124473c20115",
+      "rule_set_hash": "4415f2105968885f9a488f38c7a3b06002e58efbb80e288c5cae13f138af6321"
+    },
+    {
+      "kind": "activity",
+      "id": "assessment-first-program",
+      "version": 1,
+      "path": "activities/m1-first-slice/assessment-first-program.json",
+      "content_hash": "cf3c2e76baae334f300da457ab7e3c4d223652a092535475e8881dbacc895c73",
+      "rule_set_hash": "bf8500636dbd7d176e37994d4a230d4841be90903b4027ba71adab0fa28546d4"
+    },
+    {
+      "kind": "activity",
+      "id": "assessment-gocheck-http",
+      "version": 1,
+      "path": "activities/m1-first-slice/assessment-gocheck-http.json",
+      "content_hash": "a26cb82874128479a3e60e170b0593b9fee88a902c7b425721c495ef36a06388",
+      "rule_set_hash": "ca24b5135ecbb73da113bfbfccb005522dc53d69c0b20ed4e132a6ea94872dc1"
+    },
+    {
+      "kind": "activity",
+      "id": "assessment-gocheck-project",
+      "version": 2,
+      "path": "activities/m1-first-slice/assessment-gocheck-project.json",
+      "content_hash": "9e7c892f443ab989c9b55ad453222d107991c8c8ec9231cb1c7f83b9873e19c3",
+      "rule_set_hash": "83a8f4569c01f087754159c633b59e0951c87d007a9cd5e131ffecac96ae8209"
+    },
+    {
+      "kind": "activity",
+      "id": "assessment-report-debug",
+      "version": 1,
+      "path": "activities/m1-first-slice/assessment-report-debug.json",
+      "content_hash": "9a8e29f124c1798afc30b3cbd5c4c551d18d4032f9c4ac64bede420a3e2f29c3",
+      "rule_set_hash": "9f5654605f882fe9c806c29e0a3e2ea05dcad0fd1c6dc0691601620031410858"
+    },
+    {
+      "kind": "activity",
+      "id": "assessment-status-module",
+      "version": 2,
+      "path": "activities/m1-first-slice/assessment-status-module.json",
+      "content_hash": "e506fb032eacb772980a16943befd6e35f11ec2ccde6f747769fd62c7f918637",
+      "rule_set_hash": "bf36168180eac61c57a6633175c63fa3c689494edbdd18faf2c4fa9e5bf8b8ee"
+    },
+    {
+      "kind": "activity",
+      "id": "assessment-text-stats",
+      "version": 1,
+      "path": "activities/m1-first-slice/assessment-text-stats.json",
+      "content_hash": "1b019ecd79ee6d74d8735a5030130bec9675cc7bd9904288052b7a2a5f9dc7e4",
+      "rule_set_hash": "f357e0ae52bea0be8f001458a968d02694a00e8e819549be69672334830cbc15"
+    },
+    {
+      "kind": "activity",
+      "id": "assessment-worker-pool",
+      "version": 1,
+      "path": "activities/m1-first-slice/assessment-worker-pool.json",
+      "content_hash": "684c990d37018344c201372fe85bbdcd625167ca98f3ad0fed1849f36b710a00",
+      "rule_set_hash": "07e4053cb9210bf458254a4021eeaf50c49067bab09eec8dd4f3e7d4f3c7634d"
+    },
+    {
+      "kind": "activity",
+      "id": "guided-core-semantics",
+      "version": 1,
+      "path": "activities/m1-first-slice/guided-core-semantics.json",
+      "content_hash": "fbe3be92061fcfecaa779b6f5b4ded96f4d312e4a0e82bd8c826cb0294554c64",
+      "rule_set_hash": "72c2ea3ef3835c7bbe908adfa647426f4f81bcf50b91ff5f0106be9d6fa62aaf"
+    },
+    {
+      "kind": "activity",
+      "id": "guided-run-model",
+      "version": 7,
+      "path": "activities/m1-first-slice/guided-run-model.json",
+      "content_hash": "be6c4f50db02ef22ce8460b7e0646d7376b15bb9fef05d044526831f0ad85e34",
+      "rule_set_hash": "384e4cc462b57a541797fc38cd7e7e86eb8e7d57365e93d15828d0e946cb8428"
+    },
+    {
+      "kind": "activity",
+      "id": "practice-bounded-pipeline",
+      "version": 1,
+      "path": "activities/m1-first-slice/practice-bounded-pipeline.json",
+      "content_hash": "64884fe04e05e39212ee9314ecc72eca19acde70c88d129e9d6ffb0090726551",
+      "rule_set_hash": "118943fb493bc60b3f66b891a285c23b8f295cb6041d1366979925337603ed6a"
+    },
+    {
+      "kind": "activity",
+      "id": "practice-cancellable-map",
+      "version": 1,
+      "path": "activities/m1-first-slice/practice-cancellable-map.json",
+      "content_hash": "126eaf56598f23b25bbd423bba67d465d147c624eef2b0fbc0e60dff8bf0b5ff",
+      "rule_set_hash": "77fbba0616a57a64aa389daa8bb9d9baf583356ad8b9e895472c8a03d6e32d7a"
+    },
+    {
+      "kind": "activity",
+      "id": "practice-domain-model",
+      "version": 1,
+      "path": "activities/m1-first-slice/practice-domain-model.json",
+      "content_hash": "544e6396d10a4f99c285bb59f1f724ab30e51092e2c01a46e22905edc928f870",
+      "rule_set_hash": "781de221201042f3597f6a7cdea3c5f9f88be9b7049796e120b914f91a10c649"
+    },
+    {
+      "kind": "activity",
+      "id": "practice-error-contract",
+      "version": 3,
+      "path": "activities/m1-first-slice/practice-error-contract.json",
+      "content_hash": "94f2cef26881276b6cfa2d50a3a271cb4944fb30e2218388d735f61a0654bf78",
+      "rule_set_hash": "a62dc18620a64c7f7dd5b4b1cc00f70851f8135d9ab599cf4018b319a278db60"
+    },
+    {
+      "kind": "activity",
+      "id": "practice-failure-triage",
+      "version": 1,
+      "path": "activities/m1-first-slice/practice-failure-triage.json",
+      "content_hash": "59e596c90144c6698cf7bdeae209df58d1b5ca8630b7d9513c10af08ee835e5e",
+      "rule_set_hash": "598df956031af47ccaa073b6eaa542cb1253d97866f64fd6839b248c382c9525"
+    },
+    {
+      "kind": "activity",
+      "id": "practice-first-program",
+      "version": 1,
+      "path": "activities/m1-first-slice/practice-first-program.json",
+      "content_hash": "4addc1e326cb5846b7419cd2df32be1e459ddd9a8286985884757e10366456d6",
+      "rule_set_hash": "1234670714157b6ccff4cf3b20172ed3f53c9f9e3b05a141f2bc75adf479c0b6"
+    },
+    {
+      "kind": "activity",
+      "id": "practice-gocheck-slice",
+      "version": 1,
+      "path": "activities/m1-first-slice/practice-gocheck-slice.json",
+      "content_hash": "41eef97bf05634e47f775ef8eceeb9fd02cad3f3d71533ab68c258745485eb01",
+      "rule_set_hash": "a2f87b5632c760b19003e6c001428fdea1fa60328d30696dd352145aca11657a"
+    },
+    {
+      "kind": "activity",
+      "id": "practice-http-request-slice",
+      "version": 1,
+      "path": "activities/m1-first-slice/practice-http-request-slice.json",
+      "content_hash": "02d79f310cff48adb1b03d7f0c00f96f2ecca4954b620a0a67f89b21ea086031",
+      "rule_set_hash": "d870a0f67fa997623de2b3e8639f9f8fbe4c45afb9a81741f0657dc33d520856"
+    },
+    {
+      "kind": "activity",
+      "id": "practice-json-io",
+      "version": 3,
+      "path": "activities/m1-first-slice/practice-json-io.json",
+      "content_hash": "9b62d2208952e673b0300ec5ce64fa4b5c954ca04b43be84b1fde28516a635b9",
+      "rule_set_hash": "960c9c0e1d7e8437d569642aea7fe1e7b1cf8d64a18957e99c30b2ea8b2eaef0"
+    },
+    {
+      "kind": "activity",
+      "id": "practice-order-notifier",
+      "version": 1,
+      "path": "activities/m1-first-slice/practice-order-notifier.json",
+      "content_hash": "26c0be6e9d5fb6b23b8261e532ed74a01c131ea3af570f1f7e705d893b411202",
+      "rule_set_hash": "db5063900f78ad54bf371a87b038fc860a40fb98356cbf0ca3a56778b843531d"
+    },
+    {
+      "kind": "activity",
+      "id": "practice-package-contract",
+      "version": 2,
+      "path": "activities/m1-first-slice/practice-package-contract.json",
+      "content_hash": "717063c9ae7cf4e71504cca97c08d8932f5f4aafe5a655a1326691a30eeb9c47",
+      "rule_set_hash": "32881337cc9cecf8e1993449c712c94ff0b115c14032ff18fe09e96eac7ccd1f"
+    },
+    {
+      "kind": "activity",
+      "id": "practice-protected-counter",
+      "version": 1,
+      "path": "activities/m1-first-slice/practice-protected-counter.json",
+      "content_hash": "4f19de07c92bebab11fdb1cecf4a1d8b97bcfc40adb75db271c237507aad3d24",
+      "rule_set_hash": "2d6ca5fcc14d435e7e9586f26f7eb637eb304140c51bcc28a9b374398fe619f6"
+    },
+    {
+      "kind": "activity",
+      "id": "practice-slice-ownership",
+      "version": 1,
+      "path": "activities/m1-first-slice/practice-slice-ownership.json",
+      "content_hash": "6b1d1e3bcb92408642f4637b4838a33446828bb0c5b68c0c4e3ef27edb193da0",
+      "rule_set_hash": "de44d4c47ff014f98211368cd7c8a3acb18ad947248aabfa255023185f5fbde5"
+    },
+    {
+      "kind": "activity",
+      "id": "practice-table-tests",
+      "version": 3,
+      "path": "activities/m1-first-slice/practice-table-tests.json",
+      "content_hash": "de9a94010af22574b83499b049e4a3590521df622ce8b7553f51fbdcab31cc8f",
+      "rule_set_hash": "80203e84d972d333a0ea30aa0fbfae2ca56c866d4ebbe627833d71e6ea0aef3f"
+    },
+    {
+      "kind": "activity",
+      "id": "review-audit-service",
+      "version": 1,
+      "path": "activities/m1-first-slice/review-audit-service.json",
+      "content_hash": "d7ab0b9b849fd34a958c3a95ce37cdc2a7f5003e88139d8b0e35caf8eaa6a319",
+      "rule_set_hash": "9fbc9e9300ed9007d9b42f42a7d6e654e08cb27b9ca5d554526c06041b8412f6"
+    },
+    {
+      "kind": "activity",
+      "id": "review-budget-model",
+      "version": 1,
+      "path": "activities/m1-first-slice/review-budget-model.json",
+      "content_hash": "5a7825b1d3db6cae17ccb7b5cab36e4ae140398bf225efd9e208a44a8a6f986e",
+      "rule_set_hash": "8f1cbba521c157e9eef6b898a56ddad6750ca053bf63a2477ba86d3abc53a0ce"
+    },
+    {
+      "kind": "activity",
+      "id": "review-byte-frames",
+      "version": 1,
+      "path": "activities/m1-first-slice/review-byte-frames.json",
+      "content_hash": "8834f06609027ed3744ffd8279de46011ca4d073961b8ac8caf3bd858277c56b",
+      "rule_set_hash": "e956777dc92466911f8896e079595039d35989537c3809d9969382fe36374107"
+    },
+    {
+      "kind": "activity",
+      "id": "review-cancellable-fetch",
+      "version": 1,
+      "path": "activities/m1-first-slice/review-cancellable-fetch.json",
+      "content_hash": "f264e58dab057297783e3b8db57a35220f5287a7d30ee642fd98c8005dffcbba",
+      "rule_set_hash": "b066ddbd3d531e81ab507c6566ea0a915a692d33321301ffd15359995461ebd0"
+    },
+    {
+      "kind": "activity",
+      "id": "review-check-config-variant",
+      "version": 3,
+      "path": "activities/m1-first-slice/review-check-config-variant.json",
+      "content_hash": "ed1161e3fea81a24d7b67e0dd4d5d40183c8611ad9e5eda1e5fc603c17b9d068",
+      "rule_set_hash": "fc382642d0cd65bd3d7a8341e615a66b361d91fbf27c9749db3ebe219cec2684"
+    },
+    {
+      "kind": "activity",
+      "id": "review-concurrent-ledger",
+      "version": 1,
+      "path": "activities/m1-first-slice/review-concurrent-ledger.json",
+      "content_hash": "eafc21e4e3097da66b9cf99485a44ae5ab924e64354b068428b77ad1634b93aa",
+      "rule_set_hash": "716ec144d5d4dc3287a6d05d769206a9fe6821eaeb78c367ea81d9ce92fac7e9"
+    },
+    {
+      "kind": "activity",
+      "id": "review-endpoint-audit",
+      "version": 2,
+      "path": "activities/m1-first-slice/review-endpoint-audit.json",
+      "content_hash": "95d9fdb755a429868032a32b17ba5f0491a3a79254b5254273d451d20cf1038c",
+      "rule_set_hash": "ab1ea5d281cf60eb06750217d457788aca696fd310f7db230d66894086522b37"
+    },
+    {
+      "kind": "activity",
+      "id": "review-first-program",
+      "version": 1,
+      "path": "activities/m1-first-slice/review-first-program.json",
+      "content_hash": "1dfbb17f78e220406de931a88ae629a856dceb525516cf239b307c7d8101f294",
+      "rule_set_hash": "b170873bd99f832d7081eb1fafddcf4746d2ed1b753c31d958ae24f2c7c61e1f"
+    },
+    {
+      "kind": "activity",
+      "id": "review-format-module",
+      "version": 2,
+      "path": "activities/m1-first-slice/review-format-module.json",
+      "content_hash": "d39e6c5615fbe591a67061852b2a950432a12a6d2e0830b0b94e78ee33d3ac1e",
+      "rule_set_hash": "83a058417f6f1628dfe56a402b995b0a80f7d3470781feb4f764f990d3d751a4"
+    },
+    {
+      "kind": "activity",
+      "id": "review-jobwatch-http",
+      "version": 1,
+      "path": "activities/m1-first-slice/review-jobwatch-http.json",
+      "content_hash": "a5f48215cb0ee6d9bbfc590956cad6a79d0cf53042a6769893e045db6f83450d",
+      "rule_set_hash": "fb89f3704ed0ccd21d7cdcbc1f86e7057519644027890742d4584c97362bcb12"
+    },
+    {
+      "kind": "activity",
+      "id": "review-metrics-debug",
+      "version": 1,
+      "path": "activities/m1-first-slice/review-metrics-debug.json",
+      "content_hash": "aff0ac17be915ba7cbf23dc2f058b88b98cb14d7c6151b1632894da755170cf4",
+      "rule_set_hash": "79cae1106cbba5eba893acfe4070be2f2bf24b86b3a999c7f24d0a0e0865ca9e"
+    },
+    {
+      "kind": "activity",
+      "id": "review-temperature-bands",
+      "version": 1,
+      "path": "activities/m1-first-slice/review-temperature-bands.json",
+      "content_hash": "abf6fcce4b3cc49ce78d4d4a7a29dcb826eab8c517f13bcf4625fcef1c9be9e0",
+      "rule_set_hash": "e8e15b83f593344c9279933447c3d7ed15cf806aed009bc48f269e8d455c90e0"
+    },
+    {
+      "kind": "activity",
+      "id": "review-thumbnail-pipeline",
+      "version": 1,
+      "path": "activities/m1-first-slice/review-thumbnail-pipeline.json",
+      "content_hash": "f96dca2bd680f9134e40b47014ff8a45cc14c26ab701d72dc40806200814f08f",
+      "rule_set_hash": "a5fe2f7a104b94f948e7b3aee158de4a45aba8be290d1838761431fdd0b02371"
+    },
+    {
+      "kind": "capability",
+      "id": "M1-01",
+      "version": 1,
+      "path": "capabilities/m1/m1-01-v1.json",
+      "content_hash": "0c4cee3106ea32b96ed3e0085135606496f6e8be307bc830e266e652e17981bb"
+    },
+    {
+      "kind": "capability",
+      "id": "M1-01",
+      "version": 2,
+      "path": "capabilities/m1/m1-01-v2.json",
+      "content_hash": "99b2ff5e7612489cd1eeefa40620dcd89ab42463348935776bf56754f1a6a1aa"
+    },
+    {
+      "kind": "capability",
+      "id": "M1-01",
+      "version": 3,
+      "path": "capabilities/m1/m1-01.json",
+      "content_hash": "91089d637fc257f7e760114a5498e735be8466a9becbc5bceb34308bfa6d3df7"
+    },
+    {
+      "kind": "capability",
+      "id": "M1-02",
+      "version": 1,
+      "path": "capabilities/m1/m1-02.json",
+      "content_hash": "d7de8e1dfc7bb0da862a42eb8438c6f2b98b90305d11447faad309a8163b6712"
+    },
+    {
+      "kind": "capability",
+      "id": "M1-03",
+      "version": 1,
+      "path": "capabilities/m1/m1-03.json",
+      "content_hash": "bcd4ee7079410b3aed0d7b836df3e3e645457a792d605c711a1f4ece1e156cc1"
+    },
+    {
+      "kind": "capability",
+      "id": "M1-04",
+      "version": 1,
+      "path": "capabilities/m1/m1-04.json",
+      "content_hash": "3d27470634d4179d9873ed1bd6a0096fbbb5d8d005094de1c36a79df20b787fd"
+    },
+    {
+      "kind": "capability",
+      "id": "M1-05",
+      "version": 1,
+      "path": "capabilities/m1/m1-05.json",
+      "content_hash": "630703a358ba1faa0fe95638842743a6beabc6097e6c24c48814ba62f8548aa7"
+    },
+    {
+      "kind": "capability",
+      "id": "M1-06",
+      "version": 1,
+      "path": "capabilities/m1/m1-06.json",
+      "content_hash": "34e1565c14c40c2fdfb798348011d010496d89c555d2be07f0653c1e0e994b0f"
+    },
+    {
+      "kind": "capability",
+      "id": "M1-07",
+      "version": 1,
+      "path": "capabilities/m1/m1-07.json",
+      "content_hash": "455ebd5df3b0c95683c662a9c04bd0cd6c03e7b411cec6ff3b1969c2f398e18e"
+    },
+    {
+      "kind": "capability",
+      "id": "M1-08",
+      "version": 2,
+      "path": "capabilities/m1/m1-08.json",
+      "content_hash": "b2a016b81f2b4807a3e6a88d6a21fdcea668a8b0eac21eec940f33381cf14eb3"
+    },
+    {
+      "kind": "capability",
+      "id": "M1-09",
+      "version": 1,
+      "path": "capabilities/m1/m1-09.json",
+      "content_hash": "b8a47cbb1be236bde96f83a2ed802531e8ab916e5474a9d3dc380a1498397c58"
+    },
+    {
+      "kind": "capability",
+      "id": "M1-10",
+      "version": 1,
+      "path": "capabilities/m1/m1-10.json",
+      "content_hash": "eb005675afe48a3002c306393f3a0cadefcb2d1b0acc9d7b6fed0c9f05c0ca43"
+    },
+    {
+      "kind": "capability",
+      "id": "M1-11",
+      "version": 1,
+      "path": "capabilities/m1/m1-11.json",
+      "content_hash": "178c82ba5fdd4a6489124ac4fd949066986304defa38b838cdfaf688db8e5244"
+    },
+    {
+      "kind": "capability",
+      "id": "M1-12",
+      "version": 1,
+      "path": "capabilities/m1/m1-12.json",
+      "content_hash": "73be1a8598d2596ac894fe46b1161452d5c1dc6116b92cb74b2b9a86a0413d90"
+    },
+    {
+      "kind": "capability",
+      "id": "M1-13",
+      "version": 1,
+      "path": "capabilities/m1/m1-13.json",
+      "content_hash": "1b9cf3747cb6d5eaf8098308315d416d3663f05baf9adc36b062336586c484c5"
+    },
+    {
+      "kind": "capability",
+      "id": "M1-14",
+      "version": 1,
+      "path": "capabilities/m1/m1-14.json",
+      "content_hash": "123211401a38dc56d8dd31d9282310c4552beb1d4b4730eb26c23746d0ade807"
+    },
+    {
+      "kind": "capability",
+      "id": "M2-01",
+      "version": 1,
+      "path": "capabilities/m2/m2-01.json",
+      "content_hash": "49aa0da6a7a1a19a458c48e0febec3beb1364a7525e2a85f0e8aa387f369317b"
+    },
+    {
+      "kind": "task",
+      "id": "assessment-cancellable-checks-v1",
+      "version": 1,
+      "path": "tasks/assessment-cancellable-checks-v1/task.json",
+      "content_hash": "7cb78a156acbe94af26dd7c24590e869ef7193797a1efcf84151b39dd33229e1",
+      "bundle_hash": "476b63c960054703e37defe8c4a4c50df389c6e1cb01dccba0966a3aa37ac97e"
+    },
+    {
+      "kind": "task",
+      "id": "assessment-check-config-v2",
+      "version": 3,
+      "path": "tasks/assessment-check-config-v2/task.json",
+      "content_hash": "ffcd59767381a891265af957995f3052a8fec837e4b3a7012702b5d0b31b5450",
+      "bundle_hash": "d6673434e0cefb2208cc0743c6f7d1637af4b1685d74ff5265fc31ce14b368f5"
+    },
+    {
+      "kind": "task",
+      "id": "assessment-check-model-v1",
+      "version": 1,
+      "path": "tasks/assessment-check-model-v1/task.json",
+      "content_hash": "437152f951a7e788cdd00f87a30d5cb6536f75dc5eb30103be275227e2a13b43",
+      "bundle_hash": "e7a4de3986c48e3aa0f3fa90b67036e6f1444bb516a35f49b0c719dc2df152e2"
+    },
+    {
+      "kind": "task",
+      "id": "assessment-concurrent-registry-v1",
+      "version": 1,
+      "path": "tasks/assessment-concurrent-registry-v1/task.json",
+      "content_hash": "765b3805c6150a2e4edcfe7d2262a103fd269b1017497995739c6c27abf59314",
+      "bundle_hash": "ab8177a0c0eeb9694542c74842419ab6314d7c9ef64476db46ec488f8839238a"
+    },
+    {
+      "kind": "task",
+      "id": "assessment-delivery-service-v1",
+      "version": 1,
+      "path": "tasks/assessment-delivery-service-v1/task.json",
+      "content_hash": "56ea0e2c5d67eab4fde4efc4a7b815297f10f50f90e7fa8e407555f7ff0bd46a",
+      "bundle_hash": "56ad6021e03971c00d6096d7c2cd8f30e10519f1fddd46b37e2811f3afba4346"
+    },
+    {
+      "kind": "task",
+      "id": "assessment-event-batches-v1",
+      "version": 1,
+      "path": "tasks/assessment-event-batches-v1/task.json",
+      "content_hash": "997bbea51ef3cc8973a96a9ad10563c1ca79c9d51124c3110af9cf2c12f5ab0c",
+      "bundle_hash": "0c81d744b445800453a1b8a04641ad17681f380b4c95b58cec4fcb573a6c7234"
+    },
+    {
+      "kind": "task",
+      "id": "assessment-first-program-v1",
+      "version": 1,
+      "path": "tasks/assessment-first-program-v1/task.json",
+      "content_hash": "f8f1cab900abcab8e4b88ff3478042f40bcfc2b480e5fdb6b334e505ee4aa50e",
+      "bundle_hash": "1ea99a2ab972357cce5b70d6ff93ef64f8032a1880bbc3591e53e80cb3ec4bdb"
+    },
+    {
+      "kind": "task",
+      "id": "assessment-gocheck-http-v1",
+      "version": 1,
+      "path": "tasks/assessment-gocheck-http-v1/task.json",
+      "content_hash": "ad7a5b6a875d37690567d4f460e4c0c0ffff3cfc2c0341ab7ac10acb44db51cc",
+      "bundle_hash": "c64cdf1be039bc08573a8fcc01be21937bc2f1d49213443a818cc79ed9eff228"
+    },
+    {
+      "kind": "task",
+      "id": "assessment-gocheck-project-v1",
+      "version": 2,
+      "path": "tasks/assessment-gocheck-project-v1/task.json",
+      "content_hash": "b0b6f3154cced4df1ef9445c1d56b71cdfcfd569690c642db0bdc4da0ba3c3c3",
+      "bundle_hash": "b3b2cda6d34c212952d3ff35a9fb483f9391c86bebd68d74604c0e17caa748a9"
+    },
+    {
+      "kind": "task",
+      "id": "assessment-report-debug-v1",
+      "version": 1,
+      "path": "tasks/assessment-report-debug-v1/task.json",
+      "content_hash": "4ef23a0ed61c9e5adfe49b0b3e4572998b0d25335205bb364ac9a43ac7c39ba0",
+      "bundle_hash": "d2cee0df4b734a8711ac93ae75905c6dc769409993b9be2416300ba9d8dc0ad8"
+    },
+    {
+      "kind": "task",
+      "id": "assessment-status-module-v1",
+      "version": 2,
+      "path": "tasks/assessment-status-module-v1/task.json",
+      "content_hash": "6fd3469d1491df0b25131f340a4e003f109f77a47f525afc5392860b940e8259",
+      "bundle_hash": "30f242fcc71c59b53ab061d6d3b2829bd2c2eb04c1f7a3b066e406d22e63f426"
+    },
+    {
+      "kind": "task",
+      "id": "assessment-text-stats-v1",
+      "version": 1,
+      "path": "tasks/assessment-text-stats-v1/task.json",
+      "content_hash": "c64520768166e4cf2a65d8ec90eace71aa39e6e9606f1e2c60bb5548d12f6e7f",
+      "bundle_hash": "492aa727f4966fca669d325da52fee84c6f87d7ac0685a36a00c1bbda634c167"
+    },
+    {
+      "kind": "task",
+      "id": "assessment-worker-pool-v1",
+      "version": 1,
+      "path": "tasks/assessment-worker-pool-v1/task.json",
+      "content_hash": "bd94b0eb9ad3c6243af458ca7e70d6462739ed2aa59922e1cf863cf3b366f324",
+      "bundle_hash": "82e6465424472d93e42dd0613972ae2b227f8a9c083249501b9513b3f5e800c4"
+    },
+    {
+      "kind": "task",
+      "id": "guided-core-semantics-v1",
+      "version": 1,
+      "path": "tasks/guided-core-semantics-v1/task.json",
+      "content_hash": "193c132c353e8f29a3d545bb8309caa65f04b0841200fc47c4f74ab4e2304272",
+      "bundle_hash": "cf36c010b6e0ba5a3f40795022d9a5f583dce8762d9c14d9172bf8fd719c4fee"
+    },
+    {
+      "kind": "task",
+      "id": "guided-run-model-v2",
+      "version": 7,
+      "path": "tasks/guided-run-model-v2/task.json",
+      "content_hash": "2424bb8006cacf0b8ab046312312453620872cd62df4847f28fe966504cbb1dc",
+      "bundle_hash": "5daa3e4129e31046ee78582b1171bd2b07d8ff3a9c82e15cd4f845657514db94"
+    },
+    {
+      "kind": "task",
+      "id": "practice-bounded-pipeline-v1",
+      "version": 1,
+      "path": "tasks/practice-bounded-pipeline-v1/task.json",
+      "content_hash": "a8299c65a4dba76178e4cb49c1e82f957d8686f591d01483a77459db97433ede",
+      "bundle_hash": "eb75e893e1b618d7d398f7540bd5bef585387e20785fb1b071a1e2024f3af035"
+    },
+    {
+      "kind": "task",
+      "id": "practice-cancellable-map-v1",
+      "version": 1,
+      "path": "tasks/practice-cancellable-map-v1/task.json",
+      "content_hash": "78ab97238bbfb50b75a3c8fdb0b763994aafe84fac72c84a05d2225293e07989",
+      "bundle_hash": "59cdc566f3de894eaedffc552b80eaef3aeecfe662116c7d7af634e66e764e86"
+    },
+    {
+      "kind": "task",
+      "id": "practice-domain-model-v1",
+      "version": 1,
+      "path": "tasks/practice-domain-model-v1/task.json",
+      "content_hash": "2bfe29f108aa9d12d74d2820e0c8868d51a01f7ae72a3597be567d9ad02f98d8",
+      "bundle_hash": "d7656bdeabc9863386c91aeb5fae98c19a4e0319b2298d710eb92b37236b3043"
+    },
+    {
+      "kind": "task",
+      "id": "practice-error-contract-v1",
+      "version": 2,
+      "path": "tasks/practice-error-contract-v1/task.json",
+      "content_hash": "06bd6d185287c695f539a22f914f52f7dc3902a62a6187645ec8b04d5e8b5882",
+      "bundle_hash": "472f74d5525b62ad562ee4bb25237bb13a29577dd0b7af7b8286c755be86347d"
+    },
+    {
+      "kind": "task",
+      "id": "practice-failure-triage-v1",
+      "version": 1,
+      "path": "tasks/practice-failure-triage-v1/task.json",
+      "content_hash": "bb1b2de6b2ebf62655571d9da4bc943ed0c0da99141c26115aedd78e4cf11165",
+      "bundle_hash": "4a304a4ad2e3c2409c2ecb43555481cc92f9f93f06ce03d1f16061d3c437ea12"
+    },
+    {
+      "kind": "task",
+      "id": "practice-first-program-v1",
+      "version": 1,
+      "path": "tasks/practice-first-program-v1/task.json",
+      "content_hash": "d579f777d46a8191ec8621e884c3dea34479910eb74249ca1c691a38b40894c1",
+      "bundle_hash": "e11bd692bc0bbc941b33a9f1b81ab3cec13cc4367c9bdcd72376316b1470078a"
+    },
+    {
+      "kind": "task",
+      "id": "practice-gocheck-slice-v1",
+      "version": 1,
+      "path": "tasks/practice-gocheck-slice-v1/task.json",
+      "content_hash": "29845cc0ff42d94c76315c8cf6eb0e43eb2216d6d5b86da404e5ce39938b5cf8",
+      "bundle_hash": "7d9e69132eecb6f6e05b4a74326fd493da1efcd38c468e2247bc66a9b11cda61"
+    },
+    {
+      "kind": "task",
+      "id": "practice-http-request-slice-v1",
+      "version": 1,
+      "path": "tasks/practice-http-request-slice-v1/task.json",
+      "content_hash": "285f55af15919e2f29284415c1874c3674e9d7e359e826dfe77cd814e9327556",
+      "bundle_hash": "672d90cb4063ac3d5a932c49f7ee5bdb669fefe9bf9f1ce273b8a01a505705af"
+    },
+    {
+      "kind": "task",
+      "id": "practice-json-io-v1",
+      "version": 2,
+      "path": "tasks/practice-json-io-v1/task.json",
+      "content_hash": "55dbbc8a42f8ed00729cea6380d74eff979d3bb8b87eac5038af4db14748c677",
+      "bundle_hash": "0774286d34ca25cffaa51135b50f978972150a9ba5726757639f8d03275bfaee"
+    },
+    {
+      "kind": "task",
+      "id": "practice-order-notifier-v1",
+      "version": 1,
+      "path": "tasks/practice-order-notifier-v1/task.json",
+      "content_hash": "245ad965fbd86853a3f53ad8eb73922130d77269ff5627c3c205257491cb937b",
+      "bundle_hash": "57cc3f4a2cfe9aa3854a8b324f0bd4e60372f7dbcacf4b140e836e9c3941dca5"
+    },
+    {
+      "kind": "task",
+      "id": "practice-package-contract-v1",
+      "version": 2,
+      "path": "tasks/practice-package-contract-v1/task.json",
+      "content_hash": "1fdcd7b8f42769d83643d6331357f9690b879026c33360662ace717baf98537b",
+      "bundle_hash": "7c133c3a27729a425cb8575b253679071baffd5de39e27f8bf3a0c42a182a169"
+    },
+    {
+      "kind": "task",
+      "id": "practice-protected-counter-v1",
+      "version": 1,
+      "path": "tasks/practice-protected-counter-v1/task.json",
+      "content_hash": "29b0bfd46f42aba946064f6ee918076031098ad8353498e5e945cc5d9b2b70d2",
+      "bundle_hash": "de2081a2e57966d9692fe00c2636ea6517a8a1895349670773f3440caea6a213"
+    },
+    {
+      "kind": "task",
+      "id": "practice-slice-ownership-v1",
+      "version": 1,
+      "path": "tasks/practice-slice-ownership-v1/task.json",
+      "content_hash": "c9b5eb8e9feb0cf06c9476e8e380c5c73b47c3229e11e05172495d086ffba2dc",
+      "bundle_hash": "04bba3453d82316f953eb1d8f2f3c867c65ea0e9ed610062b0897b70fcba1cc8"
+    },
+    {
+      "kind": "task",
+      "id": "practice-table-tests-v1",
+      "version": 2,
+      "path": "tasks/practice-table-tests-v1/task.json",
+      "content_hash": "ba9f043de6d632518bcac4d5945c24fe5e51747805bd9c959d894a9aba4ee216",
+      "bundle_hash": "f240872ee73427e7d758f0a7b6cb4f01659521bd4f8a57188a3eabf06b489fe6"
+    },
+    {
+      "kind": "task",
+      "id": "review-audit-service-v1",
+      "version": 1,
+      "path": "tasks/review-audit-service-v1/task.json",
+      "content_hash": "44af41b9870154b38c5153a42cf5ef529d0c1a96b9d0d3ff691ea571b9c64e8c",
+      "bundle_hash": "600c0815ecbc5d6f2c6e054fa909de9310e8fb276706fb18ef6053a359e0ebdc"
+    },
+    {
+      "kind": "task",
+      "id": "review-budget-model-v1",
+      "version": 1,
+      "path": "tasks/review-budget-model-v1/task.json",
+      "content_hash": "3f2609ab2f5f8e04884a88a23de8f79197dce4df1fc9e8f926afee66cbee6b35",
+      "bundle_hash": "4997da80b7fcb5496c1c0286ac816d54d8f61187099a3b79ba2b82e3d552c06b"
+    },
+    {
+      "kind": "task",
+      "id": "review-byte-frames-v1",
+      "version": 1,
+      "path": "tasks/review-byte-frames-v1/task.json",
+      "content_hash": "0d4be56c32386f1721026774870a73d64faadcc62d60d900b404b923d8699a0c",
+      "bundle_hash": "0b851cf7406ead09e946ac7150dde9d35b58d0c3aaef27dc614d987fe77c9d6a"
+    },
+    {
+      "kind": "task",
+      "id": "review-cancellable-fetch-v1",
+      "version": 1,
+      "path": "tasks/review-cancellable-fetch-v1/task.json",
+      "content_hash": "fe4ba67ee0ff345f4f857e806bcb6ab9d5b28460fb313c7adb9019f1794d8604",
+      "bundle_hash": "6e63add37b73dac3fbaa110e57b82a7952fa0411e7717e2a33f9835240d55cfd"
+    },
+    {
+      "kind": "task",
+      "id": "review-check-config-variant-v2",
+      "version": 2,
+      "path": "tasks/review-check-config-variant-v2/task.json",
+      "content_hash": "4b5b71a9e81fcce0e3bb43d0ce67f3679099ca6f09a5c0b85d86b7b131155db1",
+      "bundle_hash": "6a8124bfb909d855c91552c002142f2e9a80e1c271c74a4fbdc4f22525a425c6"
+    },
+    {
+      "kind": "task",
+      "id": "review-concurrent-ledger-v1",
+      "version": 1,
+      "path": "tasks/review-concurrent-ledger-v1/task.json",
+      "content_hash": "c827b4eafa80210664f4208c6bafc58f8a28ffaa6e91914654bd6fcce5542882",
+      "bundle_hash": "188f470f97d66c3a7d264aaefc88ac2b14388c4da2cafa07439a8f50fe0ec014"
+    },
+    {
+      "kind": "task",
+      "id": "review-endpoint-audit-v1",
+      "version": 2,
+      "path": "tasks/review-endpoint-audit-v1/task.json",
+      "content_hash": "ef5a33ddf336ac7575222fec2002fd496f08997ed704ea80122bd3c1414b5948",
+      "bundle_hash": "eacb2c9e7c76e4962cbe303e0a743510ce7004b276a113aba5bb724daebf89e8"
+    },
+    {
+      "kind": "task",
+      "id": "review-first-program-v1",
+      "version": 1,
+      "path": "tasks/review-first-program-v1/task.json",
+      "content_hash": "5e4f6f178b292cd8cd9b25522c8efb8767acc2515c5221c495e2efa3ff780142",
+      "bundle_hash": "d43f2ececebf653a2df9f716a1a7c9889e8bdf38d39541a2caa416e363550b4c"
+    },
+    {
+      "kind": "task",
+      "id": "review-format-module-v1",
+      "version": 2,
+      "path": "tasks/review-format-module-v1/task.json",
+      "content_hash": "37a818cf7e7177f1cf904a370a6ef86379e5f0d1f9d647126ef6a03e4591b186",
+      "bundle_hash": "9f1624cd5320cd029903311fffb090abced6c4ea294dbeb24413089a8f736f9e"
+    },
+    {
+      "kind": "task",
+      "id": "review-jobwatch-http-v1",
+      "version": 1,
+      "path": "tasks/review-jobwatch-http-v1/task.json",
+      "content_hash": "91d84077580def24d328de5b3276277b4728f65fa30283c1629366f302f4e5bc",
+      "bundle_hash": "271fb0a05501f3d6449363253f4f4fc4cf1378111aa057b099312402af6d25d0"
+    },
+    {
+      "kind": "task",
+      "id": "review-metrics-debug-v1",
+      "version": 1,
+      "path": "tasks/review-metrics-debug-v1/task.json",
+      "content_hash": "c5d44f45bd16b4219a7495878bc1b70a60439fe96e9ba0333a9cb5be794b0bf8",
+      "bundle_hash": "bcc19e38e177063b9a611394392e7d7a78b4f44299a7c45de3d7e871ecfb6224"
+    },
+    {
+      "kind": "task",
+      "id": "review-temperature-bands-v1",
+      "version": 1,
+      "path": "tasks/review-temperature-bands-v1/task.json",
+      "content_hash": "04a3ed5fdca930bac4978c62761a26fb780c0e739e1359a9fb85ec1fa9ec9f0e",
+      "bundle_hash": "a167c10f23618446ec626ad1280d08c5434dd186441458805eb3b863e53495ae"
+    },
+    {
+      "kind": "task",
+      "id": "review-thumbnail-pipeline-v1",
+      "version": 1,
+      "path": "tasks/review-thumbnail-pipeline-v1/task.json",
+      "content_hash": "19474866c8b1d4e9e785df461ef5cac241efa142b50c8ac6299c4380eef0decf",
+      "bundle_hash": "21ef1ce6e7d1c68f2ea3bf5fedaa92222405a7403effe5eb12cf139228cffebc"
+    }
+  ],
+  "assets": [
+    {
+      "task_id": "assessment-cancellable-checks-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/assessment-cancellable-checks-v1/README.md",
+      "role": "readme",
+      "sha256": "4f3534b8ba15a356ec588d2e42711e48484f0a8649a1736877b201102d0b5225"
+    },
+    {
+      "task_id": "assessment-cancellable-checks-v1",
+      "task_version": 1,
+      "source": "heldout/checker_private_test.go",
+      "workspace_path": "checker_private_test.go",
+      "bundle_path": "tasks/assessment-cancellable-checks-v1/heldout/checker_private_test.go",
+      "role": "held_out_test",
+      "sha256": "1aad7365332f49efda3dab0040a029b3ceec1dbd25deed0ec1d199605611c9a0"
+    },
+    {
+      "task_id": "assessment-cancellable-checks-v1",
+      "task_version": 1,
+      "source": "starter/checker.go",
+      "workspace_path": "checker.go",
+      "bundle_path": "tasks/assessment-cancellable-checks-v1/starter/checker.go",
+      "role": "starter",
+      "sha256": "0dc5da0d3206aecd282b3205a6f395f9c196f4c43fbbc27477ae330b493f842e"
+    },
+    {
+      "task_id": "assessment-cancellable-checks-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/assessment-cancellable-checks-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "ab0d4c018d278242c2b6f05f4da674f196f332e840c537b1b62340204c1e7826"
+    },
+    {
+      "task_id": "assessment-cancellable-checks-v1",
+      "task_version": 1,
+      "source": "visible/checker_test.go",
+      "workspace_path": "checker_test.go",
+      "bundle_path": "tasks/assessment-cancellable-checks-v1/visible/checker_test.go",
+      "role": "visible_test",
+      "sha256": "a411d5cdf454c7d8483c36fc6e22be98538ee1b2c3673e4badfb4f7ff0647a09"
+    },
+    {
+      "task_id": "assessment-check-config-v2",
+      "task_version": 3,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/assessment-check-config-v2/README.md",
+      "role": "readme",
+      "sha256": "6cdee8a2b95bf271ac7381f9e040d4a57f700e99ff7f8b0a42b6419a4ae8bf2a"
+    },
+    {
+      "task_id": "assessment-check-config-v2",
+      "task_version": 3,
+      "source": "fixtures/valid-targets.json",
+      "workspace_path": "testdata/valid-targets.json",
+      "bundle_path": "tasks/assessment-check-config-v2/fixtures/valid-targets.json",
+      "role": "fixture",
+      "sha256": "cfb754d0a158c51f9abc1bf5b840f6f7404f5f1b88d0d33b3e65b66a9adf196e"
+    },
+    {
+      "task_id": "assessment-check-config-v2",
+      "task_version": 3,
+      "source": "heldout/internal/config/heldout_test.go",
+      "workspace_path": "internal/config/heldout_test.go",
+      "bundle_path": "tasks/assessment-check-config-v2/heldout/internal/config/heldout_test.go",
+      "role": "held_out_test",
+      "sha256": "599728de44f52baf256fdf940b0b59c0986ca795fb943eabe63757b6213c6bd5"
+    },
+    {
+      "task_id": "assessment-check-config-v2",
+      "task_version": 3,
+      "source": "starter/cmd/checkcfg/main.go",
+      "workspace_path": "cmd/checkcfg/main.go",
+      "bundle_path": "tasks/assessment-check-config-v2/starter/cmd/checkcfg/main.go",
+      "role": "starter",
+      "sha256": "2b032a1e71b699e8a1be3141ebed37e5ee7d10f1f3894345f0d7fd3df5247fec"
+    },
+    {
+      "task_id": "assessment-check-config-v2",
+      "task_version": 3,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/assessment-check-config-v2/starter/go.mod",
+      "role": "starter",
+      "sha256": "456b0a3cb8249977843635cfe811ff0ad8979c9cc0c94da14d97bc3906f26184"
+    },
+    {
+      "task_id": "assessment-check-config-v2",
+      "task_version": 3,
+      "source": "starter/internal/config/config.go",
+      "workspace_path": "internal/config/config.go",
+      "bundle_path": "tasks/assessment-check-config-v2/starter/internal/config/config.go",
+      "role": "starter",
+      "sha256": "06bb59c03d414791e89cc30cd2a3e66962f74a03fe6c2798d26ead3262f2417e"
+    },
+    {
+      "task_id": "assessment-check-config-v2",
+      "task_version": 3,
+      "source": "starter/internal/config/config_test.go",
+      "workspace_path": "internal/config/config_test.go",
+      "bundle_path": "tasks/assessment-check-config-v2/starter/internal/config/config_test.go",
+      "role": "starter",
+      "sha256": "64903b00a1e87f78d3ab2063c0853aad94ad0706f4741ba1c1d386231e82609c"
+    },
+    {
+      "task_id": "assessment-check-config-v2",
+      "task_version": 3,
+      "source": "visible/internal/config/visible_test.go",
+      "workspace_path": "internal/config/visible_test.go",
+      "bundle_path": "tasks/assessment-check-config-v2/visible/internal/config/visible_test.go",
+      "role": "visible_test",
+      "sha256": "a47e37f674bc096261f2cfbe337dbfd58c321eeee113fa5adac69f900a9bce9f"
+    },
+    {
+      "task_id": "assessment-check-model-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/assessment-check-model-v1/README.md",
+      "role": "readme",
+      "sha256": "2dcd61c04ceb3ca7d85ba5c6fbc4ee3dd92c9d187a4c8eb1746dedd7bb838565"
+    },
+    {
+      "task_id": "assessment-check-model-v1",
+      "task_version": 1,
+      "source": "heldout/target_heldout_test.go",
+      "workspace_path": "target_heldout_test.go",
+      "bundle_path": "tasks/assessment-check-model-v1/heldout/target_heldout_test.go",
+      "role": "held_out_test",
+      "sha256": "7e547a53ed224843020340fd8e189e6faa6cd3b0316178b85cac5544ec9777dd"
+    },
+    {
+      "task_id": "assessment-check-model-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/assessment-check-model-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "a30ecbf36c667e4adf70f9e3ca67bed83efd7f445f2f4678a9c287c2056fbc82"
+    },
+    {
+      "task_id": "assessment-check-model-v1",
+      "task_version": 1,
+      "source": "starter/target.go",
+      "workspace_path": "target.go",
+      "bundle_path": "tasks/assessment-check-model-v1/starter/target.go",
+      "role": "starter",
+      "sha256": "89082c4ecf705225084fd2bdfe0638e1657a46bd68fa87b117be5ea37305d37b"
+    },
+    {
+      "task_id": "assessment-check-model-v1",
+      "task_version": 1,
+      "source": "visible/target_test.go",
+      "workspace_path": "target_test.go",
+      "bundle_path": "tasks/assessment-check-model-v1/visible/target_test.go",
+      "role": "visible_test",
+      "sha256": "800bf2566ed49fc09a5893d8c59db5f08e90f72469a5ce3d38cfb7c3389039d4"
+    },
+    {
+      "task_id": "assessment-concurrent-registry-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/assessment-concurrent-registry-v1/README.md",
+      "role": "readme",
+      "sha256": "93b4929648284c59469aaed9b6eb94aa1bc2ddf7d454a457582c1dc194d6bb02"
+    },
+    {
+      "task_id": "assessment-concurrent-registry-v1",
+      "task_version": 1,
+      "source": "heldout/registry_private_test.go",
+      "workspace_path": "registry_private_test.go",
+      "bundle_path": "tasks/assessment-concurrent-registry-v1/heldout/registry_private_test.go",
+      "role": "held_out_test",
+      "sha256": "ff1b4e2b2e1137c70515803c0d276d83610cf7e3233f0d50a83742dffd49ea4c"
+    },
+    {
+      "task_id": "assessment-concurrent-registry-v1",
+      "task_version": 1,
+      "source": "race/registry_race_test.go",
+      "workspace_path": "registry_race_test.go",
+      "bundle_path": "tasks/assessment-concurrent-registry-v1/race/registry_race_test.go",
+      "role": "race_test",
+      "sha256": "ca815fd760c73b758d1a25eaf9068ffa8951c274fecb2943bc171c34b7ca6319"
+    },
+    {
+      "task_id": "assessment-concurrent-registry-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/assessment-concurrent-registry-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "2f7d87613fea1539db6e04d9b5d15214cf275d86ed54308085fd3fd52468bd0b"
+    },
+    {
+      "task_id": "assessment-concurrent-registry-v1",
+      "task_version": 1,
+      "source": "starter/registry.go",
+      "workspace_path": "registry.go",
+      "bundle_path": "tasks/assessment-concurrent-registry-v1/starter/registry.go",
+      "role": "starter",
+      "sha256": "69913ea2eca07c35339d2ce6af63815161dcd2ffa4845112a2f76a7e9666d415"
+    },
+    {
+      "task_id": "assessment-concurrent-registry-v1",
+      "task_version": 1,
+      "source": "visible/registry_test.go",
+      "workspace_path": "registry_test.go",
+      "bundle_path": "tasks/assessment-concurrent-registry-v1/visible/registry_test.go",
+      "role": "visible_test",
+      "sha256": "44d99e3e30cad123c92e322214d8822650887d010a7922b078291e38affcbf28"
+    },
+    {
+      "task_id": "assessment-delivery-service-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/assessment-delivery-service-v1/README.md",
+      "role": "readme",
+      "sha256": "32d18a99b49c815b6cc1df7610bb390317245ef2bdc751a7c79645d87df4f9a1"
+    },
+    {
+      "task_id": "assessment-delivery-service-v1",
+      "task_version": 1,
+      "source": "heldout/delivery_private_test.go",
+      "workspace_path": "delivery_private_test.go",
+      "bundle_path": "tasks/assessment-delivery-service-v1/heldout/delivery_private_test.go",
+      "role": "held_out_test",
+      "sha256": "c2f1ded2e38b53cdca7e3359143fae84df58a2db45458999c0ad1152f5a39d82"
+    },
+    {
+      "task_id": "assessment-delivery-service-v1",
+      "task_version": 1,
+      "source": "starter/delivery.go",
+      "workspace_path": "delivery.go",
+      "bundle_path": "tasks/assessment-delivery-service-v1/starter/delivery.go",
+      "role": "starter",
+      "sha256": "9b884f8461340d5314aae472458d76f89d80770cc2e71442b891e3fbd0da3fd4"
+    },
+    {
+      "task_id": "assessment-delivery-service-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/assessment-delivery-service-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "c48a55a95435ab5eb7d8c8590c075072a311be8436ac2f2bbb9652bccdd8055e"
+    },
+    {
+      "task_id": "assessment-delivery-service-v1",
+      "task_version": 1,
+      "source": "visible/delivery_test.go",
+      "workspace_path": "delivery_test.go",
+      "bundle_path": "tasks/assessment-delivery-service-v1/visible/delivery_test.go",
+      "role": "visible_test",
+      "sha256": "c3ce680b4afbdb6a8d33a0e1adc828aaf251bd59bcdc70a0333183083d468979"
+    },
+    {
+      "task_id": "assessment-event-batches-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/assessment-event-batches-v1/README.md",
+      "role": "readme",
+      "sha256": "ec10d9cdaa3444958fd0b12e55172c9fdb4967ccc7e9ae01551f33d0c5bebdeb"
+    },
+    {
+      "task_id": "assessment-event-batches-v1",
+      "task_version": 1,
+      "source": "heldout/events_heldout_test.go",
+      "workspace_path": "events_heldout_test.go",
+      "bundle_path": "tasks/assessment-event-batches-v1/heldout/events_heldout_test.go",
+      "role": "held_out_test",
+      "sha256": "054df7dc2dd83ab7fd67a5c626c4dfa4a29265a7749be034da09af20fc13f4b4"
+    },
+    {
+      "task_id": "assessment-event-batches-v1",
+      "task_version": 1,
+      "source": "starter/events.go",
+      "workspace_path": "events.go",
+      "bundle_path": "tasks/assessment-event-batches-v1/starter/events.go",
+      "role": "starter",
+      "sha256": "79a2bdb2b05b928c47119ca657450c7192b849a4a38441c44dc4ac95cefd46f5"
+    },
+    {
+      "task_id": "assessment-event-batches-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/assessment-event-batches-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "354d8a714b29ebc9abf3e9109c9dd1006a73111675266f946f4354f43378513b"
+    },
+    {
+      "task_id": "assessment-event-batches-v1",
+      "task_version": 1,
+      "source": "visible/events_test.go",
+      "workspace_path": "events_test.go",
+      "bundle_path": "tasks/assessment-event-batches-v1/visible/events_test.go",
+      "role": "visible_test",
+      "sha256": "93b068aa16333080b6c49e065902fabd45ca4726f0f558f9b2c4b9c7248dfcac"
+    },
+    {
+      "task_id": "assessment-first-program-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/assessment-first-program-v1/README.md",
+      "role": "readme",
+      "sha256": "c047ad4076f85874b27475cdd9c4d34f90689ac54e1f1417c5a00a77aafa788d"
+    },
+    {
+      "task_id": "assessment-first-program-v1",
+      "task_version": 1,
+      "source": "heldout/main_heldout_test.go",
+      "workspace_path": "main_heldout_test.go",
+      "bundle_path": "tasks/assessment-first-program-v1/heldout/main_heldout_test.go",
+      "role": "held_out_test",
+      "sha256": "ba2ec4178d6446ed27fcc56ad620d62d145b537b77f422a4faf2a1e503398b43"
+    },
+    {
+      "task_id": "assessment-first-program-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/assessment-first-program-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "2053a12ff5139f72084e285920994eb99c2a96cd926a37915b51590fd2e03c50"
+    },
+    {
+      "task_id": "assessment-first-program-v1",
+      "task_version": 1,
+      "source": "starter/main.go",
+      "workspace_path": "main.go",
+      "bundle_path": "tasks/assessment-first-program-v1/starter/main.go",
+      "role": "starter",
+      "sha256": "66a25f0c9ae6571a4099e5955c16e8a912535b016b8fc6cf00551c341de12e8e"
+    },
+    {
+      "task_id": "assessment-first-program-v1",
+      "task_version": 1,
+      "source": "visible/main_test.go",
+      "workspace_path": "main_test.go",
+      "bundle_path": "tasks/assessment-first-program-v1/visible/main_test.go",
+      "role": "visible_test",
+      "sha256": "67cd57d76133f563e4f42a6f17b62b52fd02460777311dc90dbb42824fc91572"
+    },
+    {
+      "task_id": "assessment-gocheck-http-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "TASK.md",
+      "bundle_path": "tasks/assessment-gocheck-http-v1/README.md",
+      "role": "readme",
+      "sha256": "de9d1c12289d31eef851e492633fcb2a0dddd160d85f7ee2086070913a0ecb97"
+    },
+    {
+      "task_id": "assessment-gocheck-http-v1",
+      "task_version": 1,
+      "source": "heldout/httpserver/contract_private_test.go",
+      "workspace_path": "httpserver/contract_private_test.go",
+      "bundle_path": "tasks/assessment-gocheck-http-v1/heldout/httpserver/contract_private_test.go",
+      "role": "held_out_test",
+      "sha256": "c220db71d0c67828a4c60a940ace6b4d92593a500af70cfb9098c65d39bafda6"
+    },
+    {
+      "task_id": "assessment-gocheck-http-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/assessment-gocheck-http-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "1a3440c3bebbedb74e39b94236596663c1c233ec2d87f5854cc797fa75765372"
+    },
+    {
+      "task_id": "assessment-gocheck-http-v1",
+      "task_version": 1,
+      "source": "starter/httpserver/server.go",
+      "workspace_path": "httpserver/server.go",
+      "bundle_path": "tasks/assessment-gocheck-http-v1/starter/httpserver/server.go",
+      "role": "starter",
+      "sha256": "1ec208e807b3e0ef37f94ac0002fbf2cee50d012a414ff2c843c09e78400a8d1"
+    },
+    {
+      "task_id": "assessment-gocheck-http-v1",
+      "task_version": 1,
+      "source": "starter/httpserver/server_test.go",
+      "workspace_path": "httpserver/server_test.go",
+      "bundle_path": "tasks/assessment-gocheck-http-v1/starter/httpserver/server_test.go",
+      "role": "starter",
+      "sha256": "4c2e6494629727087ae52489e59d4ad1fa3da4e98f64fa4e2c2d2b863cae4d53"
+    },
+    {
+      "task_id": "assessment-gocheck-http-v1",
+      "task_version": 1,
+      "source": "visible/httpserver/smoke_test.go",
+      "workspace_path": "httpserver/smoke_test.go",
+      "bundle_path": "tasks/assessment-gocheck-http-v1/visible/httpserver/smoke_test.go",
+      "role": "visible_test",
+      "sha256": "8005f90a8539bb62bed3ca533e1f62e833d9bb0e614b63641469568da999f868"
+    },
+    {
+      "task_id": "assessment-gocheck-project-v1",
+      "task_version": 2,
+      "source": "README.md",
+      "workspace_path": "TASK.md",
+      "bundle_path": "tasks/assessment-gocheck-project-v1/README.md",
+      "role": "readme",
+      "sha256": "5d43efd8f9e1ac2593b62ce293929fa8feb66f6b48e2c36d0bd50e91c200fd3e"
+    },
+    {
+      "task_id": "assessment-gocheck-project-v1",
+      "task_version": 2,
+      "source": "fixtures/targets.json",
+      "workspace_path": "testdata/targets.json",
+      "bundle_path": "tasks/assessment-gocheck-project-v1/fixtures/targets.json",
+      "role": "fixture",
+      "sha256": "888cae7dd8c97009ec7e79f5761e24c87a259071a0886b982af136c7aca7aa63"
+    },
+    {
+      "task_id": "assessment-gocheck-project-v1",
+      "task_version": 2,
+      "source": "heldout/internal/app/app_private_test.go",
+      "workspace_path": "internal/app/app_private_test.go",
+      "bundle_path": "tasks/assessment-gocheck-project-v1/heldout/internal/app/app_private_test.go",
+      "role": "held_out_test",
+      "sha256": "38656a75d152228be94289061296c330e1194c2404701afef247ff39b997ab80"
+    },
+    {
+      "task_id": "assessment-gocheck-project-v1",
+      "task_version": 2,
+      "source": "heldout/internal/check/check_private_test.go",
+      "workspace_path": "internal/check/check_private_test.go",
+      "bundle_path": "tasks/assessment-gocheck-project-v1/heldout/internal/check/check_private_test.go",
+      "role": "held_out_test",
+      "sha256": "d88922dc398ff8d16e7217d906e253e4154695c4088f92e10faf51cc446fada2"
+    },
+    {
+      "task_id": "assessment-gocheck-project-v1",
+      "task_version": 2,
+      "source": "heldout/internal/config/config_private_test.go",
+      "workspace_path": "internal/config/config_private_test.go",
+      "bundle_path": "tasks/assessment-gocheck-project-v1/heldout/internal/config/config_private_test.go",
+      "role": "held_out_test",
+      "sha256": "4cf73a1b0170f71d972abdaac441f392ef0ba03fea788f2327fd538c5b350cf1"
+    },
+    {
+      "task_id": "assessment-gocheck-project-v1",
+      "task_version": 2,
+      "source": "heldout/internal/report/report_private_test.go",
+      "workspace_path": "internal/report/report_private_test.go",
+      "bundle_path": "tasks/assessment-gocheck-project-v1/heldout/internal/report/report_private_test.go",
+      "role": "held_out_test",
+      "sha256": "f851af8537fa7317577d7acbd30a0a58543bcfb39c2ae7ee9c7564370a14e8c1"
+    },
+    {
+      "task_id": "assessment-gocheck-project-v1",
+      "task_version": 2,
+      "source": "race/internal/check/check_race_test.go",
+      "workspace_path": "internal/check/check_race_test.go",
+      "bundle_path": "tasks/assessment-gocheck-project-v1/race/internal/check/check_race_test.go",
+      "role": "race_test",
+      "sha256": "2c09326be9832022cd47053481ee192dca6a323f1e8e73fc31e9ce30a6699ee2"
+    },
+    {
+      "task_id": "assessment-gocheck-project-v1",
+      "task_version": 2,
+      "source": "visible/internal/check/check_test.go",
+      "workspace_path": "internal/check/check_test.go",
+      "bundle_path": "tasks/assessment-gocheck-project-v1/visible/internal/check/check_test.go",
+      "role": "visible_test",
+      "sha256": "7f93ad4e9413a97e3d774691c452f3daea61dfa8a48f31603b3511a81a54da22"
+    },
+    {
+      "task_id": "assessment-gocheck-project-v1",
+      "task_version": 2,
+      "source": "visible/internal/config/config_test.go",
+      "workspace_path": "internal/config/config_test.go",
+      "bundle_path": "tasks/assessment-gocheck-project-v1/visible/internal/config/config_test.go",
+      "role": "visible_test",
+      "sha256": "dfa06c6cd941901c786d9b0c8064ed4b3c888226bde21cee091c94cdb8cf0509"
+    },
+    {
+      "task_id": "assessment-gocheck-project-v1",
+      "task_version": 2,
+      "source": "visible/internal/report/report_test.go",
+      "workspace_path": "internal/report/report_test.go",
+      "bundle_path": "tasks/assessment-gocheck-project-v1/visible/internal/report/report_test.go",
+      "role": "visible_test",
+      "sha256": "f7d55c55009c432484c2017ea1229e648052fd60d55ed8a77629dba172e573cc"
+    },
+    {
+      "task_id": "assessment-report-debug-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/assessment-report-debug-v1/README.md",
+      "role": "readme",
+      "sha256": "4110e9239a1444d0ab4954deadf60aab0ae04cc7fd8840634649394f9342eaec"
+    },
+    {
+      "task_id": "assessment-report-debug-v1",
+      "task_version": 1,
+      "source": "fixtures/delve-transcript.txt",
+      "workspace_path": "testdata/delve-transcript.txt",
+      "bundle_path": "tasks/assessment-report-debug-v1/fixtures/delve-transcript.txt",
+      "role": "fixture",
+      "sha256": "51ff8b716e1d4d30a63fd6211b25d104ea503d44215d4f2f528b53d1b5f2ad42"
+    },
+    {
+      "task_id": "assessment-report-debug-v1",
+      "task_version": 1,
+      "source": "fixtures/pprof-top.txt",
+      "workspace_path": "testdata/pprof-top.txt",
+      "bundle_path": "tasks/assessment-report-debug-v1/fixtures/pprof-top.txt",
+      "role": "fixture",
+      "sha256": "dc247f0df7ad44c27f3a91f35c13004a6e7c8e42058a44c127051f81d69ddbaa"
+    },
+    {
+      "task_id": "assessment-report-debug-v1",
+      "task_version": 1,
+      "source": "fixtures/test-failure.txt",
+      "workspace_path": "testdata/test-failure.txt",
+      "bundle_path": "tasks/assessment-report-debug-v1/fixtures/test-failure.txt",
+      "role": "fixture",
+      "sha256": "03ed120dc2e96deca81324373fd72cf2f0896dcebdc5aa5a30f36232cd7abde6"
+    },
+    {
+      "task_id": "assessment-report-debug-v1",
+      "task_version": 1,
+      "source": "heldout/report_private_test.go",
+      "workspace_path": "report_private_test.go",
+      "bundle_path": "tasks/assessment-report-debug-v1/heldout/report_private_test.go",
+      "role": "held_out_test",
+      "sha256": "074851ce1a7073120f923ef69a1eecdbc914b6283b8e43315ed85858b90e8386"
+    },
+    {
+      "task_id": "assessment-report-debug-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/assessment-report-debug-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "a4ab4fba9b304ab0f1ea9137b170eae15e8c695e40d1f4f24b052c58029e8ba4"
+    },
+    {
+      "task_id": "assessment-report-debug-v1",
+      "task_version": 1,
+      "source": "starter/report.go",
+      "workspace_path": "report.go",
+      "bundle_path": "tasks/assessment-report-debug-v1/starter/report.go",
+      "role": "starter",
+      "sha256": "f77cc097d13f8f2342fc3256e96d8b8c5d596be54170c5947387dac8df638183"
+    },
+    {
+      "task_id": "assessment-report-debug-v1",
+      "task_version": 1,
+      "source": "visible/report_test.go",
+      "workspace_path": "report_test.go",
+      "bundle_path": "tasks/assessment-report-debug-v1/visible/report_test.go",
+      "role": "visible_test",
+      "sha256": "b23230684515a492de41e71dda03b15f31009027421a293a845747d2d0ae2a34"
+    },
+    {
+      "task_id": "assessment-status-module-v1",
+      "task_version": 2,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/assessment-status-module-v1/README.md",
+      "role": "readme",
+      "sha256": "84d5272de330fad12b406e6f8f07f307386dbea1f8eb57117e0985680a538f9a"
+    },
+    {
+      "task_id": "assessment-status-module-v1",
+      "task_version": 2,
+      "source": "heldout/health/consumer_test.go",
+      "workspace_path": "health/consumer_test.go",
+      "bundle_path": "tasks/assessment-status-module-v1/heldout/health/consumer_test.go",
+      "role": "held_out_test",
+      "sha256": "79abb0e23c7177ca9780c8b70736a01fd370c508bc968a48110599643325c3a6"
+    },
+    {
+      "task_id": "assessment-status-module-v1",
+      "task_version": 2,
+      "source": "starter/cmd/status/main.go",
+      "workspace_path": "cmd/status/main.go",
+      "bundle_path": "tasks/assessment-status-module-v1/starter/cmd/status/main.go",
+      "role": "starter",
+      "sha256": "7748c651925e1688ca5976458d2580a01f1ab4c9ed39b5d6816a3c47e70558fb"
+    },
+    {
+      "task_id": "assessment-status-module-v1",
+      "task_version": 2,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/assessment-status-module-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "9607c933a75c4ab47907f985b7edc134b141f9567dca11218776704ce8b69dcb"
+    },
+    {
+      "task_id": "assessment-status-module-v1",
+      "task_version": 2,
+      "source": "starter/health/report.go",
+      "workspace_path": "health/report.go",
+      "bundle_path": "tasks/assessment-status-module-v1/starter/health/report.go",
+      "role": "starter",
+      "sha256": "f83516738942bdc00dced50932b97fce7423b723558e3e4f73f5e27c3f6ed4b7"
+    },
+    {
+      "task_id": "assessment-status-module-v1",
+      "task_version": 2,
+      "source": "visible/health/report_test.go",
+      "workspace_path": "health/report_test.go",
+      "bundle_path": "tasks/assessment-status-module-v1/visible/health/report_test.go",
+      "role": "visible_test",
+      "sha256": "7d53b5b01ae5c3a5db1f12bdb6b6378c8fa1018a03c975e5ed8ae267bb96961f"
+    },
+    {
+      "task_id": "assessment-text-stats-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/assessment-text-stats-v1/README.md",
+      "role": "readme",
+      "sha256": "075a619f875fda3dd1dff26db30a6d2957c9ac8bc4d67c4c3794de0ce670f21e"
+    },
+    {
+      "task_id": "assessment-text-stats-v1",
+      "task_version": 1,
+      "source": "heldout/stats_heldout_test.go",
+      "workspace_path": "stats_heldout_test.go",
+      "bundle_path": "tasks/assessment-text-stats-v1/heldout/stats_heldout_test.go",
+      "role": "held_out_test",
+      "sha256": "9d568a8246163337d6b8992a836b84abdca0b158c77944b783d109c3747dec11"
+    },
+    {
+      "task_id": "assessment-text-stats-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/assessment-text-stats-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "6e51669185d620843d0308e16d4b7b0f71ef3600487a37751e65e66467580617"
+    },
+    {
+      "task_id": "assessment-text-stats-v1",
+      "task_version": 1,
+      "source": "starter/stats.go",
+      "workspace_path": "stats.go",
+      "bundle_path": "tasks/assessment-text-stats-v1/starter/stats.go",
+      "role": "starter",
+      "sha256": "c767767d3d9d39e243641136573971257d1aaff38f8ebe3baa9a75c648967bf8"
+    },
+    {
+      "task_id": "assessment-text-stats-v1",
+      "task_version": 1,
+      "source": "visible/stats_test.go",
+      "workspace_path": "stats_test.go",
+      "bundle_path": "tasks/assessment-text-stats-v1/visible/stats_test.go",
+      "role": "visible_test",
+      "sha256": "b251eaffafa34196674b6730e929b45b8550821b9eaccdb189b3661a7f8ded35"
+    },
+    {
+      "task_id": "assessment-worker-pool-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/assessment-worker-pool-v1/README.md",
+      "role": "readme",
+      "sha256": "12079f9339da3b51c79f6e84e2062c247f3a8e2569ee9eeb01289daeefb90961"
+    },
+    {
+      "task_id": "assessment-worker-pool-v1",
+      "task_version": 1,
+      "source": "heldout/pool_private_test.go",
+      "workspace_path": "pool_private_test.go",
+      "bundle_path": "tasks/assessment-worker-pool-v1/heldout/pool_private_test.go",
+      "role": "held_out_test",
+      "sha256": "eede7b5277cbaea56ed69c13ea921a9b1bc61310b525267db4c4a2f212155372"
+    },
+    {
+      "task_id": "assessment-worker-pool-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/assessment-worker-pool-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "86f5a5b26b50919d88bcbd1aa17390c6c925106ce1b6025f1544714b76c8169c"
+    },
+    {
+      "task_id": "assessment-worker-pool-v1",
+      "task_version": 1,
+      "source": "starter/pool.go",
+      "workspace_path": "pool.go",
+      "bundle_path": "tasks/assessment-worker-pool-v1/starter/pool.go",
+      "role": "starter",
+      "sha256": "5f362a59dc4490e087fe610b7eb09530c4a2d1f7791d57b846f8c1a14406b5a4"
+    },
+    {
+      "task_id": "assessment-worker-pool-v1",
+      "task_version": 1,
+      "source": "visible/pool_test.go",
+      "workspace_path": "pool_test.go",
+      "bundle_path": "tasks/assessment-worker-pool-v1/visible/pool_test.go",
+      "role": "visible_test",
+      "sha256": "573c9c3d6b23a47e7bdee3956c28027a35509b568ce1f7f4ac770bed8130202b"
+    },
+    {
+      "task_id": "guided-core-semantics-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/guided-core-semantics-v1/README.md",
+      "role": "readme",
+      "sha256": "84f7f4756c3089d183e75975806689cd8e49554ba40a779a30de0b19b3697362"
+    },
+    {
+      "task_id": "guided-core-semantics-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/guided-core-semantics-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "957209c92a94c5aa2848b261b6b26661c55254acdc684d9f478c427327557b36"
+    },
+    {
+      "task_id": "guided-core-semantics-v1",
+      "task_version": 1,
+      "source": "starter/semantics.go",
+      "workspace_path": "semantics.go",
+      "bundle_path": "tasks/guided-core-semantics-v1/starter/semantics.go",
+      "role": "starter",
+      "sha256": "9139c4c8ae00ab19b9aca251dac4e91b62c5e4da714c9e1b2394de2718840a12"
+    },
+    {
+      "task_id": "guided-core-semantics-v1",
+      "task_version": 1,
+      "source": "visible/semantics_test.go",
+      "workspace_path": "semantics_test.go",
+      "bundle_path": "tasks/guided-core-semantics-v1/visible/semantics_test.go",
+      "role": "visible_test",
+      "sha256": "dfdad38264e285a126189df040a36b23f955ada98a0852d307cbf827bbcb7d76"
+    },
+    {
+      "task_id": "guided-run-model-v2",
+      "task_version": 7,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/guided-run-model-v2/README.md",
+      "role": "readme",
+      "sha256": "c02ed4a15ac9814608103e06f5278cf72d81f395a773758a2fba680982aa74f7"
+    },
+    {
+      "task_id": "guided-run-model-v2",
+      "task_version": 7,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/guided-run-model-v2/starter/go.mod",
+      "role": "starter",
+      "sha256": "456b0a3cb8249977843635cfe811ff0ad8979c9cc0c94da14d97bc3906f26184"
+    },
+    {
+      "task_id": "guided-run-model-v2",
+      "task_version": 7,
+      "source": "starter/main.go",
+      "workspace_path": "main.go",
+      "bundle_path": "tasks/guided-run-model-v2/starter/main.go",
+      "role": "starter",
+      "sha256": "605fd7c20a4db1d66b66d2906834ec0ec779e4524f95950f9f3aa423286a1852"
+    },
+    {
+      "task_id": "guided-run-model-v2",
+      "task_version": 7,
+      "source": "visible/main_test.go",
+      "workspace_path": "main_test.go",
+      "bundle_path": "tasks/guided-run-model-v2/visible/main_test.go",
+      "role": "visible_test",
+      "sha256": "f89cf21caa21d10e4973dcb6b78e350977b0ba25493316faad8b58c11d7686c2"
+    },
+    {
+      "task_id": "practice-bounded-pipeline-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/practice-bounded-pipeline-v1/README.md",
+      "role": "readme",
+      "sha256": "9a64297da21181c973f6d5362f74d0dd5935e9af3be0ea5770581bdbe03921de"
+    },
+    {
+      "task_id": "practice-bounded-pipeline-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/practice-bounded-pipeline-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "bcc0da1f0b3dd07e164124ca117fbb4aadca27aa50af92f5392f1449d6ea2991"
+    },
+    {
+      "task_id": "practice-bounded-pipeline-v1",
+      "task_version": 1,
+      "source": "starter/pipeline.go",
+      "workspace_path": "pipeline.go",
+      "bundle_path": "tasks/practice-bounded-pipeline-v1/starter/pipeline.go",
+      "role": "starter",
+      "sha256": "c30a9a40c96ad98c2daf5c8a7b17bff785e46f83fb9910fc7086874700608aa9"
+    },
+    {
+      "task_id": "practice-bounded-pipeline-v1",
+      "task_version": 1,
+      "source": "visible/pipeline_test.go",
+      "workspace_path": "pipeline_test.go",
+      "bundle_path": "tasks/practice-bounded-pipeline-v1/visible/pipeline_test.go",
+      "role": "visible_test",
+      "sha256": "b8c869fe39601263777225be183588a8c0d9a12720ed3078879f15cb8bad2728"
+    },
+    {
+      "task_id": "practice-cancellable-map-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/practice-cancellable-map-v1/README.md",
+      "role": "readme",
+      "sha256": "2fc3f11aa722fbfcd0eb5cd04ead16e14d594debe1474dfe4ec6824ab92386e4"
+    },
+    {
+      "task_id": "practice-cancellable-map-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/practice-cancellable-map-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "aaa8a4440e31282b4246fc9695ead8b0b2c6dd1df9186f07654b638a73cacfb7"
+    },
+    {
+      "task_id": "practice-cancellable-map-v1",
+      "task_version": 1,
+      "source": "starter/map.go",
+      "workspace_path": "map.go",
+      "bundle_path": "tasks/practice-cancellable-map-v1/starter/map.go",
+      "role": "starter",
+      "sha256": "d702907c56a07383523379d783846f375a701afcb60bbc0aaeaeb079d9e90e03"
+    },
+    {
+      "task_id": "practice-cancellable-map-v1",
+      "task_version": 1,
+      "source": "visible/map_test.go",
+      "workspace_path": "map_test.go",
+      "bundle_path": "tasks/practice-cancellable-map-v1/visible/map_test.go",
+      "role": "visible_test",
+      "sha256": "d3efac3d334f4f69db24592878e9933f0ea7c8bea29eca1e60ac51ec1da0793f"
+    },
+    {
+      "task_id": "practice-domain-model-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/practice-domain-model-v1/README.md",
+      "role": "readme",
+      "sha256": "66b7a67a864f3f7696d4e3cb3c43315adbea14cd3bc74dca6caed8b0d0b0a4b0"
+    },
+    {
+      "task_id": "practice-domain-model-v1",
+      "task_version": 1,
+      "source": "starter/check.go",
+      "workspace_path": "check.go",
+      "bundle_path": "tasks/practice-domain-model-v1/starter/check.go",
+      "role": "starter",
+      "sha256": "951fc589b1d3c292068deb05c2efab2540ac97e3c56ea4aa990e3006877386dc"
+    },
+    {
+      "task_id": "practice-domain-model-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/practice-domain-model-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "135f97154f9520c4857c9335bdbe5ba7e2cdfb3ea85411defe47067892ffb48d"
+    },
+    {
+      "task_id": "practice-domain-model-v1",
+      "task_version": 1,
+      "source": "visible/check_test.go",
+      "workspace_path": "check_test.go",
+      "bundle_path": "tasks/practice-domain-model-v1/visible/check_test.go",
+      "role": "visible_test",
+      "sha256": "ab7954a5c6e52815b0a67b64e698f9e43e76d7e4b8cfbb6f0a1a4f3ba2c909f7"
+    },
+    {
+      "task_id": "practice-error-contract-v1",
+      "task_version": 2,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/practice-error-contract-v1/README.md",
+      "role": "readme",
+      "sha256": "9744e7383edae627bfcdbc97d5d872aaed162997b212fbbaee1969cd6f4cffe6"
+    },
+    {
+      "task_id": "practice-error-contract-v1",
+      "task_version": 2,
+      "source": "starter/config.go",
+      "workspace_path": "config.go",
+      "bundle_path": "tasks/practice-error-contract-v1/starter/config.go",
+      "role": "starter",
+      "sha256": "dc2849d98c308eb0ef0ddc729c2ba6169d72abdc64821a0d892760917cb329f7"
+    },
+    {
+      "task_id": "practice-error-contract-v1",
+      "task_version": 2,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/practice-error-contract-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "456b0a3cb8249977843635cfe811ff0ad8979c9cc0c94da14d97bc3906f26184"
+    },
+    {
+      "task_id": "practice-error-contract-v1",
+      "task_version": 2,
+      "source": "visible/config_test.go",
+      "workspace_path": "config_test.go",
+      "bundle_path": "tasks/practice-error-contract-v1/visible/config_test.go",
+      "role": "visible_test",
+      "sha256": "fc24a25ffe9e0db5265cd192495349d88c42179e2bb1ffdb36a023a4bbc72e6f"
+    },
+    {
+      "task_id": "practice-failure-triage-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/practice-failure-triage-v1/README.md",
+      "role": "readme",
+      "sha256": "e66cf3a7972a25bf3f0ff823a0fac8316f81c65a1d41f3fd13340ca238b334e3"
+    },
+    {
+      "task_id": "practice-failure-triage-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/practice-failure-triage-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "c4821f433d86287b096b082ebcb2c24365c10094789154efea9a3141b04f9ef3"
+    },
+    {
+      "task_id": "practice-failure-triage-v1",
+      "task_version": 1,
+      "source": "starter/normalize.go",
+      "workspace_path": "normalize.go",
+      "bundle_path": "tasks/practice-failure-triage-v1/starter/normalize.go",
+      "role": "starter",
+      "sha256": "ef4944bacc7b79ebffb0fb3dc022a406487f45ec275f0599333dd8ea778e0c65"
+    },
+    {
+      "task_id": "practice-failure-triage-v1",
+      "task_version": 1,
+      "source": "visible/normalize_test.go",
+      "workspace_path": "normalize_test.go",
+      "bundle_path": "tasks/practice-failure-triage-v1/visible/normalize_test.go",
+      "role": "visible_test",
+      "sha256": "4c658982c400d7e5495afd9c6439954a31e4fb4926b0bc84da662ef4c409acbf"
+    },
+    {
+      "task_id": "practice-first-program-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/practice-first-program-v1/README.md",
+      "role": "readme",
+      "sha256": "bd12228dacbccf20ff4539ebfefe50ba1166c7b52c39a6e498969258e92461c3"
+    },
+    {
+      "task_id": "practice-first-program-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/practice-first-program-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "10c488fe9a627d132ac70edd0b6a638676fc17268d2bbc881b7ea3e112bcfbd2"
+    },
+    {
+      "task_id": "practice-first-program-v1",
+      "task_version": 1,
+      "source": "starter/main.go",
+      "workspace_path": "main.go",
+      "bundle_path": "tasks/practice-first-program-v1/starter/main.go",
+      "role": "starter",
+      "sha256": "570adb936e6cc45b8b8f638246deb6f216825228063eaed7d8d63d25a0c31425"
+    },
+    {
+      "task_id": "practice-first-program-v1",
+      "task_version": 1,
+      "source": "visible/main_test.go",
+      "workspace_path": "main_test.go",
+      "bundle_path": "tasks/practice-first-program-v1/visible/main_test.go",
+      "role": "visible_test",
+      "sha256": "ceb2d5aa6963492ed9d6c1b30ca187131e5d23bf1335d14b1e7d61578bc2d60a"
+    },
+    {
+      "task_id": "practice-gocheck-slice-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/practice-gocheck-slice-v1/README.md",
+      "role": "readme",
+      "sha256": "825d7def80630d85e3ac53ddcab8af54c51768b1f73ea285e4d2075f5fb0e623"
+    },
+    {
+      "task_id": "practice-gocheck-slice-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/practice-gocheck-slice-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "49d3ed1546e4bdb25d9765a58bb2f624ab5de61a2fad42fcc056302d8f699168"
+    },
+    {
+      "task_id": "practice-gocheck-slice-v1",
+      "task_version": 1,
+      "source": "starter/gocheck.go",
+      "workspace_path": "gocheck.go",
+      "bundle_path": "tasks/practice-gocheck-slice-v1/starter/gocheck.go",
+      "role": "starter",
+      "sha256": "24df02f077fcea6b882ad04742fb41b92b55daac8926f3015e281e919a9ee14f"
+    },
+    {
+      "task_id": "practice-gocheck-slice-v1",
+      "task_version": 1,
+      "source": "visible/gocheck_test.go",
+      "workspace_path": "gocheck_test.go",
+      "bundle_path": "tasks/practice-gocheck-slice-v1/visible/gocheck_test.go",
+      "role": "visible_test",
+      "sha256": "dae1b1d54f9fa8cad27e4399a60cfe5494c97fa0c0809697a6e51ed2733bcb91"
+    },
+    {
+      "task_id": "practice-http-request-slice-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/practice-http-request-slice-v1/README.md",
+      "role": "readme",
+      "sha256": "e08952e601d631c6710fe701bdc0d273c64a282adfef05831d448175a6feac93"
+    },
+    {
+      "task_id": "practice-http-request-slice-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/practice-http-request-slice-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "bad9c742b62eb18a5324b7c2768993eab5c9ae16df23f084a3b4ce85e46c6b62"
+    },
+    {
+      "task_id": "practice-http-request-slice-v1",
+      "task_version": 1,
+      "source": "starter/httpslice/handler.go",
+      "workspace_path": "httpslice/handler.go",
+      "bundle_path": "tasks/practice-http-request-slice-v1/starter/httpslice/handler.go",
+      "role": "starter",
+      "sha256": "930b0b0f5c02502a0bf311540ff4f428e042a7e35377d1fe7fcd02cb8e1ddc54"
+    },
+    {
+      "task_id": "practice-http-request-slice-v1",
+      "task_version": 1,
+      "source": "visible/httpslice/handler_test.go",
+      "workspace_path": "httpslice/handler_test.go",
+      "bundle_path": "tasks/practice-http-request-slice-v1/visible/httpslice/handler_test.go",
+      "role": "visible_test",
+      "sha256": "d51907972d03451faa641c53275275ae6a578b9e70571d27646e5452c44faeaf"
+    },
+    {
+      "task_id": "practice-json-io-v1",
+      "task_version": 2,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/practice-json-io-v1/README.md",
+      "role": "readme",
+      "sha256": "7c75933fcc11db535fd3234736ca533efccc43643fad6427912b2a97d4eb1d13"
+    },
+    {
+      "task_id": "practice-json-io-v1",
+      "task_version": 2,
+      "source": "starter/config.go",
+      "workspace_path": "config.go",
+      "bundle_path": "tasks/practice-json-io-v1/starter/config.go",
+      "role": "starter",
+      "sha256": "07d790ebdfd176d1c392574b4f11a530e6871a912782d34eb980e13d8b505bde"
+    },
+    {
+      "task_id": "practice-json-io-v1",
+      "task_version": 2,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/practice-json-io-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "456b0a3cb8249977843635cfe811ff0ad8979c9cc0c94da14d97bc3906f26184"
+    },
+    {
+      "task_id": "practice-json-io-v1",
+      "task_version": 2,
+      "source": "visible/config_test.go",
+      "workspace_path": "config_test.go",
+      "bundle_path": "tasks/practice-json-io-v1/visible/config_test.go",
+      "role": "visible_test",
+      "sha256": "f8644ed96bc5e94622949cc1c510b396d59462c5eacd94c4bf036e9779357a7a"
+    },
+    {
+      "task_id": "practice-order-notifier-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/practice-order-notifier-v1/README.md",
+      "role": "readme",
+      "sha256": "04745d9cf058ce8252103fd73829635230f1efe9195a997350d64d687dca784c"
+    },
+    {
+      "task_id": "practice-order-notifier-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/practice-order-notifier-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "ade92dfbff7bb2d9a478d700263c3df9f80f91ca4203f2af411357a92f5963ba"
+    },
+    {
+      "task_id": "practice-order-notifier-v1",
+      "task_version": 1,
+      "source": "starter/service.go",
+      "workspace_path": "service.go",
+      "bundle_path": "tasks/practice-order-notifier-v1/starter/service.go",
+      "role": "starter",
+      "sha256": "6ee3c338e424b43922ec641ed0b7d366366ee63345df88c2761da079ac9ad06f"
+    },
+    {
+      "task_id": "practice-order-notifier-v1",
+      "task_version": 1,
+      "source": "visible/service_test.go",
+      "workspace_path": "service_test.go",
+      "bundle_path": "tasks/practice-order-notifier-v1/visible/service_test.go",
+      "role": "visible_test",
+      "sha256": "5aa96ccc99b6af8a2c3c58c0578b0932b942262a710a90107799f9830117127a"
+    },
+    {
+      "task_id": "practice-package-contract-v1",
+      "task_version": 2,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/practice-package-contract-v1/README.md",
+      "role": "readme",
+      "sha256": "11ea21258ed9fa19545ba864fa1d2d3025895b9b6cfe960eafc0aa1f1a5e9b67"
+    },
+    {
+      "task_id": "practice-package-contract-v1",
+      "task_version": 2,
+      "source": "starter/cmd/status/main.go",
+      "workspace_path": "cmd/status/main.go",
+      "bundle_path": "tasks/practice-package-contract-v1/starter/cmd/status/main.go",
+      "role": "starter",
+      "sha256": "177fa55881cc9a574efeaf59111ce667c69681bbcbd840f00e64dfbee0561231"
+    },
+    {
+      "task_id": "practice-package-contract-v1",
+      "task_version": 2,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/practice-package-contract-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "bf82d9a123d7afbfceae85cdd7c8b7d90ac5fbec99fb53a5a9db3e8893001e4c"
+    },
+    {
+      "task_id": "practice-package-contract-v1",
+      "task_version": 2,
+      "source": "starter/internal/report/report.go",
+      "workspace_path": "internal/report/report.go",
+      "bundle_path": "tasks/practice-package-contract-v1/starter/internal/report/report.go",
+      "role": "starter",
+      "sha256": "fe81db7bfc69d600ed3eab83b909a30c014e38b6f0faef78fd3a7f03c57419e1"
+    },
+    {
+      "task_id": "practice-package-contract-v1",
+      "task_version": 2,
+      "source": "visible/internal/report/report_test.go",
+      "workspace_path": "internal/report/report_test.go",
+      "bundle_path": "tasks/practice-package-contract-v1/visible/internal/report/report_test.go",
+      "role": "visible_test",
+      "sha256": "15bd4330d92abf6e43e23493ad3ab2bbf8cd000ea3a2899dd0cf837ac7d988c6"
+    },
+    {
+      "task_id": "practice-protected-counter-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/practice-protected-counter-v1/README.md",
+      "role": "readme",
+      "sha256": "80f76fe54ecddcb63ae6abc4e32ee574c8546856e0bd6f2f797148f81056f29c"
+    },
+    {
+      "task_id": "practice-protected-counter-v1",
+      "task_version": 1,
+      "source": "starter/counter.go",
+      "workspace_path": "counter.go",
+      "bundle_path": "tasks/practice-protected-counter-v1/starter/counter.go",
+      "role": "starter",
+      "sha256": "65ebde6275b6c2860abb3ed144e9637e64ef466d7fd1a69f91fd766430967842"
+    },
+    {
+      "task_id": "practice-protected-counter-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/practice-protected-counter-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "a131e2e127f9a229f83d4bd773e7ccfe761ed3aeb016957ced3e5ec894b0944a"
+    },
+    {
+      "task_id": "practice-protected-counter-v1",
+      "task_version": 1,
+      "source": "visible/counter_test.go",
+      "workspace_path": "counter_test.go",
+      "bundle_path": "tasks/practice-protected-counter-v1/visible/counter_test.go",
+      "role": "visible_test",
+      "sha256": "d059045ea37fc660cc76311af10c7ef62ea467aba979a62f226d532db35ce2db"
+    },
+    {
+      "task_id": "practice-slice-ownership-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/practice-slice-ownership-v1/README.md",
+      "role": "readme",
+      "sha256": "0f4c758a3e07c48a86759f68755771a3b5d8b2d1e178eec0e38fc0598d148768"
+    },
+    {
+      "task_id": "practice-slice-ownership-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/practice-slice-ownership-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "180530eb400874125306d066a616fbf2756479b4b97287d6b2d7b73b3fd4bb44"
+    },
+    {
+      "task_id": "practice-slice-ownership-v1",
+      "task_version": 1,
+      "source": "starter/ownership.go",
+      "workspace_path": "ownership.go",
+      "bundle_path": "tasks/practice-slice-ownership-v1/starter/ownership.go",
+      "role": "starter",
+      "sha256": "b9b632e0abefc27f1ebf9ed5e5045cba5d95d979962a6d0a5653274b0a7cd41e"
+    },
+    {
+      "task_id": "practice-slice-ownership-v1",
+      "task_version": 1,
+      "source": "visible/ownership_test.go",
+      "workspace_path": "ownership_test.go",
+      "bundle_path": "tasks/practice-slice-ownership-v1/visible/ownership_test.go",
+      "role": "visible_test",
+      "sha256": "33a95fa8e2925fecbaaddab8c1c2bc96d1a26b27ff2d442542edcfcccf13626c"
+    },
+    {
+      "task_id": "practice-table-tests-v1",
+      "task_version": 2,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/practice-table-tests-v1/README.md",
+      "role": "readme",
+      "sha256": "73d40e8dd4588294532ec3e1a611a5da836235b7fb9f9de3a74069eb5aae9e43"
+    },
+    {
+      "task_id": "practice-table-tests-v1",
+      "task_version": 2,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/practice-table-tests-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "456b0a3cb8249977843635cfe811ff0ad8979c9cc0c94da14d97bc3906f26184"
+    },
+    {
+      "task_id": "practice-table-tests-v1",
+      "task_version": 2,
+      "source": "starter/name.go",
+      "workspace_path": "name.go",
+      "bundle_path": "tasks/practice-table-tests-v1/starter/name.go",
+      "role": "starter",
+      "sha256": "fc7cfc713c591c9c20b803c2bce239891ad72165ef0ecf3c96b3532f63d3ffa0"
+    },
+    {
+      "task_id": "practice-table-tests-v1",
+      "task_version": 2,
+      "source": "starter/name_test.go",
+      "workspace_path": "name_test.go",
+      "bundle_path": "tasks/practice-table-tests-v1/starter/name_test.go",
+      "role": "starter",
+      "sha256": "17c7037c214aa8a396f3f0d9a7560404d0de81809ab56d448898e711f45e5116"
+    },
+    {
+      "task_id": "practice-table-tests-v1",
+      "task_version": 2,
+      "source": "visible/contract_test.go",
+      "workspace_path": "contract_test.go",
+      "bundle_path": "tasks/practice-table-tests-v1/visible/contract_test.go",
+      "role": "visible_test",
+      "sha256": "ca1f026529df6c90043fa0e21de19e44155c99137073185df138cebbd0dd088a"
+    },
+    {
+      "task_id": "review-audit-service-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/review-audit-service-v1/README.md",
+      "role": "readme",
+      "sha256": "7451c57fc085b55abc9a62186a0d5e1c3389bc312f20d74e1005c1f40a811cb3"
+    },
+    {
+      "task_id": "review-audit-service-v1",
+      "task_version": 1,
+      "source": "heldout/audit_private_test.go",
+      "workspace_path": "audit_private_test.go",
+      "bundle_path": "tasks/review-audit-service-v1/heldout/audit_private_test.go",
+      "role": "held_out_test",
+      "sha256": "64621971a028c02f92a35c368865d9a87340a70c2270ed6df731ae2039fc39d5"
+    },
+    {
+      "task_id": "review-audit-service-v1",
+      "task_version": 1,
+      "source": "starter/audit.go",
+      "workspace_path": "audit.go",
+      "bundle_path": "tasks/review-audit-service-v1/starter/audit.go",
+      "role": "starter",
+      "sha256": "eb0cfde10d9beb7bfb7c8d7fda608dd294b0661558109cc9e268b8be83984a4f"
+    },
+    {
+      "task_id": "review-audit-service-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/review-audit-service-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "81027bedb01fbd1b76bd5a4008e389baa4c714fd4036e53672798c7e0c31f9e4"
+    },
+    {
+      "task_id": "review-budget-model-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/review-budget-model-v1/README.md",
+      "role": "readme",
+      "sha256": "966185f2463b4cdcb8815c8d5566f40c6a4cb0ea73f9f05a505e6b637af55170"
+    },
+    {
+      "task_id": "review-budget-model-v1",
+      "task_version": 1,
+      "source": "heldout/budget_heldout_test.go",
+      "workspace_path": "budget_heldout_test.go",
+      "bundle_path": "tasks/review-budget-model-v1/heldout/budget_heldout_test.go",
+      "role": "held_out_test",
+      "sha256": "712ce0c95194dde7584abd4123541be772f6097c7042a57f9795b8f027b3bc8a"
+    },
+    {
+      "task_id": "review-budget-model-v1",
+      "task_version": 1,
+      "source": "starter/budget.go",
+      "workspace_path": "budget.go",
+      "bundle_path": "tasks/review-budget-model-v1/starter/budget.go",
+      "role": "starter",
+      "sha256": "b53cf30ed5ce0873a5706d9ba3e48f204ca65fe43b299bcbb6e45409592b7d86"
+    },
+    {
+      "task_id": "review-budget-model-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/review-budget-model-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "89e14ed674a1a7bd5b14733b3e5a00af127777f544dee73f59c6f41cd7ef3516"
+    },
+    {
+      "task_id": "review-budget-model-v1",
+      "task_version": 1,
+      "source": "visible/budget_test.go",
+      "workspace_path": "budget_test.go",
+      "bundle_path": "tasks/review-budget-model-v1/visible/budget_test.go",
+      "role": "visible_test",
+      "sha256": "553a88b227904ef7130d1e28cb105f84b720c1bca48870a839c1ae95b5238d32"
+    },
+    {
+      "task_id": "review-byte-frames-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/review-byte-frames-v1/README.md",
+      "role": "readme",
+      "sha256": "9b961c0c73302d78ea6e13176c262d48fc707b5a386406e26f27113862211bd2"
+    },
+    {
+      "task_id": "review-byte-frames-v1",
+      "task_version": 1,
+      "source": "heldout/frame_heldout_test.go",
+      "workspace_path": "frame_heldout_test.go",
+      "bundle_path": "tasks/review-byte-frames-v1/heldout/frame_heldout_test.go",
+      "role": "held_out_test",
+      "sha256": "89f40572ce04de4936b276526cbbabe2e804fe7e09d4fb7a144fffaec247c364"
+    },
+    {
+      "task_id": "review-byte-frames-v1",
+      "task_version": 1,
+      "source": "starter/frame.go",
+      "workspace_path": "frame.go",
+      "bundle_path": "tasks/review-byte-frames-v1/starter/frame.go",
+      "role": "starter",
+      "sha256": "6251151553b14596b865efbb814d1e77b9a8eeca51c3a7d267e9f54514836c10"
+    },
+    {
+      "task_id": "review-byte-frames-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/review-byte-frames-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "db7734de14941499c9ec26e0a8a011f8ee071da1a03fd4d5ee5b0b60d6940e2d"
+    },
+    {
+      "task_id": "review-byte-frames-v1",
+      "task_version": 1,
+      "source": "visible/frame_test.go",
+      "workspace_path": "frame_test.go",
+      "bundle_path": "tasks/review-byte-frames-v1/visible/frame_test.go",
+      "role": "visible_test",
+      "sha256": "70146043ae77d80a5bea3b196455045dee3cdeea9d33fecb4ac19e2b3cfbff54"
+    },
+    {
+      "task_id": "review-cancellable-fetch-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/review-cancellable-fetch-v1/README.md",
+      "role": "readme",
+      "sha256": "9df83dd468a5389045a3eec698c64c1f95fa9b7dbbd05a58f51c6baa69cc1ac0"
+    },
+    {
+      "task_id": "review-cancellable-fetch-v1",
+      "task_version": 1,
+      "source": "heldout/fetch_private_test.go",
+      "workspace_path": "fetch_private_test.go",
+      "bundle_path": "tasks/review-cancellable-fetch-v1/heldout/fetch_private_test.go",
+      "role": "held_out_test",
+      "sha256": "bfee568959101936c82608269b9ccd10234ec4abff5cdc65a585601f695e5175"
+    },
+    {
+      "task_id": "review-cancellable-fetch-v1",
+      "task_version": 1,
+      "source": "starter/fetch.go",
+      "workspace_path": "fetch.go",
+      "bundle_path": "tasks/review-cancellable-fetch-v1/starter/fetch.go",
+      "role": "starter",
+      "sha256": "3e4a38dee6c9f2cb47d53f534d1a20d17e384595c8f0b385805ed3de3c607e6a"
+    },
+    {
+      "task_id": "review-cancellable-fetch-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/review-cancellable-fetch-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "ef6463e57533e5f29e561630b2f8e8693f1a85977cb573174b65a243f4c83ebe"
+    },
+    {
+      "task_id": "review-check-config-variant-v2",
+      "task_version": 2,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/review-check-config-variant-v2/README.md",
+      "role": "readme",
+      "sha256": "f3af9562d30baab5a660e3778e022dfc6c521cb344197c7575d29d5306562cc9"
+    },
+    {
+      "task_id": "review-check-config-variant-v2",
+      "task_version": 2,
+      "source": "fixtures/base.json",
+      "workspace_path": "testdata/base.json",
+      "bundle_path": "tasks/review-check-config-variant-v2/fixtures/base.json",
+      "role": "fixture",
+      "sha256": "095c623bbbabaeb43be18603ab781f840010a9b3341af5553f3205d6c4704c6e"
+    },
+    {
+      "task_id": "review-check-config-variant-v2",
+      "task_version": 2,
+      "source": "fixtures/override.json",
+      "workspace_path": "testdata/override.json",
+      "bundle_path": "tasks/review-check-config-variant-v2/fixtures/override.json",
+      "role": "fixture",
+      "sha256": "182f75fa88af0df07892970281a2de85aad0cecaaa19c4cffc054b6235eac30b"
+    },
+    {
+      "task_id": "review-check-config-variant-v2",
+      "task_version": 2,
+      "source": "heldout/internal/merge/heldout_test.go",
+      "workspace_path": "internal/merge/heldout_test.go",
+      "bundle_path": "tasks/review-check-config-variant-v2/heldout/internal/merge/heldout_test.go",
+      "role": "held_out_test",
+      "sha256": "66f3f6b5dc98a1b54d6fdd551e4cae48abc64f64730abb2f0d5b40a2df07c53f"
+    },
+    {
+      "task_id": "review-check-config-variant-v2",
+      "task_version": 2,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/review-check-config-variant-v2/starter/go.mod",
+      "role": "starter",
+      "sha256": "e5543287db705509d5184e0bdd53141f908d1fd8ec16bf396ee3c08c9027b777"
+    },
+    {
+      "task_id": "review-check-config-variant-v2",
+      "task_version": 2,
+      "source": "starter/internal/merge/merge.go",
+      "workspace_path": "internal/merge/merge.go",
+      "bundle_path": "tasks/review-check-config-variant-v2/starter/internal/merge/merge.go",
+      "role": "starter",
+      "sha256": "7cad3cfa2716fe8fffc1d75ee3ae0a769df0be82f7b814bc64c6ef53f3719053"
+    },
+    {
+      "task_id": "review-check-config-variant-v2",
+      "task_version": 2,
+      "source": "starter/internal/merge/merge_test.go",
+      "workspace_path": "internal/merge/merge_test.go",
+      "bundle_path": "tasks/review-check-config-variant-v2/starter/internal/merge/merge_test.go",
+      "role": "starter",
+      "sha256": "1897eb00a19f247a06da5b33375589a34fbab0bf0fc86e1bdf7cd7df8d8a94cf"
+    },
+    {
+      "task_id": "review-concurrent-ledger-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/review-concurrent-ledger-v1/README.md",
+      "role": "readme",
+      "sha256": "4fb522f0849131841cf0cb25a12af815eca4a43c82b738673d0bc4f4eb0ff1c7"
+    },
+    {
+      "task_id": "review-concurrent-ledger-v1",
+      "task_version": 1,
+      "source": "heldout/ledger_private_test.go",
+      "workspace_path": "ledger_private_test.go",
+      "bundle_path": "tasks/review-concurrent-ledger-v1/heldout/ledger_private_test.go",
+      "role": "held_out_test",
+      "sha256": "560f1e739b743d0f418d557d2a42a584ac7996b882c9e555bf47b8fc13f9cfc7"
+    },
+    {
+      "task_id": "review-concurrent-ledger-v1",
+      "task_version": 1,
+      "source": "race/ledger_race_test.go",
+      "workspace_path": "ledger_race_test.go",
+      "bundle_path": "tasks/review-concurrent-ledger-v1/race/ledger_race_test.go",
+      "role": "race_test",
+      "sha256": "ee5f8701cda3e64aabc625f504a019454afdac89ea0aa9551d02d8b61ee0b101"
+    },
+    {
+      "task_id": "review-concurrent-ledger-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/review-concurrent-ledger-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "c6bfb0ea5ff1c48ef6e8c32af2e99c30ffa81e5ff3f878f668dafdf92f5f3dc7"
+    },
+    {
+      "task_id": "review-concurrent-ledger-v1",
+      "task_version": 1,
+      "source": "starter/ledger.go",
+      "workspace_path": "ledger.go",
+      "bundle_path": "tasks/review-concurrent-ledger-v1/starter/ledger.go",
+      "role": "starter",
+      "sha256": "73b4af802fbab3ec4d25e8fe756e643585c68d1ea6fd96869819b2cfc9eefbd2"
+    },
+    {
+      "task_id": "review-endpoint-audit-v1",
+      "task_version": 2,
+      "source": "README.md",
+      "workspace_path": "TASK.md",
+      "bundle_path": "tasks/review-endpoint-audit-v1/README.md",
+      "role": "readme",
+      "sha256": "229c1340064f0493d5f9daf2209d4410a64cb9ac2f45e87a19635b9eaacf4017"
+    },
+    {
+      "task_id": "review-endpoint-audit-v1",
+      "task_version": 2,
+      "source": "fixtures/checks.json",
+      "workspace_path": "testdata/checks.json",
+      "bundle_path": "tasks/review-endpoint-audit-v1/fixtures/checks.json",
+      "role": "fixture",
+      "sha256": "78e4702ea466b168d2295b13b3f592aebdac81b33a3920f8e1155974fb9353e2"
+    },
+    {
+      "task_id": "review-endpoint-audit-v1",
+      "task_version": 2,
+      "source": "heldout/integration/project_private_test.go",
+      "workspace_path": "integration/project_private_test.go",
+      "bundle_path": "tasks/review-endpoint-audit-v1/heldout/integration/project_private_test.go",
+      "role": "held_out_test",
+      "sha256": "7a26f8d1b742aadfd91b26d9fc7bc56db12132806ff1b08321f97ffd0691a88f"
+    },
+    {
+      "task_id": "review-endpoint-audit-v1",
+      "task_version": 2,
+      "source": "race/internal/probe/probe_race_test.go",
+      "workspace_path": "internal/probe/probe_race_test.go",
+      "bundle_path": "tasks/review-endpoint-audit-v1/race/internal/probe/probe_race_test.go",
+      "role": "race_test",
+      "sha256": "6fbc28383dda580372f06b7aaa2040778a20a7f30cb559125835906a5286222c"
+    },
+    {
+      "task_id": "review-first-program-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/review-first-program-v1/README.md",
+      "role": "readme",
+      "sha256": "7f3cdd9bcc38cbee9bc3b05bcda2d4a37ecb00af0c5def26f9fcecf42f379571"
+    },
+    {
+      "task_id": "review-first-program-v1",
+      "task_version": 1,
+      "source": "heldout/main_heldout_test.go",
+      "workspace_path": "main_heldout_test.go",
+      "bundle_path": "tasks/review-first-program-v1/heldout/main_heldout_test.go",
+      "role": "held_out_test",
+      "sha256": "a1f4d82655107a5651ea15c800969685cdbca09549cfffc5699296a5455059b9"
+    },
+    {
+      "task_id": "review-first-program-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/review-first-program-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "3091c333a1b5f90b22cb1754549e0cf6671ff410e1217d9cdb8d69a15537ade4"
+    },
+    {
+      "task_id": "review-first-program-v1",
+      "task_version": 1,
+      "source": "starter/main.go",
+      "workspace_path": "main.go",
+      "bundle_path": "tasks/review-first-program-v1/starter/main.go",
+      "role": "starter",
+      "sha256": "02104e0f2fde3dcc7a7e0d50599f2a5e4267dd958207e465f0d08dfdaa441309"
+    },
+    {
+      "task_id": "review-first-program-v1",
+      "task_version": 1,
+      "source": "visible/main_test.go",
+      "workspace_path": "main_test.go",
+      "bundle_path": "tasks/review-first-program-v1/visible/main_test.go",
+      "role": "visible_test",
+      "sha256": "e6b72d57691e16f480bd761dde115956dd3a98a68499c27c400987fd43f43457"
+    },
+    {
+      "task_id": "review-format-module-v1",
+      "task_version": 2,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/review-format-module-v1/README.md",
+      "role": "readme",
+      "sha256": "fa008135208e4367748cb9db80c6bd8448f4b3e41b767884d9c2caff7d842558"
+    },
+    {
+      "task_id": "review-format-module-v1",
+      "task_version": 2,
+      "source": "heldout/render/consumer_test.go",
+      "workspace_path": "render/consumer_test.go",
+      "bundle_path": "tasks/review-format-module-v1/heldout/render/consumer_test.go",
+      "role": "held_out_test",
+      "sha256": "07b6397137c9e0a4574acea71d124109a1d8ca66a882ef45fd45b3d7221254b7"
+    },
+    {
+      "task_id": "review-format-module-v1",
+      "task_version": 2,
+      "source": "starter/cmd/render/main.go",
+      "workspace_path": "cmd/render/main.go",
+      "bundle_path": "tasks/review-format-module-v1/starter/cmd/render/main.go",
+      "role": "starter",
+      "sha256": "9e262fb4cea69395e64d79e84a9f7e1c28e6bb77fa4390b7b7d92db6a12cf0a4"
+    },
+    {
+      "task_id": "review-format-module-v1",
+      "task_version": 2,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/review-format-module-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "70be89f96e51d950c049ef0b80cd7b04358d4f7eed7520ac32f06215e94cad29"
+    },
+    {
+      "task_id": "review-format-module-v1",
+      "task_version": 2,
+      "source": "starter/render/document.go",
+      "workspace_path": "render/document.go",
+      "bundle_path": "tasks/review-format-module-v1/starter/render/document.go",
+      "role": "starter",
+      "sha256": "90d7ac206e99de62bfc130ab935ae1786e97761f9b44f1dee856df69d1eff7ab"
+    },
+    {
+      "task_id": "review-format-module-v1",
+      "task_version": 2,
+      "source": "visible/render/document_test.go",
+      "workspace_path": "render/document_test.go",
+      "bundle_path": "tasks/review-format-module-v1/visible/render/document_test.go",
+      "role": "visible_test",
+      "sha256": "4c6015d1f03f7fe1fd832eb3b9d0794fc89e30f6d9331e9d97bac89f3f8a75bd"
+    },
+    {
+      "task_id": "review-jobwatch-http-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "TASK.md",
+      "bundle_path": "tasks/review-jobwatch-http-v1/README.md",
+      "role": "readme",
+      "sha256": "8c62cf9581dc13bc69cf5d76878ae75b5133e370bdf3b6479247ce4be746dd22"
+    },
+    {
+      "task_id": "review-jobwatch-http-v1",
+      "task_version": 1,
+      "source": "heldout/adminserver/contract_private_test.go",
+      "workspace_path": "adminserver/contract_private_test.go",
+      "bundle_path": "tasks/review-jobwatch-http-v1/heldout/adminserver/contract_private_test.go",
+      "role": "held_out_test",
+      "sha256": "911598f5d79484f0384b2e7a4202a3fdc61330de601edceea2002150cf0522dc"
+    },
+    {
+      "task_id": "review-jobwatch-http-v1",
+      "task_version": 1,
+      "source": "starter/adminserver/server.go",
+      "workspace_path": "adminserver/server.go",
+      "bundle_path": "tasks/review-jobwatch-http-v1/starter/adminserver/server.go",
+      "role": "starter",
+      "sha256": "f44665d30268d0ff6c30320991508917a03ed7c0d793c53775dded9a8d987cd7"
+    },
+    {
+      "task_id": "review-jobwatch-http-v1",
+      "task_version": 1,
+      "source": "starter/adminserver/server_test.go",
+      "workspace_path": "adminserver/server_test.go",
+      "bundle_path": "tasks/review-jobwatch-http-v1/starter/adminserver/server_test.go",
+      "role": "starter",
+      "sha256": "31435381f03194be6e64834784871f18386842c1e8f9933b346240c214064523"
+    },
+    {
+      "task_id": "review-jobwatch-http-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/review-jobwatch-http-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "1ba47f97721036a55ac6b8952098ee6dc2ab0fc741fc47f6de0b5ea88f49f3ca"
+    },
+    {
+      "task_id": "review-metrics-debug-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/review-metrics-debug-v1/README.md",
+      "role": "readme",
+      "sha256": "0929d102394bc9dc7c8560656c08e63da01938abd5300f4f28dd8c6f95088b48"
+    },
+    {
+      "task_id": "review-metrics-debug-v1",
+      "task_version": 1,
+      "source": "fixtures/delve-transcript.txt",
+      "workspace_path": "testdata/delve-transcript.txt",
+      "bundle_path": "tasks/review-metrics-debug-v1/fixtures/delve-transcript.txt",
+      "role": "fixture",
+      "sha256": "b3cdbfc333fbce98b383aa100100d96aac6a839d76995efba82f2172f5c2ce96"
+    },
+    {
+      "task_id": "review-metrics-debug-v1",
+      "task_version": 1,
+      "source": "fixtures/pprof-top.txt",
+      "workspace_path": "testdata/pprof-top.txt",
+      "bundle_path": "tasks/review-metrics-debug-v1/fixtures/pprof-top.txt",
+      "role": "fixture",
+      "sha256": "bfe9bb8b376e0949fd4db5e9ebc4c199042a6778d27a306e10b2c1a8ce1e3af7"
+    },
+    {
+      "task_id": "review-metrics-debug-v1",
+      "task_version": 1,
+      "source": "fixtures/test-failure.txt",
+      "workspace_path": "testdata/test-failure.txt",
+      "bundle_path": "tasks/review-metrics-debug-v1/fixtures/test-failure.txt",
+      "role": "fixture",
+      "sha256": "f9cc629a94277f43b8353b76a478944b99d2cc8d3f7e4363c548982f4f664d47"
+    },
+    {
+      "task_id": "review-metrics-debug-v1",
+      "task_version": 1,
+      "source": "heldout/metrics_private_test.go",
+      "workspace_path": "metrics_private_test.go",
+      "bundle_path": "tasks/review-metrics-debug-v1/heldout/metrics_private_test.go",
+      "role": "held_out_test",
+      "sha256": "432c77d825324d82a4b85b36fb611a295c192cb895aceaa8c22ea2aa286ed889"
+    },
+    {
+      "task_id": "review-metrics-debug-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/review-metrics-debug-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "703fc664a4dde61f57a78df94c41821ce7b6d14cf08a54a612ffabefd70bed02"
+    },
+    {
+      "task_id": "review-metrics-debug-v1",
+      "task_version": 1,
+      "source": "starter/metrics.go",
+      "workspace_path": "metrics.go",
+      "bundle_path": "tasks/review-metrics-debug-v1/starter/metrics.go",
+      "role": "starter",
+      "sha256": "f2b888f5a25c679fbca7bb378a3fb6547a32849405d5259552af6941f4aac5d6"
+    },
+    {
+      "task_id": "review-temperature-bands-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/review-temperature-bands-v1/README.md",
+      "role": "readme",
+      "sha256": "d8ed2bd7a42ec22fbf596d320b91a0c25f6f96cc33980d3b86811ae3f56dedc4"
+    },
+    {
+      "task_id": "review-temperature-bands-v1",
+      "task_version": 1,
+      "source": "heldout/temperature_heldout_test.go",
+      "workspace_path": "temperature_heldout_test.go",
+      "bundle_path": "tasks/review-temperature-bands-v1/heldout/temperature_heldout_test.go",
+      "role": "held_out_test",
+      "sha256": "eff92d0cbd95d9417fecb2b166770441734401b72e70ead4495ca70445d1c135"
+    },
+    {
+      "task_id": "review-temperature-bands-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/review-temperature-bands-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "d1b8df99c2cdfaa5b5d9550ea4411a31d860e91dbb1bb669d7a460b583020e74"
+    },
+    {
+      "task_id": "review-temperature-bands-v1",
+      "task_version": 1,
+      "source": "starter/temperature.go",
+      "workspace_path": "temperature.go",
+      "bundle_path": "tasks/review-temperature-bands-v1/starter/temperature.go",
+      "role": "starter",
+      "sha256": "03f0c9dc761fc808e6be23ed22e6bad063e724522a582756ebd7edca58d31a0b"
+    },
+    {
+      "task_id": "review-temperature-bands-v1",
+      "task_version": 1,
+      "source": "visible/temperature_test.go",
+      "workspace_path": "temperature_test.go",
+      "bundle_path": "tasks/review-temperature-bands-v1/visible/temperature_test.go",
+      "role": "visible_test",
+      "sha256": "62b986f565596346c38f20c78673b0f94170d6aca73baefe2d52b03ce70c02d6"
+    },
+    {
+      "task_id": "review-thumbnail-pipeline-v1",
+      "task_version": 1,
+      "source": "README.md",
+      "workspace_path": "README.md",
+      "bundle_path": "tasks/review-thumbnail-pipeline-v1/README.md",
+      "role": "readme",
+      "sha256": "356f5f30d21487c0c2092e5daf93913312901ed0e51d0c6781a03269fe6b7d74"
+    },
+    {
+      "task_id": "review-thumbnail-pipeline-v1",
+      "task_version": 1,
+      "source": "heldout/thumbnail_private_test.go",
+      "workspace_path": "thumbnail_private_test.go",
+      "bundle_path": "tasks/review-thumbnail-pipeline-v1/heldout/thumbnail_private_test.go",
+      "role": "held_out_test",
+      "sha256": "f5ba0085e1d61a7ef4176bff716e1e0fb4499ed3d1adeed039a1a46a34fec3bd"
+    },
+    {
+      "task_id": "review-thumbnail-pipeline-v1",
+      "task_version": 1,
+      "source": "starter/go.mod",
+      "workspace_path": "go.mod",
+      "bundle_path": "tasks/review-thumbnail-pipeline-v1/starter/go.mod",
+      "role": "starter",
+      "sha256": "6a7be0cc0432138f943727f09678619c285143fd065a35135b646e60299c36b0"
+    },
+    {
+      "task_id": "review-thumbnail-pipeline-v1",
+      "task_version": 1,
+      "source": "starter/thumbnail.go",
+      "workspace_path": "thumbnail.go",
+      "bundle_path": "tasks/review-thumbnail-pipeline-v1/starter/thumbnail.go",
+      "role": "starter",
+      "sha256": "306bb71d2d34314d5cb2015daa15764e178d3e00b33305ac6851b066268b0a64"
+    }
+  ],
+  "bundle_hash": "8fb10e7e83c21eb933fc9adb7a6032086dd97d9276dd553ea9288a9098d5d8b6"
+}

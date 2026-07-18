@@ -22,7 +22,7 @@ describe('AssistancePanel', () => {
 
     render(<Harness />)
     expect(screen.queryByText(secret)).not.toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: '显示提示：先定位第一条失败信息' }))
+    await user.click(screen.getByRole('button', { name: '显示提示：先让函数返回字符串' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('帮助操作暂时失败，请重试。')
     expect(screen.queryByText(secret)).not.toBeInTheDocument()
@@ -30,11 +30,11 @@ describe('AssistancePanel', () => {
 
   it('shows the hint only after reveal succeeds and uses the refreshed server level', async () => {
     const body = '只应在成功响应后显示的提示正文'
-    const event = assistanceEvent('hint:read-first-error', 'hint_revealed')
+    const event = assistanceEvent('hint:return-a-string', 'hint_revealed')
     server.use(
       http.post(`${root}/attempts/:id/hints/:hintID/reveal`, () => HttpResponse.json({
         api_version: 'v1',
-        hint: { id: 'read-first-error', title: '先定位第一条失败信息', body },
+        hint: { id: 'return-a-string', title: '先让函数返回字符串', body },
         event,
       }, { status: 201 })),
       http.get(`${root}/attempts/:id`, () => HttpResponse.json(assessmentAttempt({
@@ -45,7 +45,7 @@ describe('AssistancePanel', () => {
 
     render(<Harness />)
     expect(screen.queryByText(body)).not.toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: '显示提示：先定位第一条失败信息' }))
+    await user.click(screen.getByRole('button', { name: '显示提示：先让函数返回字符串' }))
 
     expect(await screen.findByText(body)).toBeVisible()
     expect(await screen.findByText('完成方式：使用提示')).toBeVisible()

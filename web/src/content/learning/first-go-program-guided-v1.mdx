@@ -1,0 +1,30 @@
+# 先写出程序，再理解工具反馈
+
+你看到的第一个任务应该让你真正写下一段 Go 代码。这个练习只建立一个最小闭环：补全函数、运行测试、读取反馈、修正代码，再构建出可运行程序。
+
+## 先认识四个位置
+
+```go
+package main
+
+import "fmt"
+
+func welcome(name string) string {
+    return fmt.Sprintf("welcome, %s", name)
+}
+
+func main() {
+    fmt.Println(welcome("Gopher"))
+}
+```
+
+- `package main` 表示这个包可以构建成程序。
+- `import "fmt"` 引入格式化和输出能力。
+- `func welcome...` 接收字符串参数，并返回字符串结果。
+- `func main()` 是程序入口。
+
+## 你的操作顺序
+
+先补全 `welcome`，然后运行 Test。测试失败时，先读期望值和实际值；通过后再运行 Build 和 Vet。这里的工具链是你写完代码后的反馈手段，不是需要先背诵的知识点。
+
+完成后，你至少亲手使用了一次参数、返回值、函数调用和标准输出，也走完了一次真实的修改循环。

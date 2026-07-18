@@ -1,0 +1,15 @@
+{
+  "id": "M1-01",
+  "version": 2,
+  "name": "运行模型、工具链与 module",
+  "description": "能够建立 Go module，使用 build、test、vet 获取反馈，并区分代码失败与工具基础设施失败。",
+  "milestone": "M1",
+  "domain": "tooling",
+  "prerequisites": {"hard": [], "recommended": []},
+  "required_evidence": [
+    {"type": "implement", "independence": "independent", "context": "same_context", "rule_ids": ["module-builds"]},
+    {"type": "diagnose", "independence": "independent", "context": "same_context", "rule_ids": ["toolchain-checks-pass"]}
+  ],
+  "review_policy": {"first_review_after_days": 3, "success_interval_days": 14, "failure_remediation_after_days": 1},
+  "resource_refs": ["web/src/content/go-basics/ch01-getting-started.mdx", "web/src/content/go-basics/ch10-packages-tools.mdx"]
+}

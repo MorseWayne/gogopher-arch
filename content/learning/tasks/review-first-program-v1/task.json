@@ -1,0 +1,31 @@
+{
+  "id": "review-first-program-v1",
+  "version": 1,
+  "language": "go1.25",
+  "workspace_root": "workspace",
+  "files": [
+    {"source": "README.md", "path": "README.md", "role": "readme", "editable": false, "sha256": "7f3cdd9bcc38cbee9bc3b05bcda2d4a37ecb00af0c5def26f9fcecf42f379571"},
+    {"source": "starter/go.mod", "path": "go.mod", "role": "starter", "editable": false, "sha256": "3091c333a1b5f90b22cb1754549e0cf6671ff410e1217d9cdb8d69a15537ade4"},
+    {"source": "starter/main.go", "path": "main.go", "role": "starter", "editable": true, "sha256": "02104e0f2fde3dcc7a7e0d50599f2a5e4267dd958207e465f0d08dfdaa441309"},
+    {"source": "visible/main_test.go", "path": "main_test.go", "role": "visible_test", "editable": false, "sha256": "e6b72d57691e16f480bd761dde115956dd3a98a68499c27c400987fd43f43457"},
+    {"source": "heldout/main_heldout_test.go", "path": "main_heldout_test.go", "role": "held_out_test", "editable": false, "sha256": "a1f4d82655107a5651ea15c800969685cdbca09549cfffc5699296a5455059b9"}
+  ],
+  "editable_paths": ["main.go"],
+  "readonly_paths": ["README.md", "go.mod", "main_test.go"],
+  "limits": {"max_files": 8, "max_file_bytes": 65536, "max_total_bytes": 262144},
+  "actions": {
+    "build": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "test": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "vet": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "submit": {"timeout_ms": 15000, "max_output_bytes": 131072, "network": "none"}
+  },
+  "hints": [
+    {"id": "reuse-the-small-loop", "level": 1, "title": "复用第一次的思路", "body": "先根据 healthy 得到状态，再用 fmt.Sprintf 组合 component、等号和状态。"}
+  ],
+  "visible_tests": ["main_test.go"],
+  "held_out_tests": ["main_heldout_test.go"],
+  "assessment_rules": [
+    {"rule_id": "first-program-variant-passes", "stage": "held_out_test", "selector": {"test": "TestServiceStatusHandlesVariantInputs"}, "capability_refs": [{"id": "M1-01", "version": 3}], "evidence_type": "implement", "condition": "passed"}
+  ],
+  "artifact_rules": {"workspace": "full", "logs": ["build", "test", "vet", "submit"]}
+}

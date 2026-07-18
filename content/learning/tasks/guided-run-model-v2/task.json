@@ -1,13 +1,13 @@
 {
   "id": "guided-run-model-v2",
-  "version": 6,
+  "version": 7,
   "language": "go1.25",
   "workspace_root": "workspace",
   "files": [
-    {"source": "README.md", "path": "README.md", "role": "readme", "editable": false, "sha256": "6899c846372e4899820708b3ff78df520bb2e75b098ef3d818beb0689e8acbc8"},
+    {"source": "README.md", "path": "README.md", "role": "readme", "editable": false, "sha256": "c02ed4a15ac9814608103e06f5278cf72d81f395a773758a2fba680982aa74f7"},
     {"source": "starter/go.mod", "path": "go.mod", "role": "starter", "editable": false, "sha256": "456b0a3cb8249977843635cfe811ff0ad8979c9cc0c94da14d97bc3906f26184"},
-    {"source": "starter/main.go", "path": "main.go", "role": "starter", "editable": true, "sha256": "06704daf528ce1ef8ac8d1458a1117aacac74d0fd6309975aecc797c3c3c8b7f"},
-    {"source": "visible/main_test.go", "path": "main_test.go", "role": "visible_test", "editable": false, "sha256": "433fb5ec334c9c423c2515977581d06f62963ecbd94c5357d7e494d69f40a37a"}
+    {"source": "starter/main.go", "path": "main.go", "role": "starter", "editable": true, "sha256": "605fd7c20a4db1d66b66d2906834ec0ec779e4524f95950f9f3aa423286a1852"},
+    {"source": "visible/main_test.go", "path": "main_test.go", "role": "visible_test", "editable": false, "sha256": "f89cf21caa21d10e4973dcb6b78e350977b0ba25493316faad8b58c11d7686c2"}
   ],
   "editable_paths": ["main.go"],
   "readonly_paths": ["README.md", "go.mod", "main_test.go"],
@@ -19,14 +19,14 @@
     "submit": {"timeout_ms": 15000, "max_output_bytes": 131072, "network": "none"}
   },
   "hints": [
-    {"id": "read-first-error", "level": 1, "title": "先定位第一条失败信息", "body": "从输出顶部找到第一个失败 stage，再区分它来自编译、测试还是 Vet。后续错误可能只是第一处失败的连锁结果。"},
-    {"id": "compare-tool-contracts", "level": 2, "title": "比较三个工具的职责", "body": "Build 验证代码能否编译，Test 验证可执行行为，Vet 报告静态可疑模式。记录每个动作验证的对象，而不是只记录退出码。"}
+    {"id": "return-a-string", "level": 1, "title": "先让函数返回字符串", "body": "welcome 的返回类型是 string。可以使用 fmt.Sprintf，把固定文本和 name 参数组合成返回值。"},
+    {"id": "use-the-parameter", "level": 2, "title": "不要写死样例", "body": "公开测试会传入不止一个名字。返回值必须使用 name 参数，而不是只返回 welcome, Gopher。"}
   ],
-  "solution": "一个合格的小结可以这样表达：Build 先检查包能否编译和链接；Test 运行测试验证声明的行为；Vet 查找编译器允许但可能写错的静态模式。失败时我会先确认失败阶段，再阅读第一条带文件和行号的有效错误，修复后重跑同一动作。",
+  "solution": "func welcome(name string) string { return fmt.Sprintf(\"welcome, %s\", name) }",
   "visible_tests": ["main_test.go"],
   "held_out_tests": [],
   "assessment_rules": [
-    {"rule_id": "toolchain-baseline-builds", "stage": "build", "selector": {"exit_code": 0}, "capability_refs": [{"id": "M1-01", "version": 2}], "evidence_type": "implement", "condition": "passed"}
+    {"rule_id": "first-program-runs", "stage": "visible_test", "selector": {"test": "TestWelcomeUsesTheProvidedName"}, "capability_refs": [{"id": "M1-01", "version": 3}], "evidence_type": "implement", "condition": "passed"}
   ],
   "artifact_rules": {"workspace": "diff", "logs": ["build", "test", "vet", "submit"]}
 }

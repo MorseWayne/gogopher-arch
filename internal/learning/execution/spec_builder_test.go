@@ -12,7 +12,7 @@ import (
 
 func TestSpecBuilderUsesWorkspaceOnlyForEditableAssets(t *testing.T) {
 	registry := releaseRegistry(t)
-	current := frozenAttempt(t, registry, "assessment-check-config-v2", 3)
+	current := frozenAttempt(t, registry, "assessment-check-config-v2", 4)
 	current.Workspace["internal/config/config.go"] += "\n// learner change\n"
 	current.WorkspaceHash = attempt.WorkspaceHash(current.Workspace)
 	builder, err := NewSpecBuilder(registry)

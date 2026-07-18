@@ -54,7 +54,7 @@ func TestAttemptHandlerResumesOpenAttemptWithoutCreatingAnotherFact(t *testing.T
 func TestAttemptHandlerRequiresReviewItemClaim(t *testing.T) {
 	service := &attemptServiceStub{createErr: attempt.ErrReviewClaimRequired}
 	handler, _ := NewAttemptHandler(service, nil)
-	request := httptest.NewRequest(http.MethodPost, "/api/v1/learning/attempts", strings.NewReader(`{"activity_id":"review-check-config-variant","activity_version":3}`))
+	request := httptest.NewRequest(http.MethodPost, "/api/v1/learning/attempts", strings.NewReader(`{"activity_id":"review-check-config-variant","activity_version":4}`))
 	request = request.WithContext(context.WithValue(request.Context(), sessionContextKey{}, learningsession.Session{LearnerID: "owner"}))
 	response := httptest.NewRecorder()
 	handler.Create(response, request)

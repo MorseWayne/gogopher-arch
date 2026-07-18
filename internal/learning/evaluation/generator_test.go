@@ -36,8 +36,6 @@ func TestGeneratorProducesMixedRuleResultsFromExecutedStages(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := map[string]execution.RuleStatus{
-		"module-builds":          execution.RulePassed,
-		"toolchain-checks-pass":  execution.RulePassed,
 		"error-chain-preserved":  execution.RuleNotEvaluated,
 		"resource-closed":        execution.RulePassed,
 		"invalid-input-rejected": execution.RuleNotEvaluated,
@@ -78,8 +76,8 @@ func TestGeneratorPassesAllRulesWithFullStructuredResponse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(results) != 10 {
-		t.Fatalf("len(results) = %d, want 10", len(results))
+	if len(results) != 8 {
+		t.Fatalf("len(results) = %d, want 8", len(results))
 	}
 	for _, result := range results {
 		if result.Status != execution.RulePassed {
@@ -274,7 +272,7 @@ func TestGeneratorDoesNotScoreCurrentGuidedExplanation(t *testing.T) {
 		t.Fatal(err)
 	}
 	releaseID := registry.CurrentReleaseID()
-	task, err := registry.ExecutionTask(releaseID, "guided-run-model-v2", 6)
+	task, err := registry.ExecutionTask(releaseID, "guided-run-model-v2", 7)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -287,13 +285,19 @@ func TestGeneratorDoesNotScoreCurrentGuidedExplanation(t *testing.T) {
 		TaskID: task.ID, TaskVersion: task.Version, TaskHash: task.BundleHash,
 		Workspace: workspace, Explanation: strings.Repeat("学", 20),
 	}
-	terminal := terminalExecution(frozen, execution.ExecutionSucceeded, []execution.StageResult{passedStage(execution.StageBuild)})
+	terminal := terminalExecution(frozen, execution.ExecutionSucceeded, []execution.StageResult{
+		passedStage(execution.StageBuild),
+		{
+			Stage: execution.StageVisibleTest, Status: execution.StagePassed,
+			TestEvents: []execution.TestEvent{{Action: "pass", Package: "first-program", Test: "TestWelcomeUsesTheProvidedName"}},
+		},
+	})
 
 	results, err := generator.Generate(frozen, terminal)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(results) != 1 || results[0].RuleID != "toolchain-baseline-builds" {
+	if len(results) != 1 || results[0].RuleID != "first-program-runs" || results[0].Status != execution.RulePassed {
 		t.Fatalf("current guided results = %#v", results)
 	}
 }
@@ -308,7 +312,7 @@ func TestGeneratorConsumesRealAssessmentSandboxResult(t *testing.T) {
 		t.Fatal(err)
 	}
 	releaseID := registry.CurrentReleaseID()
-	activity, err := registry.ActivityView(releaseID, "assessment-check-config", 4)
+	activity, err := registry.ActivityView(releaseID, "assessment-check-config", 5)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -359,6 +363,88 @@ func TestGeneratorConsumesRealAssessmentSandboxResult(t *testing.T) {
 	for _, result := range results {
 		if result.Status != execution.RulePassed {
 			t.Fatalf("real rule result %s = %#v", result.RuleID, result)
+		}
+	}
+}
+
+func TestFirstProgramAssessmentPassesRealSandbox(t *testing.T) {
+	contentDir, err := filepath.Abs("../../../content/learning")
+	if err != nil {
+		t.Fatal(err)
+	}
+	registry, err := definition.LoadRegistry(definition.RegistryOptions{ContentDir: contentDir})
+	if err != nil {
+		t.Fatal(err)
+	}
+	releaseID := registry.CurrentReleaseID()
+	activity, err := registry.ActivityView(releaseID, "assessment-first-program", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	task, err := registry.ExecutionTask(releaseID, activity.TaskRef.ID, activity.TaskRef.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	workspace, err := registry.PublicWorkspace(releaseID, task.ID, task.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	workspace["main.go"] = `package main
+
+import "fmt"
+
+func greeting(name string, attempts int) string {
+	if name == "" {
+		name = "Gopher"
+	}
+	return fmt.Sprintf("welcome, %s; attempts=%d", name, attempts)
+}
+
+func main() {
+	fmt.Println(greeting("Gopher", 1))
+}
+`
+	current := attempt.Attempt{
+		ID: "00000000-0000-4000-8450-000000000001", ReleaseID: releaseID,
+		ActivityID: activity.ID, ActivityVersion: activity.Version, ActivityHash: activity.ContentHash,
+		TaskID: task.ID, TaskVersion: task.Version, TaskHash: task.BundleHash,
+		Workspace: workspace, WorkspaceHash: attempt.WorkspaceHash(workspace),
+	}
+	builder, _ := execution.NewSpecBuilder(registry)
+	executionID := "00000000-0000-4000-8450-000000000002"
+	spec, err := builder.Build(current, executionID, execution.ActionSubmit)
+	if err != nil {
+		t.Fatal(err)
+	}
+	response, err := sandbox.NewRunner(sandbox.RunnerOptions{TempDir: t.TempDir()}).Run(context.Background(), spec)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if response.Status != execution.ExecutionSucceeded {
+		t.Fatalf("first program Sandbox response = %#v", response)
+	}
+	frozen := submission.Submission{
+		ID: "00000000-0000-4000-8450-000000000003", AttemptID: current.ID,
+		ReleaseID: releaseID, TaskID: task.ID, TaskVersion: task.Version, TaskHash: task.BundleHash,
+		Workspace:   workspace,
+		Explanation: "Build 检查能否编译，Test 验证行为，Vet 检查静态可疑写法；失败时先看第一条有效错误。",
+	}
+	terminal := execution.Execution{
+		ID: executionID, AttemptID: current.ID, SubmissionID: frozen.ID,
+		TaskID: task.ID, TaskVersion: task.Version, TaskHash: task.BundleHash,
+		Status: response.Status, Response: &response,
+	}
+	generator, _ := NewGenerator(registry)
+	results, err := generator.Generate(frozen, terminal)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(results) != 3 {
+		t.Fatalf("first program rule count = %d, want 3", len(results))
+	}
+	for _, result := range results {
+		if result.Status != execution.RulePassed {
+			t.Fatalf("first program rule %s = %#v", result.RuleID, result)
 		}
 	}
 }
@@ -1096,7 +1182,7 @@ func setupGenerator(t *testing.T) (*Generator, submission.Submission) {
 		t.Fatal(err)
 	}
 	releaseID := registry.CurrentReleaseID()
-	task, err := registry.ExecutionTask(releaseID, "assessment-check-config-v2", 3)
+	task, err := registry.ExecutionTask(releaseID, "assessment-check-config-v2", 4)
 	if err != nil {
 		t.Fatal(err)
 	}
