@@ -1,0 +1,17 @@
+{
+  "id": "assessment-delivery-service",
+  "version": 1,
+  "title": "独立实现交付服务抽象",
+  "kind": "learning_task",
+  "mode": "assessment",
+  "capability_refs": [{"id": "M1-06", "version": 1}],
+  "task_ref": {"id": "assessment-delivery-service-v1", "version": 1},
+  "content_ref": "web/src/content/learning/delivery-service-assessment-v1.mdx",
+  "assistance_policy": {"hints": true, "references": true, "solution": false, "ai_declaration": true},
+  "evidence_rules": [
+    {"rule_id": "consumer-interface-minimal", "capability_id": "M1-06", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "generic-helper-declared", "capability_id": "M1-06", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "substitute-contract-correct", "capability_id": "M1-06", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "generic-helper-reusable", "capability_id": "M1-06", "capability_version": 1, "evidence_type": "implement", "result": "passed"}
+  ]
+}

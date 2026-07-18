@@ -19,6 +19,8 @@ const forbiddenHeldOutMarkers = [
   'os.WriteFile(path, []byte',
   'registry_race_test.go',
   'TestRegistryConcurrentAccessIsRaceFree',
+  'report_private_test.go',
+  'TestRenderIncludesAllEntries',
 ]
 
 test.describe('Learning slice vertical scenarios', () => {
@@ -93,15 +95,15 @@ test.describe('Learning slice vertical scenarios', () => {
     expect(new Set(completed.evidence.map((item) => item.independence))).toEqual(new Set(['hinted']))
   })
 
-  test('v9 package API assessment records build, consumer, and documentation Evidence', async ({ page }) => {
+  test('v10 package API assessment records build, consumer, and documentation Evidence', async ({ page }) => {
     await bootstrap(page)
     const attempt = await readJSON<AttemptResponse>(
       await page.request.post(apiRoot + '/attempts', {
-        data: { activity_id: 'assessment-status-module', activity_version: 1 },
+        data: { activity_id: 'assessment-status-module', activity_version: 2 },
       }),
       [201],
     )
-    expect(attempt.release_id).toBe('m1-first-slice-v9')
+    expect(attempt.release_id).toBe('m1-first-slice-v10')
     expect(attempt.workspace['health/consumer_test.go']).toBeUndefined()
 
     const saved = await readJSON<AttemptResponse>(
@@ -126,7 +128,7 @@ test.describe('Learning slice vertical scenarios', () => {
     expect(capability.snapshot?.independence_state).toBe('independent')
   })
 
-  test('v9 concurrent registry uses private race evaluation without leaking its test', async ({ page }) => {
+  test('v10 concurrent registry uses private race evaluation without leaking its test', async ({ page }) => {
     await bootstrap(page)
     const attempt = await readJSON<AttemptResponse>(
       await page.request.post(apiRoot + '/attempts', {
@@ -134,7 +136,7 @@ test.describe('Learning slice vertical scenarios', () => {
       }),
       [201],
     )
-    expect(attempt.release_id).toBe('m1-first-slice-v9')
+    expect(attempt.release_id).toBe('m1-first-slice-v10')
     expect(attempt.workspace['registry_race_test.go']).toBeUndefined()
 
     const saved = await readJSON<AttemptResponse>(
@@ -165,6 +167,45 @@ test.describe('Learning slice vertical scenarios', () => {
     const raceRule = completed.rule_results.find((item) => item.rule_id === 'race-detector-clean')
     expect(raceRule?.package).toBeUndefined()
     expect(raceRule?.test).toBeUndefined()
+  })
+
+  test('v10 report diagnosis requires regression, Vet, and an explicit evidence chain', async ({ page }) => {
+    await bootstrap(page)
+    const attempt = await readJSON<AttemptResponse>(
+      await page.request.post(apiRoot + '/attempts', {
+        data: { activity_id: 'assessment-report-debug', activity_version: 1 },
+      }),
+      [201],
+    )
+    expect(attempt.release_id).toBe('m1-first-slice-v10')
+    expect(attempt.workspace['report_private_test.go']).toBeUndefined()
+
+    const saved = await readJSON<AttemptResponse>(
+      await page.request.put(apiRoot + '/attempts/' + attempt.id + '/workspace', {
+        data: {
+          base_revision: attempt.workspace_revision,
+          files: { ...attempt.workspace, 'report.go': reportDebugSolution },
+        },
+      }),
+      [200],
+    )
+    await readJSON<SubmissionResponse>(
+      await page.request.post(apiRoot + '/attempts/' + saved.id + '/submit', {
+        data: {
+          submission_key: 'report-debug-submit',
+          workspace_revision: saved.workspace_revision,
+          workspace_hash: saved.workspace_hash,
+          explanation: '失败测试确认最后一项丢失，breakpoint 显示循环提前退出；alloc_space 指向重复字符串拼接，所以改用 strings.Builder，最后以隐藏测试和 Vet 验证行为与格式参数。',
+        },
+      }),
+      [202],
+    )
+    const completed = await pollAttempt(page, saved.id, (value) => value.submission?.status === 'evaluated')
+    for (const ruleID of ['regression-fixed', 'static-analysis-clean', 'profile-diagnosis-explained']) {
+      expect(completed.rule_results.find((item) => item.rule_id === ruleID)?.status).toBe('passed')
+      expect(completed.evidence.some((item) => item.evidence_rule_id === ruleID && item.result === 'passed')).toBe(true)
+    }
+    expect(completed.rule_results.find((item) => item.rule_id === 'regression-fixed')?.test).toBeUndefined()
   })
 
   test('independent held-out pass is idempotent, verifies Snapshot, and schedules remediation after failed review', async ({ page }) => {
@@ -479,6 +520,32 @@ func (r *Registry) Snapshot() map[string]int64 {
         snapshot[key] = value
     }
     return snapshot
+}
+`
+
+const reportDebugSolution = `package report
+
+import (
+    "fmt"
+    "io"
+    "strings"
+)
+
+type Entry struct {
+    Name  string
+    Value int
+}
+
+func Render(entries []Entry) string {
+    var output strings.Builder
+    for _, entry := range entries {
+        fmt.Fprintf(&output, "%s=%d\\n", entry.Name, entry.Value)
+    }
+    return output.String()
+}
+
+func LogSummary(writer io.Writer, rendered string) {
+    fmt.Fprintf(writer, "rendered=%s\\n", rendered)
 }
 `
 

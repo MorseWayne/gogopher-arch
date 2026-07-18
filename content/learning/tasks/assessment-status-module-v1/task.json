@@ -1,6 +1,6 @@
 {
   "id": "assessment-status-module-v1",
-  "version": 1,
+  "version": 2,
   "language": "go1.25",
   "workspace_root": "workspace",
   "files": [
@@ -27,9 +27,9 @@
   "visible_tests": ["health/report_test.go"],
   "held_out_tests": ["health/consumer_test.go"],
   "assessment_rules": [
-    {"rule_id": "package-graph-builds", "stage": "build", "selector": {"package": "./..."}, "capability_refs": [{"id": "M1-08", "version": 1}], "evidence_type": "implement", "condition": "passed"},
-    {"rule_id": "exported-api-usable", "stage": "held_out_test", "selector": {"test": "TestExportedAPIUsableByConsumer"}, "capability_refs": [{"id": "M1-08", "version": 1}], "evidence_type": "implement", "condition": "passed"},
-    {"rule_id": "exported-api-documented", "stage": "ast", "selector": {"file": "health/report.go", "documented_exports": true}, "capability_refs": [{"id": "M1-08", "version": 1}], "evidence_type": "implement", "condition": "passed"}
+    {"rule_id": "package-graph-builds", "stage": "build", "selector": {"package": "./..."}, "capability_refs": [{"id": "M1-08", "version": 2}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "exported-api-usable", "stage": "held_out_test", "selector": {"test": "TestExportedAPIUsableByConsumer"}, "capability_refs": [{"id": "M1-08", "version": 2}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "exported-api-documented", "stage": "ast", "selector": {"file": "health/report.go", "documented_exports": true}, "capability_refs": [{"id": "M1-08", "version": 2}], "evidence_type": "implement", "condition": "passed"}
   ],
   "artifact_rules": {"workspace": "full", "logs": ["build", "test", "vet", "submit"]}
 }

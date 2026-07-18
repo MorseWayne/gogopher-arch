@@ -1,0 +1,7 @@
+# 变式复习：重新建立诊断证据链
+
+指标渲染器与上一题症状相似，但遗漏发生在循环另一端，输出协议也不同。不要凭记忆复制上次的行号修改；重新用失败摘要确认现象、用 breakpoint 记录定位控制流、用 `alloc_space` top 解释性能修改。
+
+提交前运行测试与 Vet，并用自己的话写出超过 80 个字符的诊断小结，其中包含 `breakpoint`、`alloc_space`、`strings.Builder`。评测关心的是你能否在新上下文中复现诊断方法。
+
+复习时只按问题查阅官方 [Diagnostics](https://go.dev/doc/diagnostics) 与 [pprof 示例](https://go.dev/blog/pprof)，随后合上资料，尝试口述“现象—定位—修复—验证”四段链路。

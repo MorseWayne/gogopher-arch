@@ -35,6 +35,15 @@ const ruleLabels: Record<string, string> = {
   'cancellation-practiced': '取消信号能够终止并发任务',
   'cancellation-propagates': '取消和失败能够传递到同批任务',
   'workers-release-before-return': '函数返回前已释放全部 Worker',
+  'consumer-interface-practiced': '使用方接口调用符合契约',
+  'consumer-interface-minimal': '使用方接口保持最小边界',
+  'generic-helper-declared': '复用函数已使用类型参数',
+  'substitute-contract-correct': '测试替身可以代入并保留错误',
+  'generic-helper-reusable': '泛型算法可跨类型复用',
+  'failure-triaged': '已从失败现场定位并修复缺陷',
+  'regression-fixed': '回归行为已经修复',
+  'static-analysis-clean': '静态检查通过',
+  'profile-diagnosis-explained': '已说明性能证据与修复关系',
 }
 
 export function learnerCapabilityName(capability?: CapabilityLabelSource): string {

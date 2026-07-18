@@ -1,0 +1,32 @@
+{
+  "id": "practice-order-notifier-v1",
+  "version": 1,
+  "language": "go1.25",
+  "workspace_root": "workspace",
+  "files": [
+    {"source": "README.md", "path": "README.md", "role": "readme", "editable": false, "sha256": "04745d9cf058ce8252103fd73829635230f1efe9195a997350d64d687dca784c"},
+    {"source": "starter/go.mod", "path": "go.mod", "role": "starter", "editable": false, "sha256": "ade92dfbff7bb2d9a478d700263c3df9f80f91ca4203f2af411357a92f5963ba"},
+    {"source": "starter/service.go", "path": "service.go", "role": "starter", "editable": true, "sha256": "6ee3c338e424b43922ec641ed0b7d366366ee63345df88c2761da079ac9ad06f"},
+    {"source": "visible/service_test.go", "path": "service_test.go", "role": "visible_test", "editable": false, "sha256": "5aa96ccc99b6af8a2c3c58c0578b0932b942262a710a90107799f9830117127a"}
+  ],
+  "editable_paths": ["service.go"],
+  "readonly_paths": ["README.md", "go.mod", "service_test.go"],
+  "limits": {"max_files": 8, "max_file_bytes": 65536, "max_total_bytes": 262144},
+  "actions": {
+    "build": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "test": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "vet": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "submit": {"timeout_ms": 15000, "max_output_bytes": 131072, "network": "none"}
+  },
+  "hints": [
+    {"id": "return-dependency-error", "level": 1, "title": "让依赖错误穿过服务边界", "body": "Notifier.Notify 已经返回 error；Place 不需要包装或吞掉它，直接把调用结果交还给使用方。"},
+    {"id": "build-message", "level": 2, "title": "先形成契约消息", "body": "消息由固定前缀 order placed: 和 item 组成；不要让 Notifier 负责拼接业务文本。"}
+  ],
+  "visible_tests": ["service_test.go"],
+  "held_out_tests": [],
+  "race_tests": [],
+  "assessment_rules": [
+    {"rule_id": "consumer-interface-practiced", "stage": "visible_test", "selector": {"test": "TestPlaceUsesNotifierContractAndPropagatesError"}, "capability_refs": [{"id": "M1-06", "version": 1}], "evidence_type": "implement", "condition": "passed"}
+  ],
+  "artifact_rules": {"workspace": "full", "logs": ["build", "test", "vet", "submit"]}
+}

@@ -1,6 +1,6 @@
 {
   "id": "practice-package-contract-v1",
-  "version": 1,
+  "version": 2,
   "language": "go1.25",
   "workspace_root": "workspace",
   "files": [
@@ -26,7 +26,7 @@
   "visible_tests": ["internal/report/report_test.go"],
   "held_out_tests": [],
   "assessment_rules": [
-    {"rule_id": "package-contract-practiced", "stage": "visible_test", "selector": {"test": "TestSummarizeKeepsDomainLogicInPackage"}, "capability_refs": [{"id": "M1-08", "version": 1}], "evidence_type": "implement", "condition": "passed"}
+    {"rule_id": "package-contract-practiced", "stage": "visible_test", "selector": {"test": "TestSummarizeKeepsDomainLogicInPackage"}, "capability_refs": [{"id": "M1-08", "version": 2}], "evidence_type": "implement", "condition": "passed"}
   ],
   "artifact_rules": {"workspace": "diff", "logs": ["build", "test", "vet", "submit"]}
 }

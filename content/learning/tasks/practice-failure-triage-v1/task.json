@@ -1,0 +1,32 @@
+{
+  "id": "practice-failure-triage-v1",
+  "version": 1,
+  "language": "go1.25",
+  "workspace_root": "workspace",
+  "files": [
+    {"source": "README.md", "path": "README.md", "role": "readme", "editable": false, "sha256": "e66cf3a7972a25bf3f0ff823a0fac8316f81c65a1d41f3fd13340ca238b334e3"},
+    {"source": "starter/go.mod", "path": "go.mod", "role": "starter", "editable": false, "sha256": "c4821f433d86287b096b082ebcb2c24365c10094789154efea9a3141b04f9ef3"},
+    {"source": "starter/normalize.go", "path": "normalize.go", "role": "starter", "editable": true, "sha256": "ef4944bacc7b79ebffb0fb3dc022a406487f45ec275f0599333dd8ea778e0c65"},
+    {"source": "visible/normalize_test.go", "path": "normalize_test.go", "role": "visible_test", "editable": false, "sha256": "4c658982c400d7e5495afd9c6439954a31e4fb4926b0bc84da662ef4c409acbf"}
+  ],
+  "editable_paths": ["normalize.go"],
+  "readonly_paths": ["README.md", "go.mod", "normalize_test.go"],
+  "limits": {"max_files": 8, "max_file_bytes": 65536, "max_total_bytes": 262144},
+  "actions": {
+    "build": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "test": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "vet": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "submit": {"timeout_ms": 15000, "max_output_bytes": 131072, "network": "none"}
+  },
+  "hints": [
+    {"id": "first-business-frame", "level": 1, "title": "先看顶部业务栈帧", "body": "panic 会指向 normalize.go 的切片访问；把该行 index 的最后一个取值与 len(names)-1 比较。"},
+    {"id": "half-open-range", "level": 2, "title": "切片下标是半开区间", "body": "合法下标满足 0 <= index < len(names)，循环条件也应表达同一个边界。"}
+  ],
+  "visible_tests": ["normalize_test.go"],
+  "held_out_tests": [],
+  "race_tests": [],
+  "assessment_rules": [
+    {"rule_id": "failure-triaged", "stage": "visible_test", "selector": {"test": "TestNormalizeHandlesEveryInputWithoutPanic"}, "capability_refs": [{"id": "M1-10", "version": 1}], "evidence_type": "diagnose", "condition": "passed"}
+  ],
+  "artifact_rules": {"workspace": "full", "logs": ["build", "test", "vet", "submit"]}
+}

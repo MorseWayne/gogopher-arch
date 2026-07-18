@@ -23,7 +23,7 @@ func TestLoadRegistryIndexesCurrentAndHistoricalDefinitions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, want := len(definitions), 66; got != want {
+	if got, want := len(definitions), 80; got != want {
 		t.Fatalf("len(Definitions()) = %d, want %d", got, want)
 	}
 	ref := DefinitionRef{ReleaseID: testReleaseID, Kind: KindActivity, ID: "assessment-check-config", Version: 4}
@@ -120,29 +120,32 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 	}
 	cases := []struct {
 		capabilityID string
+		version      int
 		acquisition  string
 		assessment   string
 		review       string
 	}{
-		{"M1-02", "guided-core-semantics", "assessment-text-stats", "review-temperature-bands"},
-		{"M1-04", "practice-slice-ownership", "assessment-event-batches", "review-byte-frames"},
-		{"M1-05", "practice-domain-model", "assessment-check-model", "review-budget-model"},
-		{"M1-08", "practice-package-contract", "assessment-status-module", "review-format-module"},
-		{"M1-11", "practice-bounded-pipeline", "assessment-worker-pool", "review-thumbnail-pipeline"},
-		{"M1-12", "practice-protected-counter", "assessment-concurrent-registry", "review-concurrent-ledger"},
-		{"M1-13", "practice-cancellable-map", "assessment-cancellable-checks", "review-cancellable-fetch"},
+		{"M1-02", 1, "guided-core-semantics", "assessment-text-stats", "review-temperature-bands"},
+		{"M1-04", 1, "practice-slice-ownership", "assessment-event-batches", "review-byte-frames"},
+		{"M1-05", 1, "practice-domain-model", "assessment-check-model", "review-budget-model"},
+		{"M1-06", 1, "practice-order-notifier", "assessment-delivery-service", "review-audit-service"},
+		{"M1-08", 2, "practice-package-contract", "assessment-status-module", "review-format-module"},
+		{"M1-10", 1, "practice-failure-triage", "assessment-report-debug", "review-metrics-debug"},
+		{"M1-11", 1, "practice-bounded-pipeline", "assessment-worker-pool", "review-thumbnail-pipeline"},
+		{"M1-12", 1, "practice-protected-counter", "assessment-concurrent-registry", "review-concurrent-ledger"},
+		{"M1-13", 1, "practice-cancellable-map", "assessment-cancellable-checks", "review-cancellable-fetch"},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.capabilityID, func(t *testing.T) {
-			capability, err := registry.CapabilityView(testReleaseID, testCase.capabilityID, 1)
+			capability, err := registry.CapabilityView(testReleaseID, testCase.capabilityID, testCase.version)
 			if err != nil || len(capability.RequiredEvidence) == 0 || len(capability.Prerequisites.Hard) == 0 {
 				t.Fatalf("CapabilityView() = %#v, %v", capability, err)
 			}
-			remediation, err := registry.RemediationActivity(testReleaseID, VersionedDefinitionRef{ID: testCase.capabilityID, Version: 1})
+			remediation, err := registry.RemediationActivity(testReleaseID, VersionedDefinitionRef{ID: testCase.capabilityID, Version: testCase.version})
 			if err != nil || remediation.ID != testCase.acquisition {
 				t.Fatalf("RemediationActivity() = %#v, %v", remediation, err)
 			}
-			assessment, err := registry.ActivityView(testReleaseID, testCase.assessment, 1)
+			assessment, err := registry.ActivityView(testReleaseID, testCase.assessment, testCase.version)
 			if err != nil || assessment.Mode != "assessment" {
 				t.Fatalf("assessment = %#v, %v", assessment, err)
 			}
@@ -153,7 +156,7 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 		})
 	}
 
-	activity, err := registry.ActivityView(testReleaseID, "assessment-status-module", 1)
+	activity, err := registry.ActivityView(testReleaseID, "assessment-status-module", 2)
 	if err != nil {
 		t.Fatal(err)
 	}

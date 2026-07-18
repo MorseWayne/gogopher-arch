@@ -1,16 +1,16 @@
 {
   "id": "assessment-status-module",
-  "version": 1,
+  "version": 2,
   "title": "独立交付状态报告 module",
   "kind": "learning_task",
   "mode": "assessment",
-  "capability_refs": [{"id": "M1-08", "version": 1}],
-  "task_ref": {"id": "assessment-status-module-v1", "version": 1},
+  "capability_refs": [{"id": "M1-08", "version": 2}],
+  "task_ref": {"id": "assessment-status-module-v1", "version": 2},
   "content_ref": "web/src/content/learning/status-module-assessment-v1.mdx",
   "assistance_policy": {"hints": true, "references": true, "solution": false, "ai_declaration": true},
   "evidence_rules": [
-    {"rule_id": "package-graph-builds", "capability_id": "M1-08", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
-    {"rule_id": "exported-api-usable", "capability_id": "M1-08", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
-    {"rule_id": "exported-api-documented", "capability_id": "M1-08", "capability_version": 1, "evidence_type": "implement", "result": "passed"}
+    {"rule_id": "package-graph-builds", "capability_id": "M1-08", "capability_version": 2, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "exported-api-usable", "capability_id": "M1-08", "capability_version": 2, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "exported-api-documented", "capability_id": "M1-08", "capability_version": 2, "evidence_type": "implement", "result": "passed"}
   ]
 }

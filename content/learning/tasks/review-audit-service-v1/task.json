@@ -1,0 +1,35 @@
+{
+  "id": "review-audit-service-v1",
+  "version": 1,
+  "language": "go1.25",
+  "workspace_root": "workspace",
+  "files": [
+    {"source": "README.md", "path": "README.md", "role": "readme", "editable": false, "sha256": "7451c57fc085b55abc9a62186a0d5e1c3389bc312f20d74e1005c1f40a811cb3"},
+    {"source": "starter/go.mod", "path": "go.mod", "role": "starter", "editable": false, "sha256": "81027bedb01fbd1b76bd5a4008e389baa4c714fd4036e53672798c7e0c31f9e4"},
+    {"source": "starter/audit.go", "path": "audit.go", "role": "starter", "editable": true, "sha256": "eb0cfde10d9beb7bfb7c8d7fda608dd294b0661558109cc9e268b8be83984a4f"},
+    {"source": "heldout/audit_private_test.go", "path": "audit_private_test.go", "role": "held_out_test", "editable": false, "sha256": "64621971a028c02f92a35c368865d9a87340a70c2270ed6df731ae2039fc39d5"}
+  ],
+  "editable_paths": ["audit.go"],
+  "readonly_paths": ["README.md", "go.mod"],
+  "limits": {"max_files": 8, "max_file_bytes": 65536, "max_total_bytes": 262144},
+  "actions": {
+    "build": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "test": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "vet": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "submit": {"timeout_ms": 20000, "max_output_bytes": 131072, "network": "none"}
+  },
+  "hints": [
+    {"id": "reconstruct-contract", "level": 1, "title": "先重建两个最小契约", "body": "写出 Append 唯一需要的 sink 方法，以及 GroupBy 唯一需要的 key 属性，再开始编码。"},
+    {"id": "group-preserves-order", "level": 2, "title": "每个 key 追加而非覆盖", "body": "结果是 map[K][]T；遍历原切片并 append 到对应 key，便能保留组内输入顺序。"}
+  ],
+  "visible_tests": [],
+  "held_out_tests": ["audit_private_test.go"],
+  "race_tests": [],
+  "assessment_rules": [
+    {"rule_id": "consumer-interface-minimal", "stage": "ast", "selector": {"file": "audit.go", "interface": "Sink", "maximum_methods": 1}, "capability_refs": [{"id": "M1-06", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "generic-helper-declared", "stage": "ast", "selector": {"file": "audit.go", "generic_function": "GroupBy"}, "capability_refs": [{"id": "M1-06", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "substitute-contract-correct", "stage": "held_out_test", "selector": {"test": "TestServiceUsesSubstituteAndPropagatesError"}, "capability_refs": [{"id": "M1-06", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "generic-helper-reusable", "stage": "held_out_test", "selector": {"test": "TestGroupByIsReusableAcrossTypes"}, "capability_refs": [{"id": "M1-06", "version": 1}], "evidence_type": "implement", "condition": "passed"}
+  ],
+  "artifact_rules": {"workspace": "full", "logs": ["build", "test", "vet", "submit"]}
+}

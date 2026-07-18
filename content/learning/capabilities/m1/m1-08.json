@@ -1,14 +1,15 @@
 {
   "id": "M1-08",
-  "version": 1,
+  "version": 2,
   "name": "包、模块、API 与文档设计",
   "description": "能够把程序拆成依赖方向清晰的包，控制导出 API，并为面向使用者的声明编写有效文档。",
   "milestone": "M1",
   "domain": "package-api-design",
-  "prerequisites": {"hard": [{"id": "M1-05", "version": 1}, {"id": "M1-07", "version": 1}], "recommended": []},
+  "prerequisites": {"hard": [{"id": "M1-05", "version": 1}, {"id": "M1-06", "version": 1}, {"id": "M1-07", "version": 1}], "recommended": []},
   "required_evidence": [
     {"type": "implement", "independence": "independent", "context": "same_context", "rule_ids": ["package-graph-builds", "exported-api-usable", "exported-api-documented"]}
   ],
   "review_policy": {"first_review_after_days": 3, "success_interval_days": 14, "failure_remediation_after_days": 1},
+  "supersedes": {"id": "M1-08", "version": 1},
   "resource_refs": ["web/src/content/go-basics/ch02-program-structure.mdx", "web/src/content/go-basics/ch10-packages-tools.mdx", "https://go.dev/doc/modules/developing", "https://go.dev/doc/comment"]
 }

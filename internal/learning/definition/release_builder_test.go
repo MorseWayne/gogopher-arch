@@ -11,7 +11,7 @@ import (
 
 const (
 	testActivitySet = "m1-first-slice"
-	testReleaseID   = "m1-first-slice-v9"
+	testReleaseID   = "m1-first-slice-v10"
 )
 
 var testCreatedAt = time.Date(2026, time.July, 18, 0, 0, 0, 0, time.UTC)

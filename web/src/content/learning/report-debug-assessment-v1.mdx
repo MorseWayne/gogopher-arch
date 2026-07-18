@@ -1,0 +1,7 @@
+# 独立诊断：报告生成故障
+
+仓库里的三份现场材料分别回答不同问题：失败摘要确认可观察回归，breakpoint 记录把控制流缩到循环边界，`alloc_space` profile 把分配热点指向字符串拼接。先写出每份证据支持的判断，再动代码。
+
+最终提交需要同时通过隐藏回归测试与 `go vet`，并提交不少于 80 个字符的诊断小结。小结中明确使用 `breakpoint`、`alloc_space`、`strings.Builder` 三个词，把证据、根因和修复逐一对应；只罗列工具命令不构成诊断证据。
+
+需要校准工具用途时，查阅官方 [Diagnostics](https://go.dev/doc/diagnostics) 的 Debugging / Profiling 分类，以及 [Profiling Go Programs](https://go.dev/blog/pprof) 中 top 输出的阅读方式。这里的 profile 已提供，不要求你搭建采集环境。

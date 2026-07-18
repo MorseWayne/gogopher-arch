@@ -1,0 +1,38 @@
+{
+  "id": "assessment-report-debug-v1",
+  "version": 1,
+  "language": "go1.25",
+  "workspace_root": "workspace",
+  "files": [
+    {"source": "README.md", "path": "README.md", "role": "readme", "editable": false, "sha256": "4110e9239a1444d0ab4954deadf60aab0ae04cc7fd8840634649394f9342eaec"},
+    {"source": "starter/go.mod", "path": "go.mod", "role": "starter", "editable": false, "sha256": "a4ab4fba9b304ab0f1ea9137b170eae15e8c695e40d1f4f24b052c58029e8ba4"},
+    {"source": "starter/report.go", "path": "report.go", "role": "starter", "editable": true, "sha256": "f77cc097d13f8f2342fc3256e96d8b8c5d596be54170c5947387dac8df638183"},
+    {"source": "visible/report_test.go", "path": "report_test.go", "role": "visible_test", "editable": false, "sha256": "b23230684515a492de41e71dda03b15f31009027421a293a845747d2d0ae2a34"},
+    {"source": "heldout/report_private_test.go", "path": "report_private_test.go", "role": "held_out_test", "editable": false, "sha256": "074851ce1a7073120f923ef69a1eecdbc914b6283b8e43315ed85858b90e8386"},
+    {"source": "fixtures/test-failure.txt", "path": "testdata/test-failure.txt", "role": "fixture", "editable": false, "sha256": "03ed120dc2e96deca81324373fd72cf2f0896dcebdc5aa5a30f36232cd7abde6"},
+    {"source": "fixtures/delve-transcript.txt", "path": "testdata/delve-transcript.txt", "role": "fixture", "editable": false, "sha256": "51ff8b716e1d4d30a63fd6211b25d104ea503d44215d4f2f528b53d1b5f2ad42"},
+    {"source": "fixtures/pprof-top.txt", "path": "testdata/pprof-top.txt", "role": "fixture", "editable": false, "sha256": "dc247f0df7ad44c27f3a91f35c13004a6e7c8e42058a44c127051f81d69ddbaa"}
+  ],
+  "editable_paths": ["report.go"],
+  "readonly_paths": ["README.md", "go.mod", "report_test.go", "testdata/test-failure.txt", "testdata/delve-transcript.txt", "testdata/pprof-top.txt"],
+  "limits": {"max_files": 12, "max_file_bytes": 65536, "max_total_bytes": 262144},
+  "actions": {
+    "build": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "test": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "vet": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "submit": {"timeout_ms": 20000, "max_output_bytes": 131072, "network": "none"}
+  },
+  "hints": [
+    {"id": "match-evidence-to-question", "level": 1, "title": "每份证据只回答一个主要问题", "body": "失败测试说明外部症状，breakpoint 说明循环何时退出，alloc_space top 说明分配热点；不要互相替代。"},
+    {"id": "builder-and-vet", "level": 2, "title": "分别修复分配与格式契约", "body": "Builder 负责累积输出；Vet 报告的格式化占位符则应与 rendered 的 string 类型一致。"}
+  ],
+  "visible_tests": ["report_test.go"],
+  "held_out_tests": ["report_private_test.go"],
+  "race_tests": [],
+  "assessment_rules": [
+    {"rule_id": "regression-fixed", "stage": "held_out_test", "selector": {"test": "TestRenderIncludesAllEntries"}, "capability_refs": [{"id": "M1-10", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "static-analysis-clean", "stage": "vet", "selector": {"package": "./..."}, "capability_refs": [{"id": "M1-10", "version": 1}], "evidence_type": "diagnose", "condition": "passed"},
+    {"rule_id": "profile-diagnosis-explained", "stage": "explanation", "selector": {"minimum_chars": 80, "required_terms": ["breakpoint", "alloc_space", "strings.Builder"]}, "capability_refs": [{"id": "M1-10", "version": 1}], "evidence_type": "diagnose", "condition": "passed"}
+  ],
+  "artifact_rules": {"workspace": "full", "logs": ["build", "test", "vet", "submit"]}
+}

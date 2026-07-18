@@ -3,6 +3,7 @@ package evaluation
 import (
 	"context"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -158,6 +159,39 @@ func (Summary) Count() int { return 0 }
 				t.Fatalf("hasDocumentedExports(%s without valid comment) = true", name)
 			}
 		})
+	}
+}
+
+func TestInterfaceAndGenericASTAnalyzersRequireExplicitContracts(t *testing.T) {
+	valid := `package service
+
+type Notifier interface { Notify(string) error }
+
+func IndexBy[T any, K comparable](values []T, key func(T) K) map[K]T { return nil }
+`
+	if !hasMinimalInterface(valid, "Notifier", 1) {
+		t.Fatal("hasMinimalInterface(valid) = false")
+	}
+	if !hasGenericFunction(valid, "IndexBy") {
+		t.Fatal("hasGenericFunction(valid) = false")
+	}
+	tooWide := `package service; type Notifier interface { Notify(string) error; Close() error }`
+	if hasMinimalInterface(tooWide, "Notifier", 1) {
+		t.Fatal("hasMinimalInterface(tooWide) = true")
+	}
+	nongeneric := `package service; func IndexBy(values []string) map[string]string { return nil }`
+	if hasGenericFunction(nongeneric, "IndexBy") {
+		t.Fatal("hasGenericFunction(nongeneric) = true")
+	}
+}
+
+func TestExplanationSelectorRequiresLengthAndEvidenceTerms(t *testing.T) {
+	selector := definition.AssessmentSelector{MinimumChars: 20, RequiredTerms: []string{"alloc_space", "strings.Builder"}}
+	if !explanationSatisfies("根据 alloc_space profile，我选择 strings.Builder 降低分配。", selector) {
+		t.Fatal("valid evidence explanation was rejected")
+	}
+	if explanationSatisfies(strings.Repeat("无关内容", 20), selector) {
+		t.Fatal("explanation without required evidence terms passed")
 	}
 }
 
@@ -368,6 +402,92 @@ func TestConcurrencyAssessmentSolutionsPassRealSandbox(t *testing.T) {
 	}
 }
 
+func TestAbstractionAndDebugAssessmentSolutionsPassRealEvaluation(t *testing.T) {
+	contentDir, err := filepath.Abs("../../../content/learning")
+	if err != nil {
+		t.Fatal(err)
+	}
+	registry, err := definition.LoadRegistry(definition.RegistryOptions{ContentDir: contentDir})
+	if err != nil {
+		t.Fatal(err)
+	}
+	generator, err := NewGenerator(registry)
+	if err != nil {
+		t.Fatal(err)
+	}
+	testCases := []struct {
+		name        string
+		activityID  string
+		path        string
+		source      string
+		explanation string
+	}{
+		{name: "minimal interface and generics", activityID: "assessment-delivery-service", path: "delivery.go", source: deliveryServiceSolution()},
+		{
+			name: "debug evidence", activityID: "assessment-report-debug", path: "report.go", source: reportDebugSolution(),
+			explanation: "失败测试确认最后一项丢失，breakpoint 显示循环提前退出；alloc_space 指向重复拼接，所以改用 strings.Builder，最后用隐藏测试和 Vet 验证行为与格式参数。",
+		},
+	}
+	for index, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			activity, err := registry.ActivityView(registry.CurrentReleaseID(), testCase.activityID, 1)
+			if err != nil {
+				t.Fatal(err)
+			}
+			task, err := registry.ExecutionTask(registry.CurrentReleaseID(), activity.TaskRef.ID, activity.TaskRef.Version)
+			if err != nil {
+				t.Fatal(err)
+			}
+			workspace, err := registry.PublicWorkspace(registry.CurrentReleaseID(), task.ID, task.Version)
+			if err != nil {
+				t.Fatal(err)
+			}
+			workspace[testCase.path] = testCase.source
+			current := attempt.Attempt{
+				ID: "00000000-0000-4000-8500-00000000000" + strconv.Itoa(index+1), ReleaseID: registry.CurrentReleaseID(),
+				ActivityID: activity.ID, ActivityVersion: activity.Version, ActivityHash: activity.ContentHash,
+				TaskID: task.ID, TaskVersion: task.Version, TaskHash: task.BundleHash,
+				Workspace: workspace, WorkspaceHash: attempt.WorkspaceHash(workspace),
+			}
+			builder, err := execution.NewSpecBuilder(registry)
+			if err != nil {
+				t.Fatal(err)
+			}
+			executionID := "00000000-0000-4000-8600-00000000000" + strconv.Itoa(index+1)
+			spec, err := builder.Build(current, executionID, execution.ActionSubmit)
+			if err != nil {
+				t.Fatal(err)
+			}
+			response, err := sandbox.NewRunner(sandbox.RunnerOptions{TempDir: t.TempDir()}).Run(context.Background(), spec)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if response.Status != execution.ExecutionSucceeded {
+				t.Fatalf("Sandbox response = %#v", response)
+			}
+			frozen := submission.Submission{
+				ID: "00000000-0000-4000-8700-00000000000" + strconv.Itoa(index+1), AttemptID: current.ID,
+				ReleaseID: current.ReleaseID, TaskID: task.ID, TaskVersion: task.Version, TaskHash: task.BundleHash,
+				Workspace: workspace, Explanation: testCase.explanation,
+			}
+			terminal := execution.Execution{
+				ID: executionID, AttemptID: current.ID, SubmissionID: frozen.ID,
+				TaskID: task.ID, TaskVersion: task.Version, TaskHash: task.BundleHash,
+				Status: response.Status, Response: &response,
+			}
+			results, err := generator.Generate(frozen, terminal)
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, result := range results {
+				if result.Status != execution.RulePassed {
+					t.Fatalf("rule %s = %#v", result.RuleID, result)
+				}
+			}
+		})
+	}
+}
+
 func workerPoolSolution() string {
 	return `package workerpool
 
@@ -488,6 +608,73 @@ func CheckAll(ctx context.Context, targets []string, workers int, check func(con
 		return first
 	}
 	return ctx.Err()
+}
+`
+}
+
+func deliveryServiceSolution() string {
+	return `package delivery
+
+type Message struct {
+	Recipient string
+	Body      string
+}
+
+type Sender interface {
+	Send(Message) error
+}
+
+type Service struct {
+	sender Sender
+}
+
+func New(sender Sender) Service {
+	return Service{sender: sender}
+}
+
+func (s Service) Deliver(messages []Message) error {
+	for _, message := range messages {
+		if err := s.sender.Send(message); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func IndexBy[T any, K comparable](values []T, key func(T) K) map[K]T {
+	indexed := make(map[K]T, len(values))
+	for _, value := range values {
+		indexed[key(value)] = value
+	}
+	return indexed
+}
+`
+}
+
+func reportDebugSolution() string {
+	return `package report
+
+import (
+	"fmt"
+	"io"
+	"strings"
+)
+
+type Entry struct {
+	Name  string
+	Value int
+}
+
+func Render(entries []Entry) string {
+	var output strings.Builder
+	for _, entry := range entries {
+		fmt.Fprintf(&output, "%s=%d\n", entry.Name, entry.Value)
+	}
+	return output.String()
+}
+
+func LogSummary(writer io.Writer, rendered string) {
+	fmt.Fprintf(writer, "rendered=%s\n", rendered)
 }
 `
 }

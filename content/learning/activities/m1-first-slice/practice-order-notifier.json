@@ -1,0 +1,14 @@
+{
+  "id": "practice-order-notifier",
+  "version": 1,
+  "title": "用最小接口接入通知依赖",
+  "kind": "learning_task",
+  "mode": "practice",
+  "capability_refs": [{"id": "M1-06", "version": 1}],
+  "task_ref": {"id": "practice-order-notifier-v1", "version": 1},
+  "content_ref": "web/src/content/learning/consumer-interface-practice-v1.mdx",
+  "assistance_policy": {"hints": true, "references": true, "solution": false, "ai_declaration": true},
+  "evidence_rules": [
+    {"rule_id": "consumer-interface-practiced", "capability_id": "M1-06", "capability_version": 1, "evidence_type": "implement", "result": "passed"}
+  ]
+}

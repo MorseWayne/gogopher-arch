@@ -1,16 +1,16 @@
 {
   "id": "review-format-module",
-  "version": 1,
+  "version": 2,
   "title": "输出格式 module 复验",
   "kind": "learning_task",
   "mode": "review",
-  "capability_refs": [{"id": "M1-08", "version": 1}],
-  "task_ref": {"id": "review-format-module-v1", "version": 1},
+  "capability_refs": [{"id": "M1-08", "version": 2}],
+  "task_ref": {"id": "review-format-module-v1", "version": 2},
   "content_ref": "web/src/content/learning/format-module-review-v1.mdx",
   "assistance_policy": {"hints": false, "references": false, "solution": false, "ai_declaration": true},
   "evidence_rules": [
-    {"rule_id": "package-graph-builds", "capability_id": "M1-08", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
-    {"rule_id": "exported-api-usable", "capability_id": "M1-08", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
-    {"rule_id": "exported-api-documented", "capability_id": "M1-08", "capability_version": 1, "evidence_type": "implement", "result": "passed"}
+    {"rule_id": "package-graph-builds", "capability_id": "M1-08", "capability_version": 2, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "exported-api-usable", "capability_id": "M1-08", "capability_version": 2, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "exported-api-documented", "capability_id": "M1-08", "capability_version": 2, "evidence_type": "implement", "result": "passed"}
   ]
 }

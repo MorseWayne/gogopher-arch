@@ -1,0 +1,7 @@
+# 独立交付：接口边界与泛型索引
+
+本次需要同时证明两种抽象能力。服务一侧，从调用者需求收缩 `Sender`，让只提供 `Send` 的替身可以直接代入；数据一侧，把 `IndexBy` 中真正不变的算法抽成类型参数，而不是复制多个具体版本。
+
+提交检查会从源码结构、隐藏替身和不同元素/key 类型三个角度交叉验证。泛型约束应只覆盖算法实际需要的能力：map key 需要 `comparable`，元素本身不需要额外约束。
+
+遇到类型参数语法问题时，查阅官方 [Tutorial: Getting started with generics](https://go.dev/doc/tutorial/generics) 的函数声明与类型推断两节；想判断“何时不该泛型化”，再读 [An Introduction To Generics](https://go.dev/blog/intro-generics) 的 When To Use Generics。目标是写出可解释的小型复用函数，不是展示复杂约束技巧。

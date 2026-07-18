@@ -1,0 +1,36 @@
+{
+  "id": "assessment-delivery-service-v1",
+  "version": 1,
+  "language": "go1.25",
+  "workspace_root": "workspace",
+  "files": [
+    {"source": "README.md", "path": "README.md", "role": "readme", "editable": false, "sha256": "32d18a99b49c815b6cc1df7610bb390317245ef2bdc751a7c79645d87df4f9a1"},
+    {"source": "starter/go.mod", "path": "go.mod", "role": "starter", "editable": false, "sha256": "c48a55a95435ab5eb7d8c8590c075072a311be8436ac2f2bbb9652bccdd8055e"},
+    {"source": "starter/delivery.go", "path": "delivery.go", "role": "starter", "editable": true, "sha256": "9b884f8461340d5314aae472458d76f89d80770cc2e71442b891e3fbd0da3fd4"},
+    {"source": "visible/delivery_test.go", "path": "delivery_test.go", "role": "visible_test", "editable": false, "sha256": "c3ce680b4afbdb6a8d33a0e1adc828aaf251bd59bcdc70a0333183083d468979"},
+    {"source": "heldout/delivery_private_test.go", "path": "delivery_private_test.go", "role": "held_out_test", "editable": false, "sha256": "c2f1ded2e38b53cdca7e3359143fae84df58a2db45458999c0ad1152f5a39d82"}
+  ],
+  "editable_paths": ["delivery.go"],
+  "readonly_paths": ["README.md", "go.mod", "delivery_test.go"],
+  "limits": {"max_files": 8, "max_file_bytes": 65536, "max_total_bytes": 262144},
+  "actions": {
+    "build": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "test": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "vet": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "submit": {"timeout_ms": 20000, "max_output_bytes": 131072, "network": "none"}
+  },
+  "hints": [
+    {"id": "consumer-needs-one-method", "level": 1, "title": "从 Service 的调用点反推接口", "body": "统计 Service 真正调用 Sender 的哪些方法；接口方法数应与这个需求一致。"},
+    {"id": "generic-shape", "level": 2, "title": "只约束 map key", "body": "IndexBy 的元素可以是任意 T，key 因为进入 map 才需要 K comparable；结果 map 应在循环前初始化。"}
+  ],
+  "visible_tests": ["delivery_test.go"],
+  "held_out_tests": ["delivery_private_test.go"],
+  "race_tests": [],
+  "assessment_rules": [
+    {"rule_id": "consumer-interface-minimal", "stage": "ast", "selector": {"file": "delivery.go", "interface": "Sender", "maximum_methods": 1}, "capability_refs": [{"id": "M1-06", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "generic-helper-declared", "stage": "ast", "selector": {"file": "delivery.go", "generic_function": "IndexBy"}, "capability_refs": [{"id": "M1-06", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "substitute-contract-correct", "stage": "held_out_test", "selector": {"test": "TestServiceUsesSubstituteAndPropagatesError"}, "capability_refs": [{"id": "M1-06", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "generic-helper-reusable", "stage": "held_out_test", "selector": {"test": "TestIndexByIsReusableAcrossTypes"}, "capability_refs": [{"id": "M1-06", "version": 1}], "evidence_type": "implement", "condition": "passed"}
+  ],
+  "artifact_rules": {"workspace": "full", "logs": ["build", "test", "vet", "submit"]}
+}

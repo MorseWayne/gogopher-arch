@@ -1,0 +1,7 @@
+breakpoint report.Render report.go:16
+> report.Render() report.go:16
+index = 1
+len(entries) = 2
+next
+> report.Render() report.go:19
+The loop exits before entries[1] is rendered.

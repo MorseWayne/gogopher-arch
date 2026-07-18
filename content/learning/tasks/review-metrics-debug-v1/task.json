@@ -1,0 +1,37 @@
+{
+  "id": "review-metrics-debug-v1",
+  "version": 1,
+  "language": "go1.25",
+  "workspace_root": "workspace",
+  "files": [
+    {"source": "README.md", "path": "README.md", "role": "readme", "editable": false, "sha256": "0929d102394bc9dc7c8560656c08e63da01938abd5300f4f28dd8c6f95088b48"},
+    {"source": "starter/go.mod", "path": "go.mod", "role": "starter", "editable": false, "sha256": "703fc664a4dde61f57a78df94c41821ce7b6d14cf08a54a612ffabefd70bed02"},
+    {"source": "starter/metrics.go", "path": "metrics.go", "role": "starter", "editable": true, "sha256": "f2b888f5a25c679fbca7bb378a3fb6547a32849405d5259552af6941f4aac5d6"},
+    {"source": "heldout/metrics_private_test.go", "path": "metrics_private_test.go", "role": "held_out_test", "editable": false, "sha256": "432c77d825324d82a4b85b36fb611a295c192cb895aceaa8c22ea2aa286ed889"},
+    {"source": "fixtures/test-failure.txt", "path": "testdata/test-failure.txt", "role": "fixture", "editable": false, "sha256": "f9cc629a94277f43b8353b76a478944b99d2cc8d3f7e4363c548982f4f664d47"},
+    {"source": "fixtures/delve-transcript.txt", "path": "testdata/delve-transcript.txt", "role": "fixture", "editable": false, "sha256": "b3cdbfc333fbce98b383aa100100d96aac6a839d76995efba82f2172f5c2ce96"},
+    {"source": "fixtures/pprof-top.txt", "path": "testdata/pprof-top.txt", "role": "fixture", "editable": false, "sha256": "bfe9bb8b376e0949fd4db5e9ebc4c199042a6778d27a306e10b2c1a8ce1e3af7"}
+  ],
+  "editable_paths": ["metrics.go"],
+  "readonly_paths": ["README.md", "go.mod", "testdata/test-failure.txt", "testdata/delve-transcript.txt", "testdata/pprof-top.txt"],
+  "limits": {"max_files": 12, "max_file_bytes": 65536, "max_total_bytes": 262144},
+  "actions": {
+    "build": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "test": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "vet": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
+    "submit": {"timeout_ms": 20000, "max_output_bytes": 131072, "network": "none"}
+  },
+  "hints": [
+    {"id": "new-boundary-new-proof", "level": 1, "title": "重新验证循环边界", "body": "本题遗漏的是第一项；用 breakpoint 中的初始 index 与合法下标范围重新推导，不要照抄上一题。"},
+    {"id": "four-part-summary", "level": 2, "title": "按四段写诊断小结", "body": "依次写现象、breakpoint 定位、alloc_space 判断与 strings.Builder 修复、测试和 Vet 验证。"}
+  ],
+  "visible_tests": [],
+  "held_out_tests": ["metrics_private_test.go"],
+  "race_tests": [],
+  "assessment_rules": [
+    {"rule_id": "regression-fixed", "stage": "held_out_test", "selector": {"test": "TestRenderIncludesAllEntries"}, "capability_refs": [{"id": "M1-10", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "static-analysis-clean", "stage": "vet", "selector": {"package": "./..."}, "capability_refs": [{"id": "M1-10", "version": 1}], "evidence_type": "diagnose", "condition": "passed"},
+    {"rule_id": "profile-diagnosis-explained", "stage": "explanation", "selector": {"minimum_chars": 80, "required_terms": ["breakpoint", "alloc_space", "strings.Builder"]}, "capability_refs": [{"id": "M1-10", "version": 1}], "evidence_type": "diagnose", "condition": "passed"}
+  ],
+  "artifact_rules": {"workspace": "full", "logs": ["build", "test", "vet", "submit"]}
+}

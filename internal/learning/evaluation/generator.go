@@ -81,7 +81,7 @@ func evaluateRule(rule definition.AssessmentRule, task definition.ExecutionTask,
 		if rule.Selector.MinimumChars < 1 {
 			return execution.RuleResult{}, fmt.Errorf("explanation selector requires minimum_chars")
 		}
-		if utf8.RuneCountInString(strings.TrimSpace(explanation)) >= rule.Selector.MinimumChars {
+		if explanationSatisfies(explanation, rule.Selector) {
 			status = execution.RulePassed
 		} else {
 			status = execution.RuleFailed
@@ -153,6 +153,26 @@ func evaluateASTRule(rule definition.AssessmentRule, task definition.ExecutionTa
 		}
 		return execution.RuleFailed, "go_ast_documented_exports"
 	}
+	if rule.Selector.Interface != "" {
+		build, exists := stages[execution.StageBuild]
+		if !exists || build.Status != execution.StagePassed {
+			return execution.RuleNotEvaluated, "go_ast_minimal_interface"
+		}
+		if hasMinimalInterface(workspace[rule.Selector.File], rule.Selector.Interface, rule.Selector.MaximumMethods) {
+			return execution.RulePassed, "go_ast_minimal_interface"
+		}
+		return execution.RuleFailed, "go_ast_minimal_interface"
+	}
+	if rule.Selector.GenericFunction != "" {
+		build, exists := stages[execution.StageBuild]
+		if !exists || build.Status != execution.StagePassed {
+			return execution.RuleNotEvaluated, "go_ast_generic_function"
+		}
+		if hasGenericFunction(workspace[rule.Selector.File], rule.Selector.GenericFunction) {
+			return execution.RulePassed, "go_ast_generic_function"
+		}
+		return execution.RuleFailed, "go_ast_generic_function"
+	}
 	if rule.Selector.MinimumCases > 0 {
 		visible, exists := stages[execution.StageVisibleTest]
 		if !exists {
@@ -167,6 +187,71 @@ func evaluateASTRule(rule definition.AssessmentRule, task definition.ExecutionTa
 		return execution.RuleFailed, "go_ast_table_tests"
 	}
 	return execution.RuleFailed, "go_ast_unknown"
+}
+
+func explanationSatisfies(explanation string, selector definition.AssessmentSelector) bool {
+	trimmed := strings.TrimSpace(explanation)
+	if utf8.RuneCountInString(trimmed) < selector.MinimumChars {
+		return false
+	}
+	lower := strings.ToLower(trimmed)
+	for _, term := range selector.RequiredTerms {
+		term = strings.ToLower(strings.TrimSpace(term))
+		if term == "" || !strings.Contains(lower, term) {
+			return false
+		}
+	}
+	return true
+}
+
+func hasMinimalInterface(source, name string, maximumMethods int) bool {
+	if maximumMethods < 1 {
+		return false
+	}
+	file, err := parser.ParseFile(token.NewFileSet(), "source.go", source, 0)
+	if err != nil {
+		return false
+	}
+	for _, declaration := range file.Decls {
+		general, ok := declaration.(*ast.GenDecl)
+		if !ok || general.Tok != token.TYPE {
+			continue
+		}
+		for _, specification := range general.Specs {
+			typeSpec, ok := specification.(*ast.TypeSpec)
+			if !ok || typeSpec.Name.Name != name {
+				continue
+			}
+			interfaceType, ok := typeSpec.Type.(*ast.InterfaceType)
+			if !ok {
+				return false
+			}
+			methods := 0
+			for _, field := range interfaceType.Methods.List {
+				if len(field.Names) == 0 {
+					methods++
+				} else {
+					methods += len(field.Names)
+				}
+			}
+			return methods >= 1 && methods <= maximumMethods
+		}
+	}
+	return false
+}
+
+func hasGenericFunction(source, name string) bool {
+	file, err := parser.ParseFile(token.NewFileSet(), "source.go", source, 0)
+	if err != nil {
+		return false
+	}
+	for _, declaration := range file.Decls {
+		function, ok := declaration.(*ast.FuncDecl)
+		if ok && function.Name.Name == name && function.Type.TypeParams != nil && len(function.Type.TypeParams.List) > 0 {
+			return true
+		}
+	}
+	return false
 }
 
 func hasDeferredCall(source, callName string) bool {
