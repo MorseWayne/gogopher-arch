@@ -27,7 +27,7 @@ type goTestRecord struct {
 func (r *Runner) runSubmit(ctx context.Context, spec execution.ExecutionSpec, response execution.ExecutionResponse, executionRoot string, started, deadline time.Time) execution.ExecutionResponse {
 	visibleRoot := filepath.Join(executionRoot, "visible-source")
 	if err := materializeAssets(visibleRoot, spec.Files, func(asset execution.FileAsset) bool {
-		return asset.Role != execution.RoleHeldOutTest
+		return !isPrivateTestRole(asset.Role)
 	}); err != nil {
 		return infraResponse(response, started, "workspace_materialize_failed", "Sandbox could not materialize the visible test workspace")
 	}
@@ -84,63 +84,93 @@ func (r *Runner) runSubmit(ctx context.Context, spec execution.ExecutionSpec, re
 		return response
 	}
 
-	packages := heldOutPackages(spec.Files)
-	if len(packages) == 0 {
-		response.Status = execution.ExecutionSucceeded
-		response.DurationMS = time.Since(started).Milliseconds()
-		return response
+	privateStages := []struct {
+		role   execution.AssetRole
+		config privateTestConfig
+	}{
+		{role: execution.RoleHeldOutTest, config: privateTestConfig{
+			stage: execution.StageHeldOutTest, label: "held-out checks", sourceDirectory: "held-out-source",
+			binaryDirectory: "held-out-binaries", runtimePrefix: "held-out-runtime",
+			includeSource: func(asset execution.FileAsset) bool { return asset.Role != execution.RoleRaceTest },
+		}},
+		{role: execution.RoleRaceTest, config: privateTestConfig{
+			stage: execution.StageRace, label: "race checks", sourceDirectory: "race-source",
+			binaryDirectory: "race-binaries", runtimePrefix: "race-runtime", buildFlags: []string{"-race"},
+			buildEnvironment: map[string]string{"CGO_ENABLED": "1"},
+			includeSource:    func(asset execution.FileAsset) bool { return asset.Role != execution.RoleHeldOutTest },
+		}},
 	}
-	heldOutStage, failure := r.runHeldOut(ctx, spec, executionRoot, packages, deadline, remainingOutput)
-	if failure != nil {
-		return infraResponse(response, started, failure.Code, failure.Message)
+	for _, private := range privateStages {
+		packages := privateTestPackages(spec.Files, private.role)
+		if len(packages) == 0 {
+			continue
+		}
+		stage, failure := r.runPrivateTests(ctx, spec, executionRoot, packages, deadline, remainingOutput, private.config)
+		if failure != nil {
+			return infraResponse(response, started, failure.Code, failure.Message)
+		}
+		response.Stages = append(response.Stages, stage)
+		if stage.Status == execution.StageFailed {
+			response.Status = execution.ExecutionUserFailed
+			response.DurationMS = time.Since(started).Milliseconds()
+			return response
+		}
 	}
-	response.Stages = append(response.Stages, heldOutStage)
-	if heldOutStage.Status == execution.StagePassed {
-		response.Status = execution.ExecutionSucceeded
-	} else {
-		response.Status = execution.ExecutionUserFailed
-	}
+	response.Status = execution.ExecutionSucceeded
 	response.DurationMS = time.Since(started).Milliseconds()
 	return response
 }
 
-func (r *Runner) runHeldOut(ctx context.Context, spec execution.ExecutionSpec, executionRoot string, packages []string, deadline time.Time, maxOutputBytes int) (execution.StageResult, *execution.Failure) {
+type privateTestConfig struct {
+	stage            execution.Stage
+	label            string
+	sourceDirectory  string
+	binaryDirectory  string
+	runtimePrefix    string
+	buildFlags       []string
+	buildEnvironment map[string]string
+	includeSource    func(execution.FileAsset) bool
+}
+
+func (r *Runner) runPrivateTests(ctx context.Context, spec execution.ExecutionSpec, executionRoot string, packages []string, deadline time.Time, maxOutputBytes int, config privateTestConfig) (execution.StageResult, *execution.Failure) {
 	started := time.Now()
-	buildRoot := filepath.Join(executionRoot, "held-out-source")
-	if err := materializeAssets(buildRoot, spec.Files, func(execution.FileAsset) bool { return true }); err != nil {
-		return execution.StageResult{}, &execution.Failure{Code: "workspace_materialize_failed", Message: "Sandbox could not materialize held-out test sources"}
+	buildRoot := filepath.Join(executionRoot, config.sourceDirectory)
+	if err := materializeAssets(buildRoot, spec.Files, config.includeSource); err != nil {
+		return execution.StageResult{}, &execution.Failure{Code: "workspace_materialize_failed", Message: "Sandbox could not materialize private test sources"}
 	}
-	binaryRoot := filepath.Join(executionRoot, "test-binaries")
+	binaryRoot := filepath.Join(executionRoot, config.binaryDirectory)
 	if err := os.Mkdir(binaryRoot, 0o700); err != nil {
-		return execution.StageResult{}, &execution.Failure{Code: "test_binary_directory_failed", Message: "Sandbox could not prepare held-out test binaries"}
+		return execution.StageResult{}, &execution.Failure{Code: "test_binary_directory_failed", Message: "Sandbox could not prepare private test binaries"}
 	}
 	binaries := make([]string, 0, len(packages))
 	remainingOutput := maxOutputBytes
 	truncated := false
 	for index, packagePath := range packages {
 		binary := filepath.Join(binaryRoot, fmt.Sprintf("package-%d.test", index))
-		result := r.runProcess(ctx, time.Until(deadline), executionRoot, buildRoot, []string{"test", "-c", "-o", binary, packageArgument(packagePath)}, remainingOutput)
+		arguments := append([]string{"test"}, config.buildFlags...)
+		arguments = append(arguments, "-c", "-o", binary, packageArgument(packagePath))
+		result := r.runProcessWithEnvironment(ctx, time.Until(deadline), executionRoot, buildRoot, arguments, remainingOutput, config.buildEnvironment)
 		if result.infrastructureFailure != nil {
 			return execution.StageResult{}, result.infrastructureFailure
 		}
 		remainingOutput = remainingAfter(remainingOutput, result)
 		truncated = truncated || result.outputTruncated
 		if result.exitCode != 0 || result.timedOut || result.outputTruncated {
-			return heldOutFailureStage(started, result.exitCode, result.timedOut, truncated, "held-out test build failed"), nil
+			return privateTestFailureStage(config.stage, config.label, started, result.exitCode, result.timedOut, truncated, config.label+" build failed"), nil
 		}
 		binaries = append(binaries, binary)
 	}
 	if err := os.RemoveAll(buildRoot); err != nil {
-		return execution.StageResult{}, &execution.Failure{Code: "held_out_source_cleanup_failed", Message: "Sandbox could not remove held-out test sources before execution"}
+		return execution.StageResult{}, &execution.Failure{Code: "private_test_source_cleanup_failed", Message: "Sandbox could not remove private test sources before execution"}
 	}
 
 	allEvents := make([]execution.TestEvent, 0)
 	for index, binary := range binaries {
-		runtimeRoot := filepath.Join(executionRoot, fmt.Sprintf("runtime-%d", index))
+		runtimeRoot := filepath.Join(executionRoot, fmt.Sprintf("%s-%d", config.runtimePrefix, index))
 		if err := materializeAssets(runtimeRoot, spec.Files, func(asset execution.FileAsset) bool {
 			return asset.Role == execution.RoleFixture
 		}); err != nil {
-			return execution.StageResult{}, &execution.Failure{Code: "runtime_fixture_failed", Message: "Sandbox could not prepare held-out runtime fixtures"}
+			return execution.StageResult{}, &execution.Failure{Code: "runtime_fixture_failed", Message: "Sandbox could not prepare private test runtime fixtures"}
 		}
 		result := r.runProcess(ctx, time.Until(deadline), executionRoot, runtimeRoot, []string{"tool", "test2json", "-t", "-p", packageArgument(packages[index]), binary, "-test.v=test2json"}, remainingOutput)
 		if result.infrastructureFailure != nil {
@@ -150,37 +180,37 @@ func (r *Runner) runHeldOut(ctx context.Context, spec execution.ExecutionSpec, e
 		truncated = truncated || result.outputTruncated
 		events, _, parseError := parseGoTestJSON([]byte(result.stdout), result.outputTruncated)
 		if parseError != nil {
-			return execution.StageResult{}, &execution.Failure{Code: "test_result_parse_failed", Message: "Sandbox could not parse structured held-out test results"}
+			return execution.StageResult{}, &execution.Failure{Code: "test_result_parse_failed", Message: "Sandbox could not parse structured private test results"}
 		}
 		allEvents = append(allEvents, events...)
 		if result.exitCode != 0 || result.timedOut || result.outputTruncated {
-			stage := heldOutFailureStage(started, result.exitCode, result.timedOut, truncated, "held-out checks failed")
+			stage := privateTestFailureStage(config.stage, config.label, started, result.exitCode, result.timedOut, truncated, config.label+" failed")
 			stage.TestEvents = allEvents
 			return stage, nil
 		}
 	}
 	return execution.StageResult{
-		Stage: execution.StageHeldOutTest, Status: execution.StagePassed, ExitCode: 0,
+		Stage: config.stage, Status: execution.StagePassed, ExitCode: 0,
 		DurationMS: time.Since(started).Milliseconds(), OutputTruncated: truncated,
-		PublicSummary: fmt.Sprintf("held-out checks passed for %d package(s)", len(packages)), TestEvents: allEvents,
+		PublicSummary: fmt.Sprintf("%s passed for %d package(s)", config.label, len(packages)), TestEvents: allEvents,
 	}, nil
 }
 
-func heldOutFailureStage(started time.Time, exitCode int, timedOut, truncated bool, summary string) execution.StageResult {
+func privateTestFailureStage(stage execution.Stage, label string, started time.Time, exitCode int, timedOut, truncated bool, summary string) execution.StageResult {
 	if timedOut {
-		summary = "held-out checks timed out"
+		summary = label + " timed out"
 	}
 	return execution.StageResult{
-		Stage: execution.StageHeldOutTest, Status: execution.StageFailed, ExitCode: exitCode,
+		Stage: stage, Status: execution.StageFailed, ExitCode: exitCode,
 		DurationMS: time.Since(started).Milliseconds(), TimedOut: timedOut,
 		OutputTruncated: truncated, PublicSummary: summary,
 	}
 }
 
-func heldOutPackages(assets []execution.FileAsset) []string {
+func privateTestPackages(assets []execution.FileAsset, role execution.AssetRole) []string {
 	unique := make(map[string]struct{})
 	for _, asset := range assets {
-		if asset.Role == execution.RoleHeldOutTest {
+		if asset.Role == role {
 			unique[path.Dir(asset.Path)] = struct{}{}
 		}
 	}

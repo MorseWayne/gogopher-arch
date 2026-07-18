@@ -1,0 +1,23 @@
+{
+  "id": "assessment-worker-pool-v1", "version": 1, "language": "go1.25", "workspace_root": "workspace",
+  "files": [
+    {"source": "README.md", "path": "README.md", "role": "readme", "editable": false, "sha256": "12079f9339da3b51c79f6e84e2062c247f3a8e2569ee9eeb01289daeefb90961"},
+    {"source": "starter/go.mod", "path": "go.mod", "role": "starter", "editable": false, "sha256": "86f5a5b26b50919d88bcbd1aa17390c6c925106ce1b6025f1544714b76c8169c"},
+    {"source": "starter/pool.go", "path": "pool.go", "role": "starter", "editable": true, "sha256": "5f362a59dc4490e087fe610b7eb09530c4a2d1f7791d57b846f8c1a14406b5a4"},
+    {"source": "visible/pool_test.go", "path": "pool_test.go", "role": "visible_test", "editable": false, "sha256": "573c9c3d6b23a47e7bdee3956c28027a35509b568ce1f7f4ac770bed8130202b"},
+    {"source": "heldout/pool_private_test.go", "path": "pool_private_test.go", "role": "held_out_test", "editable": false, "sha256": "eede7b5277cbaea56ed69c13ea921a9b1bc61310b525267db4c4a2f212155372"}
+  ],
+  "editable_paths": ["pool.go"], "readonly_paths": ["README.md", "go.mod", "pool_test.go"],
+  "limits": {"max_files": 10, "max_file_bytes": 65536, "max_total_bytes": 262144},
+  "actions": {"build": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"}, "test": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"}, "vet": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"}, "submit": {"timeout_ms": 20000, "max_output_bytes": 131072, "network": "none"}},
+  "hints": [
+    {"id": "channel-owners", "level": 1, "title": "先标出 channel 所有者", "body": "任务发送者关闭 jobs；worker 只发送 results；单独的协调者在 WaitGroup 完成后关闭 results。"},
+    {"id": "invalid-input", "level": 2, "title": "失败也要满足 channel 契约", "body": "无效 workers 或空输入应返回一个立即关闭的 channel，而不是 nil channel。"}
+  ],
+  "visible_tests": ["pool_test.go"], "held_out_tests": ["pool_private_test.go"], "race_tests": [],
+  "assessment_rules": [
+    {"rule_id": "bounded-concurrency-respected", "stage": "held_out_test", "selector": {"test": "TestProcessBoundsConcurrency"}, "capability_refs": [{"id": "M1-11", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "pipeline-completes-without-leak", "stage": "held_out_test", "selector": {"test": "TestProcessClosesAndReleasesWorkers"}, "capability_refs": [{"id": "M1-11", "version": 1}], "evidence_type": "implement", "condition": "passed"}
+  ],
+  "artifact_rules": {"workspace": "full", "logs": ["build", "test", "vet", "submit"]}
+}

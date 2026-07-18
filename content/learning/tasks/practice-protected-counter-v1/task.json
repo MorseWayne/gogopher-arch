@@ -1,0 +1,19 @@
+{
+  "id": "practice-protected-counter-v1", "version": 1, "language": "go1.25", "workspace_root": "workspace",
+  "files": [
+    {"source": "README.md", "path": "README.md", "role": "readme", "editable": false, "sha256": "80f76fe54ecddcb63ae6abc4e32ee574c8546856e0bd6f2f797148f81056f29c"},
+    {"source": "starter/go.mod", "path": "go.mod", "role": "starter", "editable": false, "sha256": "a131e2e127f9a229f83d4bd773e7ccfe761ed3aeb016957ced3e5ec894b0944a"},
+    {"source": "starter/counter.go", "path": "counter.go", "role": "starter", "editable": true, "sha256": "65ebde6275b6c2860abb3ed144e9637e64ef466d7fd1a69f91fd766430967842"},
+    {"source": "visible/counter_test.go", "path": "counter_test.go", "role": "visible_test", "editable": false, "sha256": "d059045ea37fc660cc76311af10c7ef62ea467aba979a62f226d532db35ce2db"}
+  ],
+  "editable_paths": ["counter.go"], "readonly_paths": ["README.md", "go.mod", "counter_test.go"],
+  "limits": {"max_files": 8, "max_file_bytes": 65536, "max_total_bytes": 262144},
+  "actions": {"test": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"}, "vet": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"}, "submit": {"timeout_ms": 15000, "max_output_bytes": 131072, "network": "none"}},
+  "hints": [
+    {"id": "protect-read-write", "level": 1, "title": "读写使用同一同步规则", "body": "只保护 Add 仍会让 Value 与写入并发；先列出所有访问点，再让它们遵守同一 happens-before 关系。"},
+    {"id": "match-primitive", "level": 2, "title": "让原语匹配状态", "body": "单个整数可用 atomic；未来若多个字段必须一致更新，mutex 更容易表达复合不变量。"}
+  ],
+  "visible_tests": ["counter_test.go"], "held_out_tests": [], "race_tests": [],
+  "assessment_rules": [{"rule_id": "shared-state-practiced", "stage": "visible_test", "selector": {"test": "TestCounterSupportsConcurrentAdd"}, "capability_refs": [{"id": "M1-12", "version": 1}], "evidence_type": "implement", "condition": "passed"}],
+  "artifact_rules": {"workspace": "diff", "logs": ["test", "vet", "submit"]}
+}

@@ -27,7 +27,7 @@ GoGopher Arch 是一个以 Capability、Evidence 和 Review 为核心的 Go 学�
 - immutable content release 固定 Capability、Activity、Task 和文件 hash；
 - 多文件 workspace 支持 revision conflict、服务端保存与刷新恢复；
 - Build、Test、Vet、hint reveal、Submit、infra retry 均有显式状态；
-- held-out evaluation 只返回公开摘要和 RuleResult；
+- held-out 与 race evaluation 只在服务端运行，对外只返回公开摘要和 RuleResult；
 - Evidence projection 更新 Snapshot，并生成 acquisition、due review 或 remediation；
 - Playwright 在全新 PostgreSQL 上验证 guided → assessment → review 闭环。
 
@@ -164,7 +164,7 @@ go run ./cmd/learning-content validate --activity-set m1-first-slice
 ```bash
 go run ./cmd/learning-content release \
   --activity-set m1-first-slice \
-  --release-id m1-first-slice-v8 \
+  --release-id m1-first-slice-v9 \
   --created-at 2026-07-18T00:00:00Z
 ```
 
@@ -173,7 +173,7 @@ go run ./cmd/learning-content release \
 ```bash
 npm run build --prefix web
 go run ./cmd/learning-content verify \
-  --release-dir content/learning/releases/m1-first-slice-v8 \
+  --release-dir content/learning/releases/m1-first-slice-v9 \
   --web-dist web/dist
 ```
 
@@ -208,7 +208,7 @@ npm test --prefix web -- --run
 npm run build --prefix web
 ./scripts/check-compose-exposure.sh
 go run ./cmd/learning-content verify \
-  --release-dir content/learning/releases/m1-first-slice-v8 \
+  --release-dir content/learning/releases/m1-first-slice-v9 \
   --web-dist web/dist
 npm run e2e:compose --prefix web
 git diff --check

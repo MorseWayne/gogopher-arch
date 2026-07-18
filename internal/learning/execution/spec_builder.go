@@ -49,7 +49,7 @@ func (b *SpecBuilder) Build(current attempt.Attempt, executionID string, action 
 	}
 	files := make([]FileAsset, 0, len(task.Files))
 	for _, file := range task.Files {
-		if file.Role == "held_out_test" && action != ActionSubmit {
+		if isPrivateTestRole(file.Role) && action != ActionSubmit {
 			continue
 		}
 		asset := FileAsset{Path: file.Path, SHA256: file.SHA256, Origin: OriginReleaseBundle, Access: AccessReadonly, Role: mapAssetRole(file.Role)}
@@ -86,9 +86,15 @@ func mapAssetRole(role string) AssetRole {
 		return RoleVisibleTest
 	case "held_out_test":
 		return RoleHeldOutTest
+	case "race_test":
+		return RoleRaceTest
 	case "fixture":
 		return RoleFixture
 	default:
 		return RoleWorkspace
 	}
+}
+
+func isPrivateTestRole(role string) bool {
+	return role == "held_out_test" || role == "race_test"
 }

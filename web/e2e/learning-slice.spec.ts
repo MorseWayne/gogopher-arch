@@ -17,6 +17,8 @@ const forbiddenHeldOutMarkers = [
   'file:///tmp/db',
   'want wrapped *os.PathError',
   'os.WriteFile(path, []byte',
+  'registry_race_test.go',
+  'TestRegistryConcurrentAccessIsRaceFree',
 ]
 
 test.describe('Learning slice vertical scenarios', () => {
@@ -91,7 +93,7 @@ test.describe('Learning slice vertical scenarios', () => {
     expect(new Set(completed.evidence.map((item) => item.independence))).toEqual(new Set(['hinted']))
   })
 
-  test('v8 package API assessment records build, consumer, and documentation Evidence', async ({ page }) => {
+  test('v9 package API assessment records build, consumer, and documentation Evidence', async ({ page }) => {
     await bootstrap(page)
     const attempt = await readJSON<AttemptResponse>(
       await page.request.post(apiRoot + '/attempts', {
@@ -99,7 +101,7 @@ test.describe('Learning slice vertical scenarios', () => {
       }),
       [201],
     )
-    expect(attempt.release_id).toBe('m1-first-slice-v8')
+    expect(attempt.release_id).toBe('m1-first-slice-v9')
     expect(attempt.workspace['health/consumer_test.go']).toBeUndefined()
 
     const saved = await readJSON<AttemptResponse>(
@@ -122,6 +124,47 @@ test.describe('Learning slice vertical scenarios', () => {
     expect(results.get('exported-api-documented')?.analyzer).toBe('go_ast_documented_exports')
     const capability = await pollCapability(page, 'M1-08', (value) => value.snapshot?.acquisition_state === 'verified')
     expect(capability.snapshot?.independence_state).toBe('independent')
+  })
+
+  test('v9 concurrent registry uses private race evaluation without leaking its test', async ({ page }) => {
+    await bootstrap(page)
+    const attempt = await readJSON<AttemptResponse>(
+      await page.request.post(apiRoot + '/attempts', {
+        data: { activity_id: 'assessment-concurrent-registry', activity_version: 1 },
+      }),
+      [201],
+    )
+    expect(attempt.release_id).toBe('m1-first-slice-v9')
+    expect(attempt.workspace['registry_race_test.go']).toBeUndefined()
+
+    const saved = await readJSON<AttemptResponse>(
+      await page.request.put(apiRoot + '/attempts/' + attempt.id + '/workspace', {
+        data: {
+          base_revision: attempt.workspace_revision,
+          files: { ...attempt.workspace, 'registry.go': concurrentRegistrySolution },
+        },
+      }),
+      [200],
+    )
+    await readJSON<SubmissionResponse>(
+      await page.request.post(apiRoot + '/attempts/' + saved.id + '/submit', {
+        data: {
+          submission_key: 'race-evaluation-submit',
+          workspace_revision: saved.workspace_revision,
+          workspace_hash: saved.workspace_hash,
+          explanation: '我使用 RWMutex 保护复合 map 不变量；atomic 不适合整张 map，channel owner 会增加请求与快照协议成本。',
+        },
+      }),
+      [202],
+    )
+    const completed = await pollAttempt(page, saved.id, (value) => value.submission?.status === 'evaluated')
+    expect(completed.executions.some((item) => item.stages.some((stage) => stage.stage === 'race' && stage.status === 'passed'))).toBe(true)
+    for (const ruleID of ['registry-contract-correct', 'race-detector-clean', 'synchronization-choice-explained']) {
+      expect(completed.rule_results.find((item) => item.rule_id === ruleID)?.status).toBe('passed')
+    }
+    const raceRule = completed.rule_results.find((item) => item.rule_id === 'race-detector-clean')
+    expect(raceRule?.package).toBeUndefined()
+    expect(raceRule?.test).toBeUndefined()
   })
 
   test('independent held-out pass is idempotent, verifies Snapshot, and schedules remediation after failed review', async ({ page }) => {
@@ -406,6 +449,36 @@ func (s Summary) ExitCode() int {
         return 1
     }
     return 0
+}
+`
+
+const concurrentRegistrySolution = `package registry
+
+import "sync"
+
+type Registry struct {
+    mutex  sync.RWMutex
+    values map[string]int64
+}
+
+func New() *Registry {
+    return &Registry{values: make(map[string]int64)}
+}
+
+func (r *Registry) Record(key string, delta int64) {
+    r.mutex.Lock()
+    defer r.mutex.Unlock()
+    r.values[key] += delta
+}
+
+func (r *Registry) Snapshot() map[string]int64 {
+    r.mutex.RLock()
+    defer r.mutex.RUnlock()
+    snapshot := make(map[string]int64, len(r.values))
+    for key, value := range r.values {
+        snapshot[key] = value
+    }
+    return snapshot
 }
 `
 

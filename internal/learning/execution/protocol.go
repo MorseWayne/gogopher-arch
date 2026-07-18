@@ -53,6 +53,7 @@ const (
 	RoleWorkspace   AssetRole = "workspace"
 	RoleVisibleTest AssetRole = "visible_test"
 	RoleHeldOutTest AssetRole = "held_out_test"
+	RoleRaceTest    AssetRole = "race_test"
 	RoleFixture     AssetRole = "fixture"
 )
 
@@ -107,6 +108,7 @@ const (
 	StageVisibleTest Stage = "visible_test"
 	StageVet         Stage = "vet"
 	StageHeldOutTest Stage = "held_out_test"
+	StageRace        Stage = "race"
 	StageAST         Stage = "ast"
 	StageExplanation Stage = "explanation"
 )
@@ -322,7 +324,7 @@ func (a FileAsset) validate(field string, action Action) error {
 		return invalid(field+".access", "must be editable or readonly")
 	}
 	if !a.Role.valid() {
-		return invalid(field+".role", "must be workspace, visible_test, held_out_test, or fixture")
+		return invalid(field+".role", "must be workspace, visible_test, held_out_test, race_test, or fixture")
 	}
 	if a.Origin == OriginLearnerWorkspace && a.Access != AccessEditable {
 		return invalid(field+".access", "learner_workspace assets must be editable")
@@ -333,8 +335,8 @@ func (a FileAsset) validate(field string, action Action) error {
 	if a.Role != RoleWorkspace && (a.Origin != OriginReleaseBundle || a.Access != AccessReadonly) {
 		return invalid(field+".role", "%s assets must be readonly release_bundle assets", a.Role)
 	}
-	if a.Role == RoleHeldOutTest && action != ActionSubmit {
-		return invalid(field+".role", "held_out_test assets are only allowed for submit")
+	if (a.Role == RoleHeldOutTest || a.Role == RoleRaceTest) && action != ActionSubmit {
+		return invalid(field+".role", "%s assets are only allowed for submit", a.Role)
 	}
 	return nil
 }
@@ -444,11 +446,11 @@ func (a Action) valid() bool {
 }
 
 func (r AssetRole) valid() bool {
-	return r == RoleWorkspace || r == RoleVisibleTest || r == RoleHeldOutTest || r == RoleFixture
+	return r == RoleWorkspace || r == RoleVisibleTest || r == RoleHeldOutTest || r == RoleRaceTest || r == RoleFixture
 }
 
 func (s Stage) valid() bool {
-	return s == StageBuild || s == StageVisibleTest || s == StageVet || s == StageHeldOutTest || s == StageAST || s == StageExplanation
+	return s == StageBuild || s == StageVisibleTest || s == StageVet || s == StageHeldOutTest || s == StageRace || s == StageAST || s == StageExplanation
 }
 
 var (

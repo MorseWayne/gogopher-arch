@@ -23,7 +23,7 @@ func TestLoadRegistryIndexesCurrentAndHistoricalDefinitions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, want := len(definitions), 45; got != want {
+	if got, want := len(definitions), 66; got != want {
 		t.Fatalf("len(Definitions()) = %d, want %d", got, want)
 	}
 	ref := DefinitionRef{ReleaseID: testReleaseID, Kind: KindActivity, ID: "assessment-check-config", Version: 4}
@@ -89,7 +89,7 @@ func TestRegistryViewsExcludePrivateEvaluationContract(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, forbidden := range []string{"held_out_tests", "assessment_rules", "evidence_rules", `"actions":`, "bundle_path", "source", "sha256", "先阅读 README"} {
+	for _, forbidden := range []string{"held_out_tests", "race_tests", "assessment_rules", "evidence_rules", `"actions":`, "bundle_path", "source", "sha256", "先阅读 README"} {
 		if strings.Contains(string(encoded), forbidden) {
 			t.Fatalf("public view contains private field %q: %s", forbidden, encoded)
 		}
@@ -128,6 +128,9 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 		{"M1-04", "practice-slice-ownership", "assessment-event-batches", "review-byte-frames"},
 		{"M1-05", "practice-domain-model", "assessment-check-model", "review-budget-model"},
 		{"M1-08", "practice-package-contract", "assessment-status-module", "review-format-module"},
+		{"M1-11", "practice-bounded-pipeline", "assessment-worker-pool", "review-thumbnail-pipeline"},
+		{"M1-12", "practice-protected-counter", "assessment-concurrent-registry", "review-concurrent-ledger"},
+		{"M1-13", "practice-cancellable-map", "assessment-cancellable-checks", "review-cancellable-fetch"},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.capabilityID, func(t *testing.T) {
@@ -167,6 +170,25 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 	}
 	if _, exists := workspace["health/consumer_test.go"]; exists {
 		t.Fatal("package API starter exposed held-out consumer test")
+	}
+
+	raceTask, err := registry.ExecutionTask(testReleaseID, "assessment-concurrent-registry-v1", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	runRace := false
+	for _, asset := range raceTask.Files {
+		runRace = runRace || asset.Role == "race_test"
+	}
+	if !runRace {
+		t.Fatal("concurrent registry task is missing private race test")
+	}
+	workspace, err = registry.PublicWorkspace(testReleaseID, raceTask.ID, raceTask.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, exists := workspace["registry_race_test.go"]; exists {
+		t.Fatal("public workspace contains private race test")
 	}
 }
 

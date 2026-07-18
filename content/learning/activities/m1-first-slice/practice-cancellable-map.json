@@ -1,0 +1,7 @@
+{
+  "id": "practice-cancellable-map", "version": 1, "title": "为并发映射接入取消", "kind": "learning_task", "mode": "practice",
+  "capability_refs": [{"id": "M1-13", "version": 1}], "task_ref": {"id": "practice-cancellable-map-v1", "version": 1},
+  "content_ref": "web/src/content/learning/cancellable-map-practice-v1.mdx",
+  "assistance_policy": {"hints": true, "references": true, "solution": false, "ai_declaration": true},
+  "evidence_rules": [{"rule_id": "cancellation-practiced", "capability_id": "M1-13", "capability_version": 1, "evidence_type": "implement", "result": "passed"}]
+}

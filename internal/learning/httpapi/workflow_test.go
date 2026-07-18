@@ -22,6 +22,7 @@ func TestWorkflowExecuteUsesOwnerAndRedactsHeldOutDetails(t *testing.T) {
 			Stages: []execution.StageResult{
 				{Stage: execution.StageVisibleTest, Status: execution.StagePassed, Stdout: "visible output"},
 				{Stage: execution.StageHeldOutTest, Status: execution.StageFailed, Stdout: "secret input", TestEvents: []execution.TestEvent{{Action: "fail", Package: "private", Test: "SecretTest"}}, PublicSummary: "one private check failed"},
+				{Stage: execution.StageRace, Status: execution.StageFailed, Stderr: "secret race trace", TestEvents: []execution.TestEvent{{Action: "fail", Package: "race-private", Test: "SecretRaceTest"}}, PublicSummary: "race checks failed"},
 			},
 		},
 	}}
@@ -34,7 +35,8 @@ func TestWorkflowExecuteUsesOwnerAndRedactsHeldOutDetails(t *testing.T) {
 		t.Fatalf("response=%d input=%#v", response.Code, executions.input)
 	}
 	body := response.Body.String()
-	if !strings.Contains(body, "visible output") || !strings.Contains(body, "one private check failed") || strings.Contains(body, "secret input") || strings.Contains(body, "SecretTest") {
+	if !strings.Contains(body, "visible output") || !strings.Contains(body, "one private check failed") || !strings.Contains(body, "race checks failed") ||
+		strings.Contains(body, "secret input") || strings.Contains(body, "SecretTest") || strings.Contains(body, "secret race trace") || strings.Contains(body, "SecretRaceTest") {
 		t.Fatalf("public execution = %s", body)
 	}
 }

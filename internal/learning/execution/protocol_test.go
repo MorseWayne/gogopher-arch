@@ -62,6 +62,9 @@ func TestExecutionSpecValidationInvariants(t *testing.T) {
 		{name: "held out before submit", mutate: func(s *ExecutionSpec) {
 			s.Files[0] = asset("hidden_test.go", "package task", OriginReleaseBundle, AccessReadonly, RoleHeldOutTest)
 		}, field: "files[0].role"},
+		{name: "race test before submit", mutate: func(s *ExecutionSpec) {
+			s.Files[0] = asset("race_test.go", "package task", OriginReleaseBundle, AccessReadonly, RoleRaceTest)
+		}, field: "files[0].role"},
 		{name: "file count", mutate: func(s *ExecutionSpec) {
 			s.Limits.MaxFiles = 1
 			s.Files = append(s.Files, asset("other.go", "package task", OriginLearnerWorkspace, AccessEditable, RoleWorkspace))

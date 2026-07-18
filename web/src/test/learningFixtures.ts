@@ -13,7 +13,7 @@ export const sessionFixture: SessionResponse = {
 
 export const activityFixture: ActivityResponse = {
   api_version: 'v1',
-  release_id: 'm1-first-slice-v8',
+  release_id: 'm1-first-slice-v9',
   activity: {
     id: 'guided-run-model',
     version: 6,
@@ -50,7 +50,7 @@ export const activityFixture: ActivityResponse = {
 
 export const capabilityFixture: CapabilityResponse = {
   api_version: 'v1',
-  release_id: 'm1-first-slice-v8',
+  release_id: 'm1-first-slice-v9',
   capability: {
     id: 'M1-01',
     version: 2,
@@ -82,7 +82,7 @@ export const capabilityFixture: CapabilityResponse = {
 export const attemptFixture: AttemptResponse = {
   api_version: 'v1',
   id: 'attempt-current',
-  release_id: 'm1-first-slice-v8',
+  release_id: 'm1-first-slice-v9',
   activity_id: 'guided-run-model',
   activity_version: 6,
   activity_hash: 'activity-hash',

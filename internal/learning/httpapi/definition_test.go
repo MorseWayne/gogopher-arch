@@ -120,7 +120,7 @@ func TestActivityReturnsPublicTaskContextWithoutPrivateEvaluationRules(t *testin
 			t.Fatalf("body missing %s: %s", expected, body)
 		}
 	}
-	for _, forbidden := range []string{"held_out_tests", "assessment_rules", `"actions":`, "bundle_path", "从输出顶部找到"} {
+	for _, forbidden := range []string{"held_out_tests", "race_tests", "assessment_rules", `"actions":`, "bundle_path", "从输出顶部找到"} {
 		if strings.Contains(body, forbidden) {
 			t.Fatalf("body contains private field %q: %s", forbidden, body)
 		}

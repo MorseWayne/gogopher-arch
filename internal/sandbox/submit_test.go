@@ -60,6 +60,42 @@ func TestSubmitDoesNotInjectHeldOutTestsAfterVisibleFailure(t *testing.T) {
 	}
 }
 
+func TestSubmitRunsRaceTestsPrivatelyAndDetectsDataRace(t *testing.T) {
+	runner := NewRunner(RunnerOptions{TempDir: t.TempDir()})
+	files := []execution.FileAsset{
+		runnerAsset("go.mod", "module task\n\ngo 1.25.0\n", execution.OriginReleaseBundle, execution.AccessReadonly, execution.RoleWorkspace),
+		runnerAsset("counter.go", racyCounterSource(), execution.OriginLearnerWorkspace, execution.AccessEditable, execution.RoleWorkspace),
+		runnerAsset("visible_test.go", "package task\n\nimport \"testing\"\n\nfunc TestVisible(t *testing.T) {}\n", execution.OriginReleaseBundle, execution.AccessReadonly, execution.RoleVisibleTest),
+		runnerAsset("race_private_test.go", privateRaceTest(), execution.OriginReleaseBundle, execution.AccessReadonly, execution.RoleRaceTest),
+	}
+	spec := submitSpec(files)
+	spec.Policy.TimeoutMS = 30_000
+	response, err := runner.Run(context.Background(), spec)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if response.Status != execution.ExecutionUserFailed || len(response.Stages) != 4 || response.Stages[3].Stage != execution.StageRace || response.Stages[3].Status != execution.StageFailed {
+		t.Fatalf("racy response = %#v", response)
+	}
+	if response.Stages[3].Stdout != "" || response.Stages[3].Stderr != "" || strings.Contains(response.Stages[3].PublicSummary, "race_private_test.go") {
+		t.Fatalf("race stage leaks details: %#v", response.Stages[3])
+	}
+
+	files[1] = runnerAsset("counter.go", synchronizedCounterSource(), execution.OriginLearnerWorkspace, execution.AccessEditable, execution.RoleWorkspace)
+	spec = submitSpec(files)
+	spec.Policy.TimeoutMS = 30_000
+	response, err = runner.Run(context.Background(), spec)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if response.Status != execution.ExecutionSucceeded || len(response.Stages) != 4 || response.Stages[3].Stage != execution.StageRace || response.Stages[3].Status != execution.StagePassed {
+		t.Fatalf("synchronized response = %#v", response)
+	}
+	if !hasTestEvent(response.Stages[3].TestEvents, "TestCounterHasNoRaceAndSourceIsAbsent", "pass") {
+		t.Fatalf("race events = %#v", response.Stages[3].TestEvents)
+	}
+}
+
 func TestParseGoTestJSONProducesStableEvents(t *testing.T) {
 	raw := strings.Join([]string{
 		`{"Time":"2026-07-13T00:00:00Z","Action":"run","Package":"task/pkg","Test":"TestOne"}`,
@@ -109,6 +145,74 @@ func TestHeldOutSourceIsAbsent(t *testing.T) {
 	err := filepath.Walk("..", func(path string, info os.FileInfo, err error) error {
 		if err != nil { return err }
 		if info.Name() == "hidden_test.go" { t.Fatalf("held-out source is visible at %s", path) }
+		return nil
+	})
+	if err != nil { t.Fatal(err) }
+}
+`
+}
+
+func racyCounterSource() string {
+	return `package task
+
+import "sync"
+
+func Count(workers int) int {
+	value := 0
+	var group sync.WaitGroup
+	group.Add(workers)
+	for range workers {
+		go func() {
+			defer group.Done()
+			value++
+		}()
+	}
+	group.Wait()
+	return value
+}
+`
+}
+
+func synchronizedCounterSource() string {
+	return `package task
+
+import "sync"
+
+func Count(workers int) int {
+	value := 0
+	var mutex sync.Mutex
+	var group sync.WaitGroup
+	group.Add(workers)
+	for range workers {
+		go func() {
+			defer group.Done()
+			mutex.Lock()
+			value++
+			mutex.Unlock()
+		}()
+	}
+	group.Wait()
+	return value
+}
+`
+}
+
+func privateRaceTest() string {
+	return `package task
+
+import (
+	"os"
+	"path/filepath"
+	"testing"
+)
+
+func TestCounterHasNoRaceAndSourceIsAbsent(t *testing.T) {
+	for range 20 {
+		_ = Count(32)
+	}
+	err := filepath.Walk("..", func(path string, info os.FileInfo, err error) error {
+		if err != nil { return err }
+		if info.Name() == "race_private_test.go" { t.Fatalf("private race source is visible at %s", path) }
 		return nil
 	})
 	if err != nil { t.Fatal(err) }

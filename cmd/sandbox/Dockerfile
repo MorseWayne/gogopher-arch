@@ -11,6 +11,7 @@ RUN --mount=type=cache,id=gogopher-go-mod,target=/go/pkg/mod \
     CGO_ENABLED=0 go build -o /sandbox ./cmd/sandbox
 
 FROM golang:1.25-alpine
+RUN apk add --no-cache gcc musl-dev
 RUN addgroup -S sandbox && adduser -S -G sandbox sandbox
 COPY --from=builder /sandbox /usr/local/bin/gogopher-sandbox
 USER sandbox

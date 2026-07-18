@@ -1,0 +1,7 @@
+# 取消不是一个额外 if
+
+并发函数的每个潜在阻塞点都要回答：调用方离开后，它如何被唤醒？包括发送任务、接收任务、发送结果和正在执行的回调。
+
+先从父 context 派生批次 context；任一错误出现时取消批次；协调者继续收尾，等待所有 worker 退出后再返回。原始错误要保留，父 context 错误要能由 `errors.Is` 识别。
+
+官方 [Go Concurrency Patterns: Context](https://go.dev/blog/context) 解释 context 如何沿调用链传播 deadline 与取消；[Pipelines and cancellation](https://go.dev/blog/pipelines) 解释下游提前停止时为何会泄漏上游 goroutine。

@@ -275,7 +275,7 @@ func executionResponse(value execution.Execution) executionDTO {
 			Stage: stage.Stage, Status: stage.Status, ExitCode: stage.ExitCode, DurationMS: stage.DurationMS,
 			TimedOut: stage.TimedOut, OutputTruncated: stage.OutputTruncated, PublicSummary: stage.PublicSummary,
 		}
-		if stage.Stage != execution.StageHeldOutTest {
+		if !isPrivateStage(stage.Stage) {
 			public.Stdout, public.Stderr = stage.Stdout, stage.Stderr
 			public.TestEvents = append([]execution.TestEvent(nil), stage.TestEvents...)
 		}

@@ -248,7 +248,7 @@ func attemptDetailResponse(response attemptDTO, related attemptview.Related) att
 			RuleID: value.RuleID, Status: value.Status, Stage: value.Stage, Analyzer: value.Analyzer,
 			Summary: value.Summary, ExecutionID: value.ExecutionID,
 		}
-		if value.Stage != execution.StageHeldOutTest {
+		if !isPrivateStage(value.Stage) {
 			public.Package, public.Test = value.Package, value.Test
 		}
 		response.RuleResults = append(response.RuleResults, public)
@@ -257,6 +257,10 @@ func attemptDetailResponse(response attemptDTO, related attemptview.Related) att
 		response.Evidence = append(response.Evidence, evidenceResponse(value))
 	}
 	return response
+}
+
+func isPrivateStage(stage execution.Stage) bool {
+	return stage == execution.StageHeldOutTest || stage == execution.StageRace
 }
 
 func evidenceResponse(value evaluation.Evidence) evidenceDTO {

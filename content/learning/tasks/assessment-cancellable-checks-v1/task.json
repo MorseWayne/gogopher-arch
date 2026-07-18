@@ -1,0 +1,23 @@
+{
+  "id": "assessment-cancellable-checks-v1", "version": 1, "language": "go1.25", "workspace_root": "workspace",
+  "files": [
+    {"source": "README.md", "path": "README.md", "role": "readme", "editable": false, "sha256": "4f3534b8ba15a356ec588d2e42711e48484f0a8649a1736877b201102d0b5225"},
+    {"source": "starter/go.mod", "path": "go.mod", "role": "starter", "editable": false, "sha256": "ab0d4c018d278242c2b6f05f4da674f196f332e840c537b1b62340204c1e7826"},
+    {"source": "starter/checker.go", "path": "checker.go", "role": "starter", "editable": true, "sha256": "0dc5da0d3206aecd282b3205a6f395f9c196f4c43fbbc27477ae330b493f842e"},
+    {"source": "visible/checker_test.go", "path": "checker_test.go", "role": "visible_test", "editable": false, "sha256": "a411d5cdf454c7d8483c36fc6e22be98538ee1b2c3673e4badfb4f7ff0647a09"},
+    {"source": "heldout/checker_private_test.go", "path": "checker_private_test.go", "role": "held_out_test", "editable": false, "sha256": "1aad7365332f49efda3dab0040a029b3ceec1dbd25deed0ec1d199605611c9a0"}
+  ],
+  "editable_paths": ["checker.go"], "readonly_paths": ["README.md", "go.mod", "checker_test.go"],
+  "limits": {"max_files": 10, "max_file_bytes": 65536, "max_total_bytes": 262144},
+  "actions": {"build": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"}, "test": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"}, "vet": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"}, "submit": {"timeout_ms": 20000, "max_output_bytes": 131072, "network": "none"}},
+  "hints": [
+    {"id": "first-error", "level": 1, "title": "首个错误与清理分离", "body": "记录首个非 context 错误并 cancel；结果协调循环仍要持续到 worker 全部结束，最后再决定返回哪个错误。"},
+    {"id": "select-blocking-points", "level": 2, "title": "检查每个阻塞点", "body": "派发 jobs、worker 取任务和发送结果都应能在 ctx.Done() 后退出；check 本身也必须收到派生 context。"}
+  ],
+  "visible_tests": ["checker_test.go"], "held_out_tests": ["checker_private_test.go"], "race_tests": [],
+  "assessment_rules": [
+    {"rule_id": "cancellation-propagates", "stage": "held_out_test", "selector": {"test": "TestCheckAllCancelsSiblings"}, "capability_refs": [{"id": "M1-13", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "workers-release-before-return", "stage": "held_out_test", "selector": {"test": "TestCheckAllHonorsDeadlineAndReleasesWorkers"}, "capability_refs": [{"id": "M1-13", "version": 1}], "evidence_type": "implement", "condition": "passed"}
+  ],
+  "artifact_rules": {"workspace": "full", "logs": ["build", "test", "vet", "submit"]}
+}

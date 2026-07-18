@@ -1,0 +1,19 @@
+{
+  "id": "review-thumbnail-pipeline-v1", "version": 1, "language": "go1.25", "workspace_root": "workspace",
+  "files": [
+    {"source": "README.md", "path": "README.md", "role": "readme", "editable": false, "sha256": "356f5f30d21487c0c2092e5daf93913312901ed0e51d0c6781a03269fe6b7d74"},
+    {"source": "starter/go.mod", "path": "go.mod", "role": "starter", "editable": false, "sha256": "6a7be0cc0432138f943727f09678619c285143fd065a35135b646e60299c36b0"},
+    {"source": "starter/thumbnail.go", "path": "thumbnail.go", "role": "starter", "editable": true, "sha256": "306bb71d2d34314d5cb2015daa15764e178d3e00b33305ac6851b066268b0a64"},
+    {"source": "heldout/thumbnail_private_test.go", "path": "thumbnail_private_test.go", "role": "held_out_test", "editable": false, "sha256": "f5ba0085e1d61a7ef4176bff716e1e0fb4499ed3d1adeed039a1a46a34fec3bd"}
+  ],
+  "editable_paths": ["thumbnail.go"], "readonly_paths": ["README.md", "go.mod"],
+  "limits": {"max_files": 8, "max_file_bytes": 65536, "max_total_bytes": 262144},
+  "actions": {"build": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"}, "test": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"}, "vet": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"}, "submit": {"timeout_ms": 20000, "max_output_bytes": 131072, "network": "none"}},
+  "hints": [{"id": "transfer-invariants", "level": 1, "title": "迁移结构，不迁移名字", "body": "重新写出 jobs、worker、results 的所有权和关闭时机；领域对象变化不会改变生命周期不变量。"}],
+  "visible_tests": [], "held_out_tests": ["thumbnail_private_test.go"], "race_tests": [],
+  "assessment_rules": [
+    {"rule_id": "bounded-concurrency-respected", "stage": "held_out_test", "selector": {"test": "TestGenerateBoundsConcurrency"}, "capability_refs": [{"id": "M1-11", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "pipeline-completes-without-leak", "stage": "held_out_test", "selector": {"test": "TestGenerateClosesAndReleasesWorkers"}, "capability_refs": [{"id": "M1-11", "version": 1}], "evidence_type": "implement", "condition": "passed"}
+  ],
+  "artifact_rules": {"workspace": "diff", "logs": ["build", "test", "vet", "submit"]}
+}

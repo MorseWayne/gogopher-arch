@@ -11,7 +11,7 @@ import (
 
 const (
 	testActivitySet = "m1-first-slice"
-	testReleaseID   = "m1-first-slice-v8"
+	testReleaseID   = "m1-first-slice-v9"
 )
 
 var testCreatedAt = time.Date(2026, time.July, 18, 0, 0, 0, 0, time.UTC)
@@ -113,8 +113,31 @@ func TestVerifyFrontendBundleRejectsHeldOutContent(t *testing.T) {
 		t.Fatal(err)
 	}
 	err = VerifyFrontendBundle(releaseDir, webDist)
-	if err == nil || !strings.Contains(err.Error(), "held-out asset fingerprint") {
-		t.Fatalf("VerifyFrontendBundle() error = %v, want held-out fingerprint", err)
+	if err == nil || !strings.Contains(err.Error(), "private test asset fingerprint") {
+		t.Fatalf("VerifyFrontendBundle() error = %v, want private test fingerprint", err)
+	}
+}
+
+func TestVerifyFrontendBundleRejectsRaceTestContent(t *testing.T) {
+	contentDir := repositoryContentDir(t)
+	releaseDir, err := BuildRelease(ReleaseOptions{
+		ContentDir: contentDir, ActivitySet: testActivitySet, ReleaseID: testReleaseID,
+		CreatedAt: testCreatedAt, OutputDir: t.TempDir(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	webDist := t.TempDir()
+	raceTest, err := os.ReadFile(filepath.Join(releaseDir, "bundle", "tasks", "assessment-concurrent-registry-v1", "race", "registry_race_test.go"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(webDist, "app.js"), raceTest, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	err = VerifyFrontendBundle(releaseDir, webDist)
+	if err == nil || !strings.Contains(err.Error(), "private test asset fingerprint") {
+		t.Fatalf("VerifyFrontendBundle() error = %v, want private test fingerprint", err)
 	}
 }
 

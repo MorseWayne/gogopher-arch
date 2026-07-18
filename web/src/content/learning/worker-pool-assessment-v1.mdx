@@ -1,0 +1,7 @@
+# 独立完成有界 worker pool
+
+本次不再要求保持输出顺序，而是把 channel 生命周期暴露为契约：调用方必须能够一直 `range` 到关闭。评测会实际测量并发峰值，并重复调用检查 goroutine 是否在完成后退出。
+
+提交前逐项检查：worker 数量是否来自 `workers`；任务是否恰好派发一次；是否只有在所有 worker 结束后才关闭结果 channel；无效参数能否立即得到关闭的 channel。
+
+遇到卡住时，先画 wait-for 关系，不要加 buffer 或 sleep 猜测修复。独立评估阶段可按问题查阅 [`sync.WaitGroup`](https://pkg.go.dev/sync#WaitGroup) 和 [Pipelines and cancellation](https://go.dev/blog/pipelines)，但最终代码要能由你解释和重写。

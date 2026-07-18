@@ -45,8 +45,34 @@ func TestRegistryReportsMaximumActionTimeoutForWorkerValidation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if maximum != 15*time.Second {
+	if maximum != 30*time.Second {
 		t.Fatalf("MaximumActionTimeout() = %s", maximum)
+	}
+}
+
+func TestSpecBuilderIncludesRaceTestsOnlyForSubmit(t *testing.T) {
+	registry := releaseRegistry(t)
+	current := frozenAttempt(t, registry, "assessment-concurrent-registry-v1", 1)
+	builder, err := NewSpecBuilder(registry)
+	if err != nil {
+		t.Fatal(err)
+	}
+	testSpec, err := builder.Build(current, "execution-test", ActionTest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, asset := range testSpec.Files {
+		if asset.Role == RoleRaceTest {
+			t.Fatal("test action contains private race asset")
+		}
+	}
+	submitSpec, err := builder.Build(current, "execution-submit", ActionSubmit)
+	if err != nil {
+		t.Fatal(err)
+	}
+	race := findAsset(t, submitSpec.Files, "registry_race_test.go")
+	if race.Role != RoleRaceTest || race.Origin != OriginReleaseBundle || race.Access != AccessReadonly || race.Content == "" {
+		t.Fatalf("race asset = %#v", race)
 	}
 }
 

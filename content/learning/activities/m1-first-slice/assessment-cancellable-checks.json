@@ -1,0 +1,10 @@
+{
+  "id": "assessment-cancellable-checks", "version": 1, "title": "实现可取消的并发检查器", "kind": "learning_task", "mode": "assessment",
+  "capability_refs": [{"id": "M1-13", "version": 1}], "task_ref": {"id": "assessment-cancellable-checks-v1", "version": 1},
+  "content_ref": "web/src/content/learning/cancellable-checks-assessment-v1.mdx",
+  "assistance_policy": {"hints": true, "references": true, "solution": false, "ai_declaration": true},
+  "evidence_rules": [
+    {"rule_id": "cancellation-propagates", "capability_id": "M1-13", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "workers-release-before-return", "capability_id": "M1-13", "capability_version": 1, "evidence_type": "implement", "result": "passed"}
+  ]
+}

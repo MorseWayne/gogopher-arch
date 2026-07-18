@@ -1,0 +1,7 @@
+# 把超时贯穿完整并发生命周期
+
+这次评测会让一个检查失败、其他检查阻塞在 `ctx.Done()`，也会从父 context 触发 deadline。只有在取消已经传播、任务停止派发、已启动检查全部退出之后，函数才能返回。
+
+常见错误是收到第一个 error 立即 return：这会把 worker 留在后台，甚至让它们永久阻塞在发送结果。正确结构通常把“记录首个错误”和“等待全部退出”分开。
+
+提交前用四个问题自检：谁创建派生 context；谁调用 cancel；每个 channel 谁关闭；函数如何证明所有 goroutine 已退出。需要查阅时只看官方 [`context` package](https://pkg.go.dev/context) 的 cancellation 规则和 [Context blog](https://go.dev/blog/context) 的调用链示例。

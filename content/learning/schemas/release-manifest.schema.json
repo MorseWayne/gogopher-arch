@@ -86,7 +86,7 @@
         "source": {"$ref": "#/$defs/path"},
         "workspace_path": {"$ref": "#/$defs/path"},
         "bundle_path": {"$ref": "#/$defs/path"},
-        "role": {"enum": ["starter", "visible_test", "held_out_test", "fixture", "readme"]},
+		"role": {"enum": ["starter", "visible_test", "held_out_test", "race_test", "fixture", "readme"]},
         "sha256": {"$ref": "#/$defs/hash"}
       }
     }

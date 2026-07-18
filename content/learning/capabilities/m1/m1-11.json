@@ -1,0 +1,14 @@
+{
+  "id": "M1-11",
+  "version": 1,
+  "name": "Goroutine、Channel 与有界并发",
+  "description": "能够用固定 worker、明确的 channel 所有权和 WaitGroup 构造可完成的并发流水线，并在返回前回收全部 goroutine。",
+  "milestone": "M1",
+  "domain": "bounded-concurrency",
+  "prerequisites": {"hard": [{"id": "M1-03", "version": 1}, {"id": "M1-04", "version": 1}], "recommended": [{"id": "M1-09", "version": 1}]},
+  "required_evidence": [
+    {"type": "implement", "independence": "independent", "context": "same_context", "rule_ids": ["bounded-concurrency-respected", "pipeline-completes-without-leak"]}
+  ],
+  "review_policy": {"first_review_after_days": 3, "success_interval_days": 14, "failure_remediation_after_days": 1},
+  "resource_refs": ["web/src/content/go-basics/ch08-goroutines-channels.mdx", "https://go.dev/blog/pipelines", "https://pkg.go.dev/sync"]
+}

@@ -1,0 +1,9 @@
+# 让复合状态在真实竞态检测下成立
+
+注册表同时包含 map 更新和快照复制。单字段 atomic 不能直接保护这组复合不变量；如果选择 mutex，要明确读锁、写锁覆盖哪些操作，以及为什么复制必须发生在保护范围内。
+
+## 两层验证
+
+普通隐藏测试验证快照所有权；提交阶段还会运行真实 race detector 并发压力测试。普通测试通过不代表没有竞态，race detector 通过也不代表业务契约正确，两类证据缺一不可。
+
+小结至少写清：你选择的同步原语、被保护的不变量，以及 mutex、atomic、channel ownership 中一种未采用方案在这里的代价。参考官方 [Race Detector](https://go.dev/doc/articles/race_detector)、[Go Memory Model](https://go.dev/ref/mem) 和 [`sync`](https://pkg.go.dev/sync)，按问题检索，不需要线性背诵。

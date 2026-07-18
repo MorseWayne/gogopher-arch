@@ -311,6 +311,187 @@ func TestGeneratorConsumesRealAssessmentSandboxResult(t *testing.T) {
 	}
 }
 
+func TestConcurrencyAssessmentSolutionsPassRealSandbox(t *testing.T) {
+	contentDir, err := filepath.Abs("../../../content/learning")
+	if err != nil {
+		t.Fatal(err)
+	}
+	registry, err := definition.LoadRegistry(definition.RegistryOptions{ContentDir: contentDir})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, testCase := range []struct {
+		name       string
+		activityID string
+		path       string
+		source     string
+	}{
+		{name: "bounded worker pool", activityID: "assessment-worker-pool", path: "pool.go", source: workerPoolSolution()},
+		{name: "cancellable checks", activityID: "assessment-cancellable-checks", path: "checker.go", source: cancellableChecksSolution()},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			activity, err := registry.ActivityView(registry.CurrentReleaseID(), testCase.activityID, 1)
+			if err != nil {
+				t.Fatal(err)
+			}
+			task, err := registry.ExecutionTask(registry.CurrentReleaseID(), activity.TaskRef.ID, activity.TaskRef.Version)
+			if err != nil {
+				t.Fatal(err)
+			}
+			workspace, err := registry.PublicWorkspace(registry.CurrentReleaseID(), task.ID, task.Version)
+			if err != nil {
+				t.Fatal(err)
+			}
+			workspace[testCase.path] = testCase.source
+			current := attempt.Attempt{
+				ID: "concurrency-attempt-" + strings.ReplaceAll(testCase.name, " ", "-"), ReleaseID: registry.CurrentReleaseID(),
+				ActivityID: activity.ID, ActivityVersion: activity.Version, ActivityHash: activity.ContentHash,
+				TaskID: task.ID, TaskVersion: task.Version, TaskHash: task.BundleHash,
+				Workspace: workspace, WorkspaceHash: attempt.WorkspaceHash(workspace),
+			}
+			builder, err := execution.NewSpecBuilder(registry)
+			if err != nil {
+				t.Fatal(err)
+			}
+			spec, err := builder.Build(current, "concurrency-execution-"+strings.ReplaceAll(testCase.name, " ", "-"), execution.ActionSubmit)
+			if err != nil {
+				t.Fatal(err)
+			}
+			response, err := sandbox.NewRunner(sandbox.RunnerOptions{TempDir: t.TempDir()}).Run(context.Background(), spec)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if response.Status != execution.ExecutionSucceeded {
+				t.Fatalf("Sandbox response = %#v", response)
+			}
+		})
+	}
+}
+
+func workerPoolSolution() string {
+	return `package workerpool
+
+import "sync"
+
+type Result struct {
+	Index int
+	Value int
+}
+
+type job struct {
+	index int
+	value int
+}
+
+func Process(values []int, workers int, transform func(int) int) <-chan Result {
+	results := make(chan Result)
+	if workers <= 0 || len(values) == 0 {
+		close(results)
+		return results
+	}
+	jobs := make(chan job)
+	go func() {
+		defer close(jobs)
+		for index, value := range values {
+			jobs <- job{index: index, value: value}
+		}
+	}()
+	var group sync.WaitGroup
+	group.Add(workers)
+	for range workers {
+		go func() {
+			defer group.Done()
+			for item := range jobs {
+				results <- Result{Index: item.index, Value: transform(item.value)}
+			}
+		}()
+	}
+	go func() {
+		group.Wait()
+		close(results)
+	}()
+	return results
+}
+`
+}
+
+func cancellableChecksSolution() string {
+	return `package checker
+
+import (
+	"context"
+	"fmt"
+	"sync"
+)
+
+func CheckAll(ctx context.Context, targets []string, workers int, check func(context.Context, string) error) error {
+	if workers <= 0 {
+		return fmt.Errorf("workers must be positive")
+	}
+	if len(targets) == 0 {
+		return nil
+	}
+	batch, cancel := context.WithCancel(ctx)
+	defer cancel()
+	jobs := make(chan string)
+	results := make(chan error, workers)
+	var group sync.WaitGroup
+	group.Add(workers + 1)
+	go func() {
+		defer group.Done()
+		defer close(jobs)
+		for _, target := range targets {
+			select {
+			case jobs <- target:
+			case <-batch.Done():
+				return
+			}
+		}
+	}()
+	for range workers {
+		go func() {
+			defer group.Done()
+			for {
+				select {
+				case <-batch.Done():
+					return
+				case target, ok := <-jobs:
+					if !ok {
+						return
+					}
+					err := check(batch, target)
+					select {
+					case results <- err:
+					case <-batch.Done():
+						return
+					}
+				}
+			}
+		}()
+	}
+	go func() {
+		group.Wait()
+		close(results)
+	}()
+	var first error
+	for err := range results {
+		if err != nil && first == nil {
+			if ctx.Err() != nil {
+				first = ctx.Err()
+			} else {
+				first = err
+			}
+			cancel()
+		}
+	}
+	if first != nil {
+		return first
+	}
+	return ctx.Err()
+}
+`
+}
+
 func setupGenerator(t *testing.T) (*Generator, submission.Submission) {
 	t.Helper()
 	contentDir, err := filepath.Abs("../../../content/learning")

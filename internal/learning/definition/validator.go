@@ -35,6 +35,7 @@ type taskAssets struct {
 	ReadonlyPaths []string   `json:"readonly_paths"`
 	VisibleTests  []string   `json:"visible_tests"`
 	HeldOutTests  []string   `json:"held_out_tests"`
+	RaceTests     []string   `json:"race_tests"`
 }
 
 type taskFile struct {
@@ -103,7 +104,7 @@ func ValidateTaskAssets(taskDir string, document []byte) error {
 	}
 	for _, path := range task.ReadonlyPaths {
 		file, exists := declaredPaths[path]
-		if !exists || file.Editable || file.Role == "held_out_test" {
+		if !exists || file.Editable || file.Role == "held_out_test" || file.Role == "race_test" {
 			return fmt.Errorf("readonly path %q does not reference a public readonly file", path)
 		}
 	}
@@ -115,6 +116,11 @@ func ValidateTaskAssets(taskDir string, document []byte) error {
 	for _, path := range task.HeldOutTests {
 		if file, exists := declaredPaths[path]; !exists || file.Role != "held_out_test" {
 			return fmt.Errorf("held-out test %q has no matching asset", path)
+		}
+	}
+	for _, path := range task.RaceTests {
+		if file, exists := declaredPaths[path]; !exists || file.Role != "race_test" {
+			return fmt.Errorf("race test %q has no matching asset", path)
 		}
 	}
 	return nil

@@ -47,6 +47,7 @@
     "solution": {"type": "string", "minLength": 1, "maxLength": 8000},
     "visible_tests": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/path"}},
     "held_out_tests": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/path"}},
+	"race_tests": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/path"}},
     "assessment_rules": {
       "type": "array",
       "items": {
@@ -54,7 +55,7 @@
         "required": ["rule_id", "stage", "selector", "capability_refs", "evidence_type", "condition"],
         "properties": {
           "rule_id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
-          "stage": {"enum": ["build", "visible_test", "vet", "held_out_test", "ast", "explanation"]},
+		  "stage": {"enum": ["build", "visible_test", "vet", "held_out_test", "race", "ast", "explanation"]},
           "selector": {"type": "object", "minProperties": 1},
           "capability_refs": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/capabilityRef"}},
           "evidence_type": {"enum": ["implement", "test", "diagnose"]},
@@ -87,7 +88,7 @@
       "properties": {
         "source": {"$ref": "#/$defs/path"},
         "path": {"$ref": "#/$defs/path"},
-        "role": {"enum": ["starter", "visible_test", "held_out_test", "fixture", "readme"]},
+		"role": {"enum": ["starter", "visible_test", "held_out_test", "race_test", "fixture", "readme"]},
         "editable": {"type": "boolean"},
         "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
       }

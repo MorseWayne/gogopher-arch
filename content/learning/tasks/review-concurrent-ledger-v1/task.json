@@ -1,0 +1,21 @@
+{
+  "id": "review-concurrent-ledger-v1", "version": 1, "language": "go1.25", "workspace_root": "workspace",
+  "files": [
+    {"source": "README.md", "path": "README.md", "role": "readme", "editable": false, "sha256": "4fb522f0849131841cf0cb25a12af815eca4a43c82b738673d0bc4f4eb0ff1c7"},
+    {"source": "starter/go.mod", "path": "go.mod", "role": "starter", "editable": false, "sha256": "c6bfb0ea5ff1c48ef6e8c32af2e99c30ffa81e5ff3f878f668dafdf92f5f3dc7"},
+    {"source": "starter/ledger.go", "path": "ledger.go", "role": "starter", "editable": true, "sha256": "73b4af802fbab3ec4d25e8fe756e643585c68d1ea6fd96869819b2cfc9eefbd2"},
+    {"source": "heldout/ledger_private_test.go", "path": "ledger_private_test.go", "role": "held_out_test", "editable": false, "sha256": "560f1e739b743d0f418d557d2a42a584ac7996b882c9e555bf47b8fc13f9cfc7"},
+    {"source": "race/ledger_race_test.go", "path": "ledger_race_test.go", "role": "race_test", "editable": false, "sha256": "ee5f8701cda3e64aabc625f504a019454afdac89ea0aa9551d02d8b61ee0b101"}
+  ],
+  "editable_paths": ["ledger.go"], "readonly_paths": ["README.md", "go.mod"],
+  "limits": {"max_files": 10, "max_file_bytes": 65536, "max_total_bytes": 262144},
+  "actions": {"build": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"}, "test": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"}, "vet": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"}, "submit": {"timeout_ms": 30000, "max_output_bytes": 262144, "network": "none"}},
+  "hints": [{"id": "same-boundary", "level": 1, "title": "更新和复制共享同步边界", "body": "Credit 与 Balances 都访问 balances；复制快照时也不能与写入并发。"}],
+  "visible_tests": [], "held_out_tests": ["ledger_private_test.go"], "race_tests": ["ledger_race_test.go"],
+  "assessment_rules": [
+    {"rule_id": "registry-contract-correct", "stage": "held_out_test", "selector": {"test": "TestLedgerSnapshotOwnsState"}, "capability_refs": [{"id": "M1-12", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "race-detector-clean", "stage": "race", "selector": {"package": "./..."}, "capability_refs": [{"id": "M1-12", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "synchronization-choice-explained", "stage": "explanation", "selector": {"minimum_chars": 40}, "capability_refs": [{"id": "M1-12", "version": 1}], "evidence_type": "diagnose", "condition": "passed"}
+  ],
+  "artifact_rules": {"workspace": "diff", "logs": ["build", "test", "vet", "submit"]}
+}

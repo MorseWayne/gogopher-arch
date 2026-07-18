@@ -404,7 +404,7 @@ func (r *Registry) PublicWorkspace(releaseID, taskID string, taskVersion int) (m
 	}
 	workspace := make(map[string]string)
 	for _, asset := range manifest.Assets {
-		if asset.TaskID != taskID || asset.TaskVersion != taskVersion || asset.Role == "held_out_test" {
+		if asset.TaskID != taskID || asset.TaskVersion != taskVersion || isPrivateTestAsset(asset.Role) {
 			continue
 		}
 		contents, err := readBundleFile(filepath.Join(releaseDir, "bundle"), asset.BundlePath)
@@ -414,4 +414,8 @@ func (r *Registry) PublicWorkspace(releaseID, taskID string, taskVersion int) (m
 		workspace[asset.WorkspacePath] = string(contents)
 	}
 	return workspace, nil
+}
+
+func isPrivateTestAsset(role string) bool {
+	return role == "held_out_test" || role == "race_test"
 }

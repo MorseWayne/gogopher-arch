@@ -26,7 +26,7 @@ func VerifyFrontendBundle(releaseDir, webDist string) error {
 	}
 	var forbidden []forbiddenValue
 	for _, asset := range manifest.Assets {
-		if asset.Role != "held_out_test" {
+		if !isPrivateTestAsset(asset.Role) {
 			continue
 		}
 		contents, err := readBundleFile(filepath.Join(releaseDir, "bundle"), asset.BundlePath)
@@ -35,7 +35,7 @@ func VerifyFrontendBundle(releaseDir, webDist string) error {
 		}
 		encodedJSON, err := json.Marshal(string(contents))
 		if err != nil {
-			return fmt.Errorf("encode held-out asset fingerprint: %w", err)
+			return fmt.Errorf("encode private test asset fingerprint: %w", err)
 		}
 		forbidden = append(forbidden,
 			forbiddenValue{asset: asset.Source, value: []byte(filepath.Base(asset.Source))},
@@ -74,7 +74,7 @@ func VerifyFrontendBundle(releaseDir, webDist string) error {
 		}
 		for _, candidate := range forbidden {
 			if len(candidate.value) > 0 && bytes.Contains(contents, candidate.value) {
-				return fmt.Errorf("frontend build file %q contains held-out asset fingerprint from %q", path, candidate.asset)
+				return fmt.Errorf("frontend build file %q contains private test asset fingerprint from %q", path, candidate.asset)
 			}
 		}
 		return nil

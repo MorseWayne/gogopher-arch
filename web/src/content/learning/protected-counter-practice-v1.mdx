@@ -1,0 +1,7 @@
+# 从“偶尔算错”进入共享状态同步
+
+数据竞态不是普通业务错误：两个 goroutine 并发访问同一位置，至少一个写入且缺少同步，就可能让结果、时序乃至程序行为失去保证。
+
+这个单整数计数器可以用 mutex 或 atomic。先写出状态不变量和读写点，再选择最小同步边界。不要把 channel 当作“更高级的锁”；只有当一个 goroutine 拥有状态且消息流本身有价值时，channel ownership 才更自然。
+
+先用公开测试观察不稳定结果，再阅读官方 [Data Race Detector](https://go.dev/doc/articles/race_detector) 的 Usage 与 Report Format，理解 `go test -race` 验证的是什么。

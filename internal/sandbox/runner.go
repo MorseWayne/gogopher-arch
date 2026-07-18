@@ -51,7 +51,7 @@ func (r *Runner) Run(ctx context.Context, spec execution.ExecutionSpec) (executi
 	}
 	workspace := filepath.Join(executionRoot, execution.WorkspaceRoot)
 	if err := materializeAssets(workspace, spec.Files, func(asset execution.FileAsset) bool {
-		return asset.Role != execution.RoleHeldOutTest
+		return !isPrivateTestRole(asset.Role)
 	}); err != nil {
 		return infraResponse(response, started, "workspace_materialize_failed", "Sandbox could not materialize the execution workspace"), nil
 	}
@@ -132,6 +132,10 @@ func (r processResult) stageResult(stage execution.Stage, label string) executio
 }
 
 func (r *Runner) runProcess(ctx context.Context, timeout time.Duration, executionRoot, workingDirectory string, arguments []string, maxOutputBytes int) processResult {
+	return r.runProcessWithEnvironment(ctx, timeout, executionRoot, workingDirectory, arguments, maxOutputBytes, nil)
+}
+
+func (r *Runner) runProcessWithEnvironment(ctx context.Context, timeout time.Duration, executionRoot, workingDirectory string, arguments []string, maxOutputBytes int, environmentOverrides map[string]string) processResult {
 	started := time.Now()
 	runContext, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
@@ -144,7 +148,7 @@ func (r *Runner) runProcess(ctx context.Context, timeout time.Duration, executio
 	if err := prepareGoEnvironment(executionRoot); err != nil {
 		return processResult{infrastructureFailure: &execution.Failure{Code: "runner_environment_failed", Message: "Sandbox could not prepare the Go environment"}}
 	}
-	command.Env = sandboxEnvironment(executionRoot)
+	command.Env = sandboxEnvironmentWithOverrides(executionRoot, environmentOverrides)
 	err := command.Run()
 	stdout, stderr, truncated := capture.values()
 	result := processResult{stdout: stdout, stderr: stderr, exitCode: 0, durationMS: time.Since(started).Milliseconds(), outputTruncated: truncated}
@@ -179,12 +183,19 @@ func prepareGoEnvironment(executionRoot string) error {
 }
 
 func sandboxEnvironment(executionRoot string) []string {
+	return sandboxEnvironmentWithOverrides(executionRoot, nil)
+}
+
+func sandboxEnvironmentWithOverrides(executionRoot string, additional map[string]string) []string {
 	overrides := map[string]string{
 		"CGO_ENABLED": "0", "GOENV": "off", "GOFLAGS": "", "GONOSUMDB": "*", "GOPROXY": "off",
 		"GOSUMDB": "off", "GOTOOLCHAIN": "local", "GOWORK": "off",
 		"HOME": filepath.Join(executionRoot, "home"), "GOCACHE": filepath.Join(executionRoot, "gocache"),
 		"GOMODCACHE": filepath.Join(executionRoot, "gomodcache"), "GOTMPDIR": filepath.Join(executionRoot, "gotmp"),
 		"TMPDIR": filepath.Join(executionRoot, "gotmp"),
+	}
+	for key, value := range additional {
+		overrides[key] = value
 	}
 	keys := make([]string, 0, len(overrides))
 	for key := range overrides {
@@ -197,6 +208,10 @@ func sandboxEnvironment(executionRoot string) []string {
 		environment = append(environment, key+"="+overrides[key])
 	}
 	return environment
+}
+
+func isPrivateTestRole(role execution.AssetRole) bool {
+	return role == execution.RoleHeldOutTest || role == execution.RoleRaceTest
 }
 
 func materializeAssets(root string, assets []execution.FileAsset, include func(execution.FileAsset) bool) error {

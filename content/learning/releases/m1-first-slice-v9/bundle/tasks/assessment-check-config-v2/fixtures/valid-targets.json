@@ -1,0 +1,1 @@
+{"targets":[{"name":"api","url":"https://api.example.com/health","timeout_ms":1000}]}

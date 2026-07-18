@@ -1,0 +1,10 @@
+{
+  "id": "assessment-worker-pool", "version": 1, "title": "独立实现有界 Worker Pool", "kind": "learning_task", "mode": "assessment",
+  "capability_refs": [{"id": "M1-11", "version": 1}], "task_ref": {"id": "assessment-worker-pool-v1", "version": 1},
+  "content_ref": "web/src/content/learning/worker-pool-assessment-v1.mdx",
+  "assistance_policy": {"hints": true, "references": true, "solution": false, "ai_declaration": true},
+  "evidence_rules": [
+    {"rule_id": "bounded-concurrency-respected", "capability_id": "M1-11", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "pipeline-completes-without-leak", "capability_id": "M1-11", "capability_version": 1, "evidence_type": "implement", "result": "passed"}
+  ]
+}

@@ -155,6 +155,14 @@ func TestSandboxEnvironmentDoesNotInheritProcessSecrets(t *testing.T) {
 	}
 }
 
+func TestRaceEnvironmentEnablesCGOWithoutInheritingSecrets(t *testing.T) {
+	t.Setenv("DATABASE_URL", "secret-database-url")
+	environment := strings.Join(sandboxEnvironmentWithOverrides(t.TempDir(), map[string]string{"CGO_ENABLED": "1"}), "\n")
+	if !strings.Contains(environment, "CGO_ENABLED=1") || strings.Contains(environment, "DATABASE_URL") || strings.Contains(environment, "secret-") {
+		t.Fatalf("race environment = %s", environment)
+	}
+}
+
 func TestCallerCancellationIsInfrastructureFailure(t *testing.T) {
 	runner := NewRunner(RunnerOptions{TempDir: t.TempDir()})
 	spec := runnerSpec(execution.ActionTest, []execution.FileAsset{

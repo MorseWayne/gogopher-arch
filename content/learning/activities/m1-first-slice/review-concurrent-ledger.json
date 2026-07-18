@@ -1,0 +1,11 @@
+{
+  "id": "review-concurrent-ledger", "version": 1, "title": "复习并发账本同步边界", "kind": "learning_task", "mode": "review",
+  "capability_refs": [{"id": "M1-12", "version": 1}], "task_ref": {"id": "review-concurrent-ledger-v1", "version": 1},
+  "content_ref": "web/src/content/learning/concurrent-ledger-review-v1.mdx",
+  "assistance_policy": {"hints": true, "references": true, "solution": false, "ai_declaration": true},
+  "evidence_rules": [
+    {"rule_id": "registry-contract-correct", "capability_id": "M1-12", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "race-detector-clean", "capability_id": "M1-12", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "synchronization-choice-explained", "capability_id": "M1-12", "capability_version": 1, "evidence_type": "diagnose", "result": "passed"}
+  ]
+}

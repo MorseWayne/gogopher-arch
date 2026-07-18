@@ -1,0 +1,11 @@
+{
+  "id": "assessment-concurrent-registry", "version": 1, "title": "用真实竞态检测验收注册表", "kind": "learning_task", "mode": "assessment",
+  "capability_refs": [{"id": "M1-12", "version": 1}], "task_ref": {"id": "assessment-concurrent-registry-v1", "version": 1},
+  "content_ref": "web/src/content/learning/concurrent-registry-assessment-v1.mdx",
+  "assistance_policy": {"hints": true, "references": true, "solution": false, "ai_declaration": true},
+  "evidence_rules": [
+    {"rule_id": "registry-contract-correct", "capability_id": "M1-12", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "race-detector-clean", "capability_id": "M1-12", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "synchronization-choice-explained", "capability_id": "M1-12", "capability_version": 1, "evidence_type": "diagnose", "result": "passed"}
+  ]
+}

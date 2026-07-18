@@ -1,0 +1,10 @@
+{
+  "id": "review-thumbnail-pipeline", "version": 1, "title": "复习缩略图并发流水线", "kind": "learning_task", "mode": "review",
+  "capability_refs": [{"id": "M1-11", "version": 1}], "task_ref": {"id": "review-thumbnail-pipeline-v1", "version": 1},
+  "content_ref": "web/src/content/learning/thumbnail-pipeline-review-v1.mdx",
+  "assistance_policy": {"hints": true, "references": true, "solution": false, "ai_declaration": true},
+  "evidence_rules": [
+    {"rule_id": "bounded-concurrency-respected", "capability_id": "M1-11", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "pipeline-completes-without-leak", "capability_id": "M1-11", "capability_version": 1, "evidence_type": "implement", "result": "passed"}
+  ]
+}

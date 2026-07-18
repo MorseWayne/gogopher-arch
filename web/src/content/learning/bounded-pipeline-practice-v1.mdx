@@ -1,0 +1,13 @@
+# 先建立“会结束”的并发结构
+
+这一步先不追求复杂框架，只练三个不变量：并发数有上限、结果归属明确、函数返回时 worker 已退出。固定 worker pool 比“每个输入一个 goroutine”更容易控制资源上限。
+
+## 动手顺序
+
+先画出 jobs、workers、results 三个角色，标出谁创建、谁发送、谁关闭。通常发送方负责关闭 channel；多个发送方存在时，应由等待全部发送方完成的协调者关闭。然后用索引写入预分配结果，避免并发 append 和顺序漂移。
+
+Go 官方的 [Pipelines and cancellation](https://go.dev/blog/pipelines) 给出了 fan-out、fan-in、`WaitGroup` 与关闭 channel 的完整推导。这里只读 pipeline、fan-out/fan-in 和 stopping short 三节，并回答：为什么接收方不能随意关闭仍有发送者的 channel？
+
+## AI 使用边界
+
+可以让 AI 审查你画出的所有权图，但先自己写出每个 goroutine 的退出条件。若 AI 给出代码，逐个解释每次 `close` 与 `Wait` 为什么不会死锁或 panic。

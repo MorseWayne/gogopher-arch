@@ -17,6 +17,7 @@ const stageLabel: Record<string, string> = {
   visible_test: '测试',
   vet: 'Vet',
   held_out_test: '最终检查',
+  race: '竞态检测',
   ast: '代码结构检查',
   explanation: '完成小结',
 }

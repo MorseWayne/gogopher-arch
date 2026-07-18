@@ -1,0 +1,14 @@
+{
+  "id": "M1-13",
+  "version": 1,
+  "name": "Context、超时与并发生命周期",
+  "description": "能够把取消和超时贯穿并发调用链，在失败或调用方离开时停止派发、取消同批工作并等待资源释放。",
+  "milestone": "M1",
+  "domain": "context-lifecycle",
+  "prerequisites": {"hard": [{"id": "M1-03", "version": 1}, {"id": "M1-11", "version": 1}, {"id": "M1-12", "version": 1}], "recommended": []},
+  "required_evidence": [
+    {"type": "implement", "independence": "independent", "context": "same_context", "rule_ids": ["cancellation-propagates", "workers-release-before-return"]}
+  ],
+  "review_policy": {"first_review_after_days": 3, "success_interval_days": 14, "failure_remediation_after_days": 1},
+  "resource_refs": ["web/src/content/go-basics/ch08-goroutines-channels.mdx", "https://go.dev/blog/context", "https://pkg.go.dev/context", "https://go.dev/blog/pipelines"]
+}

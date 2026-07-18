@@ -212,7 +212,7 @@ export type AttemptStatus = 'active' | 'submitted' | 'submit_infra_failed' | 'co
 export type ExecutionAction = 'build' | 'test' | 'vet' | 'submit'
 export type ExecutionStatus = 'queued' | 'running' | 'succeeded' | 'user_failed' | 'infra_failed'
 export type RuleStatus = 'passed' | 'failed' | 'not_evaluated'
-export type ExecutionStage = 'build' | 'visible_test' | 'vet' | 'held_out_test' | 'ast' | 'explanation'
+export type ExecutionStage = 'build' | 'visible_test' | 'vet' | 'held_out_test' | 'race' | 'ast' | 'explanation'
 
 export interface TestEvent {
   action: string
