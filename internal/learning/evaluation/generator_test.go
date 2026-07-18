@@ -2,10 +2,12 @@ package evaluation
 
 import (
 	"context"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/MorseWayne/gogopher-arch/internal/learning/attempt"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/definition"
@@ -192,6 +194,22 @@ func TestExplanationSelectorRequiresLengthAndEvidenceTerms(t *testing.T) {
 	}
 	if explanationSatisfies(strings.Repeat("无关内容", 20), selector) {
 		t.Fatal("explanation without required evidence terms passed")
+	}
+}
+
+func TestRequiredFilesAnalyzerRejectsMissingOrBlankProjectArtifacts(t *testing.T) {
+	rule := definition.AssessmentRule{
+		RuleID: "project-artifacts", Stage: string(execution.StageAST),
+		Selector: definition.AssessmentSelector{RequiredFiles: []string{"go.mod", "README.md"}}, Condition: "passed",
+	}
+	stages := map[execution.Stage]execution.StageResult{execution.StageBuild: passedStage(execution.StageBuild)}
+	status, analyzer := evaluateASTRule(rule, definition.ExecutionTask{}, map[string]string{"go.mod": "module tool", "README.md": "build instructions"}, stages)
+	if status != execution.RulePassed || analyzer != "workspace_required_files" {
+		t.Fatalf("required files result = %q, %q", status, analyzer)
+	}
+	status, _ = evaluateASTRule(rule, definition.ExecutionTask{}, map[string]string{"go.mod": "module tool", "README.md": "  "}, stages)
+	if status != execution.RuleFailed {
+		t.Fatalf("blank required file status = %q", status)
 	}
 }
 
@@ -488,6 +506,71 @@ func TestAbstractionAndDebugAssessmentSolutionsPassRealEvaluation(t *testing.T) 
 	}
 }
 
+func TestBlankGocheckProjectPassesRealReleaseAndSandboxEvaluation(t *testing.T) {
+	registry := draftReleaseRegistry(t)
+	activity, err := registry.ActivityView(registry.CurrentReleaseID(), "assessment-gocheck-project", 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	task, err := registry.ExecutionTask(registry.CurrentReleaseID(), activity.TaskRef.ID, activity.TaskRef.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	workspace, err := registry.PublicWorkspace(registry.CurrentReleaseID(), task.ID, task.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for path, source := range gocheckProjectSolution() {
+		workspace[path] = source
+	}
+	current := attempt.Attempt{
+		ID: "00000000-0000-4000-8800-000000000001", ReleaseID: registry.CurrentReleaseID(),
+		ActivityID: activity.ID, ActivityVersion: activity.Version, ActivityHash: activity.ContentHash,
+		TaskID: task.ID, TaskVersion: task.Version, TaskHash: task.BundleHash,
+		Workspace: workspace, WorkspaceHash: attempt.WorkspaceHash(workspace),
+	}
+	builder, err := execution.NewSpecBuilder(registry)
+	if err != nil {
+		t.Fatal(err)
+	}
+	executionID := "00000000-0000-4000-8800-000000000002"
+	spec, err := builder.Build(current, executionID, execution.ActionSubmit)
+	if err != nil {
+		t.Fatal(err)
+	}
+	response, err := sandbox.NewRunner(sandbox.RunnerOptions{TempDir: t.TempDir()}).Run(context.Background(), spec)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if response.Status != execution.ExecutionSucceeded {
+		t.Fatalf("gocheck sandbox response = %#v", response)
+	}
+	frozen := submission.Submission{
+		ID: "00000000-0000-4000-8800-000000000003", AttemptID: current.ID,
+		ReleaseID: current.ReleaseID, TaskID: task.ID, TaskVersion: task.Version, TaskHash: task.BundleHash,
+		Workspace:   workspace,
+		Explanation: "我用 package 保持 config、check、report、app 的单向依赖，让 context 从 Run 传到每个请求并统一等待退出；使用 httptest 覆盖成功、失败与取消，最后让 main 只负责把 Run 返回值映射为 exit code，从而保持核心逻辑可测试。并发层只在受控数量的 worker 中启动请求，收集完成后再按配置顺序输出，避免调度时序泄漏到用户可观察的结果。",
+	}
+	terminal := execution.Execution{
+		ID: executionID, AttemptID: current.ID, SubmissionID: frozen.ID,
+		TaskID: task.ID, TaskVersion: task.Version, TaskHash: task.BundleHash,
+		Status: response.Status, Response: &response,
+	}
+	generator, err := NewGenerator(registry)
+	if err != nil {
+		t.Fatal(err)
+	}
+	results, err := generator.Generate(frozen, terminal)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, result := range results {
+		if result.Status != execution.RulePassed {
+			t.Fatalf("gocheck rule %s = %#v", result.RuleID, result)
+		}
+	}
+}
+
 func workerPoolSolution() string {
 	return `package workerpool
 
@@ -677,6 +760,325 @@ func LogSummary(writer io.Writer, rendered string) {
 	fmt.Fprintf(writer, "rendered=%s\n", rendered)
 }
 `
+}
+
+func draftReleaseRegistry(t *testing.T) *definition.Registry {
+	t.Helper()
+	source, err := filepath.Abs("../../../content/learning")
+	if err != nil {
+		t.Fatal(err)
+	}
+	runtime := t.TempDir()
+	if err := os.CopyFS(filepath.Join(runtime, "schemas"), os.DirFS(filepath.Join(source, "schemas"))); err != nil {
+		t.Fatal(err)
+	}
+	releaseID := "m1-first-slice-v999"
+	if _, err := definition.BuildRelease(definition.ReleaseOptions{
+		ContentDir: source, ActivitySet: "m1-first-slice", ReleaseID: releaseID,
+		CreatedAt: time.Date(2026, time.July, 18, 0, 0, 0, 0, time.UTC),
+		OutputDir: filepath.Join(runtime, "releases"),
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(runtime, "current-release.json"), []byte("{\"release_id\":\""+releaseID+"\"}\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	registry, err := definition.LoadRegistry(definition.RegistryOptions{ContentDir: runtime})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return registry
+}
+
+func gocheckProjectSolution() map[string]string {
+	return map[string]string{
+		"go.mod": `module gocheck
+
+go 1.25
+`,
+		"README.md": `# gocheck
+
+Build with go build ./cmd/gocheck and test with go test ./....
+`,
+		"examples/targets.json": `{"targets":[{"name":"api","url":"http://127.0.0.1:8080/healthz"}]}
+`,
+		"internal/config/config.go": `package config
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/url"
+	"os"
+	"strings"
+)
+
+type Target struct {
+	Name string ` + "`json:\"name\"`" + `
+	URL  string ` + "`json:\"url\"`" + `
+}
+
+type Config struct {
+	Targets []Target ` + "`json:\"targets\"`" + `
+}
+
+func Load(path string) (Config, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return Config{}, fmt.Errorf("open config %q: %w", path, err)
+	}
+	defer file.Close()
+	var config Config
+	if err := json.NewDecoder(file).Decode(&config); err != nil {
+		return Config{}, fmt.Errorf("decode config %q: %w", path, err)
+	}
+	if len(config.Targets) == 0 {
+		return Config{}, fmt.Errorf("at least one target is required")
+	}
+	seen := make(map[string]struct{}, len(config.Targets))
+	for index := range config.Targets {
+		target := &config.Targets[index]
+		target.Name = strings.TrimSpace(target.Name)
+		target.URL = strings.TrimSpace(target.URL)
+		parsed, err := url.ParseRequestURI(target.URL)
+		if target.Name == "" || err != nil || parsed.Host == "" || (parsed.Scheme != "http" && parsed.Scheme != "https") {
+			return Config{}, fmt.Errorf("invalid target %q", target.Name)
+		}
+		if _, exists := seen[target.Name]; exists {
+			return Config{}, fmt.Errorf("duplicate target %q", target.Name)
+		}
+		seen[target.Name] = struct{}{}
+	}
+	return config, nil
+}
+`,
+		"internal/check/check.go": `package check
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"sync"
+	"time"
+)
+
+type Client interface {
+	Do(*http.Request) (*http.Response, error)
+}
+
+type Target struct {
+	Name string
+	URL  string
+}
+
+type Result struct {
+	Name       string ` + "`json:\"name\"`" + `
+	URL        string ` + "`json:\"url\"`" + `
+	StatusCode int    ` + "`json:\"status_code\"`" + `
+	Error      string ` + "`json:\"error,omitempty\"`" + `
+}
+
+type job struct {
+	index  int
+	target Target
+}
+
+func All(ctx context.Context, client Client, targets []Target, workers int, timeout time.Duration) ([]Result, error) {
+	if workers <= 0 || timeout <= 0 {
+		return nil, fmt.Errorf("workers and timeout must be positive")
+	}
+	results := make([]Result, len(targets))
+	jobs := make(chan job)
+	var group sync.WaitGroup
+	group.Add(workers)
+	for range workers {
+		go func() {
+			defer group.Done()
+			for item := range jobs {
+				result := Result{Name: item.target.Name, URL: item.target.URL}
+				requestContext, cancel := context.WithTimeout(ctx, timeout)
+				request, err := http.NewRequestWithContext(requestContext, http.MethodGet, item.target.URL, nil)
+				if err == nil {
+					var response *http.Response
+					response, err = client.Do(request)
+					if response != nil {
+						result.StatusCode = response.StatusCode
+						response.Body.Close()
+					}
+				}
+				cancel()
+				if err != nil {
+					result.Error = err.Error()
+				}
+				results[item.index] = result
+			}
+		}()
+	}
+	dispatching := true
+	for index, target := range targets {
+		select {
+		case jobs <- job{index: index, target: target}:
+		case <-ctx.Done():
+			dispatching = false
+		}
+		if !dispatching {
+			break
+		}
+	}
+	close(jobs)
+	group.Wait()
+	if err := ctx.Err(); err != nil {
+		return results, err
+	}
+	return results, nil
+}
+`,
+		"internal/report/report.go": `package report
+
+import (
+	"encoding/json"
+	"fmt"
+	"strings"
+
+	"gocheck/internal/check"
+)
+
+func Text(results []check.Result) string {
+	var output strings.Builder
+	for _, result := range results {
+		status := "error"
+		if result.Error == "" {
+			status = "fail"
+			if result.StatusCode >= 200 && result.StatusCode < 400 {
+				status = "ok"
+			}
+		}
+		fmt.Fprintf(&output, "%s\t%s\t%d\n", result.Name, status, result.StatusCode)
+	}
+	return output.String()
+}
+
+func JSON(results []check.Result) (string, error) {
+	encoded, err := json.Marshal(results)
+	if err != nil {
+		return "", err
+	}
+	return string(encoded) + "\n", nil
+}
+`,
+		"internal/app/app.go": `package app
+
+import (
+	"context"
+	"flag"
+	"fmt"
+	"io"
+	"net/http"
+	"time"
+
+	"gocheck/internal/check"
+	"gocheck/internal/config"
+	"gocheck/internal/report"
+)
+
+type Dependencies struct {
+	Client check.Client
+}
+
+func Run(ctx context.Context, args []string, stdout, stderr io.Writer, dependencies Dependencies) int {
+	flags := flag.NewFlagSet("gocheck", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	configPath := flags.String("config", "", "path to target configuration")
+	timeout := flags.Duration("timeout", time.Second, "per-target timeout")
+	concurrency := flags.Int("concurrency", 4, "maximum concurrent checks")
+	format := flags.String("format", "text", "text or json")
+	if err := flags.Parse(args); err != nil || *configPath == "" || *timeout <= 0 || *concurrency <= 0 || (*format != "text" && *format != "json") {
+		fmt.Fprintln(stderr, "invalid arguments")
+		return 2
+	}
+	loaded, err := config.Load(*configPath)
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 2
+	}
+	targets := make([]check.Target, len(loaded.Targets))
+	for index, target := range loaded.Targets {
+		targets[index] = check.Target{Name: target.Name, URL: target.URL}
+	}
+	client := dependencies.Client
+	if client == nil {
+		client = http.DefaultClient
+	}
+	results, err := check.All(ctx, client, targets, *concurrency, *timeout)
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
+	}
+	output := ""
+	if *format == "json" {
+		output, err = report.JSON(results)
+	} else {
+		output = report.Text(results)
+	}
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 2
+	}
+	if _, err := io.WriteString(stdout, output); err != nil {
+		fmt.Fprintln(stderr, err)
+		return 2
+	}
+	for _, result := range results {
+		if result.Error != "" || result.StatusCode < 200 || result.StatusCode >= 400 {
+			return 1
+		}
+	}
+	return 0
+}
+`,
+		"cmd/gocheck/main.go": `package main
+
+import (
+	"context"
+	"os"
+	"os/signal"
+
+	"gocheck/internal/app"
+)
+
+func main() {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+	os.Exit(app.Run(ctx, os.Args[1:], os.Stdout, os.Stderr, app.Dependencies{}))
+}
+`,
+		"internal/report/report_learner_test.go": `package report
+
+import (
+	"testing"
+
+	"gocheck/internal/check"
+)
+
+func TestTextStatusCases(t *testing.T) {
+	tests := []struct {
+		name string
+		result check.Result
+		want string
+	}{
+		{name: "ok", result: check.Result{Name: "x", StatusCode: 204}, want: "x\tok\t204\n"},
+		{name: "fail", result: check.Result{Name: "x", StatusCode: 500}, want: "x\tfail\t500\n"},
+		{name: "error", result: check.Result{Name: "x", Error: "down"}, want: "x\terror\t0\n"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if got := Text([]check.Result{test.result}); got != test.want {
+				t.Fatalf("Text() = %q, want %q", got, test.want)
+			}
+		})
+	}
+}
+`,
+	}
 }
 
 func setupGenerator(t *testing.T) (*Generator, submission.Submission) {

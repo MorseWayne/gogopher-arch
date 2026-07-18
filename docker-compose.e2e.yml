@@ -3,6 +3,8 @@ services:
     environment:
       - APP_ENV=test
       - LEARNING_SLICE_ENABLED=true
+      - SANDBOX_RPC_DEADLINE=50s
+      - EXECUTION_WORKER_LEASE=60s
 
   postgres:
     tmpfs:

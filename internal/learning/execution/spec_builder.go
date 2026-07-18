@@ -3,6 +3,7 @@ package execution
 import (
 	"errors"
 	"fmt"
+	"sort"
 
 	"github.com/MorseWayne/gogopher-arch/internal/learning/attempt"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/definition"
@@ -47,8 +48,10 @@ func (b *SpecBuilder) Build(current attempt.Attempt, executionID string, action 
 	if !exists {
 		return ExecutionSpec{}, ErrActionNotAllowed
 	}
-	files := make([]FileAsset, 0, len(task.Files))
+	files := make([]FileAsset, 0, len(task.Files)+len(current.Workspace))
+	declaredPaths := make(map[string]definition.ExecutionAsset, len(task.Files))
 	for _, file := range task.Files {
+		declaredPaths[file.Path] = file
 		if isPrivateTestRole(file.Role) && action != ActionSubmit {
 			continue
 		}
@@ -57,6 +60,9 @@ func (b *SpecBuilder) Build(current attempt.Attempt, executionID string, action 
 		if file.Editable {
 			contents, exists := current.Workspace[file.Path]
 			if !exists {
+				if task.WorkspacePolicy.AllowDeleteFiles {
+					continue
+				}
 				return ExecutionSpec{}, fmt.Errorf("editable workspace asset %q is missing", file.Path)
 			}
 			asset.Content = contents
@@ -65,6 +71,24 @@ func (b *SpecBuilder) Build(current attempt.Attempt, executionID string, action 
 			asset.Access = AccessEditable
 		}
 		files = append(files, asset)
+	}
+	dynamicPaths := make([]string, 0)
+	for filePath := range current.Workspace {
+		if declared, exists := declaredPaths[filePath]; exists {
+			if !declared.Editable && isPrivateTestRole(declared.Role) {
+				return ExecutionSpec{}, fmt.Errorf("workspace contains a reserved task path")
+			}
+			continue
+		}
+		dynamicPaths = append(dynamicPaths, filePath)
+	}
+	sort.Strings(dynamicPaths)
+	for _, filePath := range dynamicPaths {
+		contents := current.Workspace[filePath]
+		files = append(files, FileAsset{
+			Path: filePath, Content: contents, SHA256: SHA256Hex(contents),
+			Origin: OriginLearnerWorkspace, Access: AccessEditable, Role: RoleWorkspace,
+		})
 	}
 	spec := ExecutionSpec{
 		ProtocolVersion: ProtocolVersion, ExecutionID: executionID,

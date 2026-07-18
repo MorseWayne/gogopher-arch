@@ -45,7 +45,7 @@ func TestRegistryReportsMaximumActionTimeoutForWorkerValidation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if maximum != 30*time.Second {
+	if maximum != 45*time.Second {
 		t.Fatalf("MaximumActionTimeout() = %s", maximum)
 	}
 }

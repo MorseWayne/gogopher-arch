@@ -23,7 +23,7 @@ func TestLoadRegistryIndexesCurrentAndHistoricalDefinitions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, want := len(definitions), 80; got != want {
+	if got, want := len(definitions), 87; got != want {
 		t.Fatalf("len(Definitions()) = %d, want %d", got, want)
 	}
 	ref := DefinitionRef{ReleaseID: testReleaseID, Kind: KindActivity, ID: "assessment-check-config", Version: 4}
@@ -192,6 +192,29 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 	}
 	if _, exists := workspace["registry_race_test.go"]; exists {
 		t.Fatal("public workspace contains private race test")
+	}
+
+	projectActivity, err := registry.ActivityView(testReleaseID, "assessment-gocheck-project", 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if projectActivity.EvidenceContext != "new_project" {
+		t.Fatalf("gocheck evidence context = %q, want new_project", projectActivity.EvidenceContext)
+	}
+	projectTask, err := registry.TaskView(testReleaseID, projectActivity.TaskRef.ID, projectActivity.TaskRef.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !projectTask.WorkspacePolicy.AllowNewFiles || !projectTask.WorkspacePolicy.AllowDeleteFiles || projectTask.EditablePaths == nil || len(projectTask.EditablePaths) != 0 {
+		t.Fatalf("gocheck workspace policy = %#v, editable paths = %#v", projectTask.WorkspacePolicy, projectTask.EditablePaths)
+	}
+	remediation, err := registry.RemediationActivity(testReleaseID, VersionedDefinitionRef{ID: "M1-14", Version: 1})
+	if err != nil || remediation.ID != "practice-gocheck-slice" {
+		t.Fatalf("M1-14 remediation = %#v, %v", remediation, err)
+	}
+	review, err := registry.ReviewActivity(testReleaseID, projectActivity.CapabilityRefs)
+	if err != nil || review.ID != "review-endpoint-audit" || review.Version != 2 {
+		t.Fatalf("M1-14 review = %#v, %v", review, err)
 	}
 }
 

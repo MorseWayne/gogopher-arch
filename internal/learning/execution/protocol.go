@@ -21,7 +21,7 @@ const (
 	MaxProtocolTotalBytes  = 4 << 20
 	MaxProtocolOutputBytes = 1 << 20
 	MinTimeoutMS           = 100
-	MaxTimeoutMS           = 30_000
+	MaxTimeoutMS           = 45_000
 )
 
 type Action string

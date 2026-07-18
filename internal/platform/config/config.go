@@ -55,13 +55,13 @@ func Load() (Config, error) {
 	if config.SandboxResponseGrace, err = time.ParseDuration(env("SANDBOX_RESPONSE_GRACE", "2s")); err != nil {
 		return Config{}, fmt.Errorf("parse SANDBOX_RESPONSE_GRACE: %w", err)
 	}
-	if config.SandboxRPCDeadline, err = time.ParseDuration(env("SANDBOX_RPC_DEADLINE", "35s")); err != nil {
+	if config.SandboxRPCDeadline, err = time.ParseDuration(env("SANDBOX_RPC_DEADLINE", "50s")); err != nil {
 		return Config{}, fmt.Errorf("parse SANDBOX_RPC_DEADLINE: %w", err)
 	}
 	if config.ExecutionPersistGrace, err = time.ParseDuration(env("EXECUTION_PERSIST_GRACE", "5s")); err != nil {
 		return Config{}, fmt.Errorf("parse EXECUTION_PERSIST_GRACE: %w", err)
 	}
-	if config.ExecutionLease, err = time.ParseDuration(env("EXECUTION_WORKER_LEASE", "45s")); err != nil {
+	if config.ExecutionLease, err = time.ParseDuration(env("EXECUTION_WORKER_LEASE", "60s")); err != nil {
 		return Config{}, fmt.Errorf("parse EXECUTION_WORKER_LEASE: %w", err)
 	}
 	if config.ExecutionHeartbeat, err = time.ParseDuration(env("EXECUTION_WORKER_HEARTBEAT", "10s")); err != nil {

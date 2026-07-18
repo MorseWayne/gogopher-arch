@@ -42,6 +42,28 @@ describe('useAttemptWorkspace', () => {
     expect(result.current.dirty).toBe(false)
   })
 
+  it('creates and deletes safe files when a blank-project task enables it', () => {
+    const task = {
+      ...activityFixture.task,
+      workspace_policy: { allow_new_files: true, allow_delete_files: true },
+    }
+    const { result } = renderHook(() => useAttemptWorkspace(attemptFixture, task, vi.fn()))
+
+    let createError: string | null = null
+    act(() => { createError = result.current.createFile('internal/check/check.go') })
+    expect(createError).toBeNull()
+    expect(result.current.files['internal/check/check.go']).toBe('')
+    expect(result.current.selectedPath).toBe('internal/check/check.go')
+
+    act(() => result.current.updateFile('internal/check/check.go', 'package check'))
+    expect(result.current.files['internal/check/check.go']).toBe('package check')
+    act(() => result.current.deleteFile('internal/check/check.go'))
+    expect(result.current.files).not.toHaveProperty('internal/check/check.go')
+
+    act(() => { createError = result.current.createFile('../escape.go') })
+    expect(createError).toContain('安全的相对路径')
+  })
+
   it('saves the complete file map and clears the revision backup', async () => {
     const revised = revisedAttempt(1, 'workspace-hash-1')
     let received: unknown

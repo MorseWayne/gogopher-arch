@@ -44,6 +44,15 @@ const ruleLabels: Record<string, string> = {
   'regression-fixed': '回归行为已经修复',
   'static-analysis-clean': '静态检查通过',
   'profile-diagnosis-explained': '已说明性能证据与修复关系',
+  'integrated-slice-practiced': '已完成跨 package 的项目切片',
+  'project-builds': '完整项目可以构建',
+  'project-artifacts-present': '项目交付物完整',
+  'configuration-contract-correct': '配置读取与校验符合契约',
+  'concurrent-workflow-cancellable': '并发流程受控且可取消',
+  'stable-output-contract': '输出格式与顺序保持稳定',
+  'cli-exit-contract-correct': '命令参数与退出码符合契约',
+  'project-tests-present': '已补充表格驱动项目测试',
+  'delivery-decisions-explained': '已说明项目交付方案与取舍',
 }
 
 export function learnerCapabilityName(capability?: CapabilityLabelSource): string {

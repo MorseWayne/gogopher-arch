@@ -26,7 +26,7 @@ export function MultiFileEditor({
     hash: workspace.baseHash,
     dirty: workspace.dirty,
   }, onAttemptChange)
-  const editable = task.editable_paths.includes(workspace.selectedPath)
+  const editable = workspace.isEditablePath(workspace.selectedPath)
   const selectedContents = workspace.files[workspace.selectedPath] ?? ''
 
   return (
@@ -67,9 +67,13 @@ export function MultiFileEditor({
       <div className="grid min-h-[34rem] grid-cols-1 md:grid-cols-[190px_minmax(0,1fr)]">
         <WorkspaceExplorer
           paths={Object.keys(workspace.files).sort()}
-          editablePaths={task.editable_paths}
+          isEditable={workspace.isEditablePath}
           selectedPath={workspace.selectedPath}
           onSelect={workspace.setSelectedPath}
+          canCreate={task.workspace_policy.allow_new_files}
+          canDelete={task.workspace_policy.allow_delete_files}
+          onCreate={workspace.createFile}
+          onDelete={workspace.deleteFile}
         />
         <div className="min-w-0 bg-[#0d1117]">
           <div className="flex h-10 items-center gap-2 border-b border-slate-800 px-4 font-mono text-xs text-slate-300">

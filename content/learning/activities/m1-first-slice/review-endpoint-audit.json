@@ -1,0 +1,23 @@
+{
+  "id": "review-endpoint-audit",
+  "version": 2,
+  "title": "从空白工作区迁移实现 endpointaudit",
+  "kind": "learning_task",
+  "mode": "review",
+  "evidence_context": "new_project",
+  "capability_refs": [{"id": "M1-14", "version": 1}],
+  "task_ref": {"id": "review-endpoint-audit-v1", "version": 2},
+  "content_ref": "web/src/content/learning/endpoint-audit-review-v1.mdx",
+  "assistance_policy": {"hints": false, "references": false, "solution": false, "ai_declaration": true},
+  "evidence_rules": [
+    {"rule_id": "project-builds", "capability_id": "M1-14", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "project-artifacts-present", "capability_id": "M1-14", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "configuration-contract-correct", "capability_id": "M1-14", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "concurrent-workflow-cancellable", "capability_id": "M1-14", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "stable-output-contract", "capability_id": "M1-14", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "cli-exit-contract-correct", "capability_id": "M1-14", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "project-tests-present", "capability_id": "M1-14", "capability_version": 1, "evidence_type": "test", "result": "passed"},
+    {"rule_id": "race-detector-clean", "capability_id": "M1-14", "capability_version": 1, "evidence_type": "test", "result": "passed"},
+    {"rule_id": "delivery-decisions-explained", "capability_id": "M1-14", "capability_version": 1, "evidence_type": "diagnose", "result": "passed"}
+  ]
+}

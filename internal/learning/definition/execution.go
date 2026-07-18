@@ -59,6 +59,7 @@ type AssessmentSelector struct {
 	MinimumCases      int      `json:"minimum_cases,omitempty"`
 	MinimumChars      int      `json:"minimum_chars,omitempty"`
 	RequiredTerms     []string `json:"required_terms,omitempty"`
+	RequiredFiles     []string `json:"required_files,omitempty"`
 	ExitCode          *int     `json:"exit_code,omitempty"`
 }
 
@@ -79,6 +80,7 @@ type ExecutionTask struct {
 	WorkspaceRoot   string
 	Files           []ExecutionAsset
 	Limits          WorkspaceLimitsView
+	WorkspacePolicy WorkspacePolicyView
 	Actions         map[string]ExecutionAction
 	AssessmentRules []AssessmentRule
 }
@@ -98,6 +100,7 @@ func (r *Registry) ExecutionTask(releaseID, id string, version int) (ExecutionTa
 		WorkspaceRoot   string                     `json:"workspace_root"`
 		Files           []taskFile                 `json:"files"`
 		Limits          WorkspaceLimitsView        `json:"limits"`
+		WorkspacePolicy WorkspacePolicyView        `json:"workspace_policy"`
 		Actions         map[string]ExecutionAction `json:"actions"`
 		AssessmentRules []AssessmentRule           `json:"assessment_rules"`
 	}
@@ -122,6 +125,7 @@ func (r *Registry) ExecutionTask(releaseID, id string, version int) (ExecutionTa
 		ID: document.ID, Version: document.Version, BundleHash: definition.BundleHash,
 		Language: document.Language, WorkspaceRoot: document.WorkspaceRoot,
 		Files: make([]ExecutionAsset, 0, len(document.Files)), Limits: document.Limits,
+		WorkspacePolicy: document.WorkspacePolicy,
 		Actions:         make(map[string]ExecutionAction, len(document.Actions)),
 		AssessmentRules: make([]AssessmentRule, len(document.AssessmentRules)),
 	}

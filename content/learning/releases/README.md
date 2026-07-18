@@ -15,7 +15,7 @@
 ```bash
 npm run build --prefix web
 go run ./cmd/learning-content verify \
-  --release-dir content/learning/releases/m1-first-slice-v10 \
+  --release-dir content/learning/releases/m1-first-slice-v13 \
   --web-dist web/dist
 ```
 

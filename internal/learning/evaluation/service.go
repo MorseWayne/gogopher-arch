@@ -124,9 +124,12 @@ func (s *Service) Evaluate(ctx context.Context, learnerID, submissionID, executi
 		return Batch{}, false, err
 	}
 	batch.Artifacts = artifacts
-	contextLevel := "same_context"
-	if frozen.Mode == "review" {
-		contextLevel = "variant"
+	contextLevel := activity.EvidenceContext
+	if contextLevel == "" {
+		contextLevel = "same_context"
+		if frozen.Mode == "review" {
+			contextLevel = "variant"
+		}
 	}
 	for _, result := range ruleResults {
 		if result.Status == execution.RuleNotEvaluated {
@@ -182,12 +185,14 @@ func (s *Service) buildArtifacts(frozen submission.Submission, task definition.E
 	}
 
 	diffs := make([]fileDiff, 0, len(frozen.Workspace))
+	declared := make(map[string]struct{}, len(task.Files))
 	for _, asset := range task.Files {
+		declared[asset.Path] = struct{}{}
 		if !asset.Editable {
 			continue
 		}
 		current, exists := frozen.Workspace[asset.Path]
-		if !exists || current == asset.Content {
+		if exists && current == asset.Content {
 			continue
 		}
 		diffs = append(diffs, fileDiff{
@@ -195,6 +200,18 @@ func (s *Service) buildArtifacts(frozen submission.Submission, task definition.E
 			BeforeSHA256: definition.SHA256Hex([]byte(asset.Content)),
 			AfterSHA256:  definition.SHA256Hex([]byte(current)),
 		})
+	}
+	if task.WorkspacePolicy.AllowNewFiles {
+		for filePath, current := range frozen.Workspace {
+			if _, exists := declared[filePath]; exists {
+				continue
+			}
+			diffs = append(diffs, fileDiff{
+				Path: filePath, After: current,
+				BeforeSHA256: definition.SHA256Hex(nil),
+				AfterSHA256:  definition.SHA256Hex([]byte(current)),
+			})
+		}
 	}
 	sort.Slice(diffs, func(i, j int) bool { return diffs[i].Path < diffs[j].Path })
 

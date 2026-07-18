@@ -1,0 +1,9 @@
+# M1 毕业项目：从空白工作区交付 gocheck
+
+这是一次新项目证据，不是把 TODO 填完。工作区左侧可以新建和删除文件；你需要自行建立 `go.mod`、包目录、命令入口、项目测试、README 和示例配置。
+
+建议先提交一张只含依赖方向的草图，再按可运行切片推进：配置读取 → 单目标 HTTP 检查 → 稳定报告 → CLI → 有界并发和取消 → 测试与文档。每加一层就运行 Build、Test、Vet，不要最后一次性拼装。
+
+需要查语法或 API 时按问题使用官方资料：[`go.mod` reference](https://go.dev/doc/modules/gomod-ref) 校准 module；[`context`](https://pkg.go.dev/context) 校准 deadline 与取消传播；[`httptest`](https://pkg.go.dev/net/http/httptest) 构造确定性本地服务；[Race Detector](https://go.dev/doc/articles/race_detector) 验证真实并发路径。资料用于解决明确问题，最终结构和代码必须由你独立解释。
+
+提交小结按“package 依赖—context 生命周期—httptest 边界—exit code 契约”组织。隐藏检查不会要求某一种内部算法，但会验证外部契约、并发上限、取消释放、稳定输出和竞态。

@@ -1,0 +1,15 @@
+{
+  "id": "practice-gocheck-slice",
+  "version": 1,
+  "title": "接通 gocheck 最小纵向切片",
+  "kind": "learning_task",
+  "mode": "practice",
+  "evidence_context": "same_context",
+  "capability_refs": [{"id": "M1-14", "version": 1}],
+  "task_ref": {"id": "practice-gocheck-slice-v1", "version": 1},
+  "content_ref": "web/src/content/learning/gocheck-project-practice-v1.mdx",
+  "assistance_policy": {"hints": true, "references": true, "solution": false, "ai_declaration": true},
+  "evidence_rules": [
+    {"rule_id": "integrated-slice-practiced", "capability_id": "M1-14", "capability_version": 1, "evidence_type": "implement", "result": "passed"}
+  ]
+}

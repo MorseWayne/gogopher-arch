@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process'
 import { expect, test, type APIResponse, type Page } from '@playwright/test'
 
 import type {
+  ActivityResponse,
   AttemptResponse,
   CapabilityResponse,
   NextResponse,
@@ -16,11 +17,14 @@ const forbiddenHeldOutMarkers = [
   'heldout_test.go',
   'file:///tmp/db',
   'want wrapped *os.PathError',
-  'os.WriteFile(path, []byte',
   'registry_race_test.go',
   'TestRegistryConcurrentAccessIsRaceFree',
   'report_private_test.go',
   'TestRenderIncludesAllEntries',
+  'project_private_test.go',
+  'probe_race_test.go',
+  'TestLoadValidatesConfigurationAndPreservesErrors',
+  'TestAllBoundsConcurrencyAndReleasesOnCancel',
 ]
 
 test.describe('Learning slice vertical scenarios', () => {
@@ -103,7 +107,7 @@ test.describe('Learning slice vertical scenarios', () => {
       }),
       [201],
     )
-    expect(attempt.release_id).toBe('m1-first-slice-v10')
+    expect(attempt.release_id).toBe('m1-first-slice-v13')
     expect(attempt.workspace['health/consumer_test.go']).toBeUndefined()
 
     const saved = await readJSON<AttemptResponse>(
@@ -136,7 +140,7 @@ test.describe('Learning slice vertical scenarios', () => {
       }),
       [201],
     )
-    expect(attempt.release_id).toBe('m1-first-slice-v10')
+    expect(attempt.release_id).toBe('m1-first-slice-v13')
     expect(attempt.workspace['registry_race_test.go']).toBeUndefined()
 
     const saved = await readJSON<AttemptResponse>(
@@ -177,7 +181,7 @@ test.describe('Learning slice vertical scenarios', () => {
       }),
       [201],
     )
-    expect(attempt.release_id).toBe('m1-first-slice-v10')
+    expect(attempt.release_id).toBe('m1-first-slice-v13')
     expect(attempt.workspace['report_private_test.go']).toBeUndefined()
 
     const saved = await readJSON<AttemptResponse>(
@@ -206,6 +210,68 @@ test.describe('Learning slice vertical scenarios', () => {
       expect(completed.evidence.some((item) => item.evidence_rule_id === ruleID && item.result === 'passed')).toBe(true)
     }
     expect(completed.rule_results.find((item) => item.rule_id === 'regression-fixed')?.test).toBeUndefined()
+  })
+
+  test('v13 delivers gocheck from a blank workspace and records new-project Evidence', async ({ page }) => {
+    await bootstrap(page)
+    const definition = await readJSON<ActivityResponse>(
+      await page.request.get(apiRoot + '/activities/assessment-gocheck-project?version=2'),
+      [200],
+    )
+    expect(definition.activity.evidence_context).toBe('new_project')
+    expect(definition.task.workspace_policy).toEqual({ allow_new_files: true, allow_delete_files: true })
+    expect(definition.task.editable_paths).toHaveLength(0)
+
+    const attempt = await readJSON<AttemptResponse>(
+      await page.request.post(apiRoot + '/attempts', {
+        data: { activity_id: 'assessment-gocheck-project', activity_version: 2 },
+      }),
+      [201],
+    )
+    expect(attempt.release_id).toBe('m1-first-slice-v13')
+    expect(attempt.workspace['TASK.md']).toBeDefined()
+    expect(attempt.workspace['go.mod']).toBeUndefined()
+
+    const saved = await readJSON<AttemptResponse>(
+      await page.request.put(apiRoot + '/attempts/' + attempt.id + '/workspace', {
+        data: {
+          base_revision: attempt.workspace_revision,
+          files: { ...attempt.workspace, ...gocheckProjectSolution },
+        },
+      }),
+      [200],
+    )
+    await readJSON<SubmissionResponse>(
+      await page.request.post(apiRoot + '/attempts/' + saved.id + '/submit', {
+        data: {
+          submission_key: 'blank-gocheck-submit',
+          workspace_revision: saved.workspace_revision,
+          workspace_hash: saved.workspace_hash,
+          explanation: '我用 package 保持 config、check、report、app 的单向依赖，让 context 从 Run 传到每个请求并统一等待退出；使用 httptest 覆盖成功、失败与取消，最后让 main 只负责把 Run 返回值映射为 exit code。并发层只启动固定数量的 worker，关闭响应体并等待全部协程退出，再按照配置顺序输出结果，让调度时序不会改变命令行契约。',
+        },
+      }),
+      [202],
+    )
+    const completed = await pollAttempt(page, saved.id, (value) => value.submission?.status === 'evaluated')
+    const expectedRules = [
+      'project-builds',
+      'project-artifacts-present',
+      'configuration-contract-correct',
+      'concurrent-workflow-cancellable',
+      'stable-output-contract',
+      'cli-exit-contract-correct',
+      'project-tests-present',
+      'race-detector-clean',
+      'delivery-decisions-explained',
+    ]
+    for (const ruleID of expectedRules) {
+      expect(completed.rule_results.find((item) => item.rule_id === ruleID)?.status).toBe('passed')
+      expect(completed.evidence.some((item) => item.evidence_rule_id === ruleID && item.context_level === 'new_project')).toBe(true)
+    }
+    expect(completed.executions.some((item) => item.stages.some((stage) => stage.stage === 'race' && stage.status === 'passed'))).toBe(true)
+    expect(completed.rule_results.find((item) => item.rule_id === 'configuration-contract-correct')?.test).toBeUndefined()
+    const capability = await pollCapability(page, 'M1-14', (value) => value.snapshot?.acquisition_state === 'verified')
+    expect(capability.snapshot?.transfer_state).toBe('new_project')
   })
 
   test('independent held-out pass is idempotent, verifies Snapshot, and schedules remediation after failed review', async ({ page }) => {
@@ -393,7 +459,7 @@ async function pollAttempt(
       [200],
     )
     return done(current)
-  }, { timeout: 45_000, intervals: [250, 500, 1000] }).toBe(true)
+  }, { timeout: 75_000, intervals: [250, 500, 1000] }).toBe(true)
   return current!
 }
 
@@ -456,6 +522,295 @@ function compose(...args: string[]) {
 }
 
 const goStructTag = '`'
+
+const gocheckProjectSolution: Record<string, string> = {
+  'go.mod': `module gocheck
+
+go 1.25
+`,
+  'README.md': `# gocheck
+
+Build with go build ./cmd/gocheck and test with go test ./....
+`,
+  'examples/targets.json': `{"targets":[{"name":"api","url":"http://127.0.0.1:8080/healthz"}]}
+`,
+  'internal/config/config.go': String.raw`package config
+
+import (
+    "encoding/json"
+    "fmt"
+    "net/url"
+    "os"
+    "strings"
+)
+
+type Target struct {
+    Name string ${goStructTag}json:"name"${goStructTag}
+    URL  string ${goStructTag}json:"url"${goStructTag}
+}
+
+type Config struct {
+    Targets []Target ${goStructTag}json:"targets"${goStructTag}
+}
+
+func Load(path string) (Config, error) {
+    file, err := os.Open(path)
+    if err != nil {
+        return Config{}, fmt.Errorf("open config %q: %w", path, err)
+    }
+    defer file.Close()
+    var config Config
+    if err := json.NewDecoder(file).Decode(&config); err != nil {
+        return Config{}, fmt.Errorf("decode config %q: %w", path, err)
+    }
+    if len(config.Targets) == 0 {
+        return Config{}, fmt.Errorf("at least one target is required")
+    }
+    seen := make(map[string]struct{}, len(config.Targets))
+    for index := range config.Targets {
+        target := &config.Targets[index]
+        target.Name = strings.TrimSpace(target.Name)
+        target.URL = strings.TrimSpace(target.URL)
+        parsed, err := url.ParseRequestURI(target.URL)
+        if target.Name == "" || err != nil || parsed.Host == "" || (parsed.Scheme != "http" && parsed.Scheme != "https") {
+            return Config{}, fmt.Errorf("invalid target %q", target.Name)
+        }
+        if _, exists := seen[target.Name]; exists {
+            return Config{}, fmt.Errorf("duplicate target %q", target.Name)
+        }
+        seen[target.Name] = struct{}{}
+    }
+    return config, nil
+}
+`,
+  'internal/check/check.go': String.raw`package check
+
+import (
+    "context"
+    "fmt"
+    "net/http"
+    "sync"
+    "time"
+)
+
+type Client interface {
+    Do(*http.Request) (*http.Response, error)
+}
+
+type Target struct {
+    Name string
+    URL  string
+}
+
+type Result struct {
+    Name       string ${goStructTag}json:"name"${goStructTag}
+    URL        string ${goStructTag}json:"url"${goStructTag}
+    StatusCode int    ${goStructTag}json:"status_code"${goStructTag}
+    Error      string ${goStructTag}json:"error,omitempty"${goStructTag}
+}
+
+type job struct {
+    index  int
+    target Target
+}
+
+func All(ctx context.Context, client Client, targets []Target, workers int, timeout time.Duration) ([]Result, error) {
+    if workers <= 0 || timeout <= 0 {
+        return nil, fmt.Errorf("workers and timeout must be positive")
+    }
+    results := make([]Result, len(targets))
+    jobs := make(chan job)
+    var group sync.WaitGroup
+    group.Add(workers)
+    for range workers {
+        go func() {
+            defer group.Done()
+            for item := range jobs {
+                result := Result{Name: item.target.Name, URL: item.target.URL}
+                requestContext, cancel := context.WithTimeout(ctx, timeout)
+                request, err := http.NewRequestWithContext(requestContext, http.MethodGet, item.target.URL, nil)
+                if err == nil {
+                    var response *http.Response
+                    response, err = client.Do(request)
+                    if response != nil {
+                        result.StatusCode = response.StatusCode
+                        response.Body.Close()
+                    }
+                }
+                cancel()
+                if err != nil {
+                    result.Error = err.Error()
+                }
+                results[item.index] = result
+            }
+        }()
+    }
+    dispatching := true
+    for index, target := range targets {
+        select {
+        case jobs <- job{index: index, target: target}:
+        case <-ctx.Done():
+            dispatching = false
+        }
+        if !dispatching {
+            break
+        }
+    }
+    close(jobs)
+    group.Wait()
+    if err := ctx.Err(); err != nil {
+        return results, err
+    }
+    return results, nil
+}
+`,
+  'internal/report/report.go': String.raw`package report
+
+import (
+    "encoding/json"
+    "fmt"
+    "strings"
+
+    "gocheck/internal/check"
+)
+
+func Text(results []check.Result) string {
+    var output strings.Builder
+    for _, result := range results {
+        status := "error"
+        if result.Error == "" {
+            status = "fail"
+            if result.StatusCode >= 200 && result.StatusCode < 400 {
+                status = "ok"
+            }
+        }
+        fmt.Fprintf(&output, "%s\t%s\t%d\n", result.Name, status, result.StatusCode)
+    }
+    return output.String()
+}
+
+func JSON(results []check.Result) (string, error) {
+    encoded, err := json.Marshal(results)
+    if err != nil {
+        return "", err
+    }
+    return string(encoded) + "\n", nil
+}
+`,
+  'internal/app/app.go': String.raw`package app
+
+import (
+    "context"
+    "flag"
+    "fmt"
+    "io"
+    "net/http"
+    "time"
+
+    "gocheck/internal/check"
+    "gocheck/internal/config"
+    "gocheck/internal/report"
+)
+
+type Dependencies struct {
+    Client check.Client
+}
+
+func Run(ctx context.Context, args []string, stdout, stderr io.Writer, dependencies Dependencies) int {
+    flags := flag.NewFlagSet("gocheck", flag.ContinueOnError)
+    flags.SetOutput(stderr)
+    configPath := flags.String("config", "", "path to target configuration")
+    timeout := flags.Duration("timeout", time.Second, "per-target timeout")
+    concurrency := flags.Int("concurrency", 4, "maximum concurrent checks")
+    format := flags.String("format", "text", "text or json")
+    if err := flags.Parse(args); err != nil || *configPath == "" || *timeout <= 0 || *concurrency <= 0 || (*format != "text" && *format != "json") {
+        fmt.Fprintln(stderr, "invalid arguments")
+        return 2
+    }
+    loaded, err := config.Load(*configPath)
+    if err != nil {
+        fmt.Fprintln(stderr, err)
+        return 2
+    }
+    targets := make([]check.Target, len(loaded.Targets))
+    for index, target := range loaded.Targets {
+        targets[index] = check.Target{Name: target.Name, URL: target.URL}
+    }
+    client := dependencies.Client
+    if client == nil {
+        client = http.DefaultClient
+    }
+    results, err := check.All(ctx, client, targets, *concurrency, *timeout)
+    if err != nil {
+        fmt.Fprintln(stderr, err)
+        return 1
+    }
+    rendered := ""
+    if *format == "json" {
+        rendered, err = report.JSON(results)
+    } else {
+        rendered = report.Text(results)
+    }
+    if err != nil {
+        fmt.Fprintln(stderr, err)
+        return 2
+    }
+    if _, err := io.WriteString(stdout, rendered); err != nil {
+        fmt.Fprintln(stderr, err)
+        return 2
+    }
+    for _, result := range results {
+        if result.Error != "" || result.StatusCode < 200 || result.StatusCode >= 400 {
+            return 1
+        }
+    }
+    return 0
+}
+`,
+  'cmd/gocheck/main.go': String.raw`package main
+
+import (
+    "context"
+    "os"
+    "os/signal"
+
+    "gocheck/internal/app"
+)
+
+func main() {
+    ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+    defer stop()
+    os.Exit(app.Run(ctx, os.Args[1:], os.Stdout, os.Stderr, app.Dependencies{}))
+}
+`,
+  'internal/report/report_learner_test.go': String.raw`package report
+
+import (
+    "testing"
+
+    "gocheck/internal/check"
+)
+
+func TestTextStatusCases(t *testing.T) {
+    tests := []struct {
+        name   string
+        result check.Result
+        want   string
+    }{
+        {name: "ok", result: check.Result{Name: "x", StatusCode: 204}, want: "x\tok\t204\n"},
+        {name: "fail", result: check.Result{Name: "x", StatusCode: 500}, want: "x\tfail\t500\n"},
+        {name: "error", result: check.Result{Name: "x", Error: "down"}, want: "x\terror\t0\n"},
+    }
+    for _, test := range tests {
+        t.Run(test.name, func(t *testing.T) {
+            if got := Text([]check.Result{test.result}); got != test.want {
+                t.Fatalf("Text() = %q, want %q", got, test.want)
+            }
+        })
+    }
+}
+`,
+}
 
 const statusModuleSolution = `// Package health summarizes check results for command consumers.
 package health

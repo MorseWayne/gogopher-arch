@@ -1,0 +1,38 @@
+{
+  "id": "review-endpoint-audit-v1",
+  "version": 2,
+  "language": "go1.25",
+  "workspace_root": "workspace",
+  "files": [
+    {"source": "README.md", "path": "TASK.md", "role": "readme", "editable": false, "sha256": "229c1340064f0493d5f9daf2209d4410a64cb9ac2f45e87a19635b9eaacf4017"},
+    {"source": "fixtures/checks.json", "path": "testdata/checks.json", "role": "fixture", "editable": false, "sha256": "78e4702ea466b168d2295b13b3f592aebdac81b33a3920f8e1155974fb9353e2"},
+    {"source": "heldout/integration/project_private_test.go", "path": "integration/project_private_test.go", "role": "held_out_test", "editable": false, "sha256": "7a26f8d1b742aadfd91b26d9fc7bc56db12132806ff1b08321f97ffd0691a88f"},
+    {"source": "race/internal/probe/probe_race_test.go", "path": "internal/probe/probe_race_test.go", "role": "race_test", "editable": false, "sha256": "6fbc28383dda580372f06b7aaa2040778a20a7f30cb559125835906a5286222c"}
+  ],
+  "editable_paths": [],
+  "readonly_paths": ["TASK.md", "testdata/checks.json"],
+  "workspace_policy": {"allow_new_files": true, "allow_delete_files": true},
+  "limits": {"max_files": 28, "max_file_bytes": 131072, "max_total_bytes": 1048576},
+  "actions": {
+    "build": {"timeout_ms": 12000, "max_output_bytes": 131072, "network": "none"},
+    "test": {"timeout_ms": 15000, "max_output_bytes": 131072, "network": "none"},
+    "vet": {"timeout_ms": 12000, "max_output_bytes": 131072, "network": "none"},
+    "submit": {"timeout_ms": 45000, "max_output_bytes": 262144, "network": "none"}
+  },
+  "hints": [],
+  "visible_tests": [],
+  "held_out_tests": ["integration/project_private_test.go"],
+  "race_tests": ["internal/probe/probe_race_test.go"],
+  "assessment_rules": [
+    {"rule_id": "project-builds", "stage": "build", "selector": {"package": "./..."}, "capability_refs": [{"id": "M1-14", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "project-artifacts-present", "stage": "ast", "selector": {"required_files": ["go.mod", "README.md", "examples/checks.json", "cmd/endpointaudit/main.go"]}, "capability_refs": [{"id": "M1-14", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "configuration-contract-correct", "stage": "held_out_test", "selector": {"test": "TestInputContractAndCLIExitCodes"}, "capability_refs": [{"id": "M1-14", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "concurrent-workflow-cancellable", "stage": "held_out_test", "selector": {"test": "TestConcurrentWorkflowAndStableOutput"}, "capability_refs": [{"id": "M1-14", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "stable-output-contract", "stage": "held_out_test", "selector": {"test": "TestConcurrentWorkflowAndStableOutput"}, "capability_refs": [{"id": "M1-14", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "cli-exit-contract-correct", "stage": "held_out_test", "selector": {"test": "TestInputContractAndCLIExitCodes"}, "capability_refs": [{"id": "M1-14", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "project-tests-present", "stage": "ast", "selector": {"glob": "**/*_test.go", "minimum_cases": 3}, "capability_refs": [{"id": "M1-14", "version": 1}], "evidence_type": "test", "condition": "passed"},
+    {"rule_id": "race-detector-clean", "stage": "race", "selector": {"package": "./..."}, "capability_refs": [{"id": "M1-14", "version": 1}], "evidence_type": "test", "condition": "passed"},
+    {"rule_id": "delivery-decisions-explained", "stage": "explanation", "selector": {"minimum_chars": 120, "required_terms": ["package", "context", "httptest", "exit code"]}, "capability_refs": [{"id": "M1-14", "version": 1}], "evidence_type": "diagnose", "condition": "passed"}
+  ],
+  "artifact_rules": {"workspace": "full", "logs": ["build", "test", "vet", "submit"]}
+}

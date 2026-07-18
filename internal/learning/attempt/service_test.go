@@ -19,7 +19,7 @@ func TestServiceCreatesFrozenStarterAndEnforcesOwner(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if created.ReleaseID != "m1-first-slice-v10" || created.ActivityHash == "" || created.TaskHash == "" || len(created.CapabilityRefs) != 4 {
+	if created.ReleaseID != "m1-first-slice-v13" || created.ActivityHash == "" || created.TaskHash == "" || len(created.CapabilityRefs) != 4 {
 		t.Fatalf("frozen attempt = %#v", created)
 	}
 	if _, exists := created.Workspace["internal/config/heldout_test.go"]; exists {
@@ -110,6 +110,32 @@ func TestValidateWorkspaceEnforcesFileAndTotalByteLimits(t *testing.T) {
 	}
 	if err := ValidateWorkspace(view, baseline, map[string]string{"main.go": "12345", "notes.txt": "1234"}); err == nil {
 		t.Fatal("ValidateWorkspace() accepted oversized workspace")
+	}
+}
+
+func TestValidateWorkspaceSupportsBlankProjectTasksWithoutWeakeningReadonlyAssets(t *testing.T) {
+	view := definition.TaskView{
+		ReadonlyPaths:   []string{"README.md"},
+		WorkspacePolicy: definition.WorkspacePolicyView{AllowNewFiles: true, AllowDeleteFiles: true},
+		WorkspaceLimits: definition.WorkspaceLimitsView{MaxFiles: 5, MaxFileBytes: 1024, MaxTotalBytes: 4096},
+	}
+	baseline := map[string]string{"README.md": "contract"}
+	workspace := map[string]string{
+		"README.md":        "contract",
+		"go.mod":           "module example.com/tool\n",
+		"cmd/tool/main.go": "package main\n",
+	}
+	if err := ValidateWorkspace(view, baseline, workspace); err != nil {
+		t.Fatalf("ValidateWorkspace(dynamic files) error = %v", err)
+	}
+	delete(workspace, "README.md")
+	if err := ValidateWorkspace(view, baseline, workspace); err == nil {
+		t.Fatal("ValidateWorkspace() accepted a missing readonly asset")
+	}
+	workspace["README.md"] = "contract"
+	workspace["../escape.go"] = "package escape"
+	if err := ValidateWorkspace(view, baseline, workspace); err == nil {
+		t.Fatal("ValidateWorkspace() accepted path traversal")
 	}
 }
 

@@ -13,7 +13,7 @@ export const sessionFixture: SessionResponse = {
 
 export const activityFixture: ActivityResponse = {
   api_version: 'v1',
-  release_id: 'm1-first-slice-v10',
+  release_id: 'm1-first-slice-v13',
   activity: {
     id: 'guided-run-model',
     version: 6,
@@ -36,6 +36,7 @@ export const activityFixture: ActivityResponse = {
     workspace_root: 'workspace',
     editable_paths: ['main.go'],
     readonly_paths: ['README.md', 'go.mod', 'main_test.go'],
+    workspace_policy: { allow_new_files: false, allow_delete_files: false },
     visible_tests: ['main_test.go'],
     allowed_actions: ['build', 'submit', 'test', 'vet'],
     hints: [
@@ -50,7 +51,7 @@ export const activityFixture: ActivityResponse = {
 
 export const capabilityFixture: CapabilityResponse = {
   api_version: 'v1',
-  release_id: 'm1-first-slice-v10',
+  release_id: 'm1-first-slice-v13',
   capability: {
     id: 'M1-01',
     version: 2,
@@ -82,7 +83,7 @@ export const capabilityFixture: CapabilityResponse = {
 export const attemptFixture: AttemptResponse = {
   api_version: 'v1',
   id: 'attempt-current',
-  release_id: 'm1-first-slice-v10',
+  release_id: 'm1-first-slice-v13',
   activity_id: 'guided-run-model',
   activity_version: 6,
   activity_hash: 'activity-hash',

@@ -5,7 +5,10 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"path"
+	"regexp"
 	"sort"
+	"strings"
 
 	"github.com/MorseWayne/gogopher-arch/internal/learning/definition"
 )
@@ -37,25 +40,55 @@ func ValidateWorkspace(view definition.TaskView, baseline, files map[string]stri
 	for _, path := range view.ReadonlyPaths {
 		allowed[path] = false
 	}
-	if len(files) != len(allowed) || len(files) > view.WorkspaceLimits.MaxFiles {
-		return fmt.Errorf("workspace must contain exactly %d public files", len(allowed))
+	if len(files) > view.WorkspaceLimits.MaxFiles {
+		return fmt.Errorf("workspace may contain at most %d files", view.WorkspaceLimits.MaxFiles)
+	}
+	for _, filePath := range view.ReadonlyPaths {
+		contents, exists := files[filePath]
+		if !exists || contents != baseline[filePath] {
+			return fmt.Errorf("workspace path %q is readonly", filePath)
+		}
+	}
+	if !view.WorkspacePolicy.AllowDeleteFiles {
+		for _, filePath := range view.EditablePaths {
+			if _, exists := files[filePath]; !exists {
+				return fmt.Errorf("workspace path %q is required", filePath)
+			}
+		}
 	}
 	total := 0
-	for path, contents := range files {
-		editable, exists := allowed[path]
+	for filePath, contents := range files {
+		editable, exists := allowed[filePath]
 		if !exists {
-			return fmt.Errorf("workspace path %q is not allowed", path)
+			if !view.WorkspacePolicy.AllowNewFiles || !validLearnerPath(filePath) {
+				return fmt.Errorf("workspace path %q is not allowed", filePath)
+			}
+			editable = true
 		}
 		if len(contents) > view.WorkspaceLimits.MaxFileBytes {
-			return fmt.Errorf("workspace path %q exceeds %d bytes", path, view.WorkspaceLimits.MaxFileBytes)
+			return fmt.Errorf("workspace path %q exceeds %d bytes", filePath, view.WorkspaceLimits.MaxFileBytes)
 		}
 		total += len(contents)
-		if !editable && contents != baseline[path] {
-			return fmt.Errorf("workspace path %q is readonly", path)
+		if !editable && contents != baseline[filePath] {
+			return fmt.Errorf("workspace path %q is readonly", filePath)
 		}
 	}
 	if total > view.WorkspaceLimits.MaxTotalBytes {
 		return fmt.Errorf("workspace exceeds %d total bytes", view.WorkspaceLimits.MaxTotalBytes)
 	}
 	return nil
+}
+
+var learnerPathPattern = regexp.MustCompile(`^(?:[A-Za-z0-9._-]+/)*[A-Za-z0-9._-]+$`)
+
+func validLearnerPath(value string) bool {
+	if value == "" || !learnerPathPattern.MatchString(value) || strings.ContainsAny(value, "\\\x00") || strings.HasPrefix(value, "/") || path.Clean(value) != value || value == "." {
+		return false
+	}
+	for _, segment := range strings.Split(value, "/") {
+		if segment == "" || segment == "." || segment == ".." {
+			return false
+		}
+	}
+	return true
 }

@@ -30,6 +30,7 @@ type ActivityView struct {
 	Title            string                   `json:"title"`
 	Kind             string                   `json:"kind"`
 	Mode             string                   `json:"mode"`
+	EvidenceContext  string                   `json:"evidence_context,omitempty"`
 	CapabilityRefs   []VersionedDefinitionRef `json:"capability_refs"`
 	TaskRef          VersionedDefinitionRef   `json:"task_ref"`
 	ContentRef       string                   `json:"content_ref,omitempty"`
@@ -40,6 +41,11 @@ type WorkspaceLimitsView struct {
 	MaxFiles      int `json:"max_files"`
 	MaxFileBytes  int `json:"max_file_bytes"`
 	MaxTotalBytes int `json:"max_total_bytes"`
+}
+
+type WorkspacePolicyView struct {
+	AllowNewFiles    bool `json:"allow_new_files"`
+	AllowDeleteFiles bool `json:"allow_delete_files"`
 }
 
 type HintSummaryView struct {
@@ -57,6 +63,7 @@ type TaskView struct {
 	WorkspaceRoot   string              `json:"workspace_root"`
 	EditablePaths   []string            `json:"editable_paths"`
 	ReadonlyPaths   []string            `json:"readonly_paths"`
+	WorkspacePolicy WorkspacePolicyView `json:"workspace_policy"`
 	VisibleTests    []string            `json:"visible_tests"`
 	AllowedActions  []string            `json:"allowed_actions"`
 	Hints           []HintSummaryView   `json:"hints"`
@@ -131,11 +138,11 @@ func (r *Registry) CapabilityView(releaseID, id string, version int) (Capability
 	if err := json.Unmarshal(stored.Document, &document); err != nil {
 		return CapabilityView{}, fmt.Errorf("decode capability view: %w", err)
 	}
-	document.Prerequisites.Hard = append([]VersionedDefinitionRef(nil), document.Prerequisites.Hard...)
-	document.Prerequisites.Recommended = append([]VersionedDefinitionRef(nil), document.Prerequisites.Recommended...)
-	document.ResourceRefs = append([]string(nil), document.ResourceRefs...)
+	document.Prerequisites.Hard = append([]VersionedDefinitionRef{}, document.Prerequisites.Hard...)
+	document.Prerequisites.Recommended = append([]VersionedDefinitionRef{}, document.Prerequisites.Recommended...)
+	document.ResourceRefs = append([]string{}, document.ResourceRefs...)
 	for index := range document.RequiredEvidence {
-		document.RequiredEvidence[index].RuleIDs = append([]string(nil), document.RequiredEvidence[index].RuleIDs...)
+		document.RequiredEvidence[index].RuleIDs = append([]string{}, document.RequiredEvidence[index].RuleIDs...)
 	}
 	return CapabilityView{
 		ID: document.ID, Version: document.Version, ContentHash: stored.ContentHash,
@@ -160,7 +167,7 @@ func (r *Registry) CapabilityPolicy(releaseID, id string, version int) (Capabili
 		return CapabilityPolicyView{}, fmt.Errorf("decode capability policy: %w", err)
 	}
 	for index := range document.RequiredEvidence {
-		document.RequiredEvidence[index].RuleIDs = append([]string(nil), document.RequiredEvidence[index].RuleIDs...)
+		document.RequiredEvidence[index].RuleIDs = append([]string{}, document.RequiredEvidence[index].RuleIDs...)
 	}
 	return CapabilityPolicyView{
 		ID: document.ID, Version: document.Version, ContentHash: stored.ContentHash,
@@ -198,6 +205,7 @@ func (r *Registry) ActivityView(releaseID, id string, version int) (ActivityView
 		Title            string                   `json:"title"`
 		Kind             string                   `json:"kind"`
 		Mode             string                   `json:"mode"`
+		EvidenceContext  string                   `json:"evidence_context"`
 		CapabilityRefs   []VersionedDefinitionRef `json:"capability_refs"`
 		TaskRef          VersionedDefinitionRef   `json:"task_ref"`
 		ContentRef       string                   `json:"content_ref"`
@@ -209,7 +217,8 @@ func (r *Registry) ActivityView(releaseID, id string, version int) (ActivityView
 	return ActivityView{
 		ID: document.ID, Version: document.Version, ContentHash: definition.ContentHash, RuleSetHash: definition.RuleSetHash,
 		Title: document.Title, Kind: document.Kind, Mode: document.Mode,
-		CapabilityRefs: append([]VersionedDefinitionRef(nil), document.CapabilityRefs...), TaskRef: document.TaskRef,
+		EvidenceContext: document.EvidenceContext,
+		CapabilityRefs:  append([]VersionedDefinitionRef(nil), document.CapabilityRefs...), TaskRef: document.TaskRef,
 		ContentRef: document.ContentRef, AssistancePolicy: document.AssistancePolicy,
 	}, nil
 }
@@ -315,15 +324,16 @@ func (r *Registry) TaskView(releaseID, id string, version int) (TaskView, error)
 		return TaskView{}, err
 	}
 	var document struct {
-		ID            string                     `json:"id"`
-		Version       int                        `json:"version"`
-		Language      string                     `json:"language"`
-		WorkspaceRoot string                     `json:"workspace_root"`
-		EditablePaths []string                   `json:"editable_paths"`
-		ReadonlyPaths []string                   `json:"readonly_paths"`
-		VisibleTests  []string                   `json:"visible_tests"`
-		Actions       map[string]json.RawMessage `json:"actions"`
-		Hints         []struct {
+		ID              string                     `json:"id"`
+		Version         int                        `json:"version"`
+		Language        string                     `json:"language"`
+		WorkspaceRoot   string                     `json:"workspace_root"`
+		EditablePaths   []string                   `json:"editable_paths"`
+		ReadonlyPaths   []string                   `json:"readonly_paths"`
+		WorkspacePolicy WorkspacePolicyView        `json:"workspace_policy"`
+		VisibleTests    []string                   `json:"visible_tests"`
+		Actions         map[string]json.RawMessage `json:"actions"`
+		Hints           []struct {
 			ID    string `json:"id"`
 			Level int    `json:"level"`
 			Title string `json:"title"`
@@ -354,9 +364,10 @@ func (r *Registry) TaskView(releaseID, id string, version int) (TaskView, error)
 	return TaskView{
 		ID: document.ID, Version: document.Version, ContentHash: definition.ContentHash, BundleHash: definition.BundleHash,
 		Language: document.Language, WorkspaceRoot: document.WorkspaceRoot,
-		EditablePaths: append([]string(nil), document.EditablePaths...),
-		ReadonlyPaths: append([]string(nil), document.ReadonlyPaths...),
-		VisibleTests:  append([]string(nil), document.VisibleTests...), AllowedActions: allowedActions,
+		EditablePaths:   append([]string{}, document.EditablePaths...),
+		ReadonlyPaths:   append([]string{}, document.ReadonlyPaths...),
+		WorkspacePolicy: document.WorkspacePolicy,
+		VisibleTests:    append([]string{}, document.VisibleTests...), AllowedActions: allowedActions,
 		Hints: hints, Solution: document.Solution, WorkspaceLimits: document.Limits, Readme: readme,
 	}, nil
 }

@@ -1,0 +1,55 @@
+{
+  "id": "M1-14",
+  "version": 1,
+  "name": "完整 Go 程序交付",
+  "description": "能够从空白工作区建立 module，拆分输入、并发执行、输出与命令边界，交付可构建、可测试、可诊断的完整 Go 工具。",
+  "milestone": "M1",
+  "domain": "complete-program-delivery",
+  "prerequisites": {
+    "hard": [
+      {"id": "M1-07", "version": 1},
+      {"id": "M1-08", "version": 2},
+      {"id": "M1-09", "version": 1},
+      {"id": "M1-10", "version": 1},
+      {"id": "M1-13", "version": 1}
+    ],
+    "recommended": []
+  },
+  "required_evidence": [
+    {
+      "type": "implement",
+      "independence": "independent",
+      "context": "new_project",
+      "rule_ids": [
+        "project-builds",
+        "project-artifacts-present",
+        "configuration-contract-correct",
+        "concurrent-workflow-cancellable",
+        "stable-output-contract",
+        "cli-exit-contract-correct"
+      ]
+    },
+    {
+      "type": "test",
+      "independence": "independent",
+      "context": "new_project",
+      "rule_ids": ["project-tests-present", "race-detector-clean"]
+    },
+    {
+      "type": "diagnose",
+      "independence": "independent",
+      "context": "new_project",
+      "rule_ids": ["delivery-decisions-explained"]
+    }
+  ],
+  "review_policy": {"first_review_after_days": 7, "success_interval_days": 30, "failure_remediation_after_days": 1},
+  "resource_refs": [
+    "web/src/content/go-basics/ch10-packages-tools.mdx",
+    "web/src/content/go-basics/ch11-testing.mdx",
+    "https://go.dev/doc/modules/gomod-ref",
+    "https://pkg.go.dev/context",
+    "https://pkg.go.dev/net/http",
+    "https://pkg.go.dev/net/http/httptest",
+    "https://go.dev/doc/articles/race_detector"
+  ]
+}

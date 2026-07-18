@@ -133,6 +133,18 @@ func evaluateExecutionRule(rule definition.AssessmentRule, stages map[execution.
 }
 
 func evaluateASTRule(rule definition.AssessmentRule, task definition.ExecutionTask, workspace map[string]string, stages map[execution.Stage]execution.StageResult) (execution.RuleStatus, string) {
+	if len(rule.Selector.RequiredFiles) > 0 {
+		build, exists := stages[execution.StageBuild]
+		if !exists || build.Status != execution.StagePassed {
+			return execution.RuleNotEvaluated, "workspace_required_files"
+		}
+		for _, filePath := range rule.Selector.RequiredFiles {
+			if strings.TrimSpace(workspace[filePath]) == "" {
+				return execution.RuleFailed, "workspace_required_files"
+			}
+		}
+		return execution.RulePassed, "workspace_required_files"
+	}
 	if rule.Selector.DeferredCall != "" {
 		build, exists := stages[execution.StageBuild]
 		if !exists || build.Status != execution.StagePassed {
@@ -329,9 +341,18 @@ func commentStartsWith(group *ast.CommentGroup, prefix string) bool {
 
 func hasLearnerTableTests(task definition.ExecutionTask, workspace map[string]string, selector definition.AssessmentSelector) bool {
 	baselines := make(map[string]string)
+	declared := make(map[string]struct{}, len(task.Files))
 	for _, asset := range task.Files {
+		declared[asset.Path] = struct{}{}
 		if asset.Editable {
 			baselines[asset.Path] = asset.Content
+		}
+	}
+	if task.WorkspacePolicy.AllowNewFiles {
+		for filePath := range workspace {
+			if _, exists := declared[filePath]; !exists {
+				baselines[filePath] = ""
+			}
 		}
 	}
 	for filePath, baseline := range baselines {

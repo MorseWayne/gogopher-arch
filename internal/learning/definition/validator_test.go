@@ -38,6 +38,16 @@ func TestValidatorAcceptsValidDefinitions(t *testing.T) {
 			"visible_tests":[],"held_out_tests":[],"assessment_rules":[],
 			"artifact_rules":{"workspace":"full","logs":["build"]}
 		}`},
+		{KindTask, `{
+			"id":"blank-project-v1","version":1,"language":"go1.25","workspace_root":"workspace",
+			"files":[{"source":"README.md","path":"README.md","role":"readme","editable":false,"sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}],
+			"editable_paths":[],"readonly_paths":["README.md"],
+			"workspace_policy":{"allow_new_files":true,"allow_delete_files":true},
+			"limits":{"max_files":16,"max_file_bytes":65536,"max_total_bytes":262144},
+			"actions":{"build":{"timeout_ms":5000,"max_output_bytes":65536,"network":"none"}},
+			"visible_tests":[],"held_out_tests":[],"assessment_rules":[],
+			"artifact_rules":{"workspace":"full","logs":["build"]}
+		}`},
 	}
 
 	for _, tt := range tests {

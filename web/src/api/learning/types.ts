@@ -40,6 +40,7 @@ export interface Activity {
   title: string
   kind: string
   mode: string
+  evidence_context?: 'same_context' | 'variant' | 'new_project'
   capability_refs: VersionedDefinitionRef[]
   task_ref: VersionedDefinitionRef
   content_ref?: string
@@ -68,6 +69,10 @@ export interface Task {
   workspace_root: string
   editable_paths: string[]
   readonly_paths: string[]
+  workspace_policy: {
+    allow_new_files: boolean
+    allow_delete_files: boolean
+  }
   visible_tests: string[]
   allowed_actions: ExecutionAction[]
   hints: TaskHintSummary[]

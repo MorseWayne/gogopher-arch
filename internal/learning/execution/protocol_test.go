@@ -79,7 +79,7 @@ func TestExecutionSpecValidationInvariants(t *testing.T) {
 			s.Files = append(s.Files, asset("other.go", "x", OriginLearnerWorkspace, AccessEditable, RoleWorkspace))
 			s.Files[0] = asset("main.go", large, OriginLearnerWorkspace, AccessEditable, RoleWorkspace)
 		}, field: "files"},
-		{name: "timeout", mutate: func(s *ExecutionSpec) { s.Policy.TimeoutMS = 31_000 }, field: "policy.timeout_ms"},
+		{name: "timeout", mutate: func(s *ExecutionSpec) { s.Policy.TimeoutMS = 46_000 }, field: "policy.timeout_ms"},
 		{name: "output", mutate: func(s *ExecutionSpec) { s.Policy.MaxOutputBytes = MaxProtocolOutputBytes + 1 }, field: "policy.max_output_bytes"},
 		{name: "network", mutate: func(s *ExecutionSpec) { s.Policy.Network = "host" }, field: "policy.network"},
 	}

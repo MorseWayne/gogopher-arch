@@ -164,7 +164,7 @@ go run ./cmd/learning-content validate --activity-set m1-first-slice
 ```bash
 go run ./cmd/learning-content release \
   --activity-set m1-first-slice \
-  --release-id m1-first-slice-v10 \
+  --release-id m1-first-slice-v13 \
   --created-at 2026-07-18T00:00:00Z
 ```
 
@@ -173,7 +173,7 @@ go run ./cmd/learning-content release \
 ```bash
 npm run build --prefix web
 go run ./cmd/learning-content verify \
-  --release-dir content/learning/releases/m1-first-slice-v10 \
+  --release-dir content/learning/releases/m1-first-slice-v13 \
   --web-dist web/dist
 ```
 
@@ -208,7 +208,7 @@ npm test --prefix web -- --run
 npm run build --prefix web
 ./scripts/check-compose-exposure.sh
 go run ./cmd/learning-content verify \
-  --release-dir content/learning/releases/m1-first-slice-v10 \
+  --release-dir content/learning/releases/m1-first-slice-v13 \
   --web-dist web/dist
 npm run e2e:compose --prefix web
 git diff --check
@@ -229,8 +229,8 @@ git diff --check
 | `DATABASE_URL` | Compose internal URL | Gateway / migrate database connection |
 | `LOCAL_DATABASE_URL` | loopback URL | `scripts/dev.sh gateway` database connection |
 | `SANDBOX_ENDPOINT` | loopback URL | Gateway execution endpoint；Compose 内覆盖为 service URL |
-| `SANDBOX_RPC_DEADLINE` | `35s` | execution RPC deadline |
-| `EXECUTION_WORKER_LEASE` | `45s` | execution claim lease |
+| `SANDBOX_RPC_DEADLINE` | `50s` | execution RPC deadline（覆盖最长 45s 综合提交与响应余量） |
+| `EXECUTION_WORKER_LEASE` | `60s` | execution claim lease |
 | `PROJECTION_WORKER_MAX_ATTEMPTS` | `5` | projection request failure threshold |
 | `WEB_PORT` | `3000` | base Compose 唯一 published application port |
 | `GATEWAY_PORT` / `SANDBOX_PORT` / `POSTGRES_PORT` | `8080` / `8081` / `5432` | development overlay loopback ports |

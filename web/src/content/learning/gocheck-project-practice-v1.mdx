@@ -1,0 +1,7 @@
+# 第一次把能力接成程序
+
+此前的接口、配置、测试和并发任务分别证明了单点能力。这一节开始关注端到端数据流：目标进入程序，HTTP 请求在受控并发中执行，结果最后形成稳定报告。
+
+先画三栏：输入、执行、输出。给每个错误标出应该在哪一栏被发现，给每个 goroutine 标出谁负责等待它。完成代码后使用本地 `httptest.Server` 验证，不需要访问公网。官方 [`httptest`](https://pkg.go.dev/net/http/httptest) 文档中的 Server 部分展示了如何在随机 loopback 端口运行测试服务；[`net/http`](https://pkg.go.dev/net/http) 文档提醒调用方在完成后关闭响应 Body。
+
+这次有预置 module 和单文件骨架。下一次独立评估将撤去这些结构，由你自行创建文件与 package。

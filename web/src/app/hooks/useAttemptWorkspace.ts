@@ -61,13 +61,43 @@ export function useAttemptWorkspace(
     localStorage.setItem(key, JSON.stringify(backup))
   }, [baseHash, baseRevision, dirty, files, initialAttempt.id])
 
+  const isEditablePath = useCallback((path: string) =>
+    task.editable_paths.includes(path) ||
+    (task.workspace_policy.allow_new_files && !task.readonly_paths.includes(path)),
+  [task.editable_paths, task.readonly_paths, task.workspace_policy.allow_new_files])
+
   const updateFile = useCallback((path: string, contents: string) => {
-    if (!task.editable_paths.includes(path)) return
+    if (!(path in files) || !isEditablePath(path)) return
     setFiles((current) => ({ ...current, [path]: contents }))
     setDirty(true)
     setRecovered(false)
     setSaveState({ status: 'idle' })
-  }, [task.editable_paths])
+  }, [files, isEditablePath])
+
+  const createFile = useCallback((rawPath: string): string | null => {
+    const path = rawPath.trim()
+    if (!task.workspace_policy.allow_new_files) return '本练习不允许新建文件'
+    if (!validWorkspacePath(path)) return '请输入安全的相对路径，例如 cmd/tool/main.go'
+    if (path in files) return '该文件已经存在'
+    if (Object.keys(files).length >= task.limits.max_files) return `文件数量不能超过 ${task.limits.max_files}`
+    setFiles((current) => ({ ...current, [path]: '' }))
+    setSelectedPath(path)
+    setDirty(true)
+    setRecovered(false)
+    setSaveState({ status: 'idle' })
+    return null
+  }, [files, task.limits.max_files, task.workspace_policy.allow_new_files])
+
+  const deleteFile = useCallback((path: string) => {
+    if (!task.workspace_policy.allow_delete_files || !isEditablePath(path) || !(path in files)) return
+    const remaining = { ...files }
+    delete remaining[path]
+    setFiles(remaining)
+    if (selectedPath === path) setSelectedPath(Object.keys(remaining).sort()[0] ?? '')
+    setDirty(true)
+    setRecovered(false)
+    setSaveState({ status: 'idle' })
+  }, [files, isEditablePath, selectedPath, task.workspace_policy.allow_delete_files])
 
   const save = useCallback(async () => {
     const validation = validateWorkspace(files, task)
@@ -127,7 +157,10 @@ export function useAttemptWorkspace(
     baseHash,
     baseRevision,
     dirty,
+    createFile,
+    deleteFile,
     files,
+    isEditablePath,
     recovered,
     resolveConflict,
     save,
@@ -145,7 +178,7 @@ function restoreDraft(attempt: AttemptResponse, task: Task): { files: Record<str
     const value = JSON.parse(raw) as Partial<DraftBackup>
     if (value.version !== BACKUP_VERSION || value.attempt_id !== attempt.id ||
       value.base_revision !== attempt.workspace_revision || value.base_hash !== attempt.workspace_hash ||
-      !isValidBackupFiles(value.files, attempt.workspace, task.editable_paths)) {
+      !isValidBackupFiles(value.files, attempt.workspace, task)) {
       localStorage.removeItem(draftBackupKey(attempt.id, attempt.workspace_revision))
       return { files: attempt.workspace, recovered: false }
     }
@@ -159,15 +192,18 @@ function restoreDraft(attempt: AttemptResponse, task: Task): { files: Record<str
 function isValidBackupFiles(
   value: unknown,
   serverFiles: Record<string, string>,
-  editablePaths: string[],
+  task: Task,
 ): value is Record<string, string> {
   if (typeof value !== 'object' || value === null) return false
-  const entries = Object.entries(value)
-  if (entries.length !== Object.keys(serverFiles).length) return false
-  return entries.every(([path, contents]) =>
-    path in serverFiles && typeof contents === 'string' &&
-    (editablePaths.includes(path) || contents === serverFiles[path]),
-  )
+  const candidate = value as Record<string, unknown>
+  const entries = Object.entries(candidate)
+  if (!task.workspace_policy.allow_delete_files && task.editable_paths.some((path) => !(path in candidate))) return false
+  if (task.readonly_paths.some((path) => !(path in candidate) || candidate[path] !== serverFiles[path])) return false
+  return entries.every(([path, contents]) => {
+    if (typeof contents !== 'string' || !validWorkspacePath(path)) return false
+    if (task.readonly_paths.includes(path)) return contents === serverFiles[path]
+    return task.editable_paths.includes(path) || task.workspace_policy.allow_new_files
+  }) && validateWorkspace(candidate as Record<string, string>, task) === null
 }
 
 function validateWorkspace(files: Record<string, string>, task: Task): string | null {
@@ -177,6 +213,7 @@ function validateWorkspace(files: Record<string, string>, task: Task): string | 
   }
   let total = 0
   for (const [path, contents] of entries) {
+    if (!validWorkspacePath(path)) return `文件路径 ${path} 不合法`
     const size = new TextEncoder().encode(contents).length
     if (size > task.limits.max_file_bytes) {
       return `${path} 为 ${size} 字节，超过单文件限制 ${task.limits.max_file_bytes} 字节`
@@ -187,6 +224,13 @@ function validateWorkspace(files: Record<string, string>, task: Task): string | 
     return `全部文件共 ${total} 字节，超过总限制 ${task.limits.max_total_bytes} 字节`
   }
   return null
+}
+
+const workspacePathPattern = /^(?:[A-Za-z0-9._-]+\/)*[A-Za-z0-9._-]+$/
+
+function validWorkspacePath(path: string): boolean {
+  if (!workspacePathPattern.test(path) || path.startsWith('/') || path.includes('\\') || path.includes('\0')) return false
+  return path.split('/').every((segment) => segment !== '' && segment !== '.' && segment !== '..')
 }
 
 function errorText(error: unknown): string {
