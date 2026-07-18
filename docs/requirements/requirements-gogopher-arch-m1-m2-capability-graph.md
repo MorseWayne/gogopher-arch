@@ -223,9 +223,10 @@ M2 不另起一个毫无关系的玩具项目，而是把 M1 的检查工具演�
 4. M1-06、M1-10：已在真实代码中补齐接口、泛型和证据化调试闭环。
 5. M1-14：已完成 `gocheck` 独立交付与 `endpointaudit` 延迟变式的可执行内容。
 6. M2-01：已完成标准库 HTTP 请求切片、`gocheck-hub` 独立服务评估与 `jobwatch` 延迟变式。
-7. M2-02 至 M2-06：下一批继续打通 API 契约、业务边界和数据库主线。
-8. M2-07 至 M2-14：补外部依赖、运行、安全、质量和交付。
-9. M2-15、M2-16：完成 Miniflux 迁移和 `gocheck-hub` 毕业项目。
+7. M2-02：已完成严格 JSON API 契约练习、`gocheck-hub` 独立评估与 `alert rules` 延迟变式。
+8. M2-03 至 M2-06：下一批继续打通业务边界和数据库主线。
+9. M2-07 至 M2-14：补外部依赖、运行、安全、质量和交付。
+10. M2-15、M2-16：完成 Miniflux 迁移和 `gocheck-hub` 毕业项目。
 
 ## 十、已确认决策与后续细化
 
@@ -236,7 +237,7 @@ M2 不另起一个毫无关系的玩具项目，而是把 M1 的检查工具演�
 
 ## 十一、当前实现状态
 
-截至 `m1-first-slice-v16`，运行时已经发布 M1-01 至 M1-14 和 M2-01 共十五个能力节点。M1-01 已调整为从亲手完成第一个 Go 程序开始的引导、练习、评估、复习闭环，M2 后端阶段已经进入标准库 HTTP 主线：
+截至 `m1-first-slice-v17`，运行时已经发布 M1-01 至 M1-14、M2-01 和 M2-02 共十六个能力节点。M1-01 已调整为从亲手完成第一个 Go 程序开始的引导、练习、评估、复习闭环；M2 后端阶段已经从标准库 HTTP 进入稳定 API 契约：
 
 | 能力 | 首次习得 | 独立评估 | 异题复验 |
 |---|---|---|---|
@@ -251,7 +252,8 @@ M2 不另起一个毫无关系的玩具项目，而是把 M1 的检查工具演�
 | M1-13 | 可取消并发映射 | 可取消检查器 | 可取消批量抓取 |
 | M1-14 | gocheck 跨 package 切片 | 从空目录交付 gocheck | 从空目录交付 endpointaudit |
 | M2-01 | handler、ServeMux 与 request ID 切片 | gocheck-hub HTTP 入口、timeout 与 graceful shutdown | jobwatch admin server 与 trace ID 迁移 |
+| M2-02 | 严格 JSON、DTO 与错误包络 | gocheck-hub checks API | alert rules API 迁移 |
 
-每个独立评估只产生单一能力的 Evidence，且有同能力、不同题材的 review Activity；首次验证后可直接进入延迟复习调度。M1-06 通过 AST、隐藏替身和跨类型隐藏测试共同验证使用方最小接口与实用泛型，避免只靠测试偶然通过。M1-08 v2 将 M1-06 加入硬前置，并继续使用可执行的导出 API 消费者测试和 doc comment AST 验收。M1-10 要求把失败测试、breakpoint、Vet 与 `alloc_space` profile 连接成诊断小结，不能只提交修复代码。M1-12 增加只在 Submit 装载的私有 `race_test` 资产与 `race` 评测阶段，普通功能测试通过不能替代真实 `go test -race` 证据；私有源码和事件详情继续由服务端隔离。M1-14 增加受策略约束的新建/删除文件能力，并以 `new_project` 证据上下文要求学习者从空工作区交付完整 module；gocheck 独立评估和 endpointaudit 延迟变式都经过真实 sandbox、隐藏测试、Vet、Race Detector 与证据生成验证。M2-01 从 `httptest` 内存请求切片渐进到真实 loopback listener：隐藏测试分别验证 method-aware route、middleware context 传播、四类 server timeout 和活动请求期间的 `Shutdown` 等待；AST 规则要求学习者补充至少三个命名 case 的表格测试，解释规则要求串起 `ServeMux`、`context`、`timeout` 与 `Shutdown`。7 天后使用不同 route、依赖和 trace header 的 jobwatch 变式复验，避免把题目记忆误判为迁移能力。
+每个独立评估只产生单一能力的 Evidence，且有同能力、不同题材的 review Activity；首次验证后可直接进入延迟复习调度。M1-06 通过 AST、隐藏替身和跨类型隐藏测试共同验证使用方最小接口与实用泛型，避免只靠测试偶然通过。M1-08 v2 将 M1-06 加入硬前置，并继续使用可执行的导出 API 消费者测试和 doc comment AST 验收。M1-10 要求把失败测试、breakpoint、Vet 与 `alloc_space` profile 连接成诊断小结，不能只提交修复代码。M1-12 增加只在 Submit 装载的私有 `race_test` 资产与 `race` 评测阶段，普通功能测试通过不能替代真实 `go test -race` 证据；私有源码和事件详情继续由服务端隔离。M1-14 增加受策略约束的新建/删除文件能力，并以 `new_project` 证据上下文要求学习者从空工作区交付完整 module；gocheck 独立评估和 endpointaudit 延迟变式都经过真实 sandbox、隐藏测试、Vet、Race Detector 与证据生成验证。M2-01 从 `httptest` 内存请求切片渐进到真实 loopback listener：隐藏测试分别验证 method-aware route、middleware context 传播、四类 server timeout 和活动请求期间的 `Shutdown` 等待；AST 规则要求学习者补充至少三个命名 case 的表格测试，解释规则要求串起 `ServeMux`、`context`、`timeout` 与 `Shutdown`。M2-02 继续沿用同一项目上下文，但把重点收敛到传输契约：严格拒绝未知字段与多余 JSON，验证 URL 和数值边界，把非法输入、领域冲突与内部故障稳定映射为 400、409 和 500，同时禁止内部错误泄漏；7 天后用不同 DTO、领域错误和 URL 约束的 alert API 复验迁移能力。
 
-为保持已发布 Attempt 的冻结定义可重放，早期 release 仍保留其原始前置关系和评测定义。`m1-first-slice-v9` 中的 M1-08 v1 未被回写；v10 通过 M1-08 v2 显式加入 M1-06 硬前置；v11 新增 M1-14；v13 以 Activity/Task v2 前向增加综合提交的冷缓存预算至 45 秒；v14 新增 M2-01 的三个 Activity/Task 和能力定义，均未回写任何历史 release。下一内容批次进入 M2-02 至 M2-06 的 API 契约、业务分层与数据库主线。
+为保持已发布 Attempt 的冻结定义可重放，早期 release 仍保留其原始前置关系和评测定义。`m1-first-slice-v9` 中的 M1-08 v1 未被回写；v10 通过 M1-08 v2 显式加入 M1-06 硬前置；v11 新增 M1-14；v13 以 Activity/Task v2 前向增加综合提交的冷缓存预算至 45 秒；v14 新增 M2-01；v15、v16 前向调整初学入口；v17 新增 M2-02 的三个 Activity/Task 和能力定义，整个过程均未回写任何历史 release。下一内容批次进入 M2-03 至 M2-06 的业务分层与数据库主线。

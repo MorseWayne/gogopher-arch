@@ -1,0 +1,5 @@
+## 用不同领域复验 API 边界
+
+这次没有 checks 和 timeout，而是 webhook destination 与 threshold。你需要迁移同一套原则：严格 JSON、边界校验、稳定错误 code，以及不泄漏内部错误的 `500`。
+
+不要复制上一次的字段判断；先写出本题 DTO 和业务约束，再复用解码与响应方法的设计思想。

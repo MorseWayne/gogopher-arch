@@ -1,0 +1,22 @@
+{
+  "id":"review-alert-api-v1","version":1,"language":"go1.25","workspace_root":"workspace",
+  "files":[
+    {"source":"README.md","path":"TASK.md","role":"readme","editable":false,"sha256":"128c4d02071ed63080c922ac2603622aee958a78c88f1b8aeda7eb6e35c6dd07"},
+    {"source":"starter/go.mod","path":"go.mod","role":"starter","editable":false,"sha256":"862764bfbb8e11b8772f1270b4b103c9654a4f9576924de228489eae450cd0f5"},
+    {"source":"starter/alertapi/handler.go","path":"alertapi/handler.go","role":"starter","editable":true,"sha256":"cc9f980b165194f69e5d4ec9409bdbd4dce52d7f1f237f0e254a6dd41c484b8f"},
+    {"source":"starter/alertapi/handler_test.go","path":"alertapi/handler_test.go","role":"starter","editable":true,"sha256":"9b1e3c37046a2102c86338fb222345589a1a3812c570afe482fcd38c466179c7"},
+    {"source":"heldout/alertapi/contract_private_test.go","path":"alertapi/contract_private_test.go","role":"held_out_test","editable":false,"sha256":"26cee1925173ae81dd29702e773d44254081dd400c708ff6f54fb55562b0df24"}
+  ],
+  "editable_paths":["alertapi/handler.go","alertapi/handler_test.go"],"readonly_paths":["TASK.md","go.mod"],
+  "workspace_policy":{"allow_new_files":true,"allow_delete_files":false},"limits":{"max_files":12,"max_file_bytes":131072,"max_total_bytes":524288},
+  "actions":{"build":{"timeout_ms":10000,"max_output_bytes":131072,"network":"none"},"test":{"timeout_ms":12000,"max_output_bytes":131072,"network":"none"},"vet":{"timeout_ms":10000,"max_output_bytes":131072,"network":"none"},"submit":{"timeout_ms":25000,"max_output_bytes":262144,"network":"none"}},
+  "visible_tests":[],"held_out_tests":["alertapi/contract_private_test.go"],"race_tests":[],
+  "assessment_rules":[
+    {"rule_id":"api-contract-builds","stage":"build","selector":{"package":"./..."},"capability_refs":[{"id":"M2-02","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"json-contract-correct","stage":"held_out_test","selector":{"test":"TestVariantAPIContract"},"capability_refs":[{"id":"M2-02","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"validation-errors-stable","stage":"held_out_test","selector":{"test":"TestVariantAPIContract"},"capability_refs":[{"id":"M2-02","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"api-boundary-tests-present","stage":"ast","selector":{"file":"alertapi/handler_test.go","minimum_cases":3},"capability_refs":[{"id":"M2-02","version":1}],"evidence_type":"test","condition":"passed"},
+    {"rule_id":"api-error-mapping-explained","stage":"explanation","selector":{"minimum_chars":100,"required_terms":["JSON","400","409","500"]},"capability_refs":[{"id":"M2-02","version":1}],"evidence_type":"diagnose","condition":"passed"}
+  ],
+  "artifact_rules":{"workspace":"full","logs":["build","test","vet","submit"]}
+}

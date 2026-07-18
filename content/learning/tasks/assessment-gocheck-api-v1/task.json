@@ -1,0 +1,24 @@
+{
+  "id":"assessment-gocheck-api-v1","version":1,"language":"go1.25","workspace_root":"workspace",
+  "files":[
+    {"source":"README.md","path":"TASK.md","role":"readme","editable":false,"sha256":"977d7968cd2c8075d8e8f8aaaff927a7365463279925c0b8ae0bc4e62e946c61"},
+    {"source":"starter/go.mod","path":"go.mod","role":"starter","editable":false,"sha256":"7368cf4170bf796dac37daf62212567090f56f00bd9b5e012af1be6a56b5da54"},
+    {"source":"starter/checkapi/handler.go","path":"checkapi/handler.go","role":"starter","editable":true,"sha256":"946ac8992fcf40707654e4772a93a0987f17749383ae57ad91beac90dc0a1f2b"},
+    {"source":"starter/checkapi/handler_test.go","path":"checkapi/handler_test.go","role":"starter","editable":true,"sha256":"e5b6f02640140c8f225a767baa85f3504152dcb7bb163833f8e2c42c634b2d41"},
+    {"source":"visible/checkapi/smoke_test.go","path":"checkapi/smoke_test.go","role":"visible_test","editable":false,"sha256":"3ba627011b34fa1d97e03c279546dd075fd9c16a14d625e00f3d1d2db8f623ab"},
+    {"source":"heldout/checkapi/contract_private_test.go","path":"checkapi/contract_private_test.go","role":"held_out_test","editable":false,"sha256":"38d1888a0c83cd3ceb109f763b9b9cce418cd46545fb656d07901c98acb47612"}
+  ],
+  "editable_paths":["checkapi/handler.go","checkapi/handler_test.go"],"readonly_paths":["TASK.md","go.mod","checkapi/smoke_test.go"],
+  "workspace_policy":{"allow_new_files":true,"allow_delete_files":false},"limits":{"max_files":12,"max_file_bytes":131072,"max_total_bytes":524288},
+  "actions":{"build":{"timeout_ms":10000,"max_output_bytes":131072,"network":"none"},"test":{"timeout_ms":12000,"max_output_bytes":131072,"network":"none"},"vet":{"timeout_ms":10000,"max_output_bytes":131072,"network":"none"},"submit":{"timeout_ms":25000,"max_output_bytes":262144,"network":"none"}},
+  "hints":[{"id":"separate-dto-domain","level":1,"title":"分开传输 DTO 与领域输入","body":"先严格解码请求 DTO 并完成边界校验，再构造 NewCheck 调用 Creator；不要让 JSON tag 渗入领域类型。"}],
+  "visible_tests":["checkapi/smoke_test.go"],"held_out_tests":["checkapi/contract_private_test.go"],"race_tests":[],
+  "assessment_rules":[
+    {"rule_id":"api-contract-builds","stage":"build","selector":{"package":"./..."},"capability_refs":[{"id":"M2-02","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"json-contract-correct","stage":"held_out_test","selector":{"test":"TestJSONContractAndValidation"},"capability_refs":[{"id":"M2-02","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"validation-errors-stable","stage":"held_out_test","selector":{"test":"TestDomainErrorsMapToStableProtocol"},"capability_refs":[{"id":"M2-02","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"api-boundary-tests-present","stage":"ast","selector":{"file":"checkapi/handler_test.go","minimum_cases":3},"capability_refs":[{"id":"M2-02","version":1}],"evidence_type":"test","condition":"passed"},
+    {"rule_id":"api-error-mapping-explained","stage":"explanation","selector":{"minimum_chars":100,"required_terms":["JSON","400","409","500"]},"capability_refs":[{"id":"M2-02","version":1}],"evidence_type":"diagnose","condition":"passed"}
+  ],
+  "artifact_rules":{"workspace":"full","logs":["build","test","vet","submit"]}
+}

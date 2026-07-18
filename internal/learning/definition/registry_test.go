@@ -23,7 +23,7 @@ func TestLoadRegistryIndexesCurrentAndHistoricalDefinitions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, want := len(definitions), 101; got != want {
+	if got, want := len(definitions), 108; got != want {
 		t.Fatalf("len(Definitions()) = %d, want %d", got, want)
 	}
 	ref := DefinitionRef{ReleaseID: testReleaseID, Kind: KindActivity, ID: "assessment-check-config", Version: 5}
@@ -165,6 +165,7 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 		{"M1-12", 1, "practice-protected-counter", "assessment-concurrent-registry", "review-concurrent-ledger"},
 		{"M1-13", 1, "practice-cancellable-map", "assessment-cancellable-checks", "review-cancellable-fetch"},
 		{"M2-01", 1, "practice-http-request-slice", "assessment-gocheck-http", "review-jobwatch-http"},
+		{"M2-02", 1, "practice-json-api-contract", "assessment-gocheck-api", "review-alert-api"},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.capabilityID, func(t *testing.T) {
@@ -272,6 +273,29 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 	httpReview, err := registry.ReviewActivity(testReleaseID, httpActivity.CapabilityRefs)
 	if err != nil || httpReview.ID != "review-jobwatch-http" || httpReview.EvidenceContext != "variant" {
 		t.Fatalf("M2-01 review = %#v, %v", httpReview, err)
+	}
+
+	apiActivity, err := registry.ActivityView(testReleaseID, "assessment-gocheck-api", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	apiTask, err := registry.ExecutionTask(testReleaseID, apiActivity.TaskRef.ID, apiActivity.TaskRef.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(apiTask.AssessmentRules) != 5 || len(apiTask.Files) != 6 {
+		t.Fatalf("M2-02 task contract = rules %d files %d", len(apiTask.AssessmentRules), len(apiTask.Files))
+	}
+	apiWorkspace, err := registry.PublicWorkspace(testReleaseID, apiTask.ID, apiTask.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, exists := apiWorkspace["checkapi/contract_private_test.go"]; exists {
+		t.Fatal("M2-02 public workspace contains held-out contract tests")
+	}
+	apiReview, err := registry.ReviewActivity(testReleaseID, apiActivity.CapabilityRefs)
+	if err != nil || apiReview.ID != "review-alert-api" || apiReview.EvidenceContext != "variant" {
+		t.Fatalf("M2-02 review = %#v, %v", apiReview, err)
 	}
 }
 

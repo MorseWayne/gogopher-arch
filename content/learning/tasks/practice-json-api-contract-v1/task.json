@@ -1,0 +1,16 @@
+{
+  "id":"practice-json-api-contract-v1","version":1,"language":"go1.25","workspace_root":"workspace",
+  "files":[
+    {"source":"README.md","path":"README.md","role":"readme","editable":false,"sha256":"7c218e86c2d7d752717d36070c6d8bb8a6c1278003258ac96eb77ce1f5c87178"},
+    {"source":"starter/go.mod","path":"go.mod","role":"starter","editable":false,"sha256":"0a3190f4f70ed07ec7012d7ecd0a5111079a6e7436f2801b994cb10cb7e8aa31"},
+    {"source":"starter/targetapi/handler.go","path":"targetapi/handler.go","role":"starter","editable":true,"sha256":"563203c804a7fe70fe6f6235f820ddbae497c85eb096472f666bd843888abc44"},
+    {"source":"visible/targetapi/handler_test.go","path":"targetapi/handler_test.go","role":"visible_test","editable":false,"sha256":"aac77f0a67968f2644e1d3c2ae508403926fbb9faad1a81fe4d69d5b411c76d7"}
+  ],
+  "editable_paths":["targetapi/handler.go"],"readonly_paths":["README.md","go.mod","targetapi/handler_test.go"],
+  "workspace_policy":{"allow_new_files":false,"allow_delete_files":false},"limits":{"max_files":8,"max_file_bytes":65536,"max_total_bytes":262144},
+  "actions":{"build":{"timeout_ms":8000,"max_output_bytes":65536,"network":"none"},"test":{"timeout_ms":8000,"max_output_bytes":65536,"network":"none"},"vet":{"timeout_ms":8000,"max_output_bytes":65536,"network":"none"},"submit":{"timeout_ms":15000,"max_output_bytes":131072,"network":"none"}},
+  "hints":[{"id":"strict-decode","level":1,"title":"先建立严格解码边界","body":"使用 DisallowUnknownFields，并在第一次 Decode 后再次 Decode，只有 io.EOF 表示 body 中恰好一个 JSON 值。"},{"id":"json-errors","level":2,"title":"统一写 JSON 错误","body":"集中实现 writeJSON 和 writeError，先设置 Content-Type 再 WriteHeader，所有失败都输出相同 envelope。"}],
+  "visible_tests":["targetapi/handler_test.go"],"held_out_tests":[],"race_tests":[],
+  "assessment_rules":[{"rule_id":"json-api-contract-practiced","stage":"visible_test","selector":{"test":"TestHandlerCreatesTargetAndRejectsInvalidInput"},"capability_refs":[{"id":"M2-02","version":1}],"evidence_type":"implement","condition":"passed"}],
+  "artifact_rules":{"workspace":"full","logs":["build","test","vet","submit"]}
+}
