@@ -23,7 +23,7 @@ func TestLoadRegistryIndexesCurrentDefinitions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, want := len(definitions), 185; got != want {
+	if got, want := len(definitions), 192; got != want {
 		t.Fatalf("len(Definitions()) = %d, want %d", got, want)
 	}
 	ref := DefinitionRef{ReleaseID: testReleaseID, Kind: KindActivity, ID: "assessment-check-config", Version: 5}
@@ -209,6 +209,7 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 		{"M2-11", 1, "practice-ttl-cache", "assessment-gocheck-project-cache", "review-gocheck-alert-cache"},
 		{"M2-12", 1, "practice-request-telemetry", "assessment-gocheck-observability", "review-gocheck-alert-observability"},
 		{"M2-13", 1, "practice-manual-clock", "assessment-gocheck-test-layers", "review-gocheck-alert-test-layers"},
+		{"M2-14", 1, "practice-release-gates", "assessment-gocheck-delivery", "review-gocheck-alert-delivery-pipeline"},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.capabilityID, func(t *testing.T) {
@@ -632,6 +633,37 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 	qualityReview, err := registry.ReviewActivity(testReleaseID, qualityActivity.CapabilityRefs)
 	if err != nil || qualityReview.ID != "review-gocheck-alert-test-layers" || qualityReview.EvidenceContext != "variant" {
 		t.Fatalf("M2-13 review = %#v, %v", qualityReview, err)
+	}
+
+	deliveryActivity, err := registry.ActivityView(testReleaseID, "assessment-gocheck-delivery", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	deliveryTask, err := registry.ExecutionTask(testReleaseID, deliveryActivity.TaskRef.ID, deliveryActivity.TaskRef.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(deliveryTask.AssessmentRules) != 8 || len(deliveryTask.Files) != 12 {
+		t.Fatalf("M2-14 task contract = rules %d files %d", len(deliveryTask.AssessmentRules), len(deliveryTask.Files))
+	}
+	if calls := deliveryTask.AssessmentRules[6].Selector.RequiredCalls; len(calls) != 2 {
+		t.Fatalf("M2-14 migration parser calls = %#v", calls)
+	}
+	deliveryWorkspace, err := registry.PublicWorkspace(testReleaseID, deliveryTask.ID, deliveryTask.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, exists := deliveryWorkspace["delivery_contract_private_test.go"]; exists {
+		t.Fatal("M2-14 public workspace contains private delivery contract")
+	}
+	for _, required := range []string{"Dockerfile", "Makefile", ".github/workflows/ci.yml"} {
+		if _, exists := deliveryWorkspace[required]; !exists {
+			t.Fatalf("M2-14 public workspace is missing %s", required)
+		}
+	}
+	deliveryReview, err := registry.ReviewActivity(testReleaseID, deliveryActivity.CapabilityRefs)
+	if err != nil || deliveryReview.ID != "review-gocheck-alert-delivery-pipeline" || deliveryReview.EvidenceContext != "variant" {
+		t.Fatalf("M2-14 review = %#v, %v", deliveryReview, err)
 	}
 }
 

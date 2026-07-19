@@ -1,0 +1,3 @@
+# 迁移 alert worker 交付流水线
+
+把相同交付原则迁移到后台 worker。除了多阶段非 root 镜像与完整 CI gate，还要验证 migration manifest 的 SHA-256 checksum，防止已经登记的 migration 内容漂移。说明哪些检查属于源码质量、依赖风险、数据升级和运行镜像边界。

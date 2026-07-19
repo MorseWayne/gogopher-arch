@@ -1,0 +1,303 @@
+{
+  "id": "assessment-gocheck-delivery-v1",
+  "version": 1,
+  "language": "go1.25",
+  "workspace_root": "workspace",
+  "files": [
+    {
+      "source": "README.md",
+      "path": "TASK.md",
+      "role": "readme",
+      "editable": false,
+      "sha256": "40f88e760b5f5cdb05603ae7fed9b8648e7fd786d3a4e4750e3da44adc98bf16"
+    },
+    {
+      "source": "starter/go.mod",
+      "path": "go.mod",
+      "role": "starter",
+      "editable": false,
+      "sha256": "2dd86490539cdbac6e3adade545aabe2a37c60ca4f6ee3d23587bf1daa22baa8"
+    },
+    {
+      "source": "starter/cmd/gocheckhub/main.go",
+      "path": "cmd/gocheckhub/main.go",
+      "role": "starter",
+      "editable": false,
+      "sha256": "ef73af2a60c3c356f5c1349e623376cff3b7e5a8bd655e1a907e910b33930206"
+    },
+    {
+      "source": "starter/internal/delivery/migrations.go",
+      "path": "internal/delivery/migrations.go",
+      "role": "starter",
+      "editable": true,
+      "sha256": "0e1845c8d52fbb15a1eb5f0631faaa21777366a72cfa8896d12f851737478bd2"
+    },
+    {
+      "source": "starter/internal/delivery/migrations_test.go",
+      "path": "internal/delivery/migrations_test.go",
+      "role": "starter",
+      "editable": true,
+      "sha256": "66b007cc64d7df01c5a5de7eb3745f5cd882c94f54f3624d4f0b933ebf1b797b"
+    },
+    {
+      "source": "starter/Dockerfile",
+      "path": "Dockerfile",
+      "role": "starter",
+      "editable": true,
+      "sha256": "82273fc0b0717e90b181a258b4c136d5fbf278c2bf0bdb6845226e729d0253d3"
+    },
+    {
+      "source": "starter/Makefile",
+      "path": "Makefile",
+      "role": "starter",
+      "editable": true,
+      "sha256": "d36fcb248d5eb31012f3b6c6c3647d488dc2a833cb563f3b92421b5e7626f34c"
+    },
+    {
+      "source": "starter/.github/workflows/ci.yml",
+      "path": ".github/workflows/ci.yml",
+      "role": "starter",
+      "editable": true,
+      "sha256": "9177b4f4965cd5c923c25c953025b1f41ba07aa82116b73301647154a637f617"
+    },
+    {
+      "source": "starter/migrations/0001_create_checks.up.sql",
+      "path": "migrations/0001_create_checks.up.sql",
+      "role": "fixture",
+      "editable": false,
+      "sha256": "595ae1635f717865a38bab842f6eb6ee83155a5f261689c57642a90df091a434"
+    },
+    {
+      "source": "starter/migrations/0002_add_status.up.sql",
+      "path": "migrations/0002_add_status.up.sql",
+      "role": "fixture",
+      "editable": false,
+      "sha256": "60786f456683e8fd23b149750473c6a1caabb7c3a1396e1b368aff0c42a1bf27"
+    },
+    {
+      "source": "visible/internal/delivery/smoke_test.go",
+      "path": "internal/delivery/smoke_test.go",
+      "role": "visible_test",
+      "editable": false,
+      "sha256": "debe952e00117b321a3bff7b3176a9d774ed1c8e84e5e57bfaa8fea6a48a1a48"
+    },
+    {
+      "source": "heldout/delivery_contract_private_test.go",
+      "path": "delivery_contract_private_test.go",
+      "role": "held_out_test",
+      "editable": false,
+      "sha256": "28b320e971f4fe8736d1f58481509236a3d030af5d1ccce6ca00c1fc43ddc168"
+    }
+  ],
+  "editable_paths": [
+    "internal/delivery/migrations.go",
+    "internal/delivery/migrations_test.go",
+    "Dockerfile",
+    "Makefile",
+    ".github/workflows/ci.yml"
+  ],
+  "readonly_paths": [
+    "TASK.md",
+    "go.mod",
+    "cmd/gocheckhub/main.go",
+    "migrations/0001_create_checks.up.sql",
+    "migrations/0002_add_status.up.sql",
+    "internal/delivery/smoke_test.go"
+  ],
+  "limits": {
+    "max_files": 20,
+    "max_file_bytes": 131072,
+    "max_total_bytes": 524288
+  },
+  "actions": {
+    "build": {
+      "timeout_ms": 15000,
+      "max_output_bytes": 131072,
+      "network": "none"
+    },
+    "test": {
+      "timeout_ms": 15000,
+      "max_output_bytes": 131072,
+      "network": "none"
+    },
+    "vet": {
+      "timeout_ms": 15000,
+      "max_output_bytes": 131072,
+      "network": "none"
+    },
+    "submit": {
+      "timeout_ms": 45000,
+      "max_output_bytes": 262144,
+      "network": "none"
+    }
+  },
+  "hints": [
+    {
+      "id": "migration-name",
+      "level": 1,
+      "title": "先解析 migration 身份",
+      "body": "文件名应包含四位递增序号、小写描述和 .up.sql；不要排序后掩盖输入漂移。"
+    },
+    {
+      "id": "runtime-image",
+      "level": 2,
+      "title": "builder 与 runtime 分离",
+      "body": "builder 固定 Go 工具链并静态构建，runtime 只复制二进制并使用非 root 用户。"
+    },
+    {
+      "id": "same-gates",
+      "level": 3,
+      "title": "本地与 CI 使用同一语言",
+      "body": "Makefile 和 workflow 都应显式覆盖 fmt、vet、test、race、vuln、migration 与 image。"
+    }
+  ],
+  "visible_tests": [
+    "internal/delivery/smoke_test.go"
+  ],
+  "held_out_tests": [
+    "delivery_contract_private_test.go"
+  ],
+  "assessment_rules": [
+    {
+      "rule_id": "delivery-builds",
+      "stage": "build",
+      "selector": {
+        "package": "./..."
+      },
+      "capability_refs": [
+        {
+          "id": "M2-14",
+          "version": 1
+        }
+      ],
+      "evidence_type": "test",
+      "condition": "passed"
+    },
+    {
+      "rule_id": "migration-policy-enforced",
+      "stage": "held_out_test",
+      "selector": {
+        "test": "TestMigrationPolicyRejectsDownAndDrift"
+      },
+      "capability_refs": [
+        {
+          "id": "M2-14",
+          "version": 1
+        }
+      ],
+      "evidence_type": "test",
+      "condition": "passed"
+    },
+    {
+      "rule_id": "minimal-container-contract",
+      "stage": "held_out_test",
+      "selector": {
+        "test": "TestDockerfileUsesMinimalNonRootRuntime"
+      },
+      "capability_refs": [
+        {
+          "id": "M2-14",
+          "version": 1
+        }
+      ],
+      "evidence_type": "test",
+      "condition": "passed"
+    },
+    {
+      "rule_id": "ci-delivery-gates",
+      "stage": "held_out_test",
+      "selector": {
+        "test": "TestCICoversRequiredDeliveryGates"
+      },
+      "capability_refs": [
+        {
+          "id": "M2-14",
+          "version": 1
+        }
+      ],
+      "evidence_type": "test",
+      "condition": "passed"
+    },
+    {
+      "rule_id": "local-ci-parity",
+      "stage": "held_out_test",
+      "selector": {
+        "test": "TestMakefileMirrorsCI"
+      },
+      "capability_refs": [
+        {
+          "id": "M2-14",
+          "version": 1
+        }
+      ],
+      "evidence_type": "test",
+      "condition": "passed"
+    },
+    {
+      "rule_id": "migration-test-cases",
+      "stage": "ast",
+      "selector": {
+        "file": "internal/delivery/migrations_test.go",
+        "minimum_cases": 6
+      },
+      "capability_refs": [
+        {
+          "id": "M2-14",
+          "version": 1
+        }
+      ],
+      "evidence_type": "test",
+      "condition": "passed"
+    },
+    {
+      "rule_id": "migration-parser-used",
+      "stage": "ast",
+      "selector": {
+        "file": "internal/delivery/migrations.go",
+        "required_calls": [
+          "migrationPattern.FindStringSubmatch",
+          "strconv.Atoi"
+        ]
+      },
+      "capability_refs": [
+        {
+          "id": "M2-14",
+          "version": 1
+        }
+      ],
+      "evidence_type": "test",
+      "condition": "passed"
+    },
+    {
+      "rule_id": "delivery-boundaries-explained",
+      "stage": "explanation",
+      "selector": {
+        "minimum_chars": 180,
+        "required_terms": [
+          "multi-stage",
+          "non-root",
+          "go test -race",
+          "govulncheck",
+          "forward-only migration"
+        ]
+      },
+      "capability_refs": [
+        {
+          "id": "M2-14",
+          "version": 1
+        }
+      ],
+      "evidence_type": "diagnose",
+      "condition": "passed"
+    }
+  ],
+  "artifact_rules": {
+    "workspace": "full",
+    "logs": [
+      "build",
+      "test",
+      "vet",
+      "submit"
+    ]
+  }
+}

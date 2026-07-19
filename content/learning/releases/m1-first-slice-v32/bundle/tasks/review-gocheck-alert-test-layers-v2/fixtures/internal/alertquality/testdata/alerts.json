@@ -1,0 +1,4 @@
+[
+  {"name":"latency","destination":"https://hooks.example.test/latency"},
+  {"name":"failure-rate","destination":"https://hooks.example.test/failures"}
+]

@@ -1,0 +1,3 @@
+# 把发布要求变成可执行门禁
+
+发布清单只有能被机器稳定拒绝时才算契约。补全 `releaseplan.Validate`：运行用户不能是 root；fmt、vet、test、race、vuln、migration 与 image gate 必须各出现一次；migration mode 必须是 forward-only。不要在校验器里偷偷补齐或重排输入。

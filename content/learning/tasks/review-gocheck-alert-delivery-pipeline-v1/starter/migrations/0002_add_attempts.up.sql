@@ -1,0 +1,1 @@
+ALTER TABLE alerts ADD COLUMN attempts integer NOT NULL DEFAULT 0;
