@@ -1,0 +1,11 @@
+{
+  "id":"M2-10","version":1,"name":"后台任务、调度、背压与恢复","description":"能够实现可停止、固定并发的持久化 worker，以 lease、幂等键和有界重试处理积压、重复任务、部分失败与进程重启。","milestone":"M2","domain":"background-jobs-scheduling-backpressure-recovery",
+  "prerequisites":{"hard":[{"id":"M2-06","version":1},{"id":"M2-07","version":1},{"id":"M2-09","version":1},{"id":"M1-12","version":1}],"recommended":[]},
+  "required_evidence":[
+    {"type":"implement","independence":"independent","context":"same_context","rule_ids":["worker-builds","worker-success-acknowledged","worker-duplicates-suppressed","worker-temporary-failure-retried","worker-terminal-failure-recorded","worker-backpressure-bounded","worker-restart-recovery","worker-contract-calls-present"]},
+    {"type":"test","independence":"independent","context":"same_context","rule_ids":["worker-tests-present"]},
+    {"type":"diagnose","independence":"independent","context":"same_context","rule_ids":["worker-recovery-explained"]}
+  ],
+  "review_policy":{"first_review_after_days":7,"success_interval_days":30,"failure_remediation_after_days":1},
+  "resource_refs":["web/src/content/learning/retry-schedule-practice-v1.mdx","https://pkg.go.dev/context","https://pkg.go.dev/time#Timer","https://go.dev/doc/database/execute-transactions"]
+}

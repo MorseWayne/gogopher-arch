@@ -32,7 +32,7 @@ GoGopher Arch 是一个以 Capability、Evidence 和 Review 为核心的 Go 学�
 - Evidence projection 更新 Snapshot，并生成 acquisition、due review 或 remediation；
 - Playwright 在全新 PostgreSQL 上验证 guided → assessment → review 闭环。
 
-当前 `m1-first-slice-v24` 已发布 M1-01 至 M1-14、M2-01 至 M2-09。学习主链已从 Go 基础与工程能力，逐步进入 HTTP/API、业务分层、SQL 与 migration、事务一致性、外部依赖、资源级访问控制，以及配置校验、显式依赖初始化和 graceful shutdown。
+当前 `m1-first-slice-v25` 已发布 M1-01 至 M1-14、M2-01 至 M2-10。学习主链已从 Go 基础与工程能力，逐步进入 HTTP/API、业务分层、SQL 与 migration、事务一致性、外部依赖、资源级访问控制、运行时生命周期，以及持久化后台任务的背压与恢复。
 
 ## 快速开始
 
@@ -167,8 +167,8 @@ go run ./cmd/learning-content validate --activity-set m1-first-slice
 ```bash
 go run ./cmd/learning-content release \
   --activity-set m1-first-slice \
-  --release-id m1-first-slice-v24 \
-  --created-at 2026-07-19T07:00:00Z
+  --release-id m1-first-slice-v25 \
+  --created-at 2026-07-19T08:00:00Z
 ```
 
 在更新 `current-release.json` 前验证 manifest、文件 hash 和 frontend bundle：
@@ -176,7 +176,7 @@ go run ./cmd/learning-content release \
 ```bash
 npm run build --prefix web
 go run ./cmd/learning-content verify \
-  --release-dir content/learning/releases/m1-first-slice-v24 \
+  --release-dir content/learning/releases/m1-first-slice-v25 \
   --web-dist web/dist
 ```
 
@@ -211,7 +211,7 @@ npm test --prefix web -- --run
 npm run build --prefix web
 ./scripts/check-compose-exposure.sh
 go run ./cmd/learning-content verify \
-  --release-dir content/learning/releases/m1-first-slice-v24 \
+  --release-dir content/learning/releases/m1-first-slice-v25 \
   --web-dist web/dist
 npm run e2e:compose --prefix web
 git diff --check

@@ -1,0 +1,5 @@
+## 把恢复契约迁移到 alert delivery
+
+本变式把检查处理换成 webhook 投递，但持久化边界不变：Queue 管理 lease、attempt、幂等键和下一次调度，worker 只维持固定并发并把发送结果映射为 Ack、Retry 或 Fail。
+
+本题没有提示。请在 context 取消时停止领取并等待活跃发送返回，确保重复投递不触发 Sender，并解释进程重启后为什么不依赖内存 channel 或 map 恢复积压。

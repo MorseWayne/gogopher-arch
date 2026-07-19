@@ -1,0 +1,5 @@
+## 为 gocheck-hub 增加持久化 worker
+
+worker 从 Store 领取带 lease 的检查任务，固定数量 goroutine 同时承担领取与处理，因此积压不会转化为无界内存队列。成功才 Ack；临时失败按策略 Retry；永久失败或尝试耗尽进入 Fail。
+
+幂等键和完成记录属于持久化 Store：重复任务可以再次被领取，但必须跳过副作用并确认。进程退出后，新的 owner 通过过期 lease 恢复未完成任务。隐藏替身会验证领取并发上限、context 取消后的 join、每类结果转换和重启 owner。
