@@ -30,7 +30,7 @@ describe('Roadmap', () => {
     expect(screen.getByText('前置未完成')).toBeVisible()
     expect(screen.getByText('学习中')).toBeVisible()
     expect(screen.getByText('待复习')).toBeVisible()
-    expect(screen.getByText('m1-first-slice-v19')).toBeVisible()
+    expect(screen.getByText('m1-first-slice-v20')).toBeVisible()
     expect(screen.queryByText(/完成百分比：|课程进度：/)).not.toBeInTheDocument()
   })
 
@@ -50,7 +50,7 @@ describe('Roadmap', () => {
 function roadmapFixture(): RoadmapResponse {
   return {
     api_version: 'v1',
-    release_id: 'm1-first-slice-v19',
+    release_id: 'm1-first-slice-v20',
     items: [
       roadmapItem('M1-01', '编写并运行第一个 Go 程序', 'available'),
       roadmapItem('M1-06', '接口边界、测试替身与实用泛型', 'locked', undefined, undefined, false),

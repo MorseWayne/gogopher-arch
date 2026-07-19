@@ -23,7 +23,7 @@ func TestLoadRegistryIndexesCurrentAndHistoricalDefinitions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, want := len(definitions), 122; got != want {
+	if got, want := len(definitions), 129; got != want {
 		t.Fatalf("len(Definitions()) = %d, want %d", got, want)
 	}
 	ref := DefinitionRef{ReleaseID: testReleaseID, Kind: KindActivity, ID: "assessment-check-config", Version: 5}
@@ -168,6 +168,7 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 		{"M2-02", 1, "practice-json-api-contract", "assessment-gocheck-api", "review-alert-api"},
 		{"M2-03", 1, "practice-gocheck-architecture", "assessment-gocheck-architecture", "review-gocheck-alert-architecture"},
 		{"M2-04", 1, "practice-sql-pool", "assessment-gocheck-sql", "review-gocheck-alert-sql"},
+		{"M2-05", 1, "practice-schema-migration", "assessment-gocheck-schema", "review-gocheck-alert-schema"},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.capabilityID, func(t *testing.T) {
@@ -350,6 +351,32 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 	sqlReview, err := registry.ReviewActivity(testReleaseID, sqlActivity.CapabilityRefs)
 	if err != nil || sqlReview.ID != "review-gocheck-alert-sql" || sqlReview.EvidenceContext != "variant" {
 		t.Fatalf("M2-04 review = %#v, %v", sqlReview, err)
+	}
+
+	schemaActivity, err := registry.ActivityView(testReleaseID, "assessment-gocheck-schema", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	schemaTask, err := registry.ExecutionTask(testReleaseID, schemaActivity.TaskRef.ID, schemaActivity.TaskRef.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(schemaTask.AssessmentRules) != 6 || len(schemaTask.Files) != 9 {
+		t.Fatalf("M2-05 task contract = rules %d files %d", len(schemaTask.AssessmentRules), len(schemaTask.Files))
+	}
+	if schemaTask.AssessmentRules[4].Selector.MinimumCases != 3 {
+		t.Fatalf("M2-05 migration cases = %#v", schemaTask.AssessmentRules[4].Selector)
+	}
+	schemaWorkspace, err := registry.PublicWorkspace(testReleaseID, schemaTask.ID, schemaTask.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, exists := schemaWorkspace["contract_private_test.go"]; exists {
+		t.Fatal("M2-05 public workspace contains private migration contract")
+	}
+	schemaReview, err := registry.ReviewActivity(testReleaseID, schemaActivity.CapabilityRefs)
+	if err != nil || schemaReview.ID != "review-gocheck-alert-schema" || schemaReview.EvidenceContext != "variant" {
+		t.Fatalf("M2-05 review = %#v, %v", schemaReview, err)
 	}
 }
 

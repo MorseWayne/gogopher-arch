@@ -1,0 +1,5 @@
+## 把 schema 决策迁移到 alerts
+
+仍在 gocheck-hub，但这次需要为 alert rules 建模。tenant 外键、destination 非空约束、tenant 内唯一性和默认状态必须由数据库守住；列表读取按 tenant、active、severity 过滤，再按创建时间倒序。
+
+本题没有提示。请重新完成两步 forward-only migration、生产查询、EXPLAIN 查询与契约测试，不能复用 checks 的列名或索引顺序。

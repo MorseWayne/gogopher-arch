@@ -228,7 +228,7 @@ func TestRoadmapReturnsServerDerivedCapabilityStates(t *testing.T) {
 	if response.Code != http.StatusOK || reader.learnerID != "learner-roadmap" || !reader.asOf.Equal(now) {
 		t.Fatalf("response=%d reader=%#v body=%s", response.Code, reader, response.Body.String())
 	}
-	for _, expected := range []string{`"release_id":"m1-first-slice-v19"`, `"name":"编写并运行第一个 Go 程序"`, `"status":"available"`, `"state":"server_learning_state"`} {
+	for _, expected := range []string{`"release_id":"m1-first-slice-v20"`, `"name":"编写并运行第一个 Go 程序"`, `"status":"available"`, `"state":"server_learning_state"`} {
 		if !strings.Contains(response.Body.String(), expected) {
 			t.Fatalf("body missing %s: %s", expected, response.Body.String())
 		}

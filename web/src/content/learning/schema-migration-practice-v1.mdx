@@ -1,0 +1,5 @@
+## 从不变量开始写 migration
+
+关系 schema 不只是字段容器。主键、非空、默认值、唯一性和 CHECK 约束应尽量在数据库边界守住，即使未来多了另一条写入路径，也不会绕过领域不变量。
+
+本练习为 gocheck-hub 的 project 建立首个 forward-only migration，并让 `(owner_id, active, created_at DESC)` 索引与列表查询的过滤、排序顺序一致。不要写 down migration，也不要用删除数据来模拟升级。

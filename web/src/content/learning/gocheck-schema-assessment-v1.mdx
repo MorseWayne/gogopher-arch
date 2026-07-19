@@ -1,0 +1,5 @@
+## 独立设计 checks schema
+
+把 M2-04 已实现的 checks SQL storage 落到可升级的 PostgreSQL schema。第一步创建关系和约束，第二步只增加服务于“按 owner 列出启用检查”的复合索引；同时提交生产查询与对应 EXPLAIN 查询。
+
+隐藏测试会检查关系不变量、外键、唯一性、migration 顺序和禁止破坏性语句，并验证复合索引列顺序与 `WHERE`、`ORDER BY`、`LIMIT` 的查询形状一致。请补充至少三个 migration 契约测试，并解释 foreign key、constraint、index 与 EXPLAIN 分别保护或验证什么。

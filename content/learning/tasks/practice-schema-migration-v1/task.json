@@ -1,0 +1,128 @@
+{
+  "id": "practice-schema-migration-v1",
+  "version": 1,
+  "language": "go1.25",
+  "workspace_root": "workspace",
+  "files": [
+    {
+      "source": "README.md",
+      "path": "README.md",
+      "role": "readme",
+      "editable": false,
+      "sha256": "7c19dc3cac941ea5ee98897dcb336508dd5f48c303f7f48e10c69ea2fd09b3fc"
+    },
+    {
+      "source": "starter/go.mod",
+      "path": "go.mod",
+      "role": "starter",
+      "editable": false,
+      "sha256": "1a3440c3bebbedb74e39b94236596663c1c233ec2d87f5854cc797fa75765372"
+    },
+    {
+      "source": "starter/migrations/0001_create_projects.up.sql",
+      "path": "migrations/0001_create_projects.up.sql",
+      "role": "starter",
+      "editable": true,
+      "sha256": "858e66a5ef4a8f7411363c0758fb0314e5b5f3ba9e1e7bfd7fcb149101ec5a4e"
+    },
+    {
+      "source": "starter/queries/list_active_projects.sql",
+      "path": "queries/list_active_projects.sql",
+      "role": "starter",
+      "editable": true,
+      "sha256": "c19fa4832f99f1a96b073944b11adc71fad89d0080a469fd80ec536f51b010e3"
+    },
+    {
+      "source": "visible/schema/schema_test.go",
+      "path": "schema/schema_test.go",
+      "role": "visible_test",
+      "editable": false,
+      "sha256": "9badafb67c564d6654cd7a91bf722aab7ce55be9922b08bae8bf08a8352bad4a"
+    }
+  ],
+  "editable_paths": [
+    "migrations/0001_create_projects.up.sql",
+    "queries/list_active_projects.sql"
+  ],
+  "readonly_paths": [
+    "README.md",
+    "go.mod",
+    "schema/schema_test.go"
+  ],
+  "workspace_policy": {
+    "allow_new_files": false,
+    "allow_delete_files": false
+  },
+  "limits": {
+    "max_files": 8,
+    "max_file_bytes": 65536,
+    "max_total_bytes": 262144
+  },
+  "actions": {
+    "build": {
+      "timeout_ms": 8000,
+      "max_output_bytes": 65536,
+      "network": "none"
+    },
+    "test": {
+      "timeout_ms": 8000,
+      "max_output_bytes": 65536,
+      "network": "none"
+    },
+    "vet": {
+      "timeout_ms": 8000,
+      "max_output_bytes": 65536,
+      "network": "none"
+    },
+    "submit": {
+      "timeout_ms": 15000,
+      "max_output_bytes": 131072,
+      "network": "none"
+    }
+  },
+  "hints": [
+    {
+      "id": "constraints-are-boundaries",
+      "level": 1,
+      "title": "把不变量放到关系边界",
+      "body": "主键、NOT NULL、DEFAULT、CHECK 和 UNIQUE 分别守住身份、缺失值、默认状态、值域与组合唯一性。"
+    },
+    {
+      "id": "index-follows-query",
+      "level": 2,
+      "title": "索引顺序跟随查询形状",
+      "body": "等值过滤列放在复合索引前部，排序列 created_at DESC 放在后部，让一个索引同时服务过滤与排序。"
+    }
+  ],
+  "visible_tests": [
+    "schema/schema_test.go"
+  ],
+  "held_out_tests": [],
+  "race_tests": [],
+  "assessment_rules": [
+    {
+      "rule_id": "schema-migration-practiced",
+      "stage": "visible_test",
+      "selector": {
+        "test": "TestProjectSchemaAndLookup"
+      },
+      "capability_refs": [
+        {
+          "id": "M2-05",
+          "version": 1
+        }
+      ],
+      "evidence_type": "implement",
+      "condition": "passed"
+    }
+  ],
+  "artifact_rules": {
+    "workspace": "full",
+    "logs": [
+      "build",
+      "test",
+      "vet",
+      "submit"
+    ]
+  }
+}

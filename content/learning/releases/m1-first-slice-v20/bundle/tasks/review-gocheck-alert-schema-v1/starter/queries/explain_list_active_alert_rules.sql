@@ -1,0 +1,1 @@
+-- TODO: inspect the same alert lookup shape with EXPLAIN.
