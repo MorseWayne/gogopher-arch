@@ -1,0 +1,11 @@
+{
+  "id":"M2-12","version":1,"name":"日志、指标、健康检查与请求关联","description":"能够用 request ID 关联一次请求的 structured log，以低基数 route template、method 和 status class 聚合指标，并严格区分进程 liveness 与依赖 readiness。","milestone":"M2","domain":"observability-health-correlation",
+  "prerequisites":{"hard":[{"id":"M2-02","version":1},{"id":"M2-09","version":1}],"recommended":[]},
+  "required_evidence":[
+    {"type":"implement","independence":"independent","context":"same_context","rule_ids":["observability-builds","request-correlation","request-id-validation","bounded-metric-labels","response-observation","liveness-contract","readiness-contract","observability-constructor","observability-calls-present"]},
+    {"type":"test","independence":"independent","context":"same_context","rule_ids":["observability-tests-present"]},
+    {"type":"diagnose","independence":"independent","context":"same_context","rule_ids":["observability-boundaries-explained"]}
+  ],
+  "review_policy":{"first_review_after_days":7,"success_interval_days":30,"failure_remediation_after_days":1},
+  "resource_refs":["web/src/content/learning/request-telemetry-practice-v1.mdx","https://pkg.go.dev/log/slog","https://pkg.go.dev/net/http","https://sre.google/sre-book/monitoring-distributed-systems/"]
+}

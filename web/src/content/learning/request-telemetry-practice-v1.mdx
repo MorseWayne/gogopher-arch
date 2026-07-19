@@ -1,0 +1,9 @@
+# 请求关联不是把所有字段都塞进指标
+
+一次请求需要两种互补视角：structured log 保存 request ID 等可检索上下文；指标用少量稳定标签观察总体趋势。request ID、资源 ID、原始 path 和 query 都是高基数数据，不应成为 metric label。
+
+本练习用 route template 代表请求类型，用 status class 代表结果范围。middleware 在调用下游前建立 correlation context，在下游返回后统一记录状态、字节与 duration。
+
+## 健康检查预告
+
+Liveness 回答“进程是否还能工作”，不应因数据库暂时不可用而触发重启风暴。Readiness 回答“现在是否应接收流量”，可以检查必要依赖并返回 503。

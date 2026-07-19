@@ -23,7 +23,7 @@ func TestLoadRegistryIndexesCurrentAndHistoricalDefinitions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, want := len(definitions), 171; got != want {
+	if got, want := len(definitions), 178; got != want {
 		t.Fatalf("len(Definitions()) = %d, want %d", got, want)
 	}
 	ref := DefinitionRef{ReleaseID: testReleaseID, Kind: KindActivity, ID: "assessment-check-config", Version: 5}
@@ -175,6 +175,7 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 		{"M2-09", 1, "practice-lifecycle-stack", "assessment-gocheck-lifecycle", "review-gocheck-alert-worker-lifecycle"},
 		{"M2-10", 1, "practice-retry-schedule", "assessment-gocheck-worker", "review-gocheck-alert-delivery-worker"},
 		{"M2-11", 1, "practice-ttl-cache", "assessment-gocheck-project-cache", "review-gocheck-alert-cache"},
+		{"M2-12", 1, "practice-request-telemetry", "assessment-gocheck-observability", "review-gocheck-alert-observability"},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.capabilityID, func(t *testing.T) {
@@ -539,6 +540,32 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 	cacheReview, err := registry.ReviewActivity(testReleaseID, cacheActivity.CapabilityRefs)
 	if err != nil || cacheReview.ID != "review-gocheck-alert-cache" || cacheReview.EvidenceContext != "variant" {
 		t.Fatalf("M2-11 review = %#v, %v", cacheReview, err)
+	}
+
+	observabilityActivity, err := registry.ActivityView(testReleaseID, "assessment-gocheck-observability", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	observabilityTask, err := registry.ExecutionTask(testReleaseID, observabilityActivity.TaskRef.ID, observabilityActivity.TaskRef.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(observabilityTask.AssessmentRules) != 11 || len(observabilityTask.Files) != 6 {
+		t.Fatalf("M2-12 task contract = rules %d files %d", len(observabilityTask.AssessmentRules), len(observabilityTask.Files))
+	}
+	if calls := observabilityTask.AssessmentRules[8].Selector.RequiredCalls; len(calls) != 4 {
+		t.Fatalf("M2-12 observability calls = %#v", calls)
+	}
+	observabilityWorkspace, err := registry.PublicWorkspace(testReleaseID, observabilityTask.ID, observabilityTask.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, exists := observabilityWorkspace["internal/observability/contract_private_test.go"]; exists {
+		t.Fatal("M2-12 public workspace contains private observability contract")
+	}
+	observabilityReview, err := registry.ReviewActivity(testReleaseID, observabilityActivity.CapabilityRefs)
+	if err != nil || observabilityReview.ID != "review-gocheck-alert-observability" || observabilityReview.EvidenceContext != "variant" {
+		t.Fatalf("M2-12 review = %#v, %v", observabilityReview, err)
 	}
 }
 

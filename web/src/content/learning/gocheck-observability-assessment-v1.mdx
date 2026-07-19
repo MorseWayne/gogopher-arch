@@ -1,0 +1,9 @@
+# 独立评估：让 gocheck-hub 的一次请求可定位
+
+你将实现一条完整观测链：接收或生成 request ID，把它同步到 response header、request context 与 structured log；请求结束后用构造时给定的 route template、规范 method 和 status class 写入低基数指标。
+
+原始 URL、query、项目 ID、request ID 和底层 dependency error 都不能进入指标 label。结构化事件也只包含明确建模的安全字段。
+
+同时实现 `/livez` 与 `/readyz` 的不同语义。Liveness 不触及依赖；readiness 使用请求 context 探测依赖，任何内部错误只映射为稳定的 `503 not ready`。
+
+提交时说明为何 correlation 字段适合 structured log、为何聚合维度必须 low cardinality，以及错误地让 liveness 依赖数据库会产生什么运行风险。

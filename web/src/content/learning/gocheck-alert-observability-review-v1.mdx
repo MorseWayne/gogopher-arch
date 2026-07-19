@@ -1,0 +1,5 @@
+# 延迟复验：把可观测契约迁移到 alert API
+
+这次没有提示。把同一能力迁移到 `/api/v1/alerts/{id}`：alert ID 和 webhook secret 不得进入指标标签；request ID 贯穿 response、context 与 structured log；状态、字节和 duration 在 handler 返回后记录。
+
+继续严格区分 liveness 与 readiness。Alert delivery 依赖不可用时 readiness 返回稳定 503，但 liveness 仍证明进程本身存活，且两者都不泄露底层错误。
