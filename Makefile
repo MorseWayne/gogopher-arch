@@ -28,7 +28,7 @@ learning-content-validate:
 	go run ./cmd/learning-content validate --activity-set m1-first-slice
 
 learning-content-verify:
-	go run ./cmd/learning-content verify --release-dir content/learning/releases/m1-first-slice-v25 --web-dist web/dist
+	go run ./cmd/learning-content verify --release-dir content/learning/releases/m1-first-slice-v26 --web-dist web/dist
 
 check-compose-exposure:
 	./scripts/check-compose-exposure.sh

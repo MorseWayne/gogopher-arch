@@ -1,0 +1,1 @@
+-- TODO: add the alert lookup index without destructive SQL.

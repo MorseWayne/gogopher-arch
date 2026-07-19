@@ -1,0 +1,5 @@
+## 用三个状态表达缓存语义
+
+缓存读取不能只返回 value：需要区分 cold miss、positive hit 和“真相源中不存在”的 negative hit。本练习实现带注入时钟的泛型内存 Cache，让测试无需真实 sleep 就能验证 TTL、到期删除和写后失效。
+
+negative entry 使用较短 TTL 降低不存在 key 对数据源的穿透；它不是永久真相，写入或到期后仍需回到 source of truth。

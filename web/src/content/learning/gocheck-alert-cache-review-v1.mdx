@@ -1,0 +1,5 @@
+## 把一致性边界迁移到 alert rule
+
+本变式将 Project/Source 换成 Rule/Repository。请重新实现 positive/negative hit、不同 TTL、缓存故障降级、并发 miss 合并与等待者取消。
+
+Save 必须先写 Repository 再失效 cache，并区分真相写失败与失效失败。本题没有提示；解释为什么 cache 不是 source of truth，以及 stale window、negative cache 和 degradation 各自解决什么问题。

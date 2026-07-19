@@ -1,0 +1,5 @@
+## 给 project 读路径增加 cache-aside
+
+Source 始终是唯一 source of truth。fresh positive/negative hit 可以直接返回；miss 才读取 Source，并用不同 TTL 回填。Cache Get 或 Set 故障不能让核心读路径不可用，服务应降级到 Source。
+
+同一 key 的并发 cold miss 需要合并，避免瞬间击穿 Source；等待者仍必须响应自己的 context。Update 先提交 Source，再 Delete cache：Source 失败不能失效；失效失败则明确返回“真相已更新、缓存可能陈旧”的部分成功边界。
