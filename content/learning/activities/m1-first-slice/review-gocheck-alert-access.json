@@ -1,0 +1,17 @@
+{
+  "id":"review-gocheck-alert-access","version":1,"title":"迁移实现 gocheck-hub alert rule 访问控制","kind":"learning_task","mode":"review","evidence_context":"variant",
+  "capability_refs":[{"id":"M2-08","version":1}],"task_ref":{"id":"review-gocheck-alert-access-v1","version":1},
+  "content_ref":"web/src/content/learning/gocheck-alert-access-review-v1.mdx",
+  "assistance_policy":{"hints":false,"references":false,"solution":false,"ai_declaration":true},
+  "evidence_rules":[
+    {"rule_id":"access-control-builds","capability_id":"M2-08","capability_version":1,"evidence_type":"implement","result":"passed"},
+    {"rule_id":"credential-config-safe","capability_id":"M2-08","capability_version":1,"evidence_type":"implement","result":"passed"},
+    {"rule_id":"authentication-secret-safe","capability_id":"M2-08","capability_version":1,"evidence_type":"implement","result":"passed"},
+    {"rule_id":"resource-authorization-correct","capability_id":"M2-08","capability_version":1,"evidence_type":"implement","result":"passed"},
+    {"rule_id":"canonical-input-enforced","capability_id":"M2-08","capability_version":1,"evidence_type":"implement","result":"passed"},
+    {"rule_id":"security-failures-stable","capability_id":"M2-08","capability_version":1,"evidence_type":"implement","result":"passed"},
+    {"rule_id":"constant-time-calls-present","capability_id":"M2-08","capability_version":1,"evidence_type":"implement","result":"passed"},
+    {"rule_id":"security-tests-present","capability_id":"M2-08","capability_version":1,"evidence_type":"test","result":"passed"},
+    {"rule_id":"security-boundaries-explained","capability_id":"M2-08","capability_version":1,"evidence_type":"diagnose","result":"passed"}
+  ]
+}

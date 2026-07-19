@@ -23,7 +23,7 @@ func TestLoadRegistryIndexesCurrentAndHistoricalDefinitions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, want := len(definitions), 143; got != want {
+	if got, want := len(definitions), 150; got != want {
 		t.Fatalf("len(Definitions()) = %d, want %d", got, want)
 	}
 	ref := DefinitionRef{ReleaseID: testReleaseID, Kind: KindActivity, ID: "assessment-check-config", Version: 5}
@@ -171,6 +171,7 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 		{"M2-05", 1, "practice-schema-migration", "assessment-gocheck-schema", "review-gocheck-alert-schema"},
 		{"M2-06", 1, "practice-transaction-runner", "assessment-gocheck-transaction", "review-gocheck-alert-transaction"},
 		{"M2-07", 1, "practice-http-client-policy", "assessment-gocheck-http-client", "review-gocheck-alert-delivery"},
+		{"M2-08", 1, "practice-api-key-authentication", "assessment-gocheck-access-control", "review-gocheck-alert-access"},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.capabilityID, func(t *testing.T) {
@@ -431,6 +432,32 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 	httpClientReview, err := registry.ReviewActivity(testReleaseID, httpClientActivity.CapabilityRefs)
 	if err != nil || httpClientReview.ID != "review-gocheck-alert-delivery" || httpClientReview.EvidenceContext != "variant" {
 		t.Fatalf("M2-07 review = %#v, %v", httpClientReview, err)
+	}
+
+	accessActivity, err := registry.ActivityView(testReleaseID, "assessment-gocheck-access-control", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	accessTask, err := registry.ExecutionTask(testReleaseID, accessActivity.TaskRef.ID, accessActivity.TaskRef.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(accessTask.AssessmentRules) != 9 || len(accessTask.Files) != 6 {
+		t.Fatalf("M2-08 task contract = rules %d files %d", len(accessTask.AssessmentRules), len(accessTask.Files))
+	}
+	if calls := accessTask.AssessmentRules[6].Selector.RequiredCalls; len(calls) != 2 {
+		t.Fatalf("M2-08 constant-time calls = %#v", calls)
+	}
+	accessWorkspace, err := registry.PublicWorkspace(testReleaseID, accessTask.ID, accessTask.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, exists := accessWorkspace["internal/projectapi/contract_private_test.go"]; exists {
+		t.Fatal("M2-08 public workspace contains private access-control contract")
+	}
+	accessReview, err := registry.ReviewActivity(testReleaseID, accessActivity.CapabilityRefs)
+	if err != nil || accessReview.ID != "review-gocheck-alert-access" || accessReview.EvidenceContext != "variant" {
+		t.Fatalf("M2-08 review = %#v, %v", accessReview, err)
 	}
 }
 

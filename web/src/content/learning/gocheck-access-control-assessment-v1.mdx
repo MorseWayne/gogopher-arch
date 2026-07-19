@@ -1,0 +1,5 @@
+## 独立完成 project 资源访问控制
+
+gocheck-hub 的 `GET /v1/projects/{id}` 需要先认证 API key，再根据 project owner 授权。未认证请求不得访问 store；已认证但不属于调用者的 project 要与不存在资源一样返回 404，避免被 IDOR 探测。
+
+只接受 canonical 小写 ID，拒绝编码分隔符、点路径和超长输入。审计日志只记稳定 reason，不记 Authorization header、token 或资源内容。隐藏测试会检查构造配置、认证前的 store 隔离、跨租户授权、输入边界和稳定错误。请补充至少六个 case，并解释 authentication、authorization、constant-time、404 与 secret 边界。

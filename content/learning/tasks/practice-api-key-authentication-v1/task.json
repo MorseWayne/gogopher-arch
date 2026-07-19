@@ -1,0 +1,16 @@
+{
+  "id":"practice-api-key-authentication-v1","version":1,"language":"go1.25","workspace_root":"workspace",
+  "files":[
+    {"source":"README.md","path":"README.md","role":"readme","editable":false,"sha256":"6543e4488c8cc130bed17dfb579dc7ffd61628abb6f1925b1ee62ed08e6f0b9e"},
+    {"source":"starter/go.mod","path":"go.mod","role":"starter","editable":false,"sha256":"f443b76cffd6971740f2cc15482a8274f6f52f652415262b8c6549d93f6949fd"},
+    {"source":"starter/authn/authenticator.go","path":"authn/authenticator.go","role":"starter","editable":true,"sha256":"030419d688dbc03741bd22c8889c671bf808ba0c116bdf3e6452bd28e7b5777b"},
+    {"source":"visible/authn/authenticator_test.go","path":"authn/authenticator_test.go","role":"visible_test","editable":false,"sha256":"bed56b1f6f482e533deb4e32a331bc5ee9bc5faa4fb83f21c70b1d8de1fa2f8b"}
+  ],
+  "editable_paths":["authn/authenticator.go"],"readonly_paths":["README.md","go.mod","authn/authenticator_test.go"],"workspace_policy":{"allow_new_files":false,"allow_delete_files":false},
+  "limits":{"max_files":8,"max_file_bytes":65536,"max_total_bytes":262144},
+  "actions":{"build":{"timeout_ms":8000,"max_output_bytes":65536,"network":"none"},"test":{"timeout_ms":8000,"max_output_bytes":65536,"network":"none"},"vet":{"timeout_ms":8000,"max_output_bytes":65536,"network":"none"},"submit":{"timeout_ms":15000,"max_output_bytes":131072,"network":"none"}},
+  "hints":[{"id":"hash-at-boundary","level":1,"title":"构造时转换密钥","body":"用 sha256.Sum256 把每个 token 转成等长 digest，Authenticator 内部不再保留原始 token。"},{"id":"strict-bearer","level":2,"title":"先验证 header 形状","body":"strings.Fields 必须恰好得到 Bearer 和一个 token；其他 scheme、空 token 和额外字段都拒绝。"},{"id":"compare-all","level":3,"title":"比较等长 digest","body":"对请求 token 求 digest，逐个使用 subtle.ConstantTimeCompare，不要直接比较原始密钥。"}],
+  "visible_tests":["authn/authenticator_test.go"],"held_out_tests":[],"race_tests":[],
+  "assessment_rules":[{"rule_id":"api-key-authentication-practiced","stage":"visible_test","selector":{"test":"TestAuthenticatorUsesStrictBearerAndDigestComparison"},"capability_refs":[{"id":"M2-08","version":1}],"evidence_type":"implement","condition":"passed"}],
+  "artifact_rules":{"workspace":"full","logs":["build","test","vet","submit"]}
+}

@@ -1,0 +1,5 @@
+## 把密钥与身份分开
+
+API key 是密钥，不是用户名。构造认证器时只保留 key 的 SHA-256 digest；请求到达后解析严格的 `Bearer <token>` 格式，再使用 `subtle.ConstantTimeCompare` 比较等长 digest。
+
+认证只回答“谁在调用”；这不代表调用者可以访问任意 project。后续资源层仍必须独立授权。任何失败都不得返回或记录原始 token。

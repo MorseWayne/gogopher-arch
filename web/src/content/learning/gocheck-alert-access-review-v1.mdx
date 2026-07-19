@@ -1,0 +1,5 @@
+## 把访问控制迁移到 alert rule 删除
+
+这次是 `DELETE /v1/alert-rules/{id}`：只有规则 owner 能删除，但跨租户请求与规则不存在必须共用同一 404 边界。认证失败时不得查询或删除 store，任何日志和响应都不得包含 token。
+
+本题没有提示。请重新完成 digest 比较、资源级授权、canonical ID、安全日志与删除失败映射。

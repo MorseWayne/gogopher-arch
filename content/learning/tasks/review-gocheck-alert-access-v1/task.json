@@ -1,0 +1,27 @@
+{
+  "id":"review-gocheck-alert-access-v1","version":1,"language":"go1.25","workspace_root":"workspace",
+  "files":[
+    {"source":"README.md","path":"TASK.md","role":"readme","editable":false,"sha256":"3c88816d23a2a34434af1663fbfcf077db839a62406976a017f6c726a8e52bae"},
+    {"source":"starter/go.mod","path":"go.mod","role":"starter","editable":false,"sha256":"f443b76cffd6971740f2cc15482a8274f6f52f652415262b8c6549d93f6949fd"},
+    {"source":"starter/internal/alertaccess/handler.go","path":"internal/alertaccess/handler.go","role":"starter","editable":true,"sha256":"85fd8e16eb4ecc1dd5c801dce956e9144eba200441e9fea187187ccc264b189f"},
+    {"source":"starter/internal/alertaccess/handler_test.go","path":"internal/alertaccess/handler_test.go","role":"starter","editable":true,"sha256":"26e3ff7a5e244819152b4dbb2c0f7a3a3208c23460940ce3ee7c13f2c38291ef"},
+    {"source":"visible/internal/alertaccess/smoke_test.go","path":"internal/alertaccess/smoke_test.go","role":"visible_test","editable":false,"sha256":"dabb93a4dfd33bb99ec3f1d7c1d26d7778f95cac168649861edc00f6c3cc0317"},
+    {"source":"heldout/internal/alertaccess/contract_private_test.go","path":"internal/alertaccess/contract_private_test.go","role":"held_out_test","editable":false,"sha256":"34bbb43b9d4e0a5bdbbdc6c32f146a1a8b8cde04383a2f41e59ea32440dab746"}
+  ],
+  "editable_paths":["internal/alertaccess/handler.go","internal/alertaccess/handler_test.go"],"readonly_paths":["TASK.md","go.mod","internal/alertaccess/smoke_test.go"],"workspace_policy":{"allow_new_files":true,"allow_delete_files":false},
+  "limits":{"max_files":14,"max_file_bytes":131072,"max_total_bytes":524288},
+  "actions":{"build":{"timeout_ms":10000,"max_output_bytes":131072,"network":"none"},"test":{"timeout_ms":12000,"max_output_bytes":131072,"network":"none"},"vet":{"timeout_ms":10000,"max_output_bytes":131072,"network":"none"},"submit":{"timeout_ms":30000,"max_output_bytes":262144,"network":"none"}},
+  "hints":[],"visible_tests":["internal/alertaccess/smoke_test.go"],"held_out_tests":["internal/alertaccess/contract_private_test.go"],"race_tests":[],
+  "assessment_rules":[
+    {"rule_id":"access-control-builds","stage":"build","selector":{"package":"./..."},"capability_refs":[{"id":"M2-08","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"credential-config-safe","stage":"held_out_test","selector":{"test":"TestCredentialConfigurationSafe"},"capability_refs":[{"id":"M2-08","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"authentication-secret-safe","stage":"held_out_test","selector":{"test":"TestAuthenticationContractAndSecretSafety"},"capability_refs":[{"id":"M2-08","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"resource-authorization-correct","stage":"held_out_test","selector":{"test":"TestResourceAuthorizationPreventsIDOR"},"capability_refs":[{"id":"M2-08","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"canonical-input-enforced","stage":"held_out_test","selector":{"test":"TestCanonicalInputAndMethodBoundaries"},"capability_refs":[{"id":"M2-08","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"security-failures-stable","stage":"held_out_test","selector":{"test":"TestSecurityFailureResponsesStable"},"capability_refs":[{"id":"M2-08","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"constant-time-calls-present","stage":"ast","selector":{"file":"internal/alertaccess/handler.go","required_calls":["sha256.Sum256","subtle.ConstantTimeCompare"]},"capability_refs":[{"id":"M2-08","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"security-tests-present","stage":"ast","selector":{"file":"internal/alertaccess/handler_test.go","minimum_cases":6},"capability_refs":[{"id":"M2-08","version":1}],"evidence_type":"test","condition":"passed"},
+    {"rule_id":"security-boundaries-explained","stage":"explanation","selector":{"minimum_chars":180,"required_terms":["authentication","authorization","constant-time","404","secret"]},"capability_refs":[{"id":"M2-08","version":1}],"evidence_type":"diagnose","condition":"passed"}
+  ],
+  "artifact_rules":{"workspace":"full","logs":["build","test","vet","submit"]}
+}

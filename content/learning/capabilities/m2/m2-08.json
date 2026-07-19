@@ -1,0 +1,13 @@
+{
+  "id": "M2-08", "version": 1, "name": "认证、授权、密钥与输入安全",
+  "description": "能够以受控 API key 完成认证，在资源边界执行授权，隐藏资源存在性，并避免密钥进入日志、错误和响应。",
+  "milestone": "M2", "domain": "authentication-authorization-secret-input-security",
+  "prerequisites": {"hard": [{"id": "M2-02", "version": 1}, {"id": "M2-03", "version": 1}], "recommended": []},
+  "required_evidence": [
+    {"type":"implement","independence":"independent","context":"same_context","rule_ids":["access-control-builds","credential-config-safe","authentication-secret-safe","resource-authorization-correct","canonical-input-enforced","security-failures-stable","constant-time-calls-present"]},
+    {"type":"test","independence":"independent","context":"same_context","rule_ids":["security-tests-present"]},
+    {"type":"diagnose","independence":"independent","context":"same_context","rule_ids":["security-boundaries-explained"]}
+  ],
+  "review_policy":{"first_review_after_days":7,"success_interval_days":30,"failure_remediation_after_days":1},
+  "resource_refs":["web/src/content/learning/api-key-authentication-practice-v1.mdx","https://pkg.go.dev/crypto/subtle#ConstantTimeCompare","https://pkg.go.dev/net/http#Request","https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html"]
+}
