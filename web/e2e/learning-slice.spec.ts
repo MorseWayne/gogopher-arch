@@ -117,7 +117,7 @@ test.describe('Learning slice vertical scenarios', () => {
       }),
       [201],
     )
-    expect(attempt.release_id).toBe('m1-first-slice-v20')
+    expect(attempt.release_id).toBe('m1-first-slice-v21')
     expect(attempt.workspace['health/consumer_test.go']).toBeUndefined()
 
     const saved = await readJSON<AttemptResponse>(
@@ -150,7 +150,7 @@ test.describe('Learning slice vertical scenarios', () => {
       }),
       [201],
     )
-    expect(attempt.release_id).toBe('m1-first-slice-v20')
+    expect(attempt.release_id).toBe('m1-first-slice-v21')
     expect(attempt.workspace['registry_race_test.go']).toBeUndefined()
 
     const saved = await readJSON<AttemptResponse>(
@@ -191,7 +191,7 @@ test.describe('Learning slice vertical scenarios', () => {
       }),
       [201],
     )
-    expect(attempt.release_id).toBe('m1-first-slice-v20')
+    expect(attempt.release_id).toBe('m1-first-slice-v21')
     expect(attempt.workspace['report_private_test.go']).toBeUndefined()
 
     const saved = await readJSON<AttemptResponse>(
@@ -238,7 +238,7 @@ test.describe('Learning slice vertical scenarios', () => {
       }),
       [201],
     )
-    expect(attempt.release_id).toBe('m1-first-slice-v20')
+    expect(attempt.release_id).toBe('m1-first-slice-v21')
     expect(attempt.workspace['TASK.md']).toBeDefined()
     expect(attempt.workspace['go.mod']).toBeUndefined()
 

@@ -19,7 +19,7 @@ func TestServiceCreatesFrozenStarterAndEnforcesOwner(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if created.ReleaseID != "m1-first-slice-v20" || created.ActivityHash == "" || created.TaskHash == "" || len(created.CapabilityRefs) != 3 {
+	if created.ReleaseID != "m1-first-slice-v21" || created.ActivityHash == "" || created.TaskHash == "" || len(created.CapabilityRefs) != 3 {
 		t.Fatalf("frozen attempt = %#v", created)
 	}
 	if _, exists := created.Workspace["internal/config/heldout_test.go"]; exists {

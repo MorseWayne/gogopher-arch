@@ -1,0 +1,29 @@
+{
+  "id":"review-gocheck-alert-transaction-v1","version":1,"language":"go1.25","workspace_root":"workspace",
+  "files":[
+    {"source":"README.md","path":"TASK.md","role":"readme","editable":false,"sha256":"181ee9705197645f4042cc9564b137d4fe6e5357b053fcb8472fe4378f99243c"},
+    {"source":"starter/go.mod","path":"go.mod","role":"starter","editable":false,"sha256":"1a3440c3bebbedb74e39b94236596663c1c233ec2d87f5854cc797fa75765372"},
+    {"source":"starter/internal/alerts/postgres/store.go","path":"internal/alerts/postgres/store.go","role":"starter","editable":true,"sha256":"118729a6f5e249eabee41c8e48ebddd92d686f7712e303b1fae157e0acfb5797"},
+    {"source":"starter/internal/alerts/postgres/store_test.go","path":"internal/alerts/postgres/store_test.go","role":"starter","editable":true,"sha256":"4402db91a95c2e9a382ac588a57d50b00184e0c6c235aaab25db8173d55fd574"},
+    {"source":"visible/internal/alerts/postgres/smoke_test.go","path":"internal/alerts/postgres/smoke_test.go","role":"visible_test","editable":false,"sha256":"e866881df09336a3a214ced6c5ae6e7cb585951722b20aca2a2982febeceb20c"},
+    {"source":"heldout/internal/alerts/postgres/contract_private_test.go","path":"internal/alerts/postgres/contract_private_test.go","role":"held_out_test","editable":false,"sha256":"17838512dac3f03d4cc104ca5a4e59be9acc43c3a17503316459d9ead4c59acb"}
+  ],
+  "editable_paths":["internal/alerts/postgres/store.go","internal/alerts/postgres/store_test.go"],
+  "readonly_paths":["TASK.md","go.mod","internal/alerts/postgres/smoke_test.go"],
+  "workspace_policy":{"allow_new_files":true,"allow_delete_files":false},
+  "limits":{"max_files":14,"max_file_bytes":131072,"max_total_bytes":524288},
+  "actions":{"build":{"timeout_ms":10000,"max_output_bytes":131072,"network":"none"},"test":{"timeout_ms":12000,"max_output_bytes":131072,"network":"none"},"vet":{"timeout_ms":10000,"max_output_bytes":131072,"network":"none"},"submit":{"timeout_ms":30000,"max_output_bytes":262144,"network":"none"}},
+  "hints":[],
+  "visible_tests":["internal/alerts/postgres/smoke_test.go"],"held_out_tests":["internal/alerts/postgres/contract_private_test.go"],"race_tests":[],
+  "assessment_rules":[
+    {"rule_id":"transaction-store-builds","stage":"build","selector":{"package":"./..."},"capability_refs":[{"id":"M2-06","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"serializable-transaction-boundary","stage":"held_out_test","selector":{"test":"TestSerializableTransactionBoundary"},"capability_refs":[{"id":"M2-06","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"idempotency-replay-stable","stage":"held_out_test","selector":{"test":"TestIdempotencyReplayStable"},"capability_refs":[{"id":"M2-06","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"concurrent-update-conflict-stable","stage":"held_out_test","selector":{"test":"TestConcurrentUpdateConflictStable"},"capability_refs":[{"id":"M2-06","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"failure-rolls-back","stage":"held_out_test","selector":{"test":"TestFailureRollsBack"},"capability_refs":[{"id":"M2-06","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"transaction-calls-present","stage":"ast","selector":{"file":"internal/alerts/postgres/store.go","required_calls":["tx.QueryRowContext","tx.Commit","tx.Rollback"]},"capability_refs":[{"id":"M2-06","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"transaction-tests-present","stage":"ast","selector":{"file":"internal/alerts/postgres/store_test.go","minimum_cases":4},"capability_refs":[{"id":"M2-06","version":1}],"evidence_type":"test","condition":"passed"},
+    {"rule_id":"transaction-decisions-explained","stage":"explanation","selector":{"minimum_chars":160,"required_terms":["transaction","serializable","idempotency key","optimistic concurrency","rollback"]},"capability_refs":[{"id":"M2-06","version":1}],"evidence_type":"diagnose","condition":"passed"}
+  ],
+  "artifact_rules":{"workspace":"full","logs":["build","test","vet","submit"]}
+}

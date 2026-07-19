@@ -1,0 +1,20 @@
+{
+  "id": "practice-transaction-runner-v1", "version": 1, "language": "go1.25", "workspace_root": "workspace",
+  "files": [
+    {"source":"README.md","path":"README.md","role":"readme","editable":false,"sha256":"e0866b00979256eca996b35573a07aac61316a6a40359faa0bee8e0f6f5a393b"},
+    {"source":"starter/go.mod","path":"go.mod","role":"starter","editable":false,"sha256":"1a3440c3bebbedb74e39b94236596663c1c233ec2d87f5854cc797fa75765372"},
+    {"source":"starter/txrunner/runner.go","path":"txrunner/runner.go","role":"starter","editable":true,"sha256":"b9ea07e7409685c70801743c87966341d923d069257bf31f9755f13ac9c08ced"},
+    {"source":"visible/txrunner/runner_test.go","path":"txrunner/runner_test.go","role":"visible_test","editable":false,"sha256":"2f86a8d36abd70c346ca41ce95835efff3aa686e8565ad8043f7d228ddd59b14"}
+  ],
+  "editable_paths": ["txrunner/runner.go"], "readonly_paths": ["README.md","go.mod","txrunner/runner_test.go"],
+  "workspace_policy": {"allow_new_files":false,"allow_delete_files":false},
+  "limits": {"max_files":8,"max_file_bytes":65536,"max_total_bytes":262144},
+  "actions": {"build":{"timeout_ms":8000,"max_output_bytes":65536,"network":"none"},"test":{"timeout_ms":8000,"max_output_bytes":65536,"network":"none"},"vet":{"timeout_ms":8000,"max_output_bytes":65536,"network":"none"},"submit":{"timeout_ms":15000,"max_output_bytes":131072,"network":"none"}},
+  "hints": [
+    {"id":"rollback-safety-net","level":1,"title":"先安排回滚安全网","body":"BeginTx 成功后立即 defer tx.Rollback；回调成功才 Commit。Commit 后 defer 再运行不会重复回滚。"},
+    {"id":"panic-keeps-semantics","level":2,"title":"panic 前先释放事务","body":"defer 中 recover 到 panic 后调用 Rollback，再 panic 原值，既释放连接又不改变调用方语义。"}
+  ],
+  "visible_tests": ["txrunner/runner_test.go"], "held_out_tests": [], "race_tests": [],
+  "assessment_rules": [{"rule_id":"transaction-runner-practiced","stage":"visible_test","selector":{"test":"TestWithinTxCommitAndRollback"},"capability_refs":[{"id":"M2-06","version":1}],"evidence_type":"implement","condition":"passed"}],
+  "artifact_rules": {"workspace":"full","logs":["build","test","vet","submit"]}
+}

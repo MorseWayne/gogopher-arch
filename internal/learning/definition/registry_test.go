@@ -23,7 +23,7 @@ func TestLoadRegistryIndexesCurrentAndHistoricalDefinitions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, want := len(definitions), 129; got != want {
+	if got, want := len(definitions), 136; got != want {
 		t.Fatalf("len(Definitions()) = %d, want %d", got, want)
 	}
 	ref := DefinitionRef{ReleaseID: testReleaseID, Kind: KindActivity, ID: "assessment-check-config", Version: 5}
@@ -169,6 +169,7 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 		{"M2-03", 1, "practice-gocheck-architecture", "assessment-gocheck-architecture", "review-gocheck-alert-architecture"},
 		{"M2-04", 1, "practice-sql-pool", "assessment-gocheck-sql", "review-gocheck-alert-sql"},
 		{"M2-05", 1, "practice-schema-migration", "assessment-gocheck-schema", "review-gocheck-alert-schema"},
+		{"M2-06", 1, "practice-transaction-runner", "assessment-gocheck-transaction", "review-gocheck-alert-transaction"},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.capabilityID, func(t *testing.T) {
@@ -377,6 +378,32 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 	schemaReview, err := registry.ReviewActivity(testReleaseID, schemaActivity.CapabilityRefs)
 	if err != nil || schemaReview.ID != "review-gocheck-alert-schema" || schemaReview.EvidenceContext != "variant" {
 		t.Fatalf("M2-05 review = %#v, %v", schemaReview, err)
+	}
+
+	transactionActivity, err := registry.ActivityView(testReleaseID, "assessment-gocheck-transaction", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	transactionTask, err := registry.ExecutionTask(testReleaseID, transactionActivity.TaskRef.ID, transactionActivity.TaskRef.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(transactionTask.AssessmentRules) != 8 || len(transactionTask.Files) != 6 {
+		t.Fatalf("M2-06 task contract = rules %d files %d", len(transactionTask.AssessmentRules), len(transactionTask.Files))
+	}
+	if calls := transactionTask.AssessmentRules[5].Selector.RequiredCalls; len(calls) != 3 {
+		t.Fatalf("M2-06 transaction calls = %#v", calls)
+	}
+	transactionWorkspace, err := registry.PublicWorkspace(testReleaseID, transactionTask.ID, transactionTask.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, exists := transactionWorkspace["internal/runs/postgres/contract_private_test.go"]; exists {
+		t.Fatal("M2-06 public workspace contains private transaction driver")
+	}
+	transactionReview, err := registry.ReviewActivity(testReleaseID, transactionActivity.CapabilityRefs)
+	if err != nil || transactionReview.ID != "review-gocheck-alert-transaction" || transactionReview.EvidenceContext != "variant" {
+		t.Fatalf("M2-06 review = %#v, %v", transactionReview, err)
 	}
 }
 

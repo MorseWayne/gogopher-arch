@@ -1,0 +1,5 @@
+## 把一致性规则迁移到 alert acknowledgement
+
+这次命令从完成 check run 变为确认 alert rule。你仍需在 serializable transaction 中登记 idempotency key，用 expected version 做条件更新，并让重复确认返回已有结果。
+
+本题没有提示。两个不同 command 并发确认同一 version 时只能一个提交；写入错误、版本冲突和未完成的重复路径都必须结束在明确的 Commit 或 Rollback。

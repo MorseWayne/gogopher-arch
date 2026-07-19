@@ -1,0 +1,33 @@
+{
+  "id":"assessment-gocheck-transaction-v1","version":1,"language":"go1.25","workspace_root":"workspace",
+  "files":[
+    {"source":"README.md","path":"TASK.md","role":"readme","editable":false,"sha256":"362ac42afa46a584e28df8043059b81b00fdee613f1df471fa8105589639fee6"},
+    {"source":"starter/go.mod","path":"go.mod","role":"starter","editable":false,"sha256":"1a3440c3bebbedb74e39b94236596663c1c233ec2d87f5854cc797fa75765372"},
+    {"source":"starter/internal/runs/postgres/store.go","path":"internal/runs/postgres/store.go","role":"starter","editable":true,"sha256":"6ab3e364d8e2cef0bbfa7be20f0831b648ad1395bc723e3d0968172263b90b4c"},
+    {"source":"starter/internal/runs/postgres/store_test.go","path":"internal/runs/postgres/store_test.go","role":"starter","editable":true,"sha256":"4b937b6c2c746515d3b009ad3213481d5af1aff13f58cb37a6f459fb8e0648cf"},
+    {"source":"visible/internal/runs/postgres/smoke_test.go","path":"internal/runs/postgres/smoke_test.go","role":"visible_test","editable":false,"sha256":"e2722f6493e14244288903572fe50107d462ec2474508a87c7b1fabeb6588f89"},
+    {"source":"heldout/internal/runs/postgres/contract_private_test.go","path":"internal/runs/postgres/contract_private_test.go","role":"held_out_test","editable":false,"sha256":"3b039147edfd520ba376407c556755f8bba8a9de08e53d69d6029a9fad1cc5c6"}
+  ],
+  "editable_paths":["internal/runs/postgres/store.go","internal/runs/postgres/store_test.go"],
+  "readonly_paths":["TASK.md","go.mod","internal/runs/postgres/smoke_test.go"],
+  "workspace_policy":{"allow_new_files":true,"allow_delete_files":false},
+  "limits":{"max_files":14,"max_file_bytes":131072,"max_total_bytes":524288},
+  "actions":{"build":{"timeout_ms":10000,"max_output_bytes":131072,"network":"none"},"test":{"timeout_ms":12000,"max_output_bytes":131072,"network":"none"},"vet":{"timeout_ms":10000,"max_output_bytes":131072,"network":"none"},"submit":{"timeout_ms":30000,"max_output_bytes":262144,"network":"none"}},
+  "hints":[
+    {"id":"command-first","level":1,"title":"先登记幂等命令","body":"在同一 transaction 内先 INSERT command key；RETURNING 无行说明 key 已存在，此时只读取既有结果。"},
+    {"id":"version-in-where","level":2,"title":"把并发条件放进 UPDATE","body":"expected version 必须进入 WHERE；UPDATE RETURNING 无行时返回 ErrConflict，而不是先 SELECT 后无条件 UPDATE。"},
+    {"id":"one-transaction-handle","level":3,"title":"整个动作只使用 tx","body":"登记、条件更新和重复读取都调用 tx.QueryRowContext；中途不要退回 s.db，否则会失去同一连接与原子边界。"}
+  ],
+  "visible_tests":["internal/runs/postgres/smoke_test.go"],"held_out_tests":["internal/runs/postgres/contract_private_test.go"],"race_tests":[],
+  "assessment_rules":[
+    {"rule_id":"transaction-store-builds","stage":"build","selector":{"package":"./..."},"capability_refs":[{"id":"M2-06","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"serializable-transaction-boundary","stage":"held_out_test","selector":{"test":"TestSerializableTransactionBoundary"},"capability_refs":[{"id":"M2-06","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"idempotency-replay-stable","stage":"held_out_test","selector":{"test":"TestIdempotencyReplayStable"},"capability_refs":[{"id":"M2-06","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"concurrent-update-conflict-stable","stage":"held_out_test","selector":{"test":"TestConcurrentUpdateConflictStable"},"capability_refs":[{"id":"M2-06","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"failure-rolls-back","stage":"held_out_test","selector":{"test":"TestFailureRollsBack"},"capability_refs":[{"id":"M2-06","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"transaction-calls-present","stage":"ast","selector":{"file":"internal/runs/postgres/store.go","required_calls":["tx.QueryRowContext","tx.Commit","tx.Rollback"]},"capability_refs":[{"id":"M2-06","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"transaction-tests-present","stage":"ast","selector":{"file":"internal/runs/postgres/store_test.go","minimum_cases":4},"capability_refs":[{"id":"M2-06","version":1}],"evidence_type":"test","condition":"passed"},
+    {"rule_id":"transaction-decisions-explained","stage":"explanation","selector":{"minimum_chars":160,"required_terms":["transaction","serializable","idempotency key","optimistic concurrency","rollback"]},"capability_refs":[{"id":"M2-06","version":1}],"evidence_type":"diagnose","condition":"passed"}
+  ],
+  "artifact_rules":{"workspace":"full","logs":["build","test","vet","submit"]}
+}

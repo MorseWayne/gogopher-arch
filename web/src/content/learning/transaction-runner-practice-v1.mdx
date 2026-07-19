@@ -1,0 +1,5 @@
+## 事务边界必须覆盖完整业务动作
+
+`sql.Tx` 绑定一条连接，并把多条语句放进同一个提交或回滚边界。练习先实现 `WithinTx`：回调成功才 Commit，回调失败或发生 panic 都要 Rollback，开始事务和提交错误必须原样返回。
+
+不要在事务回调中改用裸 `*sql.DB`，否则语句可能落到另一条连接，失去原子性。`defer tx.Rollback()` 可以作为所有提前返回路径的安全网；Commit 后再次 Rollback 只会得到 `sql.ErrTxDone`。

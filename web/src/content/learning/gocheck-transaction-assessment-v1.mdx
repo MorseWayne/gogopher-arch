@@ -1,0 +1,5 @@
+## 独立实现 run 完成事务
+
+一次完成命令必须在 serializable transaction 中先登记 idempotency key，再用 expected version 更新 run。相同 key 重放时读取并返回既有结果，不再次更新；不同 key 并发使用相同 version 时只能有一个成功，另一个稳定返回领域冲突。
+
+隐藏 driver 会验证 BeginTx 隔离级别、参数化 QueryRowContext、提交与回滚，实际并发执行两个命令，并注入写入故障。请补充至少四个事务契约 case，并解释 transaction、serializable、idempotency key、optimistic concurrency 和 rollback 如何共同保证一致性。
