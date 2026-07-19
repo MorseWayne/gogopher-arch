@@ -23,7 +23,7 @@ func TestLoadRegistryIndexesCurrentAndHistoricalDefinitions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, want := len(definitions), 115; got != want {
+	if got, want := len(definitions), 122; got != want {
 		t.Fatalf("len(Definitions()) = %d, want %d", got, want)
 	}
 	ref := DefinitionRef{ReleaseID: testReleaseID, Kind: KindActivity, ID: "assessment-check-config", Version: 5}
@@ -167,6 +167,7 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 		{"M2-01", 1, "practice-http-request-slice", "assessment-gocheck-http", "review-jobwatch-http"},
 		{"M2-02", 1, "practice-json-api-contract", "assessment-gocheck-api", "review-alert-api"},
 		{"M2-03", 1, "practice-gocheck-architecture", "assessment-gocheck-architecture", "review-gocheck-alert-architecture"},
+		{"M2-04", 1, "practice-sql-pool", "assessment-gocheck-sql", "review-gocheck-alert-sql"},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.capabilityID, func(t *testing.T) {
@@ -323,6 +324,32 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 	architectureReview, err := registry.ReviewActivity(testReleaseID, architectureActivity.CapabilityRefs)
 	if err != nil || architectureReview.ID != "review-gocheck-alert-architecture" || architectureReview.EvidenceContext != "variant" {
 		t.Fatalf("M2-03 review = %#v, %v", architectureReview, err)
+	}
+
+	sqlActivity, err := registry.ActivityView(testReleaseID, "assessment-gocheck-sql", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sqlTask, err := registry.ExecutionTask(testReleaseID, sqlActivity.TaskRef.ID, sqlActivity.TaskRef.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(sqlTask.AssessmentRules) != 9 || len(sqlTask.Files) != 7 {
+		t.Fatalf("M2-04 task contract = rules %d files %d", len(sqlTask.AssessmentRules), len(sqlTask.Files))
+	}
+	if calls := sqlTask.AssessmentRules[2].Selector.RequiredCalls; len(calls) != 4 {
+		t.Fatalf("M2-04 pool setters = %#v", calls)
+	}
+	sqlWorkspace, err := registry.PublicWorkspace(testReleaseID, sqlTask.ID, sqlTask.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, exists := sqlWorkspace["internal/checks/postgres/contract_private_test.go"]; exists {
+		t.Fatal("M2-04 public workspace contains private SQL driver")
+	}
+	sqlReview, err := registry.ReviewActivity(testReleaseID, sqlActivity.CapabilityRefs)
+	if err != nil || sqlReview.ID != "review-gocheck-alert-sql" || sqlReview.EvidenceContext != "variant" {
+		t.Fatalf("M2-04 review = %#v, %v", sqlReview, err)
 	}
 }
 

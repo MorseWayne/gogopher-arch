@@ -1,0 +1,5 @@
+## 把 SQL 资源规则迁移到 alerts
+
+仍在 gocheck-hub，但表、参数和领域类型已经换成 alert rule。你需要重新完成 pool 配置、保存、列表和单行读取，并保持 Context 取消、Rows 生命周期和错误映射契约。
+
+本题没有提示。隐藏 driver 不依赖具体数据库服务，却会像真实 driver 一样通过 `database/sql` 返回 Rows、Scan 错误和取消结果。

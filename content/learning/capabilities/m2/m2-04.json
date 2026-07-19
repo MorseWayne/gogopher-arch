@@ -1,0 +1,13 @@
+{
+  "id": "M2-04", "version": 1, "name": "database/sql、连接池与查询资源",
+  "description": "能够配置 database/sql 连接池，使用 Context 执行参数化查询，正确处理 Rows、Scan、迭代错误与取消。",
+  "milestone": "M2", "domain": "database-sql-query-resources",
+  "prerequisites": {"hard": [{"id": "M2-03", "version": 1}, {"id": "M1-13", "version": 1}], "recommended": []},
+  "required_evidence": [
+    {"type": "implement", "independence": "independent", "context": "same_context", "rule_ids": ["sql-storage-builds", "pool-contract-correct", "pool-setters-present", "context-queries-correct", "rows-lifecycle-correct", "single-row-errors-stable", "query-cancellation-propagates"]},
+    {"type": "test", "independence": "independent", "context": "same_context", "rule_ids": ["sql-boundary-tests-present"]},
+    {"type": "diagnose", "independence": "independent", "context": "same_context", "rule_ids": ["sql-resources-explained"]}
+  ],
+  "review_policy": {"first_review_after_days": 7, "success_interval_days": 30, "failure_remediation_after_days": 1},
+  "resource_refs": ["web/src/content/learning/sql-pool-practice-v1.mdx", "https://go.dev/doc/database/manage-connections", "https://go.dev/doc/database/querying", "https://pkg.go.dev/database/sql"]
+}

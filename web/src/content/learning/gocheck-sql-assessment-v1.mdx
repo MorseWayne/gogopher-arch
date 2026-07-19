@@ -1,0 +1,5 @@
+## 独立实现 checks SQL storage
+
+为 M2-03 的 checks use case 增加 `database/sql` 实现。隐藏 driver 会验证参数化 `ExecContext`、`QueryContext`、`QueryRowContext`，主动制造取消、无记录、Scan 失败和 Rows 迭代失败。
+
+多行查询必须在成功取得 Rows 后立即安排 Close，逐行 Scan，并在循环后检查 Rows.Err。单行查询则直接 Scan，并只把 `sql.ErrNoRows` 转成领域错误。请补充表格测试并解释 connection pool、QueryContext、Scan、Close 各自负责什么。
