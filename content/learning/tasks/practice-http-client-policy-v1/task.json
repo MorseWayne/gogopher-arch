@@ -1,0 +1,16 @@
+{
+  "id":"practice-http-client-policy-v1","version":1,"language":"go1.25","workspace_root":"workspace",
+  "files":[
+    {"source":"README.md","path":"README.md","role":"readme","editable":false,"sha256":"cc48cee1805286c94d29c960f1e69ca59e5085b203c270ac05ece28accca0ee6"},
+    {"source":"starter/go.mod","path":"go.mod","role":"starter","editable":false,"sha256":"1a3440c3bebbedb74e39b94236596663c1c233ec2d87f5854cc797fa75765372"},
+    {"source":"starter/clientpolicy/client.go","path":"clientpolicy/client.go","role":"starter","editable":true,"sha256":"76a2df21c1158d3a498132be143b80fe990faae7c7c62a7f012337088dfc9d13"},
+    {"source":"visible/clientpolicy/client_test.go","path":"clientpolicy/client_test.go","role":"visible_test","editable":false,"sha256":"3c2e89b10c689a2e0846c5b6df21ee7e97134a837c84eccaac64e12b76c65316"}
+  ],
+  "editable_paths":["clientpolicy/client.go"],"readonly_paths":["README.md","go.mod","clientpolicy/client_test.go"],"workspace_policy":{"allow_new_files":false,"allow_delete_files":false},
+  "limits":{"max_files":8,"max_file_bytes":65536,"max_total_bytes":262144},
+  "actions":{"build":{"timeout_ms":8000,"max_output_bytes":65536,"network":"none"},"test":{"timeout_ms":8000,"max_output_bytes":65536,"network":"none"},"vet":{"timeout_ms":8000,"max_output_bytes":65536,"network":"none"},"submit":{"timeout_ms":15000,"max_output_bytes":131072,"network":"none"}},
+  "hints":[{"id":"clone-transport","level":1,"title":"Clone 后再配置","body":"把 http.DefaultTransport 断言为 *http.Transport 并调用 Clone，避免修改进程共享默认值。"},{"id":"layered-timeouts","level":2,"title":"整体期限与阶段期限分层","body":"Client.Timeout 覆盖整个交换，TLSHandshakeTimeout 与 ResponseHeaderTimeout 分别约束握手和等待响应头。"}],
+  "visible_tests":["clientpolicy/client_test.go"],"held_out_tests":[],"race_tests":[],
+  "assessment_rules":[{"rule_id":"http-client-policy-practiced","stage":"visible_test","selector":{"test":"TestNewClientPolicy"},"capability_refs":[{"id":"M2-07","version":1}],"evidence_type":"implement","condition":"passed"}],
+  "artifact_rules":{"workspace":"full","logs":["build","test","vet","submit"]}
+}

@@ -1,0 +1,5 @@
+## 为外部调用建立独立策略
+
+不要直接复用可变的 `http.DefaultTransport`，也不要创建没有 timeout 的裸 client。本练习通过 Clone 获得独立 Transport，配置连接复用、TLS handshake、response header 与整体请求期限。
+
+`http.Client.Timeout` 是整个交换的上限，Transport 的分阶段 timeout 帮助区分连接或响应头停滞。业务调用仍必须用请求 Context，让上游取消可以早于整体期限结束。

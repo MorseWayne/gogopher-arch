@@ -1,0 +1,5 @@
+## 独立实现外部 probe client
+
+gocheck-hub 需要调用外部 probe 服务。请求必须携带调用方 Context，正确转义 target，并在任何响应状态下关闭 Body。读取大小必须有硬上限，429、其他 4xx 和 5xx 映射为稳定领域错误。
+
+client 层不能自动重试：429 需要交给拥有预算和调度信息的上层，5xx 也可能发生在依赖已经处理请求之后。隐藏测试会统计请求次数、阻塞到取消、跟踪 Body.Close 并返回超限内容。请补充至少五个 case，并解释 http.Client、context、Close、429 与 retry 边界。

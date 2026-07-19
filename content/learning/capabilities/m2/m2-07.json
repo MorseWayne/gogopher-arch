@@ -1,0 +1,13 @@
+{
+  "id": "M2-07", "version": 1, "name": "外部 HTTP client、超时与失败边界",
+  "description": "能够使用受控 http.Client 调用外部依赖，传播取消、关闭并限制响应体，稳定映射限流与上游错误，并明确安全重试边界。",
+  "milestone": "M2", "domain": "external-http-client-failure-boundaries",
+  "prerequisites": {"hard": [{"id": "M2-02", "version": 1}, {"id": "M1-13", "version": 1}], "recommended": []},
+  "required_evidence": [
+    {"type":"implement","independence":"independent","context":"same_context","rule_ids":["http-client-builds","request-contract-correct","client-cancellation-propagates","response-body-bounded","failure-boundaries-stable","client-calls-present"]},
+    {"type":"test","independence":"independent","context":"same_context","rule_ids":["client-tests-present"]},
+    {"type":"diagnose","independence":"independent","context":"same_context","rule_ids":["client-boundaries-explained"]}
+  ],
+  "review_policy":{"first_review_after_days":7,"success_interval_days":30,"failure_remediation_after_days":1},
+  "resource_refs":["web/src/content/learning/http-client-policy-practice-v1.mdx","https://pkg.go.dev/net/http#Client","https://pkg.go.dev/net/http#NewRequestWithContext","https://go.dev/blog/context"]
+}

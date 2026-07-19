@@ -1,0 +1,5 @@
+## 把失败边界迁移到 alert delivery
+
+这次调用是带 JSON body 的 POST delivery。请求一旦离开进程，transport 错误或 5xx 都不能证明对方没有接收，因此 client 不得擅自重试；若未来需要重试，必须由上层结合 delivery idempotency key、预算和退避策略决定。
+
+本题没有提示。请重新处理 Context、请求头、202 响应、Body 关闭、读取上限以及 429/4xx/5xx 映射。

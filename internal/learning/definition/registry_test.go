@@ -23,7 +23,7 @@ func TestLoadRegistryIndexesCurrentAndHistoricalDefinitions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, want := len(definitions), 136; got != want {
+	if got, want := len(definitions), 143; got != want {
 		t.Fatalf("len(Definitions()) = %d, want %d", got, want)
 	}
 	ref := DefinitionRef{ReleaseID: testReleaseID, Kind: KindActivity, ID: "assessment-check-config", Version: 5}
@@ -170,6 +170,7 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 		{"M2-04", 1, "practice-sql-pool", "assessment-gocheck-sql", "review-gocheck-alert-sql"},
 		{"M2-05", 1, "practice-schema-migration", "assessment-gocheck-schema", "review-gocheck-alert-schema"},
 		{"M2-06", 1, "practice-transaction-runner", "assessment-gocheck-transaction", "review-gocheck-alert-transaction"},
+		{"M2-07", 1, "practice-http-client-policy", "assessment-gocheck-http-client", "review-gocheck-alert-delivery"},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.capabilityID, func(t *testing.T) {
@@ -404,6 +405,32 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 	transactionReview, err := registry.ReviewActivity(testReleaseID, transactionActivity.CapabilityRefs)
 	if err != nil || transactionReview.ID != "review-gocheck-alert-transaction" || transactionReview.EvidenceContext != "variant" {
 		t.Fatalf("M2-06 review = %#v, %v", transactionReview, err)
+	}
+
+	httpClientActivity, err := registry.ActivityView(testReleaseID, "assessment-gocheck-http-client", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	httpClientTask, err := registry.ExecutionTask(testReleaseID, httpClientActivity.TaskRef.ID, httpClientActivity.TaskRef.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(httpClientTask.AssessmentRules) != 8 || len(httpClientTask.Files) != 6 {
+		t.Fatalf("M2-07 task contract = rules %d files %d", len(httpClientTask.AssessmentRules), len(httpClientTask.Files))
+	}
+	if calls := httpClientTask.AssessmentRules[5].Selector.RequiredCalls; len(calls) != 2 {
+		t.Fatalf("M2-07 HTTP client calls = %#v", calls)
+	}
+	httpClientWorkspace, err := registry.PublicWorkspace(testReleaseID, httpClientTask.ID, httpClientTask.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, exists := httpClientWorkspace["internal/probe/httpclient/contract_private_test.go"]; exists {
+		t.Fatal("M2-07 public workspace contains private HTTP client contract")
+	}
+	httpClientReview, err := registry.ReviewActivity(testReleaseID, httpClientActivity.CapabilityRefs)
+	if err != nil || httpClientReview.ID != "review-gocheck-alert-delivery" || httpClientReview.EvidenceContext != "variant" {
+		t.Fatalf("M2-07 review = %#v, %v", httpClientReview, err)
 	}
 }
 

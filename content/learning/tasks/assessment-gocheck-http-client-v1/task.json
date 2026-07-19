@@ -1,0 +1,27 @@
+{
+  "id":"assessment-gocheck-http-client-v1","version":1,"language":"go1.25","workspace_root":"workspace",
+  "files":[
+    {"source":"README.md","path":"TASK.md","role":"readme","editable":false,"sha256":"89851b53b35411c6bb0722a70febea56c75c746c6bc88658895c034d1a88a1e1"},
+    {"source":"starter/go.mod","path":"go.mod","role":"starter","editable":false,"sha256":"1a3440c3bebbedb74e39b94236596663c1c233ec2d87f5854cc797fa75765372"},
+    {"source":"starter/internal/probe/httpclient/client.go","path":"internal/probe/httpclient/client.go","role":"starter","editable":true,"sha256":"63daadaf65c4323074278d6bccb55f9fafe90735d0534f0555ec3ca79fb536ee"},
+    {"source":"starter/internal/probe/httpclient/client_test.go","path":"internal/probe/httpclient/client_test.go","role":"starter","editable":true,"sha256":"69d53640bf6b40b13ee0b14ae94e62d635df40669946eb3a22ddba8e458fd281"},
+    {"source":"visible/internal/probe/httpclient/smoke_test.go","path":"internal/probe/httpclient/smoke_test.go","role":"visible_test","editable":false,"sha256":"abed838a7435ec93df573c2e6ea366008d3fc85b1b5e8a20f7200006f14f4909"},
+    {"source":"heldout/internal/probe/httpclient/contract_private_test.go","path":"internal/probe/httpclient/contract_private_test.go","role":"held_out_test","editable":false,"sha256":"fbcff5e2ae17098a82161b6f3bb32cf3093ad137cbbf928000bd2ef8aa9df11f"}
+  ],
+  "editable_paths":["internal/probe/httpclient/client.go","internal/probe/httpclient/client_test.go"],"readonly_paths":["TASK.md","go.mod","internal/probe/httpclient/smoke_test.go"],"workspace_policy":{"allow_new_files":true,"allow_delete_files":false},
+  "limits":{"max_files":14,"max_file_bytes":131072,"max_total_bytes":524288},
+  "actions":{"build":{"timeout_ms":10000,"max_output_bytes":131072,"network":"none"},"test":{"timeout_ms":12000,"max_output_bytes":131072,"network":"none"},"vet":{"timeout_ms":10000,"max_output_bytes":131072,"network":"none"},"submit":{"timeout_ms":30000,"max_output_bytes":262144,"network":"none"}},
+  "hints":[{"id":"url-query-builder","level":1,"title":"用 net/url 组装 query","body":"解析 base URL，复制后设置 Path，再通过 url.Values.Encode 写入 target，避免字符串拼接漏转义。"},{"id":"close-before-status","level":2,"title":"Do 成功就接管 Body","body":"只要 response 非 nil，就立即 defer Body.Close；429 和 5xx 路径也必须归还连接资源。"},{"id":"limit-plus-one","level":3,"title":"读取 maxBody+1 才能判断超限","body":"io.LimitReader 限制为 maxBody+1，ReadAll 后长度大于 maxBody 即返回 ErrBodyTooLarge。"}],
+  "visible_tests":["internal/probe/httpclient/smoke_test.go"],"held_out_tests":["internal/probe/httpclient/contract_private_test.go"],"race_tests":[],
+  "assessment_rules":[
+    {"rule_id":"http-client-builds","stage":"build","selector":{"package":"./..."},"capability_refs":[{"id":"M2-07","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"request-contract-correct","stage":"held_out_test","selector":{"test":"TestRequestContractAndBodyLifecycle"},"capability_refs":[{"id":"M2-07","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"client-cancellation-propagates","stage":"held_out_test","selector":{"test":"TestCancellationPropagates"},"capability_refs":[{"id":"M2-07","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"response-body-bounded","stage":"held_out_test","selector":{"test":"TestResponseBodyBounded"},"capability_refs":[{"id":"M2-07","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"failure-boundaries-stable","stage":"held_out_test","selector":{"test":"TestFailureBoundariesAndNoRetry"},"capability_refs":[{"id":"M2-07","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"client-calls-present","stage":"ast","selector":{"file":"internal/probe/httpclient/client.go","required_calls":["http.NewRequestWithContext","io.LimitReader"]},"capability_refs":[{"id":"M2-07","version":1}],"evidence_type":"implement","condition":"passed"},
+    {"rule_id":"client-tests-present","stage":"ast","selector":{"file":"internal/probe/httpclient/client_test.go","minimum_cases":5},"capability_refs":[{"id":"M2-07","version":1}],"evidence_type":"test","condition":"passed"},
+    {"rule_id":"client-boundaries-explained","stage":"explanation","selector":{"minimum_chars":150,"required_terms":["http.Client","context","Close","429","retry"]},"capability_refs":[{"id":"M2-07","version":1}],"evidence_type":"diagnose","condition":"passed"}
+  ],
+  "artifact_rules":{"workspace":"full","logs":["build","test","vet","submit"]}
+}
