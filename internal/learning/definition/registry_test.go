@@ -23,7 +23,7 @@ func TestLoadRegistryIndexesCurrentDefinitions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, want := len(definitions), 192; got != want {
+	if got, want := len(definitions), 199; got != want {
 		t.Fatalf("len(Definitions()) = %d, want %d", got, want)
 	}
 	ref := DefinitionRef{ReleaseID: testReleaseID, Kind: KindActivity, ID: "assessment-check-config", Version: 5}
@@ -210,6 +210,7 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 		{"M2-12", 1, "practice-request-telemetry", "assessment-gocheck-observability", "review-gocheck-alert-observability"},
 		{"M2-13", 1, "practice-manual-clock", "assessment-gocheck-test-layers", "review-gocheck-alert-test-layers"},
 		{"M2-14", 1, "practice-release-gates", "assessment-gocheck-delivery", "review-gocheck-alert-delivery-pipeline"},
+		{"M2-15", 1, "practice-miniflux-call-chain", "assessment-miniflux-category-validation", "review-miniflux-retry-after"},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.capabilityID, func(t *testing.T) {
@@ -664,6 +665,34 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 	deliveryReview, err := registry.ReviewActivity(testReleaseID, deliveryActivity.CapabilityRefs)
 	if err != nil || deliveryReview.ID != "review-gocheck-alert-delivery-pipeline" || deliveryReview.EvidenceContext != "variant" {
 		t.Fatalf("M2-14 review = %#v, %v", deliveryReview, err)
+	}
+
+	minifluxActivity, err := registry.ActivityView(testReleaseID, "assessment-miniflux-category-validation", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	minifluxTask, err := registry.ExecutionTask(testReleaseID, minifluxActivity.TaskRef.ID, minifluxActivity.TaskRef.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if minifluxTask.Language != "go1.26" || len(minifluxTask.AssessmentRules) != 6 || len(minifluxTask.Files) != 10 {
+		t.Fatalf("M2-15 task contract = language %s rules %d files %d", minifluxTask.Language, len(minifluxTask.AssessmentRules), len(minifluxTask.Files))
+	}
+	minifluxWorkspace, err := registry.PublicWorkspace(testReleaseID, minifluxTask.ID, minifluxTask.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, exists := minifluxWorkspace["internal/validator/contract_private_test.go"]; exists {
+		t.Fatal("M2-15 public workspace contains private Miniflux contract")
+	}
+	for _, required := range []string{"LICENSE", "UPSTREAM.md", "internal/model/category.go"} {
+		if _, exists := minifluxWorkspace[required]; !exists {
+			t.Fatalf("M2-15 public workspace is missing %s", required)
+		}
+	}
+	minifluxReview, err := registry.ReviewActivity(testReleaseID, minifluxActivity.CapabilityRefs)
+	if err != nil || minifluxReview.ID != "review-miniflux-retry-after" || minifluxReview.EvidenceContext != "variant" {
+		t.Fatalf("M2-15 review = %#v, %v", minifluxReview, err)
 	}
 }
 

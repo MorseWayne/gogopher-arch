@@ -8,7 +8,7 @@
   "properties": {
     "id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*-v[0-9]+$"},
     "version": {"type": "integer", "minimum": 1},
-    "language": {"const": "go1.25"},
+    "language": {"enum": ["go1.25", "go1.26"]},
     "workspace_root": {"const": "workspace"},
     "files": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/file"}},
     "editable_paths": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/path"}},

@@ -1,6 +1,6 @@
 # GoGopher Arch
 
-[![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat&logo=go)](https://go.dev/)
+[![Go Version](https://img.shields.io/badge/Go-1.26+-00ADD8?style=flat&logo=go)](https://go.dev/)
 [![React](https://img.shields.io/badge/Frontend-React%20%2B%20TypeScript-61DAFB?style=flat&logo=react)](https://react.dev/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
@@ -32,7 +32,7 @@ GoGopher Arch 是一个以 Capability、Evidence 和 Review 为核心的 Go 学�
 - Evidence projection 更新 Snapshot，并生成 acquisition、due review 或 remediation；
 - Playwright 在全新 PostgreSQL 上验证 guided → assessment → review 闭环。
 
-当前 `m1-first-slice-v32` 已发布 M1-01 至 M1-14、M2-01 至 M2-14。学习主链已从 Go 基础与工程能力，逐步进入 HTTP/API、业务分层、SQL 与 migration、事务一致性、外部依赖、资源级访问控制、运行时生命周期、缓存、可观测、分层测试与交付门禁。
+当前 `m1-first-slice-v33` 已发布 M1-01 至 M1-14、M2-01 至 M2-15。学习主链已从 Go 基础与工程能力，逐步进入 HTTP/API、业务分层、SQL 与 migration、事务一致性、外部依赖、资源级访问控制、运行时生命周期、缓存、可观测、分层测试、交付门禁与固定版本开源项目修改。
 
 ## 快速开始
 
@@ -167,8 +167,8 @@ go run ./cmd/learning-content validate --activity-set m1-first-slice
 ```bash
 go run ./cmd/learning-content release \
   --activity-set m1-first-slice \
-  --release-id m1-first-slice-v32 \
-  --created-at 2026-07-19T14:42:51Z
+  --release-id m1-first-slice-v33 \
+  --created-at 2026-07-19T15:17:52Z
 ```
 
 在更新 `current-release.json` 前验证 manifest、文件 hash 和 frontend bundle：
@@ -176,7 +176,7 @@ go run ./cmd/learning-content release \
 ```bash
 npm run build --prefix web
 go run ./cmd/learning-content verify \
-  --release-dir content/learning/releases/m1-first-slice-v32 \
+  --release-dir content/learning/releases/m1-first-slice-v33 \
   --web-dist web/dist
 ```
 
@@ -211,7 +211,7 @@ npm test --prefix web -- --run
 npm run build --prefix web
 ./scripts/check-compose-exposure.sh
 go run ./cmd/learning-content verify \
-  --release-dir content/learning/releases/m1-first-slice-v32 \
+  --release-dir content/learning/releases/m1-first-slice-v33 \
   --web-dist web/dist
 npm run e2e:compose --prefix web
 git diff --check

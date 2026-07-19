@@ -1,0 +1,43 @@
+{
+  "id": "assessment-miniflux-category-validation-v1",
+  "version": 1,
+  "language": "go1.26",
+  "workspace_root": "workspace",
+  "files": [
+    {"source":"README.md","path":"TASK.md","role":"readme","editable":false,"sha256":"b2db11e7ad137b267ce8ef8c3f6973e71802b39ea3fc2530e54c7fadf30fd577"},
+    {"source":"UPSTREAM.md","path":"UPSTREAM.md","role":"fixture","editable":false,"sha256":"d34fc5eab48d39f043d18ba64c96c8f9fcadba214ef90d7e0904cd1d15de7334"},
+    {"source":"LICENSE","path":"LICENSE","role":"fixture","editable":false,"sha256":"0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"},
+    {"source":"starter/go.mod","path":"go.mod","role":"starter","editable":false,"sha256":"bde2bf189feba599be4cec4e34759ac2a685ef54266b2050086f13f93c286d6b"},
+    {"source":"starter/internal/model/category.go","path":"internal/model/category.go","role":"starter","editable":false,"sha256":"6be4375ea709f1410f3e6f8e6d091ee6e89ffaed562ee15426861de00067aa00"},
+    {"source":"starter/internal/locale/localized_error.go","path":"internal/locale/localized_error.go","role":"starter","editable":false,"sha256":"4a944512e4d7dd72c17a8974256f9cb579a77a4c81a8d6a12a764aa60fb85c30"},
+    {"source":"starter/internal/validator/category.go","path":"internal/validator/category.go","role":"starter","editable":true,"sha256":"a773de5a83d90a2fd55f15ef0de58a0589b0643b407065b4f27ee822cf73bece"},
+    {"source":"starter/internal/validator/category_test.go","path":"internal/validator/category_test.go","role":"starter","editable":true,"sha256":"b98c478d1669cac8ee10782fb55d34a9121d404b58c699f2cbf29721cb91d480"},
+    {"source":"visible/internal/validator/smoke_test.go","path":"internal/validator/smoke_test.go","role":"visible_test","editable":false,"sha256":"78b689f1a1e6ba2153ffef3e79a276b08044f6dfb40ec11f7e34de6dfcb91791"},
+    {"source":"heldout/internal/validator/contract_private_test.go","path":"internal/validator/contract_private_test.go","role":"held_out_test","editable":false,"sha256":"31c7dd46126e80a1441778687d300dc73a3e2b71c6defced3de68803716ff962"}
+  ],
+  "editable_paths": ["internal/validator/category.go","internal/validator/category_test.go"],
+  "readonly_paths": ["TASK.md","UPSTREAM.md","LICENSE","go.mod","internal/model/category.go","internal/locale/localized_error.go","internal/validator/smoke_test.go"],
+  "limits": {"max_files":16,"max_file_bytes":65536,"max_total_bytes":262144},
+  "actions": {
+    "build":{"timeout_ms":15000,"max_output_bytes":131072,"network":"none"},
+    "test":{"timeout_ms":15000,"max_output_bytes":131072,"network":"none"},
+    "vet":{"timeout_ms":15000,"max_output_bytes":131072,"network":"none"},
+    "submit":{"timeout_ms":45000,"max_output_bytes":262144,"network":"none"}
+  },
+  "hints": [
+    {"id":"normalize-first","level":1,"title":"先规范化再做任何判断","body":"create 与 update 都应先 TrimSpace，后续长度、重复查询和 request mutation 使用同一个值。"},
+    {"id":"count-runes","level":2,"title":"边界按 Unicode rune 计算","body":"标题长度不是 UTF-8 byte 数；使用 utf8.RuneCountInString 验证 100 rune 上限。"},
+    {"id":"training-seam","level":3,"title":"区分上游与训练 seam","body":"CategoryStore 只替换具体 storage 依赖以隔离数据库，不改变 handler → validator → storage 的上游调用方向。"}
+  ],
+  "visible_tests": ["internal/validator/smoke_test.go"],
+  "held_out_tests": ["internal/validator/contract_private_test.go"],
+  "assessment_rules": [
+    {"rule_id":"miniflux-slice-builds","stage":"build","selector":{"package":"./..."},"capability_refs":[{"id":"M2-15","version":1}],"evidence_type":"test","condition":"passed"},
+    {"rule_id":"category-normalization-contract","stage":"held_out_test","selector":{"test":"TestCategoryNormalizationContract"},"capability_refs":[{"id":"M2-15","version":1}],"evidence_type":"test","condition":"passed"},
+    {"rule_id":"category-update-contract","stage":"held_out_test","selector":{"test":"TestCategoryUpdateContract"},"capability_refs":[{"id":"M2-15","version":1}],"evidence_type":"test","condition":"passed"},
+    {"rule_id":"category-test-cases","stage":"ast","selector":{"file":"internal/validator/category_test.go","minimum_cases":6},"capability_refs":[{"id":"M2-15","version":1}],"evidence_type":"test","condition":"passed"},
+    {"rule_id":"category-normalizer-used","stage":"ast","selector":{"file":"internal/validator/category.go","required_calls":["strings.TrimSpace","utf8.RuneCountInString"]},"capability_refs":[{"id":"M2-15","version":1}],"evidence_type":"test","condition":"passed"},
+    {"rule_id":"miniflux-patch-explained","stage":"explanation","selector":{"minimum_chars":220,"required_terms":["fixed commit","API chain","training patch","test boundary","rollback"]},"capability_refs":[{"id":"M2-15","version":1}],"evidence_type":"diagnose","condition":"passed"}
+  ],
+  "artifact_rules": {"workspace":"full","logs":["build","test","vet","submit"]}
+}

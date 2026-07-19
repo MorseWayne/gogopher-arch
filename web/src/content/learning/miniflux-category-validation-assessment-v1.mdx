@@ -1,0 +1,3 @@
+# 独立完成 Miniflux category 校验 patch
+
+训练切片保持 Miniflux v2.3.2 的真实 module、路径、model 与 validator 结构，只用最小 store seam 隔离 PostgreSQL。请让 create/update 共用 Unicode 安全的 title 规范化规则：去除首尾空白，拒绝空标题与超过 100 个 rune 的标题，并用规范化值执行重复检查和后续 patch。补齐表格测试，并解释这份训练 patch 如何映射回上游、如何验证以及如何回滚。

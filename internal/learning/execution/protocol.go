@@ -15,6 +15,7 @@ import (
 const (
 	ProtocolVersion        = 1
 	GoLanguage             = "go1.25"
+	GoLanguage126          = "go1.26"
 	WorkspaceRoot          = "workspace"
 	MaxProtocolFiles       = 64
 	MaxProtocolFileBytes   = 1 << 20
@@ -233,8 +234,8 @@ func (s ExecutionSpec) Validate() error {
 	if !identifierPattern.MatchString(s.ExecutionID) {
 		return invalid("execution_id", "must be a non-empty safe identifier of at most 128 characters")
 	}
-	if s.Language != GoLanguage {
-		return invalid("language", "must equal %q", GoLanguage)
+	if s.Language != GoLanguage && s.Language != GoLanguage126 {
+		return invalid("language", "must equal %q or %q", GoLanguage, GoLanguage126)
 	}
 	if s.WorkspaceRoot != WorkspaceRoot {
 		return invalid("workspace_root", "must equal %q", WorkspaceRoot)

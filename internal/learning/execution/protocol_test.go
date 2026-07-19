@@ -49,6 +49,7 @@ func TestExecutionSpecValidationInvariants(t *testing.T) {
 		field  string
 	}{
 		{name: "protocol version", mutate: func(s *ExecutionSpec) { s.ProtocolVersion = 2 }, field: "protocol_version"},
+		{name: "unsupported language", mutate: func(s *ExecutionSpec) { s.Language = "go1.27" }, field: "language"},
 		{name: "arbitrary action", mutate: func(s *ExecutionSpec) { s.Action = "go test; rm -rf /" }, field: "action"},
 		{name: "absolute path", mutate: func(s *ExecutionSpec) { s.Files[0].Path = "/tmp/main.go" }, field: "files[0].path"},
 		{name: "parent path", mutate: func(s *ExecutionSpec) { s.Files[0].Path = "../main.go" }, field: "files[0].path"},
@@ -91,6 +92,16 @@ func TestExecutionSpecValidationInvariants(t *testing.T) {
 				t.Fatalf("Validate() error = %v, want field %s", err, test.field)
 			}
 		})
+	}
+}
+
+func TestExecutionSpecAcceptsSupportedGoLanguages(t *testing.T) {
+	for _, language := range []string{GoLanguage, GoLanguage126} {
+		spec := validSpec(ActionTest)
+		spec.Language = language
+		if err := spec.Validate(); err != nil {
+			t.Fatalf("Validate(%s) error = %v", language, err)
+		}
 	}
 }
 

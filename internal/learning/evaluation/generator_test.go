@@ -3,8 +3,8 @@ package evaluation
 import (
 	"context"
 	"os"
-	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -27,9 +27,9 @@ func TestMain(m *testing.M) {
 		_, _ = os.Stderr.WriteString("create evaluation cache: " + err.Error() + "\n")
 		os.Exit(1)
 	}
-	realGo, err := exec.LookPath("go")
-	if err != nil {
-		_, _ = os.Stderr.WriteString("find go binary: " + err.Error() + "\n")
+	realGo := filepath.Join(runtime.GOROOT(), "bin", "go")
+	if _, err := os.Stat(realGo); err != nil {
+		_, _ = os.Stderr.WriteString("find active Go toolchain: " + err.Error() + "\n")
 		_ = os.RemoveAll(cacheRoot)
 		os.Exit(1)
 	}

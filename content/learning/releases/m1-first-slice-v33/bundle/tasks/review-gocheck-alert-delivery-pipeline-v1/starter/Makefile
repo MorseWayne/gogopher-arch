@@ -1,0 +1,3 @@
+.PHONY: verify
+verify:
+	go test ./...

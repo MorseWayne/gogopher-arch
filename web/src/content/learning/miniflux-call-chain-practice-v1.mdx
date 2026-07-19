@@ -1,0 +1,5 @@
+# 在固定 Miniflux 源码中建立两条调用链
+
+本任务只认 Miniflux v2.3.2、commit `51f2e0d8199ea8fa305081f6e175bba64b0ef94b`。从 route 或 scheduler 入口开始，记录文件、符号和职责，不要按目录名猜测架构。你需要分别追踪 category creation API 与后台 feed refresh，直到 storage 或调度结果被写回。
+
+上游源码采用 Apache-2.0；训练切片必须保留来源、commit、SPDX 和修改说明。固定 commit 是证据的一部分，`main` 或 `latest` 不能替代可复现基线。

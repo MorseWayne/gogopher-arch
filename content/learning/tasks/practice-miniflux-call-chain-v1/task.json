@@ -1,0 +1,34 @@
+{
+  "id": "practice-miniflux-call-chain-v1",
+  "version": 1,
+  "language": "go1.26",
+  "workspace_root": "workspace",
+  "files": [
+    {"source":"README.md","path":"TASK.md","role":"readme","editable":false,"sha256":"73ca4fcbf5003dbb11b707cf2347c6a78af4a4e672e3e0bdaf35ba7541412986"},
+    {"source":"starter/go.mod","path":"go.mod","role":"starter","editable":false,"sha256":"9814aeeb743599acbcd1e329795d5858940a90623b702cc5ca43bc439767ac2d"},
+    {"source":"starter/trace/trace.go","path":"trace/trace.go","role":"starter","editable":true,"sha256":"32f65a126a834eae303c96bebd56b9696e43e36d394330a9978d271d07616c72"},
+    {"source":"visible/trace/trace_test.go","path":"trace/trace_test.go","role":"visible_test","editable":false,"sha256":"497379452469cf61499fc70e650d75aea8a043416942e92a12df44462334d70f"},
+    {"source":"heldout/trace/contract_private_test.go","path":"trace/contract_private_test.go","role":"held_out_test","editable":false,"sha256":"b6f7c577fced3b74bd08c5a18cf2f0c28838e82feef70539fb650f3fe9d91229"}
+  ],
+  "editable_paths": ["trace/trace.go"],
+  "readonly_paths": ["TASK.md","go.mod","trace/trace_test.go"],
+  "limits": {"max_files":10,"max_file_bytes":65536,"max_total_bytes":262144},
+  "actions": {
+    "build":{"timeout_ms":15000,"max_output_bytes":65536,"network":"none"},
+    "test":{"timeout_ms":15000,"max_output_bytes":65536,"network":"none"},
+    "vet":{"timeout_ms":15000,"max_output_bytes":65536,"network":"none"},
+    "submit":{"timeout_ms":45000,"max_output_bytes":131072,"network":"none"}
+  },
+  "hints": [
+    {"id":"api-route","level":1,"title":"从 method-aware route 开始","body":"api.go 把 POST /v1/categories 直接注册到 createCategoryHandler。"},
+    {"id":"scheduler","level":2,"title":"不要跳过 batch 和 pool","body":"feedScheduler 从 storage 取到期 job，再由 Pool.Push 形成进入 worker 的背压边界。"},
+    {"id":"fixed-symbols","level":3,"title":"按固定 commit 记录符号","body":"只填写 v2.3.2 commit 中实际存在的 path、symbol 与职责词。"}
+  ],
+  "solution": "Category creation: api route → createCategoryHandler → ValidateCategoryCreation → CreateCategory. Feed refresh: feedScheduler → FetchJobs → Pool.Push → worker.Run → RefreshFeed。",
+  "visible_tests": ["trace/trace_test.go"],
+  "held_out_tests": ["trace/contract_private_test.go"],
+  "assessment_rules": [
+    {"rule_id":"miniflux-call-chains-traced","stage":"held_out_test","selector":{"test":"TestMinifluxCallChainsMatchFixedCommit"},"capability_refs":[{"id":"M2-15","version":1}],"evidence_type":"implement","condition":"passed"}
+  ],
+  "artifact_rules": {"workspace":"diff","logs":["build","test","vet","submit"]}
+}
