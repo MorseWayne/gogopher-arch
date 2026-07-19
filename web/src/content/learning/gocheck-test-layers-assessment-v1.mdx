@@ -1,0 +1,5 @@
+# 独立评估：让每层测试回答不同问题
+
+Unit test 只验证业务决策，用 deterministic clock、ID source 与 store fake 控制输入。Handler test 用 `httptest` 证明 JSON、状态码和错误协议，不启动真实 listener。Database integration test 则连接真实 PostgreSQL，验证驱动、SQL、schema 与连接生命周期共同工作。
+
+Fixture 是跨层共享的场景数据，不应把数据库实现细节泄漏回 unit test。Sandbox 验证测试结构和隐藏契约；CI/Compose 提供真实 PostgreSQL 并执行 opt-in integration test。

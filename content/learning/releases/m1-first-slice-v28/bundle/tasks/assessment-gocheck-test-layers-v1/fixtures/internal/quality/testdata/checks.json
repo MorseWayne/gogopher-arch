@@ -1,0 +1,4 @@
+[
+  {"name":"homepage","target":"https://example.test/health"},
+  {"name":"worker","target":"https://worker.example.test/ready"}
+]

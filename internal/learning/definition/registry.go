@@ -35,10 +35,11 @@ type RegistryOptions struct {
 }
 
 type Registry struct {
-	contentDir  string
-	current     string
-	releases    map[string]ReleaseManifest
-	definitions map[DefinitionRef]Definition
+	contentDir             string
+	current                string
+	releases               map[string]ReleaseManifest
+	definitions            map[DefinitionRef]Definition
+	registrationReleaseIDs []string
 }
 
 type RegistryHistory interface {
@@ -81,6 +82,15 @@ func LoadRegistry(options RegistryOptions) (*Registry, error) {
 		contentDir: options.ContentDir, current: current,
 		releases: make(map[string]ReleaseManifest), definitions: make(map[DefinitionRef]Definition),
 	}
+	registrationReleaseSet := make(map[string]struct{}, len(options.RequiredReleaseIDs)+1)
+	registrationReleaseSet[current] = struct{}{}
+	for _, required := range options.RequiredReleaseIDs {
+		registrationReleaseSet[required] = struct{}{}
+	}
+	for releaseID := range registrationReleaseSet {
+		registry.registrationReleaseIDs = append(registry.registrationReleaseIDs, releaseID)
+	}
+	sort.Strings(registry.registrationReleaseIDs)
 	for _, entry := range entries {
 		if !entry.IsDir() {
 			continue
@@ -140,6 +150,10 @@ func (r *Registry) ReleaseIDs() []string {
 	}
 	sort.Strings(result)
 	return result
+}
+
+func (r *Registry) releaseIDsForRegistration() []string {
+	return append([]string(nil), r.registrationReleaseIDs...)
 }
 
 func (r *Registry) Manifest(releaseID string) (ReleaseManifest, error) {

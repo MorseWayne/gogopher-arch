@@ -107,7 +107,7 @@ func TestActivityReturnsPublicTaskContextWithoutPrivateEvaluationRules(t *testin
 	if err != nil {
 		t.Fatal(err)
 	}
-	request := authenticatedDefinitionRequest(httptest.NewRequest(http.MethodGet, "/api/v1/learning/activities/guided-run-model?version=7", nil), "learner-activity")
+	request := authenticatedDefinitionRequest(httptest.NewRequest(http.MethodGet, "/api/v1/learning/activities/guided-run-model?version=8", nil), "learner-activity")
 	request.SetPathValue("id", "guided-run-model")
 	response := httptest.NewRecorder()
 	handler.Activity(response, request)
@@ -228,7 +228,7 @@ func TestRoadmapReturnsServerDerivedCapabilityStates(t *testing.T) {
 	if response.Code != http.StatusOK || reader.learnerID != "learner-roadmap" || !reader.asOf.Equal(now) {
 		t.Fatalf("response=%d reader=%#v body=%s", response.Code, reader, response.Body.String())
 	}
-	for _, expected := range []string{`"release_id":"m1-first-slice-v27"`, `"name":"编写并运行第一个 Go 程序"`, `"status":"available"`, `"state":"server_learning_state"`} {
+	for _, expected := range []string{`"release_id":"m1-first-slice-v31"`, `"name":"编写并运行第一个 Go 程序"`, `"status":"available"`, `"state":"server_learning_state"`} {
 		if !strings.Contains(response.Body.String(), expected) {
 			t.Fatalf("body missing %s: %s", expected, response.Body.String())
 		}

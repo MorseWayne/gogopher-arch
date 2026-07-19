@@ -86,7 +86,7 @@ func (s *ReleaseStore) Register(ctx context.Context, registry *Registry) error {
 		return fmt.Errorf("lock definition registration: %w", err)
 	}
 
-	for _, releaseID := range registry.ReleaseIDs() {
+	for _, releaseID := range registry.releaseIDsForRegistration() {
 		manifest, err := registry.Manifest(releaseID)
 		if err != nil {
 			return err

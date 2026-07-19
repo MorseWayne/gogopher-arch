@@ -1,0 +1,1 @@
+-- TODO: use EXPLAIN to inspect the same lookup shape.

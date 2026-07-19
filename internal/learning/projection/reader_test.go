@@ -72,7 +72,7 @@ func TestSelectAcquisitionKeepsBeginnerFirstProgramSequence(t *testing.T) {
 	ref := []definition.VersionedDefinitionRef{{ID: "M1-01", Version: 3}}
 	activities := []definition.ActivityView{
 		{ID: "assessment-first-program", Version: 1, Mode: "assessment", CapabilityRefs: ref},
-		{ID: "guided-run-model", Version: 7, Mode: "guided", CapabilityRefs: ref},
+		{ID: "guided-run-model", Version: 8, Mode: "guided", CapabilityRefs: ref},
 		{ID: "practice-first-program", Version: 1, Mode: "practice", CapabilityRefs: ref},
 	}
 	tests := []struct {

@@ -1,14 +1,12 @@
 package evaluation
 
 import (
-	"context"
 	"strconv"
 	"testing"
 
 	"github.com/MorseWayne/gogopher-arch/internal/learning/attempt"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/execution"
 	"github.com/MorseWayne/gogopher-arch/internal/learning/submission"
-	"github.com/MorseWayne/gogopher-arch/internal/sandbox"
 )
 
 func TestM203LearningLoopSolutionsPassRealReleaseAndSandboxEvaluation(t *testing.T) {
@@ -86,7 +84,7 @@ func TestM203LearningLoopSolutionsPassRealReleaseAndSandboxEvaluation(t *testing
 			if err != nil {
 				t.Fatal(err)
 			}
-			response, err := sandbox.NewRunner(sandbox.RunnerOptions{TempDir: t.TempDir()}).Run(context.Background(), specification)
+			response, err := runRegressionSandbox(t, specification)
 			if err != nil {
 				t.Fatal(err)
 			}

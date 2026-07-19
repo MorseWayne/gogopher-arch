@@ -1,0 +1,90 @@
+{
+  "id": "review-gocheck-alert-test-layers",
+  "version": 2,
+  "title": "迁移 alert API 分层测试",
+  "kind": "learning_task",
+  "mode": "review",
+  "evidence_context": "variant",
+  "capability_refs": [
+    {
+      "id": "M2-13",
+      "version": 1
+    }
+  ],
+  "task_ref": {
+    "id": "review-gocheck-alert-test-layers-v2",
+    "version": 2
+  },
+  "content_ref": "web/src/content/learning/gocheck-alert-test-layers-review-v1.mdx",
+  "assistance_policy": {
+    "hints": false,
+    "references": false,
+    "solution": false,
+    "ai_declaration": true
+  },
+  "evidence_rules": [
+    {
+      "rule_id": "quality-builds",
+      "capability_id": "M2-13",
+      "capability_version": 1,
+      "evidence_type": "test",
+      "result": "passed"
+    },
+    {
+      "rule_id": "unit-test-boundary",
+      "capability_id": "M2-13",
+      "capability_version": 1,
+      "evidence_type": "test",
+      "result": "passed"
+    },
+    {
+      "rule_id": "handler-test-boundary",
+      "capability_id": "M2-13",
+      "capability_version": 1,
+      "evidence_type": "test",
+      "result": "passed"
+    },
+    {
+      "rule_id": "fixture-contract",
+      "capability_id": "M2-13",
+      "capability_version": 1,
+      "evidence_type": "test",
+      "result": "passed"
+    },
+    {
+      "rule_id": "service-test-cases",
+      "capability_id": "M2-13",
+      "capability_version": 1,
+      "evidence_type": "test",
+      "result": "passed"
+    },
+    {
+      "rule_id": "service-fakes-used",
+      "capability_id": "M2-13",
+      "capability_version": 1,
+      "evidence_type": "test",
+      "result": "passed"
+    },
+    {
+      "rule_id": "handler-httptest-used",
+      "capability_id": "M2-13",
+      "capability_version": 1,
+      "evidence_type": "test",
+      "result": "passed"
+    },
+    {
+      "rule_id": "postgres-integration-wired",
+      "capability_id": "M2-13",
+      "capability_version": 1,
+      "evidence_type": "test",
+      "result": "passed"
+    },
+    {
+      "rule_id": "quality-boundaries-explained",
+      "capability_id": "M2-13",
+      "capability_version": 1,
+      "evidence_type": "diagnose",
+      "result": "passed"
+    }
+  ]
+}

@@ -1,0 +1,320 @@
+{
+  "id": "assessment-gocheck-test-layers-v2",
+  "version": 2,
+  "language": "go1.25",
+  "workspace_root": "workspace",
+  "files": [
+    {
+      "source": "README.md",
+      "path": "TASK.md",
+      "role": "readme",
+      "editable": false,
+      "sha256": "3dba208cd334cbdbaae8a5d6bfd5863269c3c10e51a2c2276330e212de638a8d"
+    },
+    {
+      "source": "starter/go.mod",
+      "path": "go.mod",
+      "role": "starter",
+      "editable": false,
+      "sha256": "217ce5b4dfab458c5ee52b597d2ddea1ecb7e044231bbb6ef0af146733d4c534"
+    },
+    {
+      "source": "starter/go.sum",
+      "path": "go.sum",
+      "role": "starter",
+      "editable": false,
+      "sha256": "10f85f016b4bb4919ddc6453cc8c09962bc186a29d39ed064332a23ed5a58115"
+    },
+    {
+      "source": "starter/internal/quality/app.go",
+      "path": "internal/quality/app.go",
+      "role": "starter",
+      "editable": false,
+      "sha256": "eff846765d1f11442907138b20e745cb99dd0d45dc1d43189257fecabb9bc6f1"
+    },
+    {
+      "source": "starter/internal/quality/service_test.go",
+      "path": "internal/quality/service_test.go",
+      "role": "starter",
+      "editable": true,
+      "sha256": "7388ef8a6b8a5eb6190fb103339701a038ccb650d2b3196be40afd68e2b61f53"
+    },
+    {
+      "source": "starter/internal/quality/handler_test.go",
+      "path": "internal/quality/handler_test.go",
+      "role": "starter",
+      "editable": true,
+      "sha256": "9a0036c18c9462b08c158cdbba37150759c52d6c6348048a41d6d5fc4997ab96"
+    },
+    {
+      "source": "starter/internal/quality/postgres_integration_test.go",
+      "path": "internal/quality/postgres_integration_test.go",
+      "role": "starter",
+      "editable": true,
+      "sha256": "a58eec3cc3ef1d25c7515f292a0fe1928fe62b3aae3aa9100fedf9f7bd849030"
+    },
+    {
+      "source": "starter/internal/quality/postgres_driver_integration_test.go",
+      "path": "internal/quality/postgres_driver_integration_test.go",
+      "role": "starter",
+      "editable": false,
+      "sha256": "bdb4074c7d5d50bb5bf8cf7ae9ff9b0d61db78fda4878d676917cacaddb27803"
+    },
+    {
+      "source": "fixtures/internal/quality/testdata/checks.json",
+      "path": "internal/quality/testdata/checks.json",
+      "role": "fixture",
+      "editable": false,
+      "sha256": "e29f9c949408a3be3caa25240f9184fce17fa5690ac7a1423e561cf70c0dd1c5"
+    },
+    {
+      "source": "visible/internal/quality/smoke_test.go",
+      "path": "internal/quality/smoke_test.go",
+      "role": "visible_test",
+      "editable": false,
+      "sha256": "d2ea0ed92bef78268b595d6ada2b7459dc2cd23f2a9a8452c888dec90801c850"
+    },
+    {
+      "source": "heldout/internal/quality/contract_private_test.go",
+      "path": "internal/quality/contract_private_test.go",
+      "role": "held_out_test",
+      "editable": false,
+      "sha256": "2c756734083bf79cbf91dd320780b0857d7be5b52a6911011566ab437971bcdc"
+    }
+  ],
+  "editable_paths": [
+    "internal/quality/service_test.go",
+    "internal/quality/handler_test.go",
+    "internal/quality/postgres_integration_test.go"
+  ],
+  "readonly_paths": [
+    "TASK.md",
+    "go.mod",
+    "internal/quality/app.go",
+    "internal/quality/testdata/checks.json",
+    "internal/quality/smoke_test.go",
+    "go.sum",
+    "internal/quality/postgres_driver_integration_test.go"
+  ],
+  "workspace_policy": {
+    "allow_new_files": true,
+    "allow_delete_files": false
+  },
+  "limits": {
+    "max_files": 18,
+    "max_file_bytes": 131072,
+    "max_total_bytes": 524288
+  },
+  "actions": {
+    "build": {
+      "timeout_ms": 10000,
+      "max_output_bytes": 131072,
+      "network": "none"
+    },
+    "test": {
+      "timeout_ms": 15000,
+      "max_output_bytes": 131072,
+      "network": "none"
+    },
+    "vet": {
+      "timeout_ms": 10000,
+      "max_output_bytes": 131072,
+      "network": "none"
+    },
+    "submit": {
+      "timeout_ms": 35000,
+      "max_output_bytes": 262144,
+      "network": "none"
+    }
+  },
+  "hints": [
+    {
+      "id": "test-through-boundary",
+      "level": 1,
+      "title": "每层只替换下一层依赖",
+      "body": "unit test 替换 Store/Clock/ID；handler test 只替换 Creator；database test 使用真实 PostgreSQL。"
+    },
+    {
+      "id": "integration-opt-in",
+      "level": 2,
+      "title": "本地缺少数据库时明确 Skip",
+      "body": "只有 TEST_DATABASE_URL 为空时 Skip；配置存在后必须 PingContext、注册 Cleanup 并执行隔离 setup。"
+    }
+  ],
+  "visible_tests": [
+    "internal/quality/smoke_test.go"
+  ],
+  "held_out_tests": [
+    "internal/quality/contract_private_test.go"
+  ],
+  "race_tests": [],
+  "assessment_rules": [
+    {
+      "rule_id": "quality-builds",
+      "stage": "build",
+      "selector": {
+        "package": "./..."
+      },
+      "capability_refs": [
+        {
+          "id": "M2-13",
+          "version": 1
+        }
+      ],
+      "evidence_type": "test",
+      "condition": "passed"
+    },
+    {
+      "rule_id": "unit-test-boundary",
+      "stage": "held_out_test",
+      "selector": {
+        "test": "TestUnitBoundarySupportsDeterministicClockAndStoreFake"
+      },
+      "capability_refs": [
+        {
+          "id": "M2-13",
+          "version": 1
+        }
+      ],
+      "evidence_type": "test",
+      "condition": "passed"
+    },
+    {
+      "rule_id": "handler-test-boundary",
+      "stage": "held_out_test",
+      "selector": {
+        "test": "TestHandlerBoundaryUsesServiceFakeAndStableProtocol"
+      },
+      "capability_refs": [
+        {
+          "id": "M2-13",
+          "version": 1
+        }
+      ],
+      "evidence_type": "test",
+      "condition": "passed"
+    },
+    {
+      "rule_id": "fixture-contract",
+      "stage": "held_out_test",
+      "selector": {
+        "test": "TestFixtureSupportsLayeredScenarios"
+      },
+      "capability_refs": [
+        {
+          "id": "M2-13",
+          "version": 1
+        }
+      ],
+      "evidence_type": "test",
+      "condition": "passed"
+    },
+    {
+      "rule_id": "service-test-cases",
+      "stage": "ast",
+      "selector": {
+        "file": "internal/quality/service_test.go",
+        "minimum_cases": 6
+      },
+      "capability_refs": [
+        {
+          "id": "M2-13",
+          "version": 1
+        }
+      ],
+      "evidence_type": "test",
+      "condition": "passed"
+    },
+    {
+      "rule_id": "service-fakes-used",
+      "stage": "ast",
+      "selector": {
+        "file": "internal/quality/service_test.go",
+        "required_calls": [
+          "service.Create",
+          "clock.Now"
+        ]
+      },
+      "capability_refs": [
+        {
+          "id": "M2-13",
+          "version": 1
+        }
+      ],
+      "evidence_type": "test",
+      "condition": "passed"
+    },
+    {
+      "rule_id": "handler-httptest-used",
+      "stage": "ast",
+      "selector": {
+        "file": "internal/quality/handler_test.go",
+        "required_calls": [
+          "httptest.NewRequest",
+          "httptest.NewRecorder",
+          "handler.ServeHTTP"
+        ]
+      },
+      "capability_refs": [
+        {
+          "id": "M2-13",
+          "version": 1
+        }
+      ],
+      "evidence_type": "test",
+      "condition": "passed"
+    },
+    {
+      "rule_id": "postgres-integration-wired",
+      "stage": "ast",
+      "selector": {
+        "file": "internal/quality/postgres_integration_test.go",
+        "required_calls": [
+          "sql.Open",
+          "db.PingContext",
+          "t.Cleanup",
+          "db.ExecContext"
+        ]
+      },
+      "capability_refs": [
+        {
+          "id": "M2-13",
+          "version": 1
+        }
+      ],
+      "evidence_type": "test",
+      "condition": "passed"
+    },
+    {
+      "rule_id": "quality-boundaries-explained",
+      "stage": "explanation",
+      "selector": {
+        "minimum_chars": 180,
+        "required_terms": [
+          "unit test",
+          "httptest",
+          "fixture",
+          "PostgreSQL",
+          "deterministic clock"
+        ]
+      },
+      "capability_refs": [
+        {
+          "id": "M2-13",
+          "version": 1
+        }
+      ],
+      "evidence_type": "diagnose",
+      "condition": "passed"
+    }
+  ],
+  "artifact_rules": {
+    "workspace": "full",
+    "logs": [
+      "build",
+      "test",
+      "vet",
+      "submit"
+    ]
+  }
+}

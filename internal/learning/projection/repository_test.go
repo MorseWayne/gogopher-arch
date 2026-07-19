@@ -245,7 +245,7 @@ func TestPostgresProjectorRebuildsFactsIdempotently(t *testing.T) {
 	if err != nil || capabilityRead.Snapshot == nil || capabilityRead.Snapshot.RetentionState != RetentionStateDue || len(capabilityRead.RecentEvidence) != 2 {
 		t.Fatalf("Capability(M1-03) = %#v, %v", capabilityRead, err)
 	}
-	guidedActivity, _ := registry.ActivityView(registry.CurrentReleaseID(), "guided-run-model", 7)
+	guidedActivity, _ := registry.ActivityView(registry.CurrentReleaseID(), "guided-run-model", 8)
 	guidedTask, _ := registry.TaskView(registry.CurrentReleaseID(), guidedActivity.TaskRef.ID, guidedActivity.TaskRef.Version)
 	openAttemptID := "00000000-0000-4000-8000-000000000116"
 	if _, err := db.ExecContext(ctx, `INSERT INTO "`+schema+`".learning_attempts (

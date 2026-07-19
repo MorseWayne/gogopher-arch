@@ -1,11 +1,11 @@
 {
   "id": "guided-run-model",
-  "version": 7,
+  "version": 8,
   "title": "亲手完成第一个 Go 程序",
   "kind": "learning_task",
   "mode": "guided",
   "capability_refs": [{"id": "M1-01", "version": 3}],
-  "task_ref": {"id": "guided-run-model-v2", "version": 7},
+  "task_ref": {"id": "guided-run-model-v2", "version": 8},
   "content_ref": "web/src/content/learning/first-go-program-guided-v1.mdx",
   "assistance_policy": {"hints": true, "references": true, "solution": true, "ai_declaration": true},
   "evidence_rules": [

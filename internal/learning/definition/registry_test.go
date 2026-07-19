@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-func TestLoadRegistryIndexesCurrentAndHistoricalDefinitions(t *testing.T) {
+func TestLoadRegistryIndexesCurrentDefinitions(t *testing.T) {
 	registry, err := LoadRegistry(RegistryOptions{ContentDir: repositoryContentDir(t)})
 	if err != nil {
 		t.Fatal(err)
@@ -23,7 +23,7 @@ func TestLoadRegistryIndexesCurrentAndHistoricalDefinitions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, want := len(definitions), 178; got != want {
+	if got, want := len(definitions), 185; got != want {
 		t.Fatalf("len(Definitions()) = %d, want %d", got, want)
 	}
 	ref := DefinitionRef{ReleaseID: testReleaseID, Kind: KindActivity, ID: "assessment-check-config", Version: 5}
@@ -44,6 +44,38 @@ func TestLoadRegistryIndexesCurrentAndHistoricalDefinitions(t *testing.T) {
 	}
 	if _, err := registry.Get(DefinitionRef{ReleaseID: testReleaseID, Kind: KindTask, ID: "missing", Version: 1}); !errors.Is(err, ErrDefinitionNotFound) {
 		t.Fatalf("Get(missing) error = %v, want ErrDefinitionNotFound", err)
+	}
+}
+
+func TestRegistryIndexesAllReleasesButRegistersOnlyCurrentAndRequiredHistory(t *testing.T) {
+	contentDir := copyRegistryContent(t)
+	const historicalReleaseID = "m1-first-slice-v29"
+	if err := copyPath(
+		filepath.Join(repositoryContentDir(t), "releases", historicalReleaseID),
+		filepath.Join(contentDir, "releases", historicalReleaseID),
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	registry, err := LoadRegistry(RegistryOptions{ContentDir: contentDir})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := registry.ReleaseIDs(); len(got) != 2 || got[0] != historicalReleaseID || got[1] != testReleaseID {
+		t.Fatalf("ReleaseIDs() = %#v, want [%s %s]", got, historicalReleaseID, testReleaseID)
+	}
+	if got := registry.releaseIDsForRegistration(); len(got) != 1 || got[0] != testReleaseID {
+		t.Fatalf("releaseIDsForRegistration() = %#v, want [%s]", got, testReleaseID)
+	}
+
+	registry, err = LoadRegistry(RegistryOptions{
+		ContentDir: contentDir, RequiredReleaseIDs: []string{historicalReleaseID},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := registry.releaseIDsForRegistration(); len(got) != 2 || got[0] != historicalReleaseID || got[1] != testReleaseID {
+		t.Fatalf("releaseIDsForRegistration() = %#v, want [%s %s]", got, historicalReleaseID, testReleaseID)
 	}
 }
 
@@ -125,7 +157,7 @@ func TestRegistryExposesBeginnerFirstProgramLoop(t *testing.T) {
 	if capability.Name != "编写并运行第一个 Go 程序" || len(capability.Prerequisites.Hard) != 0 || len(capability.RequiredEvidence) != 2 {
 		t.Fatalf("beginner Capability = %#v", capability)
 	}
-	guided, err := registry.ActivityView(testReleaseID, "guided-run-model", 7)
+	guided, err := registry.ActivityView(testReleaseID, "guided-run-model", 8)
 	if err != nil || guided.Title != "亲手完成第一个 Go 程序" || guided.Mode != "guided" {
 		t.Fatalf("beginner guided Activity = %#v, %v", guided, err)
 	}
@@ -176,6 +208,7 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 		{"M2-10", 1, "practice-retry-schedule", "assessment-gocheck-worker", "review-gocheck-alert-delivery-worker"},
 		{"M2-11", 1, "practice-ttl-cache", "assessment-gocheck-project-cache", "review-gocheck-alert-cache"},
 		{"M2-12", 1, "practice-request-telemetry", "assessment-gocheck-observability", "review-gocheck-alert-observability"},
+		{"M2-13", 1, "practice-manual-clock", "assessment-gocheck-test-layers", "review-gocheck-alert-test-layers"},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.capabilityID, func(t *testing.T) {
@@ -187,7 +220,11 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 			if err != nil || remediation.ID != testCase.acquisition {
 				t.Fatalf("RemediationActivity() = %#v, %v", remediation, err)
 			}
-			assessment, err := registry.ActivityView(testReleaseID, testCase.assessment, testCase.version)
+			activityVersion := testCase.version
+			if testCase.capabilityID == "M2-13" {
+				activityVersion = 2
+			}
+			assessment, err := registry.ActivityView(testReleaseID, testCase.assessment, activityVersion)
 			if err != nil || assessment.Mode != "assessment" {
 				t.Fatalf("assessment = %#v, %v", assessment, err)
 			}
@@ -566,6 +603,35 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 	observabilityReview, err := registry.ReviewActivity(testReleaseID, observabilityActivity.CapabilityRefs)
 	if err != nil || observabilityReview.ID != "review-gocheck-alert-observability" || observabilityReview.EvidenceContext != "variant" {
 		t.Fatalf("M2-12 review = %#v, %v", observabilityReview, err)
+	}
+
+	qualityActivity, err := registry.ActivityView(testReleaseID, "assessment-gocheck-test-layers", 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	qualityTask, err := registry.ExecutionTask(testReleaseID, qualityActivity.TaskRef.ID, qualityActivity.TaskRef.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if qualityTask.ID != "assessment-gocheck-test-layers-v2" || qualityTask.Version != 2 || len(qualityTask.AssessmentRules) != 9 || len(qualityTask.Files) != 11 {
+		t.Fatalf("M2-13 task contract = rules %d files %d", len(qualityTask.AssessmentRules), len(qualityTask.Files))
+	}
+	if calls := qualityTask.AssessmentRules[7].Selector.RequiredCalls; len(calls) != 4 {
+		t.Fatalf("M2-13 PostgreSQL integration calls = %#v", calls)
+	}
+	qualityWorkspace, err := registry.PublicWorkspace(testReleaseID, qualityTask.ID, qualityTask.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, exists := qualityWorkspace["internal/quality/contract_private_test.go"]; exists {
+		t.Fatal("M2-13 public workspace contains private quality contract")
+	}
+	if _, exists := qualityWorkspace["internal/quality/testdata/checks.json"]; !exists {
+		t.Fatal("M2-13 public workspace is missing fixture")
+	}
+	qualityReview, err := registry.ReviewActivity(testReleaseID, qualityActivity.CapabilityRefs)
+	if err != nil || qualityReview.ID != "review-gocheck-alert-test-layers" || qualityReview.EvidenceContext != "variant" {
+		t.Fatalf("M2-13 review = %#v, %v", qualityReview, err)
 	}
 }
 

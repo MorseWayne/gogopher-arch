@@ -1,6 +1,6 @@
 {
   "id": "guided-run-model-v2",
-  "version": 7,
+  "version": 8,
   "language": "go1.25",
   "workspace_root": "workspace",
   "files": [
@@ -13,10 +13,10 @@
   "readonly_paths": ["README.md", "go.mod", "main_test.go"],
   "limits": {"max_files": 8, "max_file_bytes": 65536, "max_total_bytes": 262144},
   "actions": {
-    "build": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
-    "test": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
-    "vet": {"timeout_ms": 8000, "max_output_bytes": 65536, "network": "none"},
-    "submit": {"timeout_ms": 15000, "max_output_bytes": 131072, "network": "none"}
+    "build": {"timeout_ms": 15000, "max_output_bytes": 65536, "network": "none"},
+    "test": {"timeout_ms": 15000, "max_output_bytes": 65536, "network": "none"},
+    "vet": {"timeout_ms": 15000, "max_output_bytes": 65536, "network": "none"},
+    "submit": {"timeout_ms": 45000, "max_output_bytes": 131072, "network": "none"}
   },
   "hints": [
     {"id": "return-a-string", "level": 1, "title": "先让函数返回字符串", "body": "welcome 的返回类型是 string。可以使用 fmt.Sprintf，把固定文本和 name 参数组合成返回值。"},

@@ -1,0 +1,5 @@
+# 延迟复验：迁移 alert 测试金字塔
+
+把同样的边界迁移到 alert API：deterministic clock 与 store fake 支撑 unit test，service fake 与 `httptest` 固定 HTTP contract，`testdata/alerts.json` 驱动 fixture，而真实 PostgreSQL integration test 只在数据库环境明确配置时运行。
+
+不要用 mock PostgreSQL 代替 schema/SQL 集成证据，也不要让 unit test 通过网络、sleep 或共享数据库获得偶然结果。

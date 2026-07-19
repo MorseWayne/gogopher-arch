@@ -13,23 +13,23 @@ export const sessionFixture: SessionResponse = {
 
 export const activityFixture: ActivityResponse = {
   api_version: 'v1',
-  release_id: 'm1-first-slice-v27',
+  release_id: 'm1-first-slice-v31',
   activity: {
     id: 'guided-run-model',
-    version: 7,
+    version: 8,
     content_hash: 'activity-hash',
     rule_set_hash: 'rule-set-hash',
     title: '亲手完成第一个 Go 程序',
     kind: 'learning_task',
     mode: 'guided',
     capability_refs: [{ id: 'M1-01', version: 3 }],
-    task_ref: { id: 'guided-run-model-v2', version: 7 },
+    task_ref: { id: 'guided-run-model-v2', version: 8 },
     content_ref: 'web/src/content/learning/first-go-program-guided-v1.mdx',
     assistance_policy: { hints: true, references: true, solution: true, ai_declaration: true },
   },
   task: {
     id: 'guided-run-model-v2',
-    version: 7,
+    version: 8,
     content_hash: 'task-hash',
     bundle_hash: 'bundle-hash',
     language: 'go1.25',
@@ -51,7 +51,7 @@ export const activityFixture: ActivityResponse = {
 
 export const capabilityFixture: CapabilityResponse = {
   api_version: 'v1',
-  release_id: 'm1-first-slice-v27',
+  release_id: 'm1-first-slice-v31',
   capability: {
     id: 'M1-01',
     version: 3,
@@ -83,12 +83,12 @@ export const capabilityFixture: CapabilityResponse = {
 export const attemptFixture: AttemptResponse = {
   api_version: 'v1',
   id: 'attempt-current',
-  release_id: 'm1-first-slice-v27',
+  release_id: 'm1-first-slice-v31',
   activity_id: 'guided-run-model',
-  activity_version: 7,
+  activity_version: 8,
   activity_hash: 'activity-hash',
   task_id: 'guided-run-model-v2',
-  task_version: 7,
+  task_version: 8,
   task_hash: 'task-hash',
   capability_refs: [{ id: 'M1-01', version: 3 }],
   mode: 'guided',

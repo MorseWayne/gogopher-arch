@@ -1,0 +1,5 @@
+breakpoint metrics.Render metrics.go:16
+> metrics.Render() metrics.go:16
+index = 1
+len(values) = 2
+The first loop iteration starts after values[0].

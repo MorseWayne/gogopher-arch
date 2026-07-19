@@ -3,6 +3,7 @@ package evaluation
 import (
 	"context"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -15,6 +16,51 @@ import (
 	"github.com/MorseWayne/gogopher-arch/internal/learning/submission"
 	"github.com/MorseWayne/gogopher-arch/internal/sandbox"
 )
+
+const regressionSandboxMinimumTimeoutMS = 45_000
+
+var regressionSandboxGoBinary string
+
+func TestMain(m *testing.M) {
+	cacheRoot, err := os.MkdirTemp("", "gogopher-evaluation-cache-*")
+	if err != nil {
+		_, _ = os.Stderr.WriteString("create evaluation cache: " + err.Error() + "\n")
+		os.Exit(1)
+	}
+	realGo, err := exec.LookPath("go")
+	if err != nil {
+		_, _ = os.Stderr.WriteString("find go binary: " + err.Error() + "\n")
+		_ = os.RemoveAll(cacheRoot)
+		os.Exit(1)
+	}
+	goCache := filepath.Join(cacheRoot, "gocache")
+	if err := os.MkdirAll(goCache, 0o700); err != nil {
+		_, _ = os.Stderr.WriteString("create shared Go cache: " + err.Error() + "\n")
+		_ = os.RemoveAll(cacheRoot)
+		os.Exit(1)
+	}
+	regressionSandboxGoBinary = filepath.Join(cacheRoot, "go")
+	arguments := string([]byte{36, 64})
+	wrapper := "#!/bin/sh\nGOCACHE=\"" + goCache + "\" exec \"" + realGo + "\" \"" + arguments + "\"\n"
+	if err := os.WriteFile(regressionSandboxGoBinary, []byte(wrapper), 0o700); err != nil {
+		_, _ = os.Stderr.WriteString("create Go cache wrapper: " + err.Error() + "\n")
+		_ = os.RemoveAll(cacheRoot)
+		os.Exit(1)
+	}
+	code := m.Run()
+	_ = os.RemoveAll(cacheRoot)
+	os.Exit(code)
+}
+
+func runRegressionSandbox(t *testing.T, spec execution.ExecutionSpec) (execution.ExecutionResponse, error) {
+	t.Helper()
+	if spec.Policy.TimeoutMS < regressionSandboxMinimumTimeoutMS {
+		spec.Policy.TimeoutMS = regressionSandboxMinimumTimeoutMS
+	}
+	return sandbox.NewRunner(sandbox.RunnerOptions{
+		TempDir: t.TempDir(), GoBinary: regressionSandboxGoBinary,
+	}).Run(context.Background(), spec)
+}
 
 func TestGeneratorProducesMixedRuleResultsFromExecutedStages(t *testing.T) {
 	generator, frozen := setupGenerator(t)
@@ -291,7 +337,7 @@ func TestGeneratorDoesNotScoreCurrentGuidedExplanation(t *testing.T) {
 		t.Fatal(err)
 	}
 	releaseID := registry.CurrentReleaseID()
-	task, err := registry.ExecutionTask(releaseID, "guided-run-model-v2", 7)
+	task, err := registry.ExecutionTask(releaseID, "guided-run-model-v2", 8)
 	if err != nil {
 		t.Fatal(err)
 	}
