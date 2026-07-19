@@ -1,0 +1,5 @@
+## 把生命周期迁移到 alert worker
+
+本变式不再关闭 HTTP server，而是先有界停止 worker，再关闭它依赖的 store。配置必须在 OpenStore 之前失败，NewWorker 失败则立即关闭 store，Run 自发失败也要完成清理。
+
+本题没有提示。请重新实现 SIGTERM/Context、shutdown timeout、逆序所有权和错误传播。

@@ -23,7 +23,7 @@ func TestLoadRegistryIndexesCurrentAndHistoricalDefinitions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, want := len(definitions), 150; got != want {
+	if got, want := len(definitions), 157; got != want {
 		t.Fatalf("len(Definitions()) = %d, want %d", got, want)
 	}
 	ref := DefinitionRef{ReleaseID: testReleaseID, Kind: KindActivity, ID: "assessment-check-config", Version: 5}
@@ -172,6 +172,7 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 		{"M2-06", 1, "practice-transaction-runner", "assessment-gocheck-transaction", "review-gocheck-alert-transaction"},
 		{"M2-07", 1, "practice-http-client-policy", "assessment-gocheck-http-client", "review-gocheck-alert-delivery"},
 		{"M2-08", 1, "practice-api-key-authentication", "assessment-gocheck-access-control", "review-gocheck-alert-access"},
+		{"M2-09", 1, "practice-lifecycle-stack", "assessment-gocheck-lifecycle", "review-gocheck-alert-worker-lifecycle"},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.capabilityID, func(t *testing.T) {
@@ -458,6 +459,32 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 	accessReview, err := registry.ReviewActivity(testReleaseID, accessActivity.CapabilityRefs)
 	if err != nil || accessReview.ID != "review-gocheck-alert-access" || accessReview.EvidenceContext != "variant" {
 		t.Fatalf("M2-08 review = %#v, %v", accessReview, err)
+	}
+
+	lifecycleActivity, err := registry.ActivityView(testReleaseID, "assessment-gocheck-lifecycle", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	lifecycleTask, err := registry.ExecutionTask(testReleaseID, lifecycleActivity.TaskRef.ID, lifecycleActivity.TaskRef.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(lifecycleTask.AssessmentRules) != 9 || len(lifecycleTask.Files) != 6 {
+		t.Fatalf("M2-09 task contract = rules %d files %d", len(lifecycleTask.AssessmentRules), len(lifecycleTask.Files))
+	}
+	if calls := lifecycleTask.AssessmentRules[6].Selector.RequiredCalls; len(calls) != 4 {
+		t.Fatalf("M2-09 lifecycle calls = %#v", calls)
+	}
+	lifecycleWorkspace, err := registry.PublicWorkspace(testReleaseID, lifecycleTask.ID, lifecycleTask.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, exists := lifecycleWorkspace["cmd/gocheckhub/contract_private_test.go"]; exists {
+		t.Fatal("M2-09 public workspace contains private lifecycle contract")
+	}
+	lifecycleReview, err := registry.ReviewActivity(testReleaseID, lifecycleActivity.CapabilityRefs)
+	if err != nil || lifecycleReview.ID != "review-gocheck-alert-worker-lifecycle" || lifecycleReview.EvidenceContext != "variant" {
+		t.Fatalf("M2-09 review = %#v, %v", lifecycleReview, err)
 	}
 }
 

@@ -1,0 +1,5 @@
+## 组装 gocheck-hub 运行时
+
+composition root 必须在触及外部资源前校验 configuration，再显式调用 database、handler 和 server constructor。任一初始化失败都要逆序回滚已取得资源。
+
+main 使用 `signal.NotifyContext` 接收 SIGTERM；取消后用独立有界 context 调用 server `Shutdown`，完成后再关闭 database。服务自发故障也必须清理资源并返回原因。隐藏替身会记录初始化、Serve、Shutdown 和 Close 顺序以及 deadline。
