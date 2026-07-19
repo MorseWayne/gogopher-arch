@@ -23,7 +23,7 @@ func TestLoadRegistryIndexesCurrentDefinitions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, want := len(definitions), 199; got != want {
+	if got, want := len(definitions), 206; got != want {
 		t.Fatalf("len(Definitions()) = %d, want %d", got, want)
 	}
 	ref := DefinitionRef{ReleaseID: testReleaseID, Kind: KindActivity, ID: "assessment-check-config", Version: 5}
@@ -211,6 +211,7 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 		{"M2-13", 1, "practice-manual-clock", "assessment-gocheck-test-layers", "review-gocheck-alert-test-layers"},
 		{"M2-14", 1, "practice-release-gates", "assessment-gocheck-delivery", "review-gocheck-alert-delivery-pipeline"},
 		{"M2-15", 1, "practice-miniflux-call-chain", "assessment-miniflux-category-validation", "review-miniflux-retry-after"},
+		{"M2-16", 1, "practice-gocheck-hub-ai-review", "assessment-gocheck-hub-graduation", "review-alertboard-delivery"},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.capabilityID, func(t *testing.T) {
@@ -693,6 +694,34 @@ func TestRegistryExposesSecondCapabilityBatchAsCompleteLearningLoops(t *testing.
 	minifluxReview, err := registry.ReviewActivity(testReleaseID, minifluxActivity.CapabilityRefs)
 	if err != nil || minifluxReview.ID != "review-miniflux-retry-after" || minifluxReview.EvidenceContext != "variant" {
 		t.Fatalf("M2-15 review = %#v, %v", minifluxReview, err)
+	}
+
+	graduationActivity, err := registry.ActivityView(testReleaseID, "assessment-gocheck-hub-graduation", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	graduationTask, err := registry.ExecutionTask(testReleaseID, graduationActivity.TaskRef.ID, graduationActivity.TaskRef.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if graduationTask.Language != "go1.26" || len(graduationTask.AssessmentRules) != 10 || len(graduationTask.Files) != 4 || !graduationTask.WorkspacePolicy.AllowNewFiles {
+		t.Fatalf("M2-16 task contract = language %s rules %d files %d policy %#v", graduationTask.Language, len(graduationTask.AssessmentRules), len(graduationTask.Files), graduationTask.WorkspacePolicy)
+	}
+	graduationWorkspace, err := registry.PublicWorkspace(testReleaseID, graduationTask.ID, graduationTask.Version)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, exists := graduationWorkspace["internal/hub/contract_private_test.go"]; exists {
+		t.Fatal("M2-16 public workspace contains private graduation contract")
+	}
+	for _, required := range []string{"TASK.md", "internal/hub/public_contract_test.go"} {
+		if _, exists := graduationWorkspace[required]; !exists {
+			t.Fatalf("M2-16 public workspace is missing %s", required)
+		}
+	}
+	graduationReview, err := registry.ReviewActivity(testReleaseID, graduationActivity.CapabilityRefs)
+	if err != nil || graduationReview.ID != "review-alertboard-delivery" || graduationReview.EvidenceContext != "variant" {
+		t.Fatalf("M2-16 review = %#v, %v", graduationReview, err)
 	}
 }
 

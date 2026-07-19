@@ -1,0 +1,1 @@
+{"services":[{"name":"api","endpoint":"https://api.internal.example.com","retry":3}]}

@@ -1,0 +1,3 @@
+--- FAIL: TestRenderIncludesAllEntries
+    metrics_private_test.go:10: Render() = "errors:1\n", want "requests:5\nerrors:1\n"
+FAIL

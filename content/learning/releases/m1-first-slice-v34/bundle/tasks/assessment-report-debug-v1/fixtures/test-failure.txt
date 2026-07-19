@@ -1,0 +1,3 @@
+--- FAIL: TestRenderIncludesLastEntry
+    report_test.go:9: Render() = "api=1\n", want "api=1\ndb=2\n"
+FAIL

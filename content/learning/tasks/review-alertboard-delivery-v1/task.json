@@ -1,0 +1,38 @@
+{
+  "id": "review-alertboard-delivery-v1",
+  "version": 1,
+  "language": "go1.26",
+  "workspace_root": "workspace",
+  "files": [
+    {"source": "README.md", "path": "TASK.md", "role": "readme", "editable": false, "sha256": "6d186a7f273c8877b77d2ed23baac0d03a40de96268126ec3a6d92e1e9724808"},
+    {"source": "starter/go.mod", "path": "go.mod", "role": "starter", "editable": false, "sha256": "14c4e960fa481c904942352da205c146419b5f9f9b4710a23426605121b989ee"},
+    {"source": "starter/internal/alertboard/service.go", "path": "internal/alertboard/service.go", "role": "starter", "editable": true, "sha256": "6440b2403d98e79b24ea6c817e06a2cfda14a21331d65f9d09bbf591526b8cc5"},
+    {"source": "starter/internal/alertboard/service_test.go", "path": "internal/alertboard/service_test.go", "role": "starter", "editable": true, "sha256": "3310c102d190ada2a3296dcf41b882eb5e23d038ab31bcca3d1bdf8960e9974c"},
+    {"source": "starter/cmd/alertboard/main.go", "path": "cmd/alertboard/main.go", "role": "starter", "editable": false, "sha256": "55a60bb97151b2b4b680462447ce60ec34511b14fa10d77440c97b9777101566"},
+    {"source": "starter/migrations/0001_create_alerts.up.sql", "path": "migrations/0001_create_alerts.up.sql", "role": "starter", "editable": false, "sha256": "ce495f0c7d31fdc6bba13344fde4125a2584fc06ca5910be114a7d1d11c3465c"},
+    {"source": "starter/migrations/0002_add_delivery_index.up.sql", "path": "migrations/0002_add_delivery_index.up.sql", "role": "starter", "editable": false, "sha256": "a20e63f83ff9c1a84f5508b66956eea202635b1032782d95b2971b8b8ecf2ae9"},
+    {"source": "starter/Dockerfile", "path": "Dockerfile", "role": "starter", "editable": false, "sha256": "a3c6cdd94f21428c95f06884afafe4b24add7e1b5d647c239ca8e60037cb9735"},
+    {"source": "starter/Makefile", "path": "Makefile", "role": "starter", "editable": false, "sha256": "1b53de3997abf33d0643df095ce2bbe81de81d73c58c5662c03e93bbf62061cb"},
+    {"source": "visible/internal/alertboard/smoke_test.go", "path": "internal/alertboard/smoke_test.go", "role": "visible_test", "editable": false, "sha256": "02cb9b65c2c36e38a7954569daca48d2db921a7fb2c3c3d98b75489195c16ca2"},
+    {"source": "heldout/internal/alertboard/contract_private_test.go", "path": "internal/alertboard/contract_private_test.go", "role": "held_out_test", "editable": false, "sha256": "7d025af25f3aa00140108789674237dc255ad9b431bc833000ff3155466c910a"}
+  ],
+  "editable_paths": ["internal/alertboard/service.go", "internal/alertboard/service_test.go"],
+  "readonly_paths": ["TASK.md", "go.mod", "cmd/alertboard/main.go", "migrations/0001_create_alerts.up.sql", "migrations/0002_add_delivery_index.up.sql", "Dockerfile", "Makefile", "internal/alertboard/smoke_test.go"],
+  "workspace_policy": {"allow_new_files": false, "allow_delete_files": false},
+  "limits": {"max_files": 14, "max_file_bytes": 131072, "max_total_bytes": 786432},
+  "actions": {
+    "build": {"timeout_ms": 15000, "max_output_bytes": 131072, "network": "none"},
+    "test": {"timeout_ms": 20000, "max_output_bytes": 131072, "network": "none"},
+    "vet": {"timeout_ms": 15000, "max_output_bytes": 131072, "network": "none"},
+    "submit": {"timeout_ms": 45000, "max_output_bytes": 262144, "network": "none"}
+  },
+  "hints": [],
+  "visible_tests": ["internal/alertboard/smoke_test.go"],
+  "held_out_tests": ["internal/alertboard/contract_private_test.go"],
+  "assessment_rules": [
+    {"rule_id": "variant-contract-correct", "stage": "held_out_test", "selector": {"test": "TestVariantServicePreservesSecurityCacheAndWorkerBoundaries"}, "capability_refs": [{"id": "M2-16", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "variant-tests-present", "stage": "ast", "selector": {"file": "internal/alertboard/service_test.go", "minimum_cases": 5}, "capability_refs": [{"id": "M2-16", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "variant-decisions-explained", "stage": "explanation", "selector": {"minimum_chars": 200, "required_terms": ["authentication", "tenant", "cache-aside", "source of truth", "bounded worker", "context"]}, "capability_refs": [{"id": "M2-16", "version": 1}], "evidence_type": "implement", "condition": "passed"}
+  ],
+  "artifact_rules": {"workspace": "diff", "logs": ["build", "test", "vet", "submit"]}
+}

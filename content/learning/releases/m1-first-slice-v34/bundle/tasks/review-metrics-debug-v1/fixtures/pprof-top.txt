@@ -1,0 +1,7 @@
+File: metrics.test
+Type: alloc_space
+Showing nodes accounting for 47.8MB, 94.1% of 50.8MB total
+      flat  flat%   sum%        cum   cum%
+    34.6MB 68.1%  68.1%     34.6MB 68.1%  runtime.concatstrings
+    13.2MB 26.0%  94.1%     47.8MB 94.1%  review/metricsdebug.Render
+Focus: output grows through repeated string concatenation.

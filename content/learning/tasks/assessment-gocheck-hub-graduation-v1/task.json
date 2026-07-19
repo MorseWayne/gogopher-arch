@@ -1,0 +1,39 @@
+{
+  "id": "assessment-gocheck-hub-graduation-v1",
+  "version": 1,
+  "language": "go1.26",
+  "workspace_root": "workspace",
+  "files": [
+    {"source": "README.md", "path": "TASK.md", "role": "readme", "editable": false, "sha256": "0972eaa44440c76f59068df69ddd37dec73fdb698fbda92fcb7460cbb59a7965"},
+    {"source": "visible/internal/hub/service_test.go", "path": "internal/hub/public_contract_test.go", "role": "visible_test", "editable": false, "sha256": "770cff94b1508a7710e3d5f114327e119c048994c23bbdef79e710174ddcdf57"},
+    {"source": "heldout/internal/hub/contract_private_test.go", "path": "internal/hub/contract_private_test.go", "role": "held_out_test", "editable": false, "sha256": "52955577dfdccfeaa5bc20b3a4918d1c83674375e1e46277a3de47146ba3d110"},
+    {"source": "race/internal/hub/race_private_test.go", "path": "internal/hub/race_private_test.go", "role": "race_test", "editable": false, "sha256": "a826cc54e4da9f74c02f7b1c749e40db3d0da923c122d4e67125c651088ba8f0"}
+  ],
+  "editable_paths": [],
+  "readonly_paths": ["TASK.md", "internal/hub/public_contract_test.go"],
+  "workspace_policy": {"allow_new_files": true, "allow_delete_files": true},
+  "limits": {"max_files": 36, "max_file_bytes": 196608, "max_total_bytes": 1572864},
+  "actions": {
+    "build": {"timeout_ms": 15000, "max_output_bytes": 131072, "network": "none"},
+    "test": {"timeout_ms": 20000, "max_output_bytes": 131072, "network": "none"},
+    "vet": {"timeout_ms": 15000, "max_output_bytes": 131072, "network": "none"},
+    "submit": {"timeout_ms": 45000, "max_output_bytes": 262144, "network": "none"}
+  },
+  "hints": [],
+  "visible_tests": ["internal/hub/public_contract_test.go"],
+  "held_out_tests": ["internal/hub/contract_private_test.go"],
+  "race_tests": ["internal/hub/race_private_test.go"],
+  "assessment_rules": [
+    {"rule_id": "service-builds", "stage": "build", "selector": {"package": "./..."}, "capability_refs": [{"id": "M2-16", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "api-security-correct", "stage": "held_out_test", "selector": {"test": "TestAuthenticationPrecedesLookupAndScopesTenant"}, "capability_refs": [{"id": "M2-16", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "storage-cache-correct", "stage": "held_out_test", "selector": {"test": "TestProjectAPIUsesStrictJSONAndTenantCacheAside"}, "capability_refs": [{"id": "M2-16", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "worker-lifecycle-correct", "stage": "held_out_test", "selector": {"test": "TestWorkerConcurrencyIsBoundedAndCancellationJoins"}, "capability_refs": [{"id": "M2-16", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "health-telemetry-correct", "stage": "held_out_test", "selector": {"test": "TestHealthRequestCorrelationAndLowCardinalityMetrics"}, "capability_refs": [{"id": "M2-16", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "delivery-artifacts-present", "stage": "ast", "selector": {"required_files": ["go.mod", "README.md", "cmd/gocheckhub/main.go", "Dockerfile", "Makefile", ".github/workflows/ci.yml", "migrations/0001_create_projects.up.sql", "migrations/0002_add_jobs.up.sql"]}, "capability_refs": [{"id": "M2-16", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "sql-boundary-present", "stage": "ast", "selector": {"file": "internal/hub/sqlstore.go", "required_calls": ["db.PingContext", "db.QueryRowContext", "db.ExecContext"]}, "capability_refs": [{"id": "M2-16", "version": 1}], "evidence_type": "implement", "condition": "passed"},
+    {"rule_id": "service-tests-present", "stage": "ast", "selector": {"file": "internal/hub/service_test.go", "minimum_cases": 6}, "capability_refs": [{"id": "M2-16", "version": 1}], "evidence_type": "test", "condition": "passed"},
+    {"rule_id": "service-race-clean", "stage": "race", "selector": {"package": "./..."}, "capability_refs": [{"id": "M2-16", "version": 1}], "evidence_type": "test", "condition": "passed"},
+    {"rule_id": "delivery-boundaries-explained", "stage": "explanation", "selector": {"minimum_chars": 260, "required_terms": ["authentication", "source of truth", "cache-aside", "context", "readiness", "forward-only", "non-root", "race"]}, "capability_refs": [{"id": "M2-16", "version": 1}], "evidence_type": "diagnose", "condition": "passed"}
+  ],
+  "artifact_rules": {"workspace": "full", "logs": ["build", "test", "vet", "submit"]}
+}

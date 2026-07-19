@@ -1,0 +1,17 @@
+{
+  "id": "review-alertboard-delivery",
+  "version": 1,
+  "title": "延迟复验 alertboard 服务边界",
+  "kind": "learning_task",
+  "mode": "review",
+  "evidence_context": "variant",
+  "capability_refs": [{"id": "M2-16", "version": 1}],
+  "task_ref": {"id": "review-alertboard-delivery-v1", "version": 1},
+  "content_ref": "web/src/content/learning/alertboard-delivery-review-v1.mdx",
+  "assistance_policy": {"hints": false, "references": false, "solution": false, "ai_declaration": true},
+  "evidence_rules": [
+    {"rule_id": "variant-contract-correct", "capability_id": "M2-16", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "variant-tests-present", "capability_id": "M2-16", "capability_version": 1, "evidence_type": "implement", "result": "passed"},
+    {"rule_id": "variant-decisions-explained", "capability_id": "M2-16", "capability_version": 1, "evidence_type": "implement", "result": "passed"}
+  ]
+}

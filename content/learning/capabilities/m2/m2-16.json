@@ -1,0 +1,64 @@
+{
+  "id": "M2-16",
+  "version": 1,
+  "name": "后端服务完整交付",
+  "description": "能够从空白工作区独立交付包含 API、持久化边界、后台任务、认证授权、缓存、可观测性、测试与发布门禁的 Go 后端服务，并审查 AI 产出、迁移到陌生上下文和完成延迟复验。",
+  "milestone": "M2",
+  "domain": "complete-backend-delivery",
+  "prerequisites": {
+    "hard": [
+      {"id": "M2-08", "version": 1},
+      {"id": "M2-10", "version": 1},
+      {"id": "M2-11", "version": 1},
+      {"id": "M2-12", "version": 1},
+      {"id": "M2-14", "version": 1},
+      {"id": "M2-15", "version": 1}
+    ],
+    "recommended": []
+  },
+  "required_evidence": [
+    {
+      "type": "diagnose",
+      "independence": "ai_assisted",
+      "context": "same_context",
+      "rule_ids": ["ai-delivery-review-correct", "ai-decisions-explained"]
+    },
+    {
+      "type": "implement",
+      "independence": "independent",
+      "context": "new_project",
+      "rule_ids": ["service-builds", "api-security-correct", "storage-cache-correct", "worker-lifecycle-correct", "health-telemetry-correct", "delivery-artifacts-present", "sql-boundary-present"]
+    },
+    {
+      "type": "test",
+      "independence": "independent",
+      "context": "new_project",
+      "rule_ids": ["service-tests-present", "service-race-clean"]
+    },
+    {
+      "type": "diagnose",
+      "independence": "independent",
+      "context": "new_project",
+      "rule_ids": ["delivery-boundaries-explained"]
+    },
+    {
+      "type": "implement",
+      "independence": "independent",
+      "context": "variant",
+      "rule_ids": ["variant-contract-correct", "variant-tests-present", "variant-decisions-explained"]
+    }
+  ],
+  "review_policy": {
+    "first_review_after_days": 7,
+    "success_interval_days": 30,
+    "failure_remediation_after_days": 1
+  },
+  "resource_refs": [
+    "https://pkg.go.dev/net/http",
+    "https://pkg.go.dev/database/sql",
+    "https://pkg.go.dev/crypto/subtle",
+    "https://pkg.go.dev/log/slog",
+    "https://go.dev/doc/articles/race_detector",
+    "web/src/content/learning/gocheck-hub-graduation-assessment-v1.mdx"
+  ]
+}
